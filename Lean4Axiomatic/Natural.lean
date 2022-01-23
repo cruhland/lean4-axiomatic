@@ -65,12 +65,20 @@ class SignProperties (ℕ : Type) [AdditionBase ℕ] extends SignBase ℕ where
   positive_subst : AA.Substitutive Positive (· ≃ ·) (· → ·)
   positive_add {n m : ℕ} : Positive n → Positive (n + m)
 
+class OrderBase (ℕ : Type) [AdditionBase ℕ] where
+  leOp : LE ℕ
+  le_defn {n m : ℕ} : n ≤ m ↔ ∃ k : ℕ, n + k ≃ m
+
+attribute [instance] OrderBase.leOp
+
 class Decl (ℕ : Type) where
   [toAddition : Addition ℕ]
   [toSignProperties : SignProperties ℕ]
+  [toOrderBase : OrderBase ℕ]
 
 attribute [instance] Decl.toAddition
 attribute [instance] Decl.toSignProperties
+attribute [instance] Decl.toOrderBase
 
 namespace Derived
 
@@ -247,8 +255,7 @@ theorem zero_sum_split
       Eqv.trans (Eqv.symm AdditionBase.step_add) ‹step n + m ≃ 0›
     exact Axioms.step_neq_zero ‹step (n + m) ≃ 0›
 
-instance additionProperties {ℕ : Type} [AdditionBase ℕ]
-    : AdditionProperties ℕ where
+instance additionProperties [AdditionBase ℕ] : AdditionProperties ℕ where
   add_zero := add_zero
   add_step := add_step
   add_subst := inferInstance
@@ -256,6 +263,9 @@ instance additionProperties {ℕ : Type} [AdditionBase ℕ]
   add_assoc := add_assoc
   cancel_add := cancel_add
   zero_sum_split := zero_sum_split
+
+instance [Constructors ℕ] [Equality ℕ] : SignBase ℕ where
+  positive_defn := Iff.intro id id
 
 theorem positive_subst
     [Constructors ℕ] [Equality ℕ] [SignBase ℕ] {n₁ n₂ : ℕ}
@@ -293,8 +303,7 @@ theorem positive_add
     show step (n + m) ≄ 0
     exact Axioms.step_neq_zero
 
-instance signProperties
-    {ℕ : Type} [AdditionBase ℕ] [SignBase ℕ] : SignProperties ℕ where
+instance signProperties [AdditionBase ℕ] [SignBase ℕ] : SignProperties ℕ where
   positive_subst := inferInstance
   positive_add := positive_add
 
@@ -345,9 +354,59 @@ instance : AdditionBase Nat where
 
 instance : Addition Nat := Addition.mk
 
-instance : SignBase Nat where
-  positive_defn := Iff.intro id id
-  
+instance : OrderBase Nat where
+  leOp := inferInstance
+
+  le_defn {n m : Nat} := by
+    show n ≤ m ↔ ∃ k, n + k ≃ m
+    apply Iff.intro
+    · intro (_ : n ≤ m)
+      show ∃ k, n + k ≃ m
+      induction ‹n ≤ m›
+      case refl =>
+        show ∃ k, n + k ≃ n
+        exists (0 : Nat)
+        exact AdditionProperties.add_zero
+      case step m _ ih =>
+        have ⟨k, (_ : n + k ≃ m)⟩ := ih
+        show ∃ k, n + k ≃ step m
+        exists step k
+        calc
+          _ ≃ n + step k   := Eqv.refl
+          _ ≃ step (n + k) := AdditionProperties.add_step
+          _ ≃ step m       := AA.subst ‹n + k ≃ m›
+    · intro ⟨k, (_ : n + k ≃ m)⟩
+      revert m
+      show ∀ m, n + k ≃ m → n ≤ m
+      induction k
+      case zero =>
+        intro m (_ : n + 0 ≃ m)
+        show n ≤ m
+        have : n = m :=
+          Eqv.trans (Eqv.symm AdditionProperties.add_zero) ‹n + 0 ≃ m›
+        cases ‹n = m›
+        show n ≤ n
+        apply Nat.le.refl
+      case succ k ih =>
+        have : ∀ m, n + k ≃ m → n ≤ m := ih
+        intro m (_ : n + step k ≃ m)
+        show n ≤ m
+        have : step (n + k) ≃ m :=
+          Eqv.trans (Eqv.symm AdditionProperties.add_step) ‹n + step k ≃ m›
+        cases m
+        case zero =>
+          have : step (n + k) ≃ 0 := by assumption
+          apply False.elim
+          show False
+          exact Axioms.step_neq_zero ‹step (n + k) ≃ 0›
+        case succ m' _ =>
+          have : step (n + k) ≃ step m' := by assumption
+          show n ≤ step m'
+          apply Nat.le.step
+          show n ≤ m'
+          have : n + k ≃ m' := Axioms.step_injective ‹step (n + k) ≃ step m'›
+          exact ih m' ‹n + k ≃ m'›
+
 instance : Decl Nat := Decl.mk
 
 end ImplNat
