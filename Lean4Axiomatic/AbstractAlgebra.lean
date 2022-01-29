@@ -23,14 +23,14 @@ instance
 
 class Substitutive
     {α : Sort u} {β : Sort v}
-    (f : α → β) (rα : α → α → Prop) (rβ : β → β → Prop) where
+    (f : α → β) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop) where
   subst {x₁ x₂ : α} : rα x₁ x₂ → rβ (f x₁) (f x₂)
 
 export Substitutive (subst)
 
 class SubstitutiveForHand
     (hand : Hand) {α : Sort u} {β : Sort v}
-    (f : α → α → β) (rα : α → α → Prop) (rβ : β → β → Prop) where
+    (f : α → α → β) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop) where
   subst₂
     {x₁ x₂ y : α} : rα x₁ x₂ → rβ (forHand hand f x₁ y) (forHand hand f x₂ y)
 

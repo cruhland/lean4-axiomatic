@@ -280,7 +280,6 @@ theorem positive_subst
   have : n₁ ≄ 0 := SignBase.positive_defn.mp ‹Positive n₁›
   apply SignBase.positive_defn.mpr
   show n₂ ≄ 0
-  -- TODO: Why couldn't Lean find this instance?
   exact AA.substL (inst := AA.neq.substL) ‹n₁ ≃ n₂› ‹n₁ ≄ 0›
 
 instance
@@ -296,7 +295,6 @@ theorem positive_add
   apply casesOn (motive := λ m => Positive (n + m)) m
   case zero =>
     show Positive (n + 0)
-    -- TODO: Why do I have to provide the `rβ` parameter?
     apply AA.subst (rβ := (· → ·)) (Eqv.symm AdditionProperties.add_zero)
     exact ‹Positive n›
   case step =>
