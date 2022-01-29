@@ -1,6 +1,6 @@
 import Lean4Axiomatic.Operators
 
-open Operators (TildeDash)
+open Operators (TildeDash TildeDashQuestion)
 
 namespace Relation
 
@@ -36,6 +36,9 @@ def neq.symm {α : Sort u} [EqvOp α] {x y : α} : x ≄ y → y ≄ x := by
   apply ‹x ≄ y›
   show x ≃ y
   exact Symm.symm ‹y ≃ x›
+
+class EqvOp? (α : Sort u)
+    extends EqvOp α, TildeDashQuestion α (λ x y => Decidable (x ≃ y))
 
 end Relation
 
