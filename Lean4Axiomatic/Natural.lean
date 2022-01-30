@@ -35,6 +35,9 @@ class Axioms (ℕ : Type) extends Constructors ℕ, Equality ℕ where
 
 attribute [instance] Axioms.step_substitutive
 
+class AxiomProperties (ℕ : Type) [Axioms ℕ] where
+  step_neq {n : ℕ} : step n ≄ n
+
 class AdditionBase (ℕ : Type) extends Axioms ℕ where
   addOp : Add ℕ
 
@@ -46,8 +49,8 @@ attribute [instance] AdditionBase.addOp
 class AdditionProperties (ℕ : Type) extends AdditionBase ℕ where
   add_zero {n : ℕ} : n + 0 ≃ n
   add_step {n m : ℕ} : n + step m ≃ step (n + m)
-
   add_subst : AA.Substitutive₂ (α := ℕ) (· + ·) (· ≃ ·) (· ≃ ·)
+  add_one_step {n : ℕ} : n + 1 ≃ step n
   add_comm : AA.Commutative (α := ℕ) (· + ·)
   add_assoc {n m k : ℕ} : (n + m) + k ≃ n + (m + k)
   cancel_add {n m k : ℕ} : n + m ≃ n + k → m ≃ k
@@ -76,14 +79,17 @@ class OrderBase (ℕ : Type) [AdditionBase ℕ] where
 attribute [instance default+1] OrderBase.leOp
 attribute [instance default+1] OrderBase.ltOp
 
+class OrderProperties (ℕ : Type) [AdditionBase ℕ] extends OrderBase ℕ where
+  lt_step {n : ℕ} : n < step n
+
 class Decl (ℕ : Type) where
   [toAddition : Addition ℕ]
   [toSignProperties : SignProperties ℕ]
-  [toOrderBase : OrderBase ℕ]
+  [toOrderProperties : OrderProperties ℕ]
 
 attribute [instance] Decl.toAddition
 attribute [instance] Decl.toSignProperties
-attribute [instance] Decl.toOrderBase
+attribute [instance] Decl.toOrderProperties
 
 namespace Derived
 
@@ -98,6 +104,21 @@ def casesOn
     [Axioms ℕ] {motive : ℕ → Prop} (n : ℕ)
     (zero : motive 0) (step : ∀ n, motive (step n)) : motive n :=
   recOn n zero (λ n ih => step n)
+
+instance [Axioms ℕ] : AxiomProperties ℕ where
+  step_neq {n : ℕ} : step n ≄ n := by
+    apply recOn (motive := λ n => step n ≄ n) n
+    case zero =>
+      show step 0 ≄ 0
+      exact Axioms.step_neq_zero
+    case step =>
+      intro n (ih : step n ≄ n)
+      show step (step n) ≄ step n
+      intro (_ : step (step n) ≃ step n)
+      show False
+      apply ih
+      show step n ≃ n
+      exact Axioms.step_injective ‹step (step n) ≃ step n›
 
 theorem add_zero [AdditionBase ℕ] {n : ℕ} : n + 0 ≃ n := by
   apply recOn (motive := λ n => n + 0 ≃ n) n
@@ -201,6 +222,13 @@ instance
   substitutiveL := inferInstance
   substitutiveR := inferInstance
 
+theorem add_one_step [AdditionBase ℕ] {n : ℕ} : n + 1 ≃ step n := by
+  calc
+    _ ≃ n + 1        := Eqv.refl
+    _ ≃ n + step 0   := AA.substR Eqv.refl
+    _ ≃ step (n + 0) := add_step
+    _ ≃ step n       := AA.subst add_zero
+
 theorem add_assoc
     [AdditionBase ℕ] {n m k : ℕ} : (n + m) + k ≃ n + (m + k) := by
   apply recOn (motive := λ n => (n + m) + k ≃ n + (m + k)) n
@@ -264,6 +292,7 @@ instance additionProperties [AdditionBase ℕ] : AdditionProperties ℕ where
   add_zero := add_zero
   add_step := add_step
   add_subst := inferInstance
+  add_one_step := add_one_step
   add_comm := inferInstance
   add_assoc := add_assoc
   cancel_add := cancel_add
@@ -313,6 +342,21 @@ instance signProperties [AdditionBase ℕ] [SignBase ℕ] : SignProperties ℕ w
 instance [AdditionBase ℕ] : OrderBase ℕ where
   le_defn {n m : ℕ} := Iff.intro id id
   lt_defn {n m : ℕ} := Iff.intro id id
+
+theorem lt_step [AdditionBase ℕ] [OrderBase ℕ] {n : ℕ} : n < step n := by
+  show n < step n
+  apply OrderBase.lt_defn.mpr
+  apply And.intro
+  · show n ≤ step n
+    apply OrderBase.le_defn.mpr
+    exists (1 : ℕ)
+    show n + 1 ≃ step n
+    exact add_one_step
+  · show n ≄ step n
+    exact Eqv.symm AxiomProperties.step_neq
+
+instance [AdditionBase ℕ] : OrderProperties ℕ where
+  lt_step := lt_step
 
 end Derived
 
