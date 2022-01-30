@@ -80,7 +80,12 @@ attribute [instance default+1] OrderBase.leOp
 attribute [instance default+1] OrderBase.ltOp
 
 class OrderProperties (ℕ : Type) [AdditionBase ℕ] extends OrderBase ℕ where
+  le_subst₂ : AA.Substitutive₂ (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·)
+  le_refl {n : ℕ} : n ≤ n
+  le_trans {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k
   lt_step {n : ℕ} : n < step n
+
+attribute [instance] OrderProperties.le_subst₂
 
 class Decl (ℕ : Type) where
   [toAddition : Addition ℕ]
@@ -343,6 +348,118 @@ instance [AdditionBase ℕ] : OrderBase ℕ where
   le_defn {n m : ℕ} := Iff.intro id id
   lt_defn {n m : ℕ} := Iff.intro id id
 
+theorem le_substL
+    [AdditionBase ℕ] [OrderBase ℕ] {n₁ n₂ m : ℕ}
+    : n₁ ≃ n₂ → n₁ ≤ m → n₂ ≤ m := by
+  intro (_ : n₁ ≃ n₂) (_ : n₁ ≤ m)
+  show n₂ ≤ m
+  have ⟨d, (_ : n₁ + d ≃ m)⟩ := OrderBase.le_defn.mp ‹n₁ ≤ m›
+  apply OrderBase.le_defn.mpr
+  exists d
+  show n₂ + d ≃ m
+  calc
+    _ ≃ n₂ + d := Eqv.refl
+    _ ≃ n₁ + d := Eqv.symm (AA.substL ‹n₁ ≃ n₂›)
+    _ ≃ m      := ‹n₁ + d ≃ m›
+
+theorem le_substR
+    [AdditionBase ℕ] [OrderBase ℕ] {n m₁ m₂ : ℕ}
+    : m₁ ≃ m₂ → n ≤ m₁ → n ≤ m₂ := by
+  intro (_ : m₁ ≃ m₂) (_ : n ≤ m₁)
+  show n ≤ m₂
+  have ⟨d, (_ : n + d ≃ m₁)⟩ := OrderBase.le_defn.mp ‹n ≤ m₁›
+  apply OrderBase.le_defn.mpr
+  exists d
+  show n + d ≃ m₂
+  exact Eqv.trans ‹n + d ≃ m₁› ‹m₁ ≃ m₂›
+
+instance [AdditionBase ℕ] [OrderBase ℕ]
+    : AA.SubstitutiveForHand AA.Hand.L (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·) where
+  subst₂ := le_substL
+
+instance [AdditionBase ℕ] [OrderBase ℕ]
+    : AA.SubstitutiveForHand AA.Hand.R (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·) where
+  subst₂ := le_substR
+
+instance [AdditionBase ℕ] [OrderBase ℕ]
+    : AA.Substitutive₂ (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·) where
+  substitutiveL := inferInstance
+  substitutiveR := inferInstance
+
+theorem le_refl [AdditionBase ℕ] [OrderBase ℕ] {n : ℕ} : n ≤ n := by
+  apply OrderBase.le_defn.mpr
+  exists (0 : ℕ)
+  show n + 0 ≃ n
+  exact AdditionProperties.add_zero
+
+theorem le_step_split
+    [AdditionBase ℕ] [OrderBase ℕ] {n m : ℕ}
+    : n ≤ step m → n ≤ m ∨ n ≃ step m := by
+  intro (_ : n ≤ step m)
+  show n ≤ m ∨ n ≃ step m
+  have ⟨d, (_ : n + d ≃ step m)⟩ := OrderBase.le_defn.mp ‹n ≤ step m›
+  apply (casesOn (motive := λ x => d ≃ x → n ≤ m ∨ n ≃ step m) d · · Eqv.refl)
+  · intro (_ : d ≃ 0)
+    apply Or.inr
+    show n ≃ step m
+    calc
+      _ ≃ n      := Eqv.refl
+      _ ≃ n + 0  := Eqv.symm AdditionProperties.add_zero
+      _ ≃ n + d  := Eqv.symm (AA.substR ‹d ≃ 0›)
+      _ ≃ step m := ‹n + d ≃ step m›
+  · intro e (_ : d ≃ step e)
+    apply Or.inl
+    show n ≤ m
+    apply OrderBase.le_defn.mpr
+    exists e
+    show n + e ≃ m
+    apply Axioms.step_injective
+    show step (n + e) ≃ step m
+    calc
+      _ ≃ step (n + e) := Eqv.refl
+      _ ≃ n + step e   := Eqv.symm AdditionProperties.add_step
+      _ ≃ n + d        := Eqv.symm (AA.substR ‹d ≃ step e›)
+      _ ≃ step m       := ‹n + d ≃ step m›
+
+theorem le_step
+    [AdditionBase ℕ] [OrderBase ℕ] {n m : ℕ} : n ≤ m → n ≤ step m := by
+  intro (_ : n ≤ m)
+  show n ≤ step m
+  have ⟨d, (_ : n + d ≃ m)⟩ := OrderBase.le_defn.mp ‹n ≤ m›
+  apply OrderBase.le_defn.mpr
+  exists step d
+  show n + step d ≃ step m
+  calc
+    _ ≃ n + step d   := Eqv.refl
+    _ ≃ step (n + d) := AdditionProperties.add_step
+    _ ≃ step m       := AA.subst ‹n + d ≃ m›
+
+theorem le_trans
+    [AdditionBase ℕ] [OrderBase ℕ] {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k := by
+  intro (_ : n ≤ m)
+  have ⟨d, (_ : n + d ≃ m)⟩ := OrderBase.le_defn.mp ‹n ≤ m›
+  apply recOn (motive := λ k => m ≤ k → n ≤ k) k
+  case zero =>
+    intro (_ : m ≤ 0)
+    have ⟨e, (_ : m + e ≃ 0)⟩ := OrderBase.le_defn.mp ‹m ≤ 0›
+    show n ≤ 0
+    apply OrderBase.le_defn.mpr
+    exists d + e
+    show n + (d + e) ≃ 0
+    calc
+      _ ≃ n + (d + e) := Eqv.refl
+      _ ≃ (n + d) + e := Eqv.symm AdditionProperties.add_assoc
+      _ ≃ m + e       := AA.substL ‹n + d ≃ m›
+      _ ≃ 0           := ‹m + e ≃ 0›
+  case step =>
+    intro k (ih : m ≤ k → n ≤ k) (_ : m ≤ step k)
+    show n ≤ step k
+    match le_step_split ‹m ≤ step k› with
+    | Or.inl (_ : m ≤ k) =>
+      exact le_step (ih ‹m ≤ k›)
+    | Or.inr (_ : m ≃ step k) =>
+      exact AA.substR (rβ := (· → ·)) ‹m ≃ step k› ‹n ≤ m›
+
 theorem lt_step [AdditionBase ℕ] [OrderBase ℕ] {n : ℕ} : n < step n := by
   show n < step n
   apply OrderBase.lt_defn.mpr
@@ -356,6 +473,9 @@ theorem lt_step [AdditionBase ℕ] [OrderBase ℕ] {n : ℕ} : n < step n := by
     exact Eqv.symm AxiomProperties.step_neq
 
 instance [AdditionBase ℕ] : OrderProperties ℕ where
+  le_subst₂ := inferInstance
+  le_refl := le_refl
+  le_trans := le_trans
   lt_step := lt_step
 
 end Derived

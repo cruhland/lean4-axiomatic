@@ -69,6 +69,9 @@ class Substitutive₂
   substitutiveL : SubstitutiveForHand Hand.L f rα rβ
   substitutiveR : SubstitutiveForHand Hand.R f rα rβ
 
+attribute [instance] Substitutive₂.substitutiveL
+attribute [instance] Substitutive₂.substitutiveR
+
 instance neq.substL
     {α : Sort u} [EqvOp α]
     : SubstitutiveForHand Hand.L (α := α) (· ≄ ·) (· ≃ ·) (· → ·) := by
