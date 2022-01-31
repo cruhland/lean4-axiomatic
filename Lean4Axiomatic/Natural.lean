@@ -82,6 +82,7 @@ attribute [instance default+1] OrderBase.ltOp
 class OrderProperties (ℕ : Type) [AdditionBase ℕ] extends OrderBase ℕ where
   le_subst₂ : AA.Substitutive₂ (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·)
   le_refl {n : ℕ} : n ≤ n
+  le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m
   le_trans {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k
   lt_step {n : ℕ} : n < step n
 
@@ -392,6 +393,26 @@ theorem le_refl [AdditionBase ℕ] [OrderBase ℕ] {n : ℕ} : n ≤ n := by
   show n + 0 ≃ n
   exact AdditionProperties.add_zero
 
+theorem le_antisymm
+    [AdditionBase ℕ] [OrderBase ℕ] {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m := by
+  intro (_ : n ≤ m) (_ : m ≤ n)
+  show n ≃ m
+  have ⟨d₁, (_ : n + d₁ ≃ m)⟩ := OrderBase.le_defn.mp ‹n ≤ m›
+  have ⟨d₂, (_ : m + d₂ ≃ n)⟩ := OrderBase.le_defn.mp ‹m ≤ n›
+  have : n + (d₁ + d₂) ≃ n + 0 := calc
+    _ ≃ n + (d₁ + d₂) := Eqv.refl
+    _ ≃ (n + d₁) + d₂ := Eqv.symm AdditionProperties.add_assoc
+    _ ≃ m + d₂        := AA.substL ‹n + d₁ ≃ m›
+    _ ≃ n             := ‹m + d₂ ≃ n›
+    _ ≃ n + 0         := Eqv.symm AdditionProperties.add_zero
+  have : d₁ + d₂ ≃ 0 := AdditionProperties.cancel_add ‹n + (d₁ + d₂) ≃ n + 0›
+  have ⟨(_ : d₁ ≃ 0), _⟩ := AdditionProperties.zero_sum_split ‹d₁ + d₂ ≃ 0›
+  calc
+    _ ≃ n      := Eqv.refl
+    _ ≃ n + 0  := Eqv.symm AdditionProperties.add_zero
+    _ ≃ n + d₁ := Eqv.symm (AA.substR ‹d₁ ≃ 0›)
+    _ ≃ m      := ‹n + d₁ ≃ m›
+
 theorem le_step_split
     [AdditionBase ℕ] [OrderBase ℕ] {n m : ℕ}
     : n ≤ step m → n ≤ m ∨ n ≃ step m := by
@@ -475,6 +496,7 @@ theorem lt_step [AdditionBase ℕ] [OrderBase ℕ] {n : ℕ} : n < step n := by
 instance [AdditionBase ℕ] : OrderProperties ℕ where
   le_subst₂ := inferInstance
   le_refl := le_refl
+  le_antisymm := le_antisymm
   le_trans := le_trans
   lt_step := lt_step
 
