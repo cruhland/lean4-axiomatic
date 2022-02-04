@@ -66,6 +66,7 @@ export SignBase (Positive)
 
 class SignProperties (ℕ : Type) [AdditionBase ℕ] extends SignBase ℕ where
   positive_subst : AA.Substitutive Positive (· ≃ ·) (· → ·)
+  positive_step {n : ℕ} : Positive n → ∃ m : ℕ, step m ≃ n
   positive_add {n m : ℕ} : Positive n → Positive (n + m)
 
 class OrderBase (ℕ : Type) [AdditionBase ℕ] where
@@ -88,6 +89,7 @@ class OrderProperties (ℕ : Type) [AdditionBase ℕ] extends OrderBase ℕ wher
   le_cancel_add : AA.Cancellative₂ (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·)
 
   lt_step {n : ℕ} : n < step n
+  lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m
 
 attribute [instance] OrderProperties.le_subst_eqv
 
@@ -324,6 +326,23 @@ instance
     : AA.Substitutive (α := ℕ) Positive (· ≃ ·) (· → ·) where
   subst := positive_subst
 
+theorem positive_step
+    [Axioms ℕ] [SignBase ℕ] {n : ℕ} : Positive n → ∃ m : ℕ, step m ≃ n := by
+  apply casesOn (motive := λ n => Positive n → ∃ m, step m ≃ n) n
+  case zero =>
+    intro (_ : Positive (0 : ℕ))
+    apply False.elim
+    show False
+    have : 0 ≄ 0 := SignBase.positive_defn.mp ‹Positive (0 : ℕ)›
+    apply this
+    show 0 ≃ 0
+    exact Eqv.refl
+  case step =>
+    intro n (_ : Positive (step n))
+    exists n
+    show step n ≃ step n
+    exact Eqv.refl
+
 theorem positive_add
     [AdditionBase ℕ] [SignBase ℕ] {n m : ℕ}
     : Positive n → Positive (n + m) := by
@@ -345,6 +364,7 @@ theorem positive_add
 
 instance signProperties [AdditionBase ℕ] [SignBase ℕ] : SignProperties ℕ where
   positive_subst := inferInstance
+  positive_step := positive_step
   positive_add := positive_add
 
 instance [AdditionBase ℕ] : OrderBase ℕ where
@@ -555,6 +575,59 @@ theorem lt_step [AdditionBase ℕ] [OrderBase ℕ] {n : ℕ} : n < step n := by
   · show n ≄ step n
     exact Eqv.symm AxiomProperties.step_neq
 
+theorem lt_step_le
+    [AdditionBase ℕ] [OrderBase ℕ] {n m : ℕ} : n < m ↔ step n ≤ m := by
+  apply Iff.intro
+  · intro (_ : n < m)
+    show step n ≤ m
+    have ⟨(_ : n ≤ m), (_ : n ≄ m)⟩ := OrderBase.lt_defn.mp ‹n < m›
+    have ⟨d, (_ : n + d ≃ m)⟩ := OrderBase.le_defn.mp ‹n ≤ m›
+    have : d ≄ 0 := by
+      intro (_ : d ≃ 0)
+      show False
+      apply ‹n ≄ m›
+      show n ≃ m
+      calc
+        _ ≃ n     := Eqv.refl
+        _ ≃ n + 0 := Eqv.symm AdditionProperties.add_zero
+        _ ≃ n + d := Eqv.symm (AA.substR ‹d ≃ 0›)
+        _ ≃ m     := ‹n + d ≃ m›
+    have : Positive d := SignBase.positive_defn.mpr ‹d ≄ 0›
+    have ⟨d', (_ : step d' ≃ d)⟩ := SignProperties.positive_step ‹Positive d›
+    show step n ≤ m
+    apply OrderBase.le_defn.mpr
+    exists d'
+    show step n + d' ≃ m
+    calc
+      _ ≃ step n + d'   := Eqv.refl
+      _ ≃ step (n + d') := AdditionBase.step_add
+      _ ≃ n + step d'   := Eqv.symm AdditionProperties.add_step
+      _ ≃ n + d         := AA.substR ‹step d' ≃ d›
+      _ ≃ m             := ‹n + d ≃ m›
+  · intro (_ : step n ≤ m)
+    show n < m
+    have ⟨d, (_ : step n + d ≃ m)⟩ := OrderBase.le_defn.mp ‹step n ≤ m›
+    have : n + step d ≃ m := calc
+      _ ≃ n + step d   := Eqv.refl
+      _ ≃ step (n + d) := AdditionProperties.add_step
+      _ ≃ step n + d   := Eqv.symm AdditionBase.step_add
+      _ ≃ m            := ‹step n + d ≃ m›
+    have : ∃ d, n + d ≃ m := ⟨step d, ‹n + step d ≃ m›⟩
+    have : n ≤ m := OrderBase.le_defn.mpr ‹∃ d, n + d ≃ m›
+    have : n ≄ m := by
+      intro (_ : n ≃ m)
+      show False
+      have : n + step d ≃ n + 0 := calc
+        _ ≃ n + step d := Eqv.refl
+        _ ≃ m := ‹n + step d ≃ m›
+        _ ≃ n := Eqv.symm ‹n ≃ m›
+        _ ≃ n + 0 := Eqv.symm AdditionProperties.add_zero
+      have : step d ≃ 0 := AdditionProperties.cancel_add ‹n + step d ≃ n + 0›
+      exact absurd this Axioms.step_neq_zero
+    show n < m
+    apply OrderBase.lt_defn.mpr
+    exact ⟨‹n ≤ m›, ‹n ≄ m›⟩
+
 instance [AdditionBase ℕ] : OrderProperties ℕ where
   le_subst_eqv := inferInstance
   le_refl := inferInstance
@@ -563,6 +636,7 @@ instance [AdditionBase ℕ] : OrderProperties ℕ where
   le_cancel_add := inferInstance
   le_antisymm := le_antisymm
   lt_step := lt_step
+  lt_step_le := lt_step_le
 
 end Derived
 
