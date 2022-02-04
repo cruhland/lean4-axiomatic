@@ -80,13 +80,16 @@ attribute [instance default+1] OrderBase.leOp
 attribute [instance default+1] OrderBase.ltOp
 
 class OrderProperties (ℕ : Type) [AdditionBase ℕ] extends OrderBase ℕ where
-  le_subst₂ : AA.Substitutive₂ (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·)
-  le_refl {n : ℕ} : n ≤ n
+  le_subst_eqv : AA.Substitutive₂ (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·)
+  le_refl : Relation.Refl (α := ℕ) (· ≤ ·)
+  le_trans : Relation.Trans (α := ℕ) (· ≤ ·)
   le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m
-  le_trans {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k
+  le_subst_add : AA.Substitutive₂ (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·)
+  le_cancel_add : AA.Cancellative₂ (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·)
+
   lt_step {n : ℕ} : n < step n
 
-attribute [instance] OrderProperties.le_subst₂
+attribute [instance] OrderProperties.le_subst_eqv
 
 class Decl (ℕ : Type) where
   [toAddition : Addition ℕ]
@@ -194,7 +197,7 @@ theorem subst_add
       show 0 + m ≃ step n₂ + m
       apply False.elim
       show False
-      exact Axioms.step_neq_zero (Eqv.symm ‹0 ≃ step n₂›) 
+      exact Axioms.step_neq_zero (Eqv.symm ‹0 ≃ step n₂›)
   case step =>
     intro n₁ (ih : ∀ y, n₁ ≃ y → n₁ + m ≃ y + m) n₂
     show step n₁ ≃ n₂ → step n₁ + m ≃ n₂ + m
@@ -224,9 +227,8 @@ instance [AdditionBase ℕ]
   AA.substR_from_substL_swap
 
 instance
-    [AdditionBase ℕ] : AA.Substitutive₂ (α := ℕ) (· + ·) (· ≃ ·) (· ≃ ·) where
-  substitutiveL := inferInstance
-  substitutiveR := inferInstance
+    [AdditionBase ℕ] : AA.Substitutive₂ (α := ℕ) (· + ·) (· ≃ ·) (· ≃ ·) :=
+  AA.Substitutive₂.mk
 
 theorem add_one_step [AdditionBase ℕ] {n : ℕ} : n + 1 ≃ step n := by
   calc
@@ -315,7 +317,7 @@ theorem positive_subst
   have : n₁ ≄ 0 := SignBase.positive_defn.mp ‹Positive n₁›
   apply SignBase.positive_defn.mpr
   show n₂ ≄ 0
-  exact AA.substL (inst := AA.neq.substL) ‹n₁ ≃ n₂› ‹n₁ ≄ 0›
+  exact AA.substL (self := AA.neq.substL) ‹n₁ ≃ n₂› ‹n₁ ≄ 0›
 
 instance
     [Constructors ℕ] [Equality ℕ] [SignBase ℕ]
@@ -349,7 +351,7 @@ instance [AdditionBase ℕ] : OrderBase ℕ where
   le_defn {n m : ℕ} := Iff.intro id id
   lt_defn {n m : ℕ} := Iff.intro id id
 
-theorem le_substL
+theorem le_subst_eqv
     [AdditionBase ℕ] [OrderBase ℕ] {n₁ n₂ m : ℕ}
     : n₁ ≃ n₂ → n₁ ≤ m → n₂ ≤ m := by
   intro (_ : n₁ ≃ n₂) (_ : n₁ ≤ m)
@@ -363,7 +365,11 @@ theorem le_substL
     _ ≃ n₁ + d := Eqv.symm (AA.substL ‹n₁ ≃ n₂›)
     _ ≃ m      := ‹n₁ + d ≃ m›
 
-theorem le_substR
+instance [AdditionBase ℕ] [OrderBase ℕ]
+    : AA.SubstitutiveForHand AA.Hand.L (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·) where
+  subst₂ := le_subst_eqv
+
+theorem le_eqv_subst
     [AdditionBase ℕ] [OrderBase ℕ] {n m₁ m₂ : ℕ}
     : m₁ ≃ m₂ → n ≤ m₁ → n ≤ m₂ := by
   intro (_ : m₁ ≃ m₂) (_ : n ≤ m₁)
@@ -375,17 +381,12 @@ theorem le_substR
   exact Eqv.trans ‹n + d ≃ m₁› ‹m₁ ≃ m₂›
 
 instance [AdditionBase ℕ] [OrderBase ℕ]
-    : AA.SubstitutiveForHand AA.Hand.L (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·) where
-  subst₂ := le_substL
-
-instance [AdditionBase ℕ] [OrderBase ℕ]
     : AA.SubstitutiveForHand AA.Hand.R (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·) where
-  subst₂ := le_substR
+  subst₂ := le_eqv_subst
 
 instance [AdditionBase ℕ] [OrderBase ℕ]
-    : AA.Substitutive₂ (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·) where
-  substitutiveL := inferInstance
-  substitutiveR := inferInstance
+    : AA.Substitutive₂ (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·) :=
+  AA.Substitutive₂.mk
 
 theorem le_refl [AdditionBase ℕ] [OrderBase ℕ] {n : ℕ} : n ≤ n := by
   apply OrderBase.le_defn.mpr
@@ -393,25 +394,8 @@ theorem le_refl [AdditionBase ℕ] [OrderBase ℕ] {n : ℕ} : n ≤ n := by
   show n + 0 ≃ n
   exact AdditionProperties.add_zero
 
-theorem le_antisymm
-    [AdditionBase ℕ] [OrderBase ℕ] {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m := by
-  intro (_ : n ≤ m) (_ : m ≤ n)
-  show n ≃ m
-  have ⟨d₁, (_ : n + d₁ ≃ m)⟩ := OrderBase.le_defn.mp ‹n ≤ m›
-  have ⟨d₂, (_ : m + d₂ ≃ n)⟩ := OrderBase.le_defn.mp ‹m ≤ n›
-  have : n + (d₁ + d₂) ≃ n + 0 := calc
-    _ ≃ n + (d₁ + d₂) := Eqv.refl
-    _ ≃ (n + d₁) + d₂ := Eqv.symm AdditionProperties.add_assoc
-    _ ≃ m + d₂        := AA.substL ‹n + d₁ ≃ m›
-    _ ≃ n             := ‹m + d₂ ≃ n›
-    _ ≃ n + 0         := Eqv.symm AdditionProperties.add_zero
-  have : d₁ + d₂ ≃ 0 := AdditionProperties.cancel_add ‹n + (d₁ + d₂) ≃ n + 0›
-  have ⟨(_ : d₁ ≃ 0), _⟩ := AdditionProperties.zero_sum_split ‹d₁ + d₂ ≃ 0›
-  calc
-    _ ≃ n      := Eqv.refl
-    _ ≃ n + 0  := Eqv.symm AdditionProperties.add_zero
-    _ ≃ n + d₁ := Eqv.symm (AA.substR ‹d₁ ≃ 0›)
-    _ ≃ m      := ‹n + d₁ ≃ m›
+instance [AdditionBase ℕ] [OrderBase ℕ] : Relation.Refl (α := ℕ) (· ≤ ·) where
+  refl := le_refl
 
 theorem le_step_split
     [AdditionBase ℕ] [OrderBase ℕ] {n m : ℕ}
@@ -481,6 +465,84 @@ theorem le_trans
     | Or.inr (_ : m ≃ step k) =>
       exact AA.substR (rβ := (· → ·)) ‹m ≃ step k› ‹n ≤ m›
 
+instance [AdditionBase ℕ] [OrderBase ℕ] : Relation.Trans (α := ℕ) (· ≤ ·) where
+  trans := le_trans
+
+theorem le_subst_add
+    [AdditionBase ℕ] [OrderBase ℕ] {n₁ n₂ m : ℕ}
+    : n₁ ≤ n₂ → n₁ + m ≤ n₂ + m := by
+  intro (_ : n₁ ≤ n₂)
+  show n₁ + m ≤ n₂ + m
+  have ⟨d, (_ : n₁ + d ≃ n₂)⟩ := OrderBase.le_defn.mp ‹n₁ ≤ n₂›
+  apply OrderBase.le_defn.mpr
+  exists d
+  show (n₁ + m) + d ≃ n₂ + m
+  calc
+    _ ≃ (n₁ + m) + d := Eqv.refl
+    _ ≃ n₁ + (m + d) := AdditionProperties.add_assoc
+    _ ≃ n₁ + (d + m) := AA.substR AA.comm
+    _ ≃ (n₁ + d) + m := Eqv.symm AdditionProperties.add_assoc
+    _ ≃ n₂ + m       := AA.substL ‹n₁ + d ≃ n₂›
+
+instance [AdditionBase ℕ] [OrderBase ℕ]
+    : AA.SubstitutiveForHand AA.Hand.L (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) where
+  subst₂ := le_subst_add
+
+instance [AdditionBase ℕ] [OrderBase ℕ]
+    : AA.SubstitutiveForHand AA.Hand.R (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) :=
+  AA.substR_from_substL_swap
+
+instance [AdditionBase ℕ] [OrderBase ℕ]
+    : AA.Substitutive₂ (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) :=
+  AA.Substitutive₂.mk
+
+theorem le_cancel_add
+    [AdditionBase ℕ] [OrderBase ℕ] {n m₁ m₂ : ℕ}
+    : n + m₁ ≤ n + m₂ → m₁ ≤ m₂ := by
+  intro (_ : n + m₁ ≤ n + m₂)
+  show m₁ ≤ m₂
+  have ⟨d, (_ : (n + m₁) + d ≃ n + m₂)⟩ :=
+    OrderBase.le_defn.mp ‹n + m₁ ≤ n + m₂›
+  apply OrderBase.le_defn.mpr
+  exists d
+  show m₁ + d ≃ m₂
+  have : n + (m₁ + d) ≃ n + m₂ := calc
+    _ ≃ n + (m₁ + d) := Eqv.refl
+    _ ≃ (n + m₁) + d := Eqv.symm AdditionProperties.add_assoc
+    _ ≃ n + m₂       := ‹(n + m₁) + d ≃ n + m₂›
+  exact AdditionProperties.cancel_add ‹n + (m₁ + d) ≃ n + m₂›
+
+instance [AdditionBase ℕ] [OrderBase ℕ]
+    : AA.Cancellative AA.Hand.L (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) where
+  cancel := le_cancel_add
+
+instance [AdditionBase ℕ] [OrderBase ℕ]
+    : AA.Cancellative AA.Hand.R (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) :=
+  AA.cancelR_from_cancelL
+
+instance [AdditionBase ℕ] [OrderBase ℕ]
+    : AA.Cancellative₂ (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) := AA.Cancellative₂.mk
+
+theorem le_antisymm
+    [AdditionBase ℕ] [OrderBase ℕ] {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m := by
+  intro (_ : n ≤ m) (_ : m ≤ n)
+  show n ≃ m
+  have ⟨d₁, (_ : n + d₁ ≃ m)⟩ := OrderBase.le_defn.mp ‹n ≤ m›
+  have ⟨d₂, (_ : m + d₂ ≃ n)⟩ := OrderBase.le_defn.mp ‹m ≤ n›
+  have : n + (d₁ + d₂) ≃ n + 0 := calc
+    _ ≃ n + (d₁ + d₂) := Eqv.refl
+    _ ≃ (n + d₁) + d₂ := Eqv.symm AdditionProperties.add_assoc
+    _ ≃ m + d₂        := AA.substL ‹n + d₁ ≃ m›
+    _ ≃ n             := ‹m + d₂ ≃ n›
+    _ ≃ n + 0         := Eqv.symm AdditionProperties.add_zero
+  have : d₁ + d₂ ≃ 0 := AdditionProperties.cancel_add ‹n + (d₁ + d₂) ≃ n + 0›
+  have ⟨(_ : d₁ ≃ 0), _⟩ := AdditionProperties.zero_sum_split ‹d₁ + d₂ ≃ 0›
+  calc
+    _ ≃ n      := Eqv.refl
+    _ ≃ n + 0  := Eqv.symm AdditionProperties.add_zero
+    _ ≃ n + d₁ := Eqv.symm (AA.substR ‹d₁ ≃ 0›)
+    _ ≃ m      := ‹n + d₁ ≃ m›
+
 theorem lt_step [AdditionBase ℕ] [OrderBase ℕ] {n : ℕ} : n < step n := by
   show n < step n
   apply OrderBase.lt_defn.mpr
@@ -494,10 +556,12 @@ theorem lt_step [AdditionBase ℕ] [OrderBase ℕ] {n : ℕ} : n < step n := by
     exact Eqv.symm AxiomProperties.step_neq
 
 instance [AdditionBase ℕ] : OrderProperties ℕ where
-  le_subst₂ := inferInstance
-  le_refl := le_refl
+  le_subst_eqv := inferInstance
+  le_refl := inferInstance
+  le_trans := inferInstance
+  le_subst_add := inferInstance
+  le_cancel_add := inferInstance
   le_antisymm := le_antisymm
-  le_trans := le_trans
   lt_step := lt_step
 
 end Derived
