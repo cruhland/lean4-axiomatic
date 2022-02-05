@@ -81,15 +81,21 @@ attribute [instance default+1] OrderBase.leOp
 attribute [instance default+1] OrderBase.ltOp
 
 class OrderProperties (ℕ : Type) [AdditionBase ℕ] extends OrderBase ℕ where
+  le_subst_step : AA.Substitutive (α := ℕ) step (· ≤ ·) (· ≤ ·)
   le_subst_eqv : AA.Substitutive₂ (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·)
   le_refl : Relation.Refl (α := ℕ) (· ≤ ·)
   le_trans : Relation.Trans (α := ℕ) (· ≤ ·)
   le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m
   le_subst_add : AA.Substitutive₂ (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·)
   le_cancel_add : AA.Cancellative₂ (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·)
+  le_from_eqv {n m : ℕ} : n ≃ m → n ≤ m
+  le_from_lt {n m : ℕ} : n < m → n ≤ m
+  le_split {n m : ℕ} : n ≤ m → n < m ∨ n ≃ m
 
+  lt_trans : Relation.Trans (α := ℕ) (· < ·)
   lt_step {n : ℕ} : n < step n
   lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m
+  trichotomy {n m : ℕ} : AA.ExactlyOneOfThree (n < m) (n ≃ m) (n > m)
 
 attribute [instance] OrderProperties.le_subst_eqv
 
@@ -371,6 +377,24 @@ instance [AdditionBase ℕ] : OrderBase ℕ where
   le_defn {n m : ℕ} := Iff.intro id id
   lt_defn {n m : ℕ} := Iff.intro id id
 
+theorem le_subst_step
+    [AdditionBase ℕ] [OrderBase ℕ] {n₁ n₂ : ℕ}
+    : n₁ ≤ n₂ → step n₁ ≤ step n₂ := by
+  intro (_ : n₁ ≤ n₂)
+  show step n₁ ≤ step n₂
+  have ⟨d, (_ : n₁ + d ≃ n₂)⟩ := OrderBase.le_defn.mp ‹n₁ ≤ n₂›
+  apply OrderBase.le_defn.mpr
+  exists d
+  show step n₁ + d ≃ step n₂
+  calc
+    _ ≃ step n₁ + d := Eqv.refl
+    _ ≃ step (n₁ + d) := AdditionBase.step_add
+    _ ≃ step n₂ := AA.subst ‹n₁ + d ≃ n₂›
+
+instance [AdditionBase ℕ] [OrderBase ℕ]
+    : AA.Substitutive (α := ℕ) step (· ≤ ·) (· ≤ ·) where
+  subst := le_subst_step
+
 theorem le_subst_eqv
     [AdditionBase ℕ] [OrderBase ℕ] {n₁ n₂ m : ℕ}
     : n₁ ≃ n₂ → n₁ ≤ m → n₂ ≤ m := by
@@ -628,15 +652,145 @@ theorem lt_step_le
     apply OrderBase.lt_defn.mpr
     exact ⟨‹n ≤ m›, ‹n ≄ m›⟩
 
+theorem le_from_eqv
+    [AdditionBase ℕ] [OrderBase ℕ] {n m : ℕ} : n ≃ m → n ≤ m := by
+  intro (_ : n ≃ m)
+  show n ≤ m
+  have : n ≤ n := Eqv.refl
+  exact AA.substR (rβ := (· → ·)) ‹n ≃ m› ‹n ≤ n›
+
+theorem le_from_lt
+    [AdditionBase ℕ] [OrderBase ℕ] {n m : ℕ} : n < m → n ≤ m := by
+  intro (_ : n < m)
+  show n ≤ m
+  have ⟨(_ : n ≤ m), _⟩ := OrderBase.lt_defn.mp ‹n < m›
+  exact ‹n ≤ m›
+
+theorem le_split
+    [AdditionBase ℕ] [OrderBase ℕ] {n m : ℕ} : n ≤ m → n < m ∨ n ≃ m := by
+  intro (_ : n ≤ m)
+  show n < m ∨ n ≃ m
+  have ⟨d, (h : n + d ≃ m)⟩ := OrderBase.le_defn.mp ‹n ≤ m›
+  revert h
+  apply casesOn (motive := λ d => n + d ≃ m → n < m ∨ n ≃ m) d
+  case zero =>
+    intro (_ : n + 0 ≃ m)
+    apply Or.inr
+    show n ≃ m
+    calc
+      _ ≃ n     := Eqv.refl
+      _ ≃ n + 0 := Eqv.symm add_zero
+      _ ≃ m     := ‹n + 0 ≃ m›
+  case step =>
+    intro d (_ : n + step d ≃ m)
+    apply Or.inl
+    show n < m
+    apply lt_step_le.mpr
+    show step n ≤ m
+    apply OrderBase.le_defn.mpr
+    exists d
+    show step n + d ≃ m
+    calc
+      _ ≃ step n + d   := Eqv.refl
+      _ ≃ step (n + d) := AdditionBase.step_add
+      _ ≃ n + step d   := Eqv.symm add_step
+      _ ≃ m            := ‹n + step d ≃ m›
+
+theorem lt_trans
+    [AdditionBase ℕ] [OrderBase ℕ] {n m k : ℕ} : n < m → m < k → n < k := by
+  intro (_ : n < m) (_ : m < k)
+  show n < k
+  apply lt_step_le.mpr
+  show step n ≤ k
+  calc
+    _ ≤ step n := Eqv.refl
+    _ ≤ m      := lt_step_le.mp ‹n < m›
+    _ ≤ step m := le_from_lt lt_step
+    _ ≤ k      := lt_step_le.mp ‹m < k›
+
+instance [AdditionBase ℕ] [OrderBase ℕ]: Relation.Trans (α := ℕ) (· < ·) where
+  trans := lt_trans
+
+theorem trichotomy
+    [AdditionBase ℕ] [OrderBase ℕ] {n m : ℕ}
+    : AA.ExactlyOneOfThree (n < m) (n ≃ m) (n > m) := by
+  constructor
+  case atLeastOne =>
+    apply recOn (motive := λ n => AA.OneOfThree (n < m) (n ≃ m) (n > m)) n
+    case zero =>
+      show AA.OneOfThree (0 < m) (0 ≃ m) (0 > m)
+      apply casesOn
+        (motive := λ m : ℕ => AA.OneOfThree (0 < m) (0 ≃ m) (0 > m)) m
+      case zero =>
+        apply AA.OneOfThree.second
+        show 0 ≃ 0
+        exact Eqv.refl
+      case step =>
+        intro m
+        apply AA.OneOfThree.first
+        show 0 < step m
+        apply OrderBase.lt_defn.mpr
+        apply And.intro
+        · show 0 ≤ step m
+          apply OrderBase.le_defn.mpr
+          exists step m
+          exact AdditionBase.zero_add
+        · show 0 ≄ step m
+          exact Eqv.symm Axioms.step_neq_zero
+    case step =>
+      intro n (ih : AA.OneOfThree (n < m) (n ≃ m) (n > m))
+      show AA.OneOfThree (step n < m) (step n ≃ m) (step n > m)
+      match ih with
+      | AA.OneOfThree.first (_ : n < m) =>
+        have : step n ≤ m := lt_step_le.mp ‹n < m›
+        have : step n < m ∨ step n ≃ m := le_split ‹step n ≤ m›
+        match ‹step n < m ∨ step n ≃ m› with
+        | Or.inl (_ : step n < m) => exact AA.OneOfThree.first ‹step n < m›
+        | Or.inr (_ : step n ≃ m) => exact AA.OneOfThree.second ‹step n ≃ m›
+      | AA.OneOfThree.second (_ : n ≃ m) =>
+        have : m ≃ n := Eqv.symm ‹n ≃ m›
+        have : m ≤ n := le_from_eqv ‹m ≃ n›
+        have : step m ≤ step n := AA.subst ‹m ≤ n›
+        have : m < step n := lt_step_le.mpr ‹step m ≤ step n›
+        apply AA.OneOfThree.third
+        exact ‹m < step n›
+      | AA.OneOfThree.third (_ : n > m) =>
+        apply AA.OneOfThree.third
+        show m < step n
+        exact Eqv.trans ‹m < n› lt_step
+  case atMostOne =>
+    show ¬ AA.TwoOfThree (n < m) (n ≃ m) (n > m)
+    intro
+    | AA.TwoOfThree.oneAndTwo (_ : n < m) (_ : n ≃ m) =>
+      show False
+      have ⟨_, (_ : n ≄ m)⟩ := OrderBase.lt_defn.mp ‹n < m›
+      exact absurd ‹n ≃ m› ‹n ≄ m›
+    | AA.TwoOfThree.oneAndThree (_ : n < m) (_ : n > m) =>
+      show False
+      have ⟨(_ : n ≤ m), (_ : n ≄ m)⟩ := OrderBase.lt_defn.mp ‹n < m›
+      have ⟨(_ : m ≤ n), _⟩ := OrderBase.lt_defn.mp ‹n > m›
+      have : n ≃ m := le_antisymm ‹n ≤ m› ‹m ≤ n›
+      exact absurd ‹n ≃ m› ‹n ≄ m›
+    | AA.TwoOfThree.twoAndThree (_ : n ≃ m) (_ : n > m) =>
+      show False
+      have ⟨_, (_ : m ≄ n)⟩ := OrderBase.lt_defn.mp ‹n > m›
+      exact absurd ‹n ≃ m› (Eqv.symm ‹m ≄ n›)
+
 instance [AdditionBase ℕ] : OrderProperties ℕ where
+  le_subst_step := inferInstance
   le_subst_eqv := inferInstance
   le_refl := inferInstance
   le_trans := inferInstance
   le_subst_add := inferInstance
   le_cancel_add := inferInstance
   le_antisymm := le_antisymm
+  le_from_eqv := le_from_eqv
+  le_from_lt := le_from_lt
+  le_split := le_split
+  lt_trans := inferInstance
   lt_step := lt_step
   lt_step_le := lt_step_le
+  trichotomy := trichotomy
 
 end Derived
 

@@ -129,4 +129,18 @@ def cancelR_from_cancelL
   have : rβ (f x y₁) (f x y₂) := AA.substR (rβ := (· → ·)) AA.comm this
   exact AA.cancelL this
 
+inductive OneOfThree (α β γ : Prop) : Prop where
+| first  (a : α)
+| second (b : β)
+| third  (c : γ)
+
+inductive TwoOfThree (α β γ : Prop) : Prop where
+| oneAndTwo   (a : α) (b : β)
+| oneAndThree (a : α) (c : γ)
+| twoAndThree (b : β) (c : γ)
+
+structure ExactlyOneOfThree (α β γ : Prop) : Prop where
+  atLeastOne :   OneOfThree α β γ
+  atMostOne  : ¬ TwoOfThree α β γ
+
 end AA
