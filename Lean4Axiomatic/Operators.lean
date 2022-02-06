@@ -15,4 +15,8 @@ class TildeDashQuestion (α : Sort u) (β : outParam (α → α → Sort v)) whe
 
 infix:50 " ≃? " => TildeDashQuestion.tildeDashQuestion
 
+def ltNot {α : Type u} [LT α] (x y : α) : Prop := ¬ (x < y)
+
+infix:50 " ≮ " => ltNot
+
 end Operators

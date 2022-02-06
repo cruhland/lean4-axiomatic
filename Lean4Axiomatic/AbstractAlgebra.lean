@@ -18,6 +18,13 @@ class Substitutive
 
 export Substitutive (subst)
 
+class Injective
+    {α : Sort u} {β : Sort v} (f : α → β)
+    (rα : outParam (α → α → Prop)) (rβ : β → β → Prop) where
+  inject {x₁ x₂ : α} : rβ (f x₁) (f x₂) → rα x₁ x₂
+
+export Injective (inject)
+
 class SubstitutiveForHand
     (hand : Hand) {α : Sort u} {β : Sort v} (f : α → α → β)
     (rα : outParam (α → α → Prop)) (rβ : β → β → Prop) where

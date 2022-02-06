@@ -27,13 +27,14 @@ attribute [instance] Equality.eqvOp?
 
 class Axioms (ℕ : Type) extends Constructors ℕ, Equality ℕ where
   step_substitutive : AA.Substitutive step (· ≃ ·) (· ≃ ·)
-  step_injective {n m : ℕ} : step n ≃ step m → n ≃ m
+  step_injective : AA.Injective step (· ≃ ·) (· ≃ ·)
   step_neq_zero {n : ℕ} : step n ≄ 0
 
   ind {motive : ℕ → Prop}
     : motive 0 → (∀ n, motive n → motive (step n)) → ∀ n, motive n
 
 attribute [instance] Axioms.step_substitutive
+attribute [instance] Axioms.step_injective
 
 class AxiomProperties (ℕ : Type) [Axioms ℕ] where
   step_neq {n : ℕ} : step n ≄ n
@@ -82,6 +83,7 @@ attribute [instance default+1] OrderBase.ltOp
 
 class OrderProperties (ℕ : Type) [AdditionBase ℕ] extends OrderBase ℕ where
   le_subst_step : AA.Substitutive (α := ℕ) step (· ≤ ·) (· ≤ ·)
+  le_inject_step : AA.Injective (α := ℕ) step (· ≤ ·) (· ≤ ·)
   le_subst_eqv : AA.Substitutive₂ (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·)
   le_refl : Relation.Refl (α := ℕ) (· ≤ ·)
   le_trans : Relation.Trans (α := ℕ) (· ≤ ·)
@@ -92,9 +94,12 @@ class OrderProperties (ℕ : Type) [AdditionBase ℕ] extends OrderBase ℕ wher
   le_from_lt {n m : ℕ} : n < m → n ≤ m
   le_split {n m : ℕ} : n ≤ m → n < m ∨ n ≃ m
 
+  lt_subst_eqv : AA.Substitutive₂ (α := ℕ) (· < ·) (· ≃ ·) (· → ·)
   lt_trans : Relation.Trans (α := ℕ) (· < ·)
+  lt_zero {n : ℕ} : n ≮ 0
   lt_step {n : ℕ} : n < step n
   lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m
+  lt_split {n m : ℕ} : n < step m → n < m ∨ n ≃ m
   trichotomy {n m : ℕ} : AA.ExactlyOneOfThree (n < m) (n ≃ m) (n > m)
 
 attribute [instance] OrderProperties.le_subst_eqv
@@ -135,7 +140,7 @@ instance [Axioms ℕ] : AxiomProperties ℕ where
       show False
       apply ih
       show step n ≃ n
-      exact Axioms.step_injective ‹step (step n) ≃ step n›
+      exact AA.inject ‹step (step n) ≃ step n›
 
 theorem add_zero [AdditionBase ℕ] {n : ℕ} : n + 0 ≃ n := by
   apply recOn (motive := λ n => n + 0 ≃ n) n
@@ -219,7 +224,7 @@ theorem subst_add
     case step =>
       intro n₂ (_ : step n₁ ≃ step n₂)
       show step n₁ + m ≃ step n₂ + m
-      have : n₁ ≃ n₂ := Axioms.step_injective ‹step n₁ ≃ step n₂›
+      have : n₁ ≃ n₂ := AA.inject ‹step n₁ ≃ step n₂›
       calc
         _ ≃ step n₁ + m   := Eqv.refl
         _ ≃ step (n₁ + m) := AdditionBase.step_add
@@ -279,7 +284,7 @@ theorem cancel_add [AdditionBase ℕ] {n m k : ℕ} : n + m ≃ n + k → m ≃ 
     show m ≃ k
     apply ih
     show n + m ≃ n + k
-    apply Axioms.step_injective
+    apply AA.inject (β := ℕ) (f := step) (rβ := (· ≃ ·))
     show step (n + m) ≃ step (n + k)
     calc
       _ ≃ step (n + m) := Eqv.refl
@@ -395,6 +400,26 @@ instance [AdditionBase ℕ] [OrderBase ℕ]
     : AA.Substitutive (α := ℕ) step (· ≤ ·) (· ≤ ·) where
   subst := le_subst_step
 
+theorem le_inject_step
+    [AdditionBase ℕ] [OrderBase ℕ] {n₁ n₂ : ℕ}
+    : step n₁ ≤ step n₂ → n₁ ≤ n₂ := by
+  intro (_ : step n₁ ≤ step n₂)
+  show n₁ ≤ n₂
+  have ⟨d, (_ : step n₁ + d ≃ step n₂)⟩ :=
+    OrderBase.le_defn.mp ‹step n₁ ≤ step n₂›
+  apply OrderBase.le_defn.mpr
+  exists d
+  show n₁ + d ≃ n₂
+  have : step (n₁ + d) ≃ step n₂ := calc
+    _ ≃ step (n₁ + d) := Eqv.refl
+    _ ≃ step n₁ + d := Eqv.symm AdditionBase.step_add
+    _ ≃ step n₂ := ‹step n₁ + d ≃ step n₂›
+  exact AA.inject ‹step (n₁ + d) ≃ step n₂›
+
+instance [AdditionBase ℕ] [OrderBase ℕ]
+    : AA.Injective (α := ℕ) step (· ≤ ·) (· ≤ ·) where
+  inject := le_inject_step
+
 theorem le_subst_eqv
     [AdditionBase ℕ] [OrderBase ℕ] {n₁ n₂ m : ℕ}
     : n₁ ≃ n₂ → n₁ ≤ m → n₂ ≤ m := by
@@ -462,7 +487,7 @@ theorem le_step_split
     apply OrderBase.le_defn.mpr
     exists e
     show n + e ≃ m
-    apply Axioms.step_injective
+    apply AA.inject (β := ℕ) (f := step) (rβ := (· ≃ ·))
     show step (n + e) ≃ step m
     calc
       _ ≃ step (n + e) := Eqv.refl
@@ -587,6 +612,39 @@ theorem le_antisymm
     _ ≃ n + d₁ := Eqv.symm (AA.substR ‹d₁ ≃ 0›)
     _ ≃ m      := ‹n + d₁ ≃ m›
 
+theorem lt_subst_eqv
+    [AdditionBase ℕ] [OrderBase ℕ] {n₁ n₂ m : ℕ}
+    : n₁ ≃ n₂ → n₁ < m → n₂ < m := by
+  intro (_ : n₁ ≃ n₂) (_ : n₁ < m)
+  show n₂ < m
+  have ⟨(_ : n₁ ≤ m), (_ : n₁ ≄ m)⟩ := OrderBase.lt_defn.mp ‹n₁ < m›
+  have : n₂ ≤ m := AA.substL (rβ := (· → ·)) ‹n₁ ≃ n₂› ‹n₁ ≤ m›
+  have : n₂ ≄ m := AA.substL (f := (· ≄ ·)) (rβ := (· → ·)) ‹n₁ ≃ n₂› ‹n₁ ≄ m›
+  apply OrderBase.lt_defn.mpr
+  exact ⟨‹n₂ ≤ m›, ‹n₂ ≄ m›⟩
+
+instance [AdditionBase ℕ] [OrderBase ℕ]
+    : AA.SubstitutiveForHand AA.Hand.L (α := ℕ) (· < ·) (· ≃ ·) (· → ·) where
+  subst₂ := lt_subst_eqv
+
+theorem lt_eqv_subst
+    [AdditionBase ℕ] [OrderBase ℕ] {n₁ n₂ m : ℕ}
+    : n₁ ≃ n₂ → m < n₁ → m < n₂ := by
+  intro (_ : n₁ ≃ n₂) (_ : m < n₁)
+  show m < n₂
+  have ⟨(_ : m ≤ n₁), (_ : m ≄ n₁)⟩ := OrderBase.lt_defn.mp ‹m < n₁›
+  have : m ≤ n₂ := AA.substR (rβ := (· → ·)) ‹n₁ ≃ n₂› ‹m ≤ n₁›
+  have : m ≄ n₂ := AA.substR (f := (· ≄ ·)) (rβ := (· → ·)) ‹n₁ ≃ n₂› ‹m ≄ n₁›
+  apply OrderBase.lt_defn.mpr
+  exact ⟨‹m ≤ n₂›, ‹m ≄ n₂›⟩
+
+instance [AdditionBase ℕ] [OrderBase ℕ]
+    : AA.SubstitutiveForHand AA.Hand.R (α := ℕ) (· < ·) (· ≃ ·) (· → ·) where
+  subst₂ := lt_eqv_subst
+
+instance [AdditionBase ℕ] [OrderBase ℕ]
+    : AA.Substitutive₂ (α := ℕ) (· < ·) (· ≃ ·) (· → ·) := AA.Substitutive₂.mk
+
 theorem lt_step [AdditionBase ℕ] [OrderBase ℕ] {n : ℕ} : n < step n := by
   show n < step n
   apply OrderBase.lt_defn.mpr
@@ -652,6 +710,17 @@ theorem lt_step_le
     apply OrderBase.lt_defn.mpr
     exact ⟨‹n ≤ m›, ‹n ≄ m›⟩
 
+theorem lt_zero [AdditionBase ℕ] [OrderBase ℕ] {n : ℕ} : n ≮ 0 := by
+  intro (_ : n < 0)
+  show False
+  have : step n ≤ 0 := lt_step_le.mp ‹n < 0›
+  have ⟨d, (_ : step n + d ≃ 0)⟩ := OrderBase.le_defn.mp ‹step n ≤ 0›
+  have : step (n + d) ≃ 0 := calc
+    _ ≃ step (n + d) := Eqv.refl
+    _ ≃ step n + d   := Eqv.symm AdditionBase.step_add
+    _ ≃ 0            := ‹step n + d ≃ 0›
+  exact absurd ‹step (n + d) ≃ 0› Axioms.step_neq_zero
+
 theorem le_from_eqv
     [AdditionBase ℕ] [OrderBase ℕ] {n m : ℕ} : n ≃ m → n ≤ m := by
   intro (_ : n ≃ m)
@@ -695,6 +764,14 @@ theorem le_split
       _ ≃ step (n + d) := AdditionBase.step_add
       _ ≃ n + step d   := Eqv.symm add_step
       _ ≃ m            := ‹n + step d ≃ m›
+
+theorem lt_split
+    [AdditionBase ℕ] [OrderBase ℕ] {n m : ℕ} : n < step m → n < m ∨ n ≃ m := by
+  intro (_ : n < step m)
+  show n < m ∨ n ≃ m
+  have : step n ≤ step m := lt_step_le.mp ‹n < step m›
+  have : n ≤ m := AA.inject ‹step n ≤ step m›
+  exact le_split ‹n ≤ m›
 
 theorem lt_trans
     [AdditionBase ℕ] [OrderBase ℕ] {n m k : ℕ} : n < m → m < k → n < k := by
@@ -778,6 +855,7 @@ theorem trichotomy
 
 instance [AdditionBase ℕ] : OrderProperties ℕ where
   le_subst_step := inferInstance
+  le_inject_step := inferInstance
   le_subst_eqv := inferInstance
   le_refl := inferInstance
   le_trans := inferInstance
@@ -787,9 +865,12 @@ instance [AdditionBase ℕ] : OrderProperties ℕ where
   le_from_eqv := le_from_eqv
   le_from_lt := le_from_lt
   le_split := le_split
+  lt_subst_eqv := inferInstance
   lt_trans := inferInstance
+  lt_zero := lt_zero
   lt_step := lt_step
   lt_step_le := lt_step_le
+  lt_split := lt_split
   trichotomy := trichotomy
 
 end Derived
@@ -816,6 +897,9 @@ instance : AA.Substitutive (step : Nat → Nat) (· ≃ ·) (· ≃ ·) where
 theorem succ_injective {n m : Nat} : Nat.succ n = Nat.succ m → n = m
 | Eq.refl _ => Eq.refl _
 
+instance : AA.Injective (step : Nat → Nat) (· ≃ ·) (· ≃ ·) where
+  inject := succ_injective
+
 def indImpl
     {motive : Nat → Sort v}
     (mz : motive 0) (ms : {n : Nat} → motive n → motive (Nat.succ n)) (n : Nat)
@@ -826,7 +910,7 @@ def indImpl
 
 instance : Axioms Nat where
   step_substitutive := inferInstance
-  step_injective := succ_injective
+  step_injective := inferInstance
   step_neq_zero := Nat.noConfusion
   -- 2022-01-11: Using `Nat.rec` directly here, gives the following error:
   -- code generator does not support recursor 'Nat.rec' yet, consider using
