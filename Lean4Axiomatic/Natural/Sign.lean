@@ -1,6 +1,6 @@
 import Lean4Axiomatic.Natural.Addition
 
-namespace Natural
+namespace ℕ
 
 class SignBase (ℕ : Type) [Constructors ℕ] [Equality ℕ] where
   Positive (n : ℕ) : Prop := n ≄ 0
@@ -78,4 +78,4 @@ instance signProperties [AdditionBase ℕ] [SignBase ℕ] : SignProperties ℕ w
 
 end Derived
 
-end Natural
+end ℕ

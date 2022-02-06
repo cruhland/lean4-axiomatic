@@ -6,7 +6,7 @@ import Lean4Axiomatic.Natural.Sign
 
 open Operators (TildeDash)
 
-namespace Natural
+namespace ℕ
 
 class Decl (ℕ : Type) where
   [toAddition : Addition ℕ]
@@ -17,4 +17,4 @@ attribute [instance] Decl.toAddition
 attribute [instance] Decl.toSignProperties
 attribute [instance] Decl.toOrderProperties
 
-end Natural
+end ℕ

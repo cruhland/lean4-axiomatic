@@ -1,7 +1,7 @@
 import Lean4Axiomatic.AbstractAlgebra
 import Lean4Axiomatic.Eqv
 
-namespace Natural
+namespace ℕ
 
 open Relation (EqvOp?)
 
@@ -68,4 +68,4 @@ instance [Axioms ℕ] : AxiomProperties ℕ where
 
 end Derived
 
-end Natural
+end ℕ

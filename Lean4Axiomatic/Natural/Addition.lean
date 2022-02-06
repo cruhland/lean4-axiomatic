@@ -1,6 +1,6 @@
 import Lean4Axiomatic.Natural.Core
 
-namespace Natural
+namespace ℕ
 
 class AdditionBase (ℕ : Type) extends Axioms ℕ where
   addOp : Add ℕ
@@ -205,4 +205,4 @@ instance additionProperties [AdditionBase ℕ] : AdditionProperties ℕ where
 
 end Derived
 
-end Natural
+end ℕ

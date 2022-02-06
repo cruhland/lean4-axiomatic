@@ -1,6 +1,6 @@
 import Lean4Axiomatic.Natural.Sign
 
-namespace Natural
+namespace ℕ
 
 class OrderBase (ℕ : Type) [AdditionBase ℕ] where
   leOp : LE ℕ := LE.mk λ n m => ∃ k : ℕ, n + k ≃ m
@@ -537,4 +537,4 @@ instance [AdditionBase ℕ] : OrderProperties ℕ where
 
 end Derived
 
-end Natural
+end ℕ
