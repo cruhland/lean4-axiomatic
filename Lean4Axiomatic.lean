@@ -1,3 +1,3 @@
-import Lean4Axiomatic.Natural
+import Lean4Axiomatic.Natural.Impl.Nat
 
 def hello := "world"
