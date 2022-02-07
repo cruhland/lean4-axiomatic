@@ -5,18 +5,20 @@ namespace ℕ
 
 open Relation (EqvOp?)
 
+variable {ℕ : Type}
+
 class Constructors (ℕ : Type) where
   zero : ℕ
   step : ℕ → ℕ
 
 export Constructors (zero step)
 
-def ofNatImpl {ℕ : Type} [Constructors ℕ] : Nat → ℕ
+def ofNat {ℕ : Type} [Constructors ℕ] : Nat → ℕ
 | 0 => zero
-| n+1 => step (ofNatImpl n)
+| n+1 => step (ofNat n)
 
 instance instOfNat {ℕ : Type} [Constructors ℕ] {n : Nat} : OfNat ℕ n where
-  ofNat := ofNatImpl n
+  ofNat := ofNat n
 
 class Equality (ℕ : Type) where
   eqvOp? : EqvOp? ℕ
@@ -34,26 +36,33 @@ class Axioms (ℕ : Type) extends Constructors ℕ, Equality ℕ where
 attribute [instance] Axioms.step_substitutive
 attribute [instance] Axioms.step_injective
 
-class AxiomProperties (ℕ : Type) [Axioms ℕ] where
+class Axioms.Derived (ℕ : Type) [Axioms ℕ] where
+  ind_on
+    {motive : ℕ → Prop} (n : ℕ)
+    (zero : motive 0) (step : ∀ m, motive m → motive (step m)) : motive n
+
+  cases_on
+    {motive : ℕ → Prop} (n : ℕ)
+    (zero : motive 0) (step : ∀ n, motive (step n)) : motive n
+
   step_neq {n : ℕ} : step n ≄ n
 
-namespace Derived
-
-variable {ℕ : Type}
-
-def recOn
+def ind_on
     [Axioms ℕ] {motive : ℕ → Prop} (n : ℕ)
     (zero : motive 0) (step : ∀ m, motive m → motive (step m)) : motive n :=
   Axioms.ind zero step n
 
-def casesOn
+def cases_on
     [Axioms ℕ] {motive : ℕ → Prop} (n : ℕ)
     (zero : motive 0) (step : ∀ n, motive (step n)) : motive n :=
-  recOn n zero (λ n ih => step n)
+  ind_on n zero (λ n ih => step n)
 
-instance [Axioms ℕ] : AxiomProperties ℕ where
+instance [Axioms ℕ] : Axioms.Derived ℕ where
+  ind_on := ind_on
+  cases_on := cases_on
+
   step_neq {n : ℕ} : step n ≄ n := by
-    apply recOn (motive := λ n => step n ≄ n) n
+    apply ind_on (motive := λ n => step n ≄ n) n
     case zero =>
       show step 0 ≄ 0
       exact Axioms.step_neq_zero
@@ -65,7 +74,5 @@ instance [Axioms ℕ] : AxiomProperties ℕ where
       apply ih
       show step n ≃ n
       exact AA.inject ‹step (step n) ≃ step n›
-
-end Derived
 
 end ℕ

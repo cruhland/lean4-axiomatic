@@ -134,7 +134,7 @@ theorem le_step_split
   intro (_ : n ≤ step m)
   show n ≤ m ∨ n ≃ step m
   have ⟨d, (_ : n + d ≃ step m)⟩ := OrderBase.le_defn.mp ‹n ≤ step m›
-  apply (casesOn (motive := λ x => d ≃ x → n ≤ m ∨ n ≃ step m) d · · Eqv.refl)
+  apply (cases_on (motive := λ x => d ≃ x → n ≤ m ∨ n ≃ step m) d · · Eqv.refl)
   · intro (_ : d ≃ 0)
     apply Or.inr
     show n ≃ step m
@@ -174,7 +174,7 @@ theorem le_trans
     [AdditionBase ℕ] [OrderBase ℕ] {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k := by
   intro (_ : n ≤ m)
   have ⟨d, (_ : n + d ≃ m)⟩ := OrderBase.le_defn.mp ‹n ≤ m›
-  apply recOn (motive := λ k => m ≤ k → n ≤ k) k
+  apply ind_on (motive := λ k => m ≤ k → n ≤ k) k
   case zero =>
     intro (_ : m ≤ 0)
     have ⟨e, (_ : m + e ≃ 0)⟩ := OrderBase.le_defn.mp ‹m ≤ 0›
@@ -317,7 +317,7 @@ theorem lt_step [AdditionBase ℕ] [OrderBase ℕ] {n : ℕ} : n < step n := by
     show n + 1 ≃ step n
     exact add_one_step
   · show n ≄ step n
-    exact Eqv.symm AxiomProperties.step_neq
+    exact Eqv.symm Axioms.Derived.step_neq
 
 theorem lt_step_le
     [AdditionBase ℕ] [OrderBase ℕ] {n m : ℕ} : n < m ↔ step n ≤ m := by
@@ -403,7 +403,7 @@ theorem le_split
   show n < m ∨ n ≃ m
   have ⟨d, (h : n + d ≃ m)⟩ := OrderBase.le_defn.mp ‹n ≤ m›
   revert h
-  apply casesOn (motive := λ d => n + d ≃ m → n < m ∨ n ≃ m) d
+  apply cases_on (motive := λ d => n + d ≃ m → n < m ∨ n ≃ m) d
   case zero =>
     intro (_ : n + 0 ≃ m)
     apply Or.inr
@@ -455,10 +455,10 @@ theorem trichotomy
     : AA.ExactlyOneOfThree (n < m) (n ≃ m) (n > m) := by
   constructor
   case atLeastOne =>
-    apply recOn (motive := λ n => AA.OneOfThree (n < m) (n ≃ m) (n > m)) n
+    apply ind_on (motive := λ n => AA.OneOfThree (n < m) (n ≃ m) (n > m)) n
     case zero =>
       show AA.OneOfThree (0 < m) (0 ≃ m) (0 > m)
-      apply casesOn
+      apply cases_on
         (motive := λ m : ℕ => AA.OneOfThree (0 < m) (0 ≃ m) (0 > m)) m
       case zero =>
         apply AA.OneOfThree.second

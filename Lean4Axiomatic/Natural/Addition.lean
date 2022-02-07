@@ -27,7 +27,7 @@ namespace Derived
 variable {ℕ : Type}
 
 theorem add_zero [AdditionBase ℕ] {n : ℕ} : n + 0 ≃ n := by
-  apply recOn (motive := λ n => n + 0 ≃ n) n
+  apply ind_on (motive := λ n => n + 0 ≃ n) n
   case zero =>
     show 0 + 0 ≃ 0
     calc
@@ -42,7 +42,7 @@ theorem add_zero [AdditionBase ℕ] {n : ℕ} : n + 0 ≃ n := by
       _ ≃ step n       := AA.subst ih
 
 theorem add_step [AdditionBase ℕ] {n m : ℕ} : n + step m ≃ step (n + m) := by
-  apply recOn (motive := λ n => n + step m ≃ step (n + m)) n
+  apply ind_on (motive := λ n => n + step m ≃ step (n + m)) n
   case zero =>
     show 0 + step m ≃ step (0 + m)
     calc
@@ -59,7 +59,7 @@ theorem add_step [AdditionBase ℕ] {n m : ℕ} : n + step m ≃ step (n + m) :=
       _ ≃ step (step n + m)   := AA.subst (Eqv.symm AdditionBase.step_add)
 
 theorem add_comm [AdditionBase ℕ] {n m : ℕ} : n + m ≃ m + n := by
-  apply recOn (motive := λ n => n + m ≃ m + n) n
+  apply ind_on (motive := λ n => n + m ≃ m + n) n
   case zero =>
     show 0 + m ≃ m + 0
     calc
@@ -80,11 +80,11 @@ instance [AdditionBase ℕ] : AA.Commutative (α := ℕ) (· + ·) where
 
 theorem subst_add
     [AdditionBase ℕ] {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m := by
-  apply recOn (motive := λ x => ∀ y, x ≃ y → x + m ≃ y + m) n₁
+  apply ind_on (motive := λ x => ∀ y, x ≃ y → x + m ≃ y + m) n₁
   case zero =>
     intro n₂
     show 0 ≃ n₂ → 0 + m ≃ n₂ + m
-    apply casesOn (motive := λ y => 0 ≃ y → 0 + m ≃ y + m)
+    apply cases_on (motive := λ y => 0 ≃ y → 0 + m ≃ y + m)
     case zero =>
       intro (_ : 0 ≃ (0 : ℕ))
       show 0 + m ≃ 0 + m
@@ -98,7 +98,7 @@ theorem subst_add
   case step =>
     intro n₁ (ih : ∀ y, n₁ ≃ y → n₁ + m ≃ y + m) n₂
     show step n₁ ≃ n₂ → step n₁ + m ≃ n₂ + m
-    apply casesOn (motive := λ y => step n₁ ≃ y → step n₁ + m ≃ y + m)
+    apply cases_on (motive := λ y => step n₁ ≃ y → step n₁ + m ≃ y + m)
     case zero =>
       intro (_ : step n₁ ≃ 0)
       show step n₁ + m ≃ 0 + m
@@ -136,7 +136,7 @@ theorem add_one_step [AdditionBase ℕ] {n : ℕ} : n + 1 ≃ step n := by
 
 theorem add_assoc
     [AdditionBase ℕ] {n m k : ℕ} : (n + m) + k ≃ n + (m + k) := by
-  apply recOn (motive := λ n => (n + m) + k ≃ n + (m + k)) n
+  apply ind_on (motive := λ n => (n + m) + k ≃ n + (m + k)) n
   case zero =>
     show (0 + m) + k ≃ 0 + (m + k)
     calc
@@ -154,7 +154,7 @@ theorem add_assoc
       _ ≃ step n + (m + k)   := Eqv.symm AdditionBase.step_add
 
 theorem cancel_add [AdditionBase ℕ] {n m k : ℕ} : n + m ≃ n + k → m ≃ k := by
-  apply recOn (motive := λ n => n + m ≃ n + k → m ≃ k) n
+  apply ind_on (motive := λ n => n + m ≃ n + k → m ≃ k) n
   case zero =>
     intro (_ : 0 + m ≃ 0 + k)
     show m ≃ k
@@ -178,7 +178,7 @@ theorem cancel_add [AdditionBase ℕ] {n m k : ℕ} : n + m ≃ n + k → m ≃ 
 
 theorem zero_sum_split
     [AdditionBase ℕ] {n m : ℕ} : n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0 := by
-  apply casesOn (motive := λ n => n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0) n
+  apply cases_on (motive := λ n => n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0) n
   case zero =>
     intro (_ : 0 + m ≃ 0)
     show 0 ≃ 0 ∧ m ≃ 0

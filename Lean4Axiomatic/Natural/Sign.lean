@@ -37,7 +37,7 @@ instance
 
 theorem positive_step
     [Axioms ℕ] [SignBase ℕ] {n : ℕ} : Positive n → ∃ m : ℕ, step m ≃ n := by
-  apply casesOn (motive := λ n => Positive n → ∃ m, step m ≃ n) n
+  apply cases_on (motive := λ n => Positive n → ∃ m, step m ≃ n) n
   case zero =>
     intro (_ : Positive (0 : ℕ))
     apply False.elim
@@ -57,7 +57,7 @@ theorem positive_add
     : Positive n → Positive (n + m) := by
   intro (_ : Positive n)
   show Positive (n + m)
-  apply casesOn (motive := λ m => Positive (n + m)) m
+  apply cases_on (motive := λ m => Positive (n + m)) m
   case zero =>
     show Positive (n + 0)
     apply AA.subst (rβ := (· → ·)) (Eqv.symm AdditionProperties.add_zero)
