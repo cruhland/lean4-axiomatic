@@ -52,7 +52,7 @@ theorem positive_add {n m : ℕ} : Positive n → Positive (n + m) := by
     show step (n + m) ≄ 0
     exact Axioms.step_neq_zero
 
-instance : Sign.Derived ℕ where
+instance sign_derived : Sign.Derived ℕ where
   positive_subst := inferInstance
   positive_step := positive_step
   positive_add := positive_add

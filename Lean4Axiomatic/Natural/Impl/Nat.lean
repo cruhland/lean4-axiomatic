@@ -1,7 +1,7 @@
 import Lean4Axiomatic.Eqv
 import Lean4Axiomatic.Natural
-import Lean4Axiomatic.Natural.Impl.Derived.Core
-import Lean4Axiomatic.Natural.Impl.Derived.Addition
+import Lean4Axiomatic.Natural.Impl.Default
+import Lean4Axiomatic.Natural.Impl.Derived
 
 open Relation (EqvOp?)
 

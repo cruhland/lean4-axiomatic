@@ -3,7 +3,7 @@ import Lean4Axiomatic.Natural.Addition
 namespace ℕ
 
 class Sign.Base (ℕ : Type) [Core ℕ] where
-  Positive (n : ℕ) : Prop := n ≄ 0
+  Positive (n : ℕ) : Prop
   positive_defn {n : ℕ} : Positive n ↔ n ≄ 0
 
 class Sign.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ]
@@ -13,7 +13,8 @@ class Sign.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ]
   positive_add {n m : ℕ} : Positive n → Positive (n + m)
 
 namespace Sign
-export Sign.Base (Positive)
+export Sign.Base (Positive positive_defn)
+export Sign.Derived (positive_step)
 end Sign
 
 export Sign (Positive)

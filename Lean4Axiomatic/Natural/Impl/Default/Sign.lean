@@ -5,7 +5,8 @@ namespace ℕ
 variable {ℕ : Type}
 variable [Core ℕ]
 
-instance : Sign.Base ℕ where
+instance sign_base : Sign.Base ℕ where
+  Positive (n : ℕ) := n ≄ 0
   positive_defn := Iff.intro id id
 
 end ℕ
