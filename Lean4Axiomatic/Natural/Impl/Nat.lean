@@ -1,5 +1,7 @@
 import Lean4Axiomatic.Eqv
 import Lean4Axiomatic.Natural
+import Lean4Axiomatic.Natural.Impl.Derived.Core
+import Lean4Axiomatic.Natural.Impl.Derived.Addition
 
 open Relation (EqvOp?)
 
@@ -21,6 +23,8 @@ instance : EqvOp? Nat where
 instance : Equality Nat where
   eqvOp? := inferInstance
 
+instance : Core Nat := Core.mk
+
 instance : AA.Substitutive (step : Nat → Nat) (· ≃ ·) (· ≃ ·) where
   subst := congrArg step
 
@@ -38,7 +42,7 @@ def indImpl
   | Nat.zero => mz
   | Nat.succ n => ms (indImpl mz ms n)
 
-instance : Axioms Nat where
+instance : Axioms.Base Nat where
   step_substitutive := inferInstance
   step_injective := inferInstance
   step_neq_zero := Nat.noConfusion
@@ -47,12 +51,11 @@ instance : Axioms Nat where
   -- 'match ... with' and/or structural recursion
   ind := indImpl
 
-instance : AdditionBase Nat where
+instance : Addition.Base Nat where
   addOp := inferInstance
   zero_add := @Nat.zero_add
   step_add := @Nat.succ_add
 
-instance : Addition Nat := Addition.mk
 instance : Decl Nat := Decl.mk
 
 end Nat

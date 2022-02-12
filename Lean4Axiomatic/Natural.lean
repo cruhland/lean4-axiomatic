@@ -9,12 +9,9 @@ open Operators (TildeDash)
 namespace ℕ
 
 class Decl (ℕ : Type) where
-  [toAddition : Addition ℕ]
-  [toSignProperties : SignProperties ℕ]
-  [toOrderProperties : OrderProperties ℕ]
-
-attribute [instance] Decl.toAddition
-attribute [instance] Decl.toSignProperties
-attribute [instance] Decl.toOrderProperties
+  [toCore : Core ℕ]
+  [toAddition : Addition.Derived ℕ]
+  [toSign : Sign.Derived ℕ]
+  [toOrder : Order.Derived ℕ]
 
 end ℕ

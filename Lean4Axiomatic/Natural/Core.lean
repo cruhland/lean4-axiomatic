@@ -25,18 +25,20 @@ class Equality (ℕ : Type) where
 
 attribute [instance] Equality.eqvOp?
 
-class Axioms (ℕ : Type) extends Constructors ℕ, Equality ℕ where
-  step_substitutive : AA.Substitutive step (· ≃ ·) (· ≃ ·)
-  step_injective : AA.Injective step (· ≃ ·) (· ≃ ·)
+class Core (ℕ : Type) extends Constructors ℕ, Equality ℕ
+
+class Axioms.Base (ℕ : Type) [Core ℕ] where
+  step_substitutive : AA.Substitutive (α := ℕ) step (· ≃ ·) (· ≃ ·)
+  step_injective : AA.Injective (α := ℕ) step (· ≃ ·) (· ≃ ·)
   step_neq_zero {n : ℕ} : step n ≄ 0
 
   ind {motive : ℕ → Prop}
     : motive 0 → (∀ n, motive n → motive (step n)) → ∀ n, motive n
 
-attribute [instance] Axioms.step_substitutive
-attribute [instance] Axioms.step_injective
+attribute [instance] Axioms.Base.step_substitutive
+attribute [instance] Axioms.Base.step_injective
 
-class Axioms.Derived (ℕ : Type) [Axioms ℕ] where
+class Axioms.Derived (ℕ : Type) [Core ℕ] extends Axioms.Base ℕ where
   ind_on
     {motive : ℕ → Prop} (n : ℕ)
     (zero : motive 0) (step : ∀ m, motive m → motive (step m)) : motive n
@@ -47,32 +49,11 @@ class Axioms.Derived (ℕ : Type) [Axioms ℕ] where
 
   step_neq {n : ℕ} : step n ≄ n
 
-def ind_on
-    [Axioms ℕ] {motive : ℕ → Prop} (n : ℕ)
-    (zero : motive 0) (step : ∀ m, motive m → motive (step m)) : motive n :=
-  Axioms.ind zero step n
+namespace Axioms
+export Axioms.Base (ind step_injective step_neq_zero)
+export Axioms.Derived (cases_on ind_on)
+end Axioms
 
-def cases_on
-    [Axioms ℕ] {motive : ℕ → Prop} (n : ℕ)
-    (zero : motive 0) (step : ∀ n, motive (step n)) : motive n :=
-  ind_on n zero (λ n ih => step n)
-
-instance [Axioms ℕ] : Axioms.Derived ℕ where
-  ind_on := ind_on
-  cases_on := cases_on
-
-  step_neq {n : ℕ} : step n ≄ n := by
-    apply ind_on (motive := λ n => step n ≄ n) n
-    case zero =>
-      show step 0 ≄ 0
-      exact Axioms.step_neq_zero
-    case step =>
-      intro n (ih : step n ≄ n)
-      show step (step n) ≄ step n
-      intro (_ : step (step n) ≃ step n)
-      show False
-      apply ih
-      show step n ≃ n
-      exact AA.inject ‹step (step n) ≃ step n›
+export Axioms (ind step_injective step_neq_zero)
 
 end ℕ
