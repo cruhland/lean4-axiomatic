@@ -5,7 +5,8 @@ import Lean4Axiomatic.Natural.Impl.Derived
 
 open Relation (EqvOp?)
 
-namespace ℕ
+namespace Lean4Axiomatic
+namespace Natural
 namespace Impl
 namespace Nat
 
@@ -60,4 +61,5 @@ instance : Decl Nat := Decl.mk
 
 end Nat
 end Impl
-end ℕ
+end Natural
+end Lean4Axiomatic

@@ -1,6 +1,7 @@
 import Lean4Axiomatic.Natural.Addition
 
-namespace ℕ
+namespace Lean4Axiomatic
+namespace Natural
 
 class Order.Base (ℕ : Type) [Core ℕ] [Addition.Base ℕ] where
   leOp : LE ℕ
@@ -37,4 +38,5 @@ class Order.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ]
 
 attribute [instance] Order.Derived.le_subst_eqv
 
-end ℕ
+end Natural
+end Lean4Axiomatic

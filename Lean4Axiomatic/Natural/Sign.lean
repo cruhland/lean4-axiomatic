@@ -1,6 +1,7 @@
 import Lean4Axiomatic.Natural.Addition
 
-namespace ℕ
+namespace Lean4Axiomatic
+namespace Natural
 
 class Sign.Base (ℕ : Type) [Core ℕ] where
   Positive (n : ℕ) : Prop
@@ -19,4 +20,5 @@ end Sign
 
 export Sign (Positive)
 
-end ℕ
+end Natural
+end Lean4Axiomatic

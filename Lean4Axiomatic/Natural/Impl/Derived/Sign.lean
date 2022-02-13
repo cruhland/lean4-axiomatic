@@ -1,6 +1,7 @@
 import Lean4Axiomatic.Natural.Sign
 
-namespace ℕ
+namespace Lean4Axiomatic
+namespace Natural
 
 variable {ℕ : Type}
 variable [Core ℕ]
@@ -57,4 +58,5 @@ instance sign_derived : Sign.Derived ℕ where
   positive_step := positive_step
   positive_add := positive_add
 
-end ℕ
+end Natural
+end Lean4Axiomatic

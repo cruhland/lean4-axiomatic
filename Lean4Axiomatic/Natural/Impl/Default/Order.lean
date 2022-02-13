@@ -1,6 +1,7 @@
 import Lean4Axiomatic.Natural.Order
 
-namespace ℕ
+namespace Lean4Axiomatic
+namespace Natural
 
 variable {ℕ : Type}
 variable [Core ℕ]
@@ -16,4 +17,5 @@ instance order_base : Order.Base ℕ where
   ltOp := inferInstance
   lt_defn {n m : ℕ} := Iff.intro id id
 
-end ℕ
+end Natural
+end Lean4Axiomatic

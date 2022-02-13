@@ -1,6 +1,7 @@
 import Lean4Axiomatic.Natural.Core
 
-namespace ℕ
+namespace Lean4Axiomatic
+namespace Natural
 
 class Addition.Base (ℕ : Type) [Core ℕ] where
   addOp : Add ℕ
@@ -31,4 +32,5 @@ end Addition
 
 export Addition (addOp step_add zero_add)
 
-end ℕ
+end Natural
+end Lean4Axiomatic

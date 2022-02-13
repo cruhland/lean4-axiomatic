@@ -1,7 +1,8 @@
 import Lean4Axiomatic.AbstractAlgebra
 import Lean4Axiomatic.Eqv
 
-namespace ℕ
+namespace Lean4Axiomatic
+namespace Natural
 
 open Relation (EqvOp?)
 
@@ -56,4 +57,5 @@ end Axioms
 
 export Axioms (ind step_injective step_neq_zero)
 
-end ℕ
+end Natural
+end Lean4Axiomatic

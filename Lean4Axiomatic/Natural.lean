@@ -6,7 +6,8 @@ import Lean4Axiomatic.Natural.Sign
 
 open Operators (TildeDash)
 
-namespace ℕ
+namespace Lean4Axiomatic
+namespace Natural
 
 class Decl (ℕ : Type) where
   [toCore : Core ℕ]
@@ -14,4 +15,5 @@ class Decl (ℕ : Type) where
   [toSign : Sign.Derived ℕ]
   [toOrder : Order.Derived ℕ]
 
-end ℕ
+end Natural
+end Lean4Axiomatic

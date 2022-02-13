@@ -1,6 +1,7 @@
 import Lean4Axiomatic.Natural.Addition
 
-namespace ℕ
+namespace Lean4Axiomatic
+namespace Natural
 
 variable {ℕ : Type}
 variable [Core ℕ]
@@ -179,4 +180,5 @@ instance addition_derived : Addition.Derived ℕ where
   cancel_add := cancel_add
   zero_sum_split := zero_sum_split
 
-end ℕ
+end Natural
+end Lean4Axiomatic

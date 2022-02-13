@@ -1,7 +1,8 @@
 import Lean4Axiomatic.Natural.Order
 import Lean4Axiomatic.Natural.Sign
 
-namespace ℕ
+namespace Lean4Axiomatic
+namespace Natural
 
 variable {ℕ : Type}
 variable [Core ℕ]
@@ -469,4 +470,5 @@ instance order_derived : Order.Derived ℕ where
   lt_split := lt_split
   trichotomy := trichotomy
 
-end ℕ
+end Natural
+end Lean4Axiomatic
