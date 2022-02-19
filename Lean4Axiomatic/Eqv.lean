@@ -52,11 +52,9 @@ instance
 
 namespace Eqv
 
-open Relation
-
-export Swap (swap)
-export Refl (refl)
-export Symm (symm)
-export Trans (trans)
+export Relation.Swap (swap)
+export Relation.Refl (refl)
+export Relation.Symm (symm)
+export Relation.Trans (trans)
 
 end Eqv

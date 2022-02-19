@@ -14,12 +14,12 @@ class Constructors (ℕ : Type) where
 
 export Constructors (zero step)
 
-def ofNat {ℕ : Type} [Constructors ℕ] : Nat → ℕ
+def fromNat {ℕ : Type} [Constructors ℕ] : Nat → ℕ
 | 0 => zero
-| n+1 => step (ofNat n)
+| n+1 => step (fromNat n)
 
-instance instOfNat {ℕ : Type} [Constructors ℕ] {n : Nat} : OfNat ℕ n where
-  ofNat := ofNat n
+instance ofNat {ℕ : Type} [Constructors ℕ] {n : Nat} : OfNat ℕ n where
+  ofNat := fromNat n
 
 class Equality (ℕ : Type) where
   eqvOp? : EqvOp? ℕ
@@ -51,11 +51,12 @@ class Axioms.Derived (ℕ : Type) [Core ℕ] extends Axioms.Base ℕ where
   step_neq {n : ℕ} : step n ≄ n
 
 namespace Axioms
-export Axioms.Base (ind step_injective step_neq_zero)
+export Axioms.Base (ind step_injective step_neq_zero step_substitutive)
 export Axioms.Derived (cases_on ind_on)
 end Axioms
 
-export Axioms (ind step_injective step_neq_zero)
+export Axioms (ind ind_on step_injective step_neq_zero step_substitutive)
+export Equality (eqvOp?)
 
 end Natural
 end Lean4Axiomatic

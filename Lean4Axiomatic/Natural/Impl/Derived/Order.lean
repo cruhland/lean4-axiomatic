@@ -4,6 +4,8 @@ import Lean4Axiomatic.Natural.Sign
 namespace Lean4Axiomatic
 namespace Natural
 
+namespace Derived
+
 variable {ℕ : Type}
 variable [Core ℕ]
 variable [Axioms.Derived ℕ]
@@ -23,7 +25,8 @@ theorem le_subst_step {n₁ n₂ : ℕ} : n₁ ≤ n₂ → step n₁ ≤ step n
     _ ≃ step (n₁ + d) := Addition.step_add
     _ ≃ step n₂ := AA.subst ‹n₁ + d ≃ n₂›
 
-instance : AA.Substitutive (α := ℕ) step (· ≤ ·) (· ≤ ·) where
+instance le_substitutive_step
+    : AA.Substitutive (α := ℕ) step (· ≤ ·) (· ≤ ·) where
   subst := le_subst_step
 
 theorem le_inject_step {n₁ n₂ : ℕ} : step n₁ ≤ step n₂ → n₁ ≤ n₂ := by
@@ -40,7 +43,7 @@ theorem le_inject_step {n₁ n₂ : ℕ} : step n₁ ≤ step n₂ → n₁ ≤ 
     _ ≃ step n₂ := ‹step n₁ + d ≃ step n₂›
   exact AA.inject ‹step (n₁ + d) ≃ step n₂›
 
-instance : AA.Injective (α := ℕ) step (· ≤ ·) (· ≤ ·) where
+instance le_injective_step : AA.Injective (α := ℕ) step (· ≤ ·) (· ≤ ·) where
   inject := le_inject_step
 
 theorem le_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ ≤ m → n₂ ≤ m := by
@@ -55,7 +58,7 @@ theorem le_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ ≤ m → n₂
     _ ≃ n₁ + d := Eqv.symm (AA.substL ‹n₁ ≃ n₂›)
     _ ≃ m      := ‹n₁ + d ≃ m›
 
-instance
+instance le_substL_eqv
     : AA.SubstitutiveForHand AA.Hand.L (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·) where
   subst₂ := le_subst_eqv
 
@@ -68,12 +71,14 @@ theorem le_eqv_subst {n m₁ m₂ : ℕ} : m₁ ≃ m₂ → n ≤ m₁ → n �
   show n + d ≃ m₂
   exact Eqv.trans ‹n + d ≃ m₁› ‹m₁ ≃ m₂›
 
-instance
+instance le_substR_eqv
     : AA.SubstitutiveForHand AA.Hand.R (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·) where
   subst₂ := le_eqv_subst
 
-instance : AA.Substitutive₂ (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·) :=
-  AA.Substitutive₂.mk
+instance le_substitutive_eqv
+    : AA.Substitutive₂ (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·) where
+  substitutiveL := le_substL_eqv
+  substitutiveR := le_substR_eqv
 
 theorem le_refl {n : ℕ} : n ≤ n := by
   apply Order.Base.le_defn.mpr
@@ -81,7 +86,7 @@ theorem le_refl {n : ℕ} : n ≤ n := by
   show n + 0 ≃ n
   exact Addition.add_zero
 
-instance : Relation.Refl (α := ℕ) (· ≤ ·) where
+instance le_reflexive : Relation.Refl (α := ℕ) (· ≤ ·) where
   refl := le_refl
 
 theorem le_step_split {n m : ℕ} : n ≤ step m → n ≤ m ∨ n ≃ step m := by
@@ -149,7 +154,7 @@ theorem le_trans {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k := by
     | Or.inr (_ : m ≃ step k) =>
       exact AA.substR (rβ := (· → ·)) ‹m ≃ step k› ‹n ≤ m›
 
-instance : Relation.Trans (α := ℕ) (· ≤ ·) where
+instance le_transitive : Relation.Trans (α := ℕ) (· ≤ ·) where
   trans := le_trans
 
 theorem le_subst_add {n₁ n₂ m : ℕ} : n₁ ≤ n₂ → n₁ + m ≤ n₂ + m := by
@@ -166,16 +171,18 @@ theorem le_subst_add {n₁ n₂ m : ℕ} : n₁ ≤ n₂ → n₁ + m ≤ n₂ +
     _ ≃ (n₁ + d) + m := Eqv.symm Addition.add_assoc
     _ ≃ n₂ + m       := AA.substL ‹n₁ + d ≃ n₂›
 
-instance
+instance le_substL_add
     : AA.SubstitutiveForHand AA.Hand.L (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) where
   subst₂ := le_subst_add
 
-instance
+instance le_substR_add
     : AA.SubstitutiveForHand AA.Hand.R (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) :=
-  AA.substR_from_substL_swap
+  AA.substR_from_substL_swap le_substL_add
 
-instance : AA.Substitutive₂ (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) :=
-  AA.Substitutive₂.mk
+instance le_substitutive_add
+    : AA.Substitutive₂ (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) where
+  substitutiveL := le_substL_add
+  substitutiveR := le_substR_add
 
 theorem le_cancel_add {n m₁ m₂ : ℕ} : n + m₁ ≤ n + m₂ → m₁ ≤ m₂ := by
   intro (_ : n + m₁ ≤ n + m₂)
@@ -191,14 +198,18 @@ theorem le_cancel_add {n m₁ m₂ : ℕ} : n + m₁ ≤ n + m₂ → m₁ ≤ m
     _ ≃ n + m₂       := ‹(n + m₁) + d ≃ n + m₂›
   exact Addition.cancel_add ‹n + (m₁ + d) ≃ n + m₂›
 
-instance : AA.Cancellative AA.Hand.L (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) where
+instance le_cancelL_add
+    : AA.Cancellative AA.Hand.L (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) where
   cancel := le_cancel_add
 
-instance : AA.Cancellative AA.Hand.R (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) :=
-  AA.cancelR_from_cancelL
+instance le_cancelR_add
+    : AA.Cancellative AA.Hand.R (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) :=
+  AA.cancelR_from_cancelL le_cancelL_add
 
-instance : AA.Cancellative₂ (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) :=
-  AA.Cancellative₂.mk
+instance le_cancellative_add
+    : AA.Cancellative₂ (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) where
+  cancellativeL := le_cancelL_add
+  cancellativeR := le_cancelR_add
 
 theorem le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m := by
   intro (_ : n ≤ m) (_ : m ≤ n)
@@ -228,7 +239,7 @@ theorem lt_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ < m → n₂ <
   apply Order.Base.lt_defn.mpr
   exact ⟨‹n₂ ≤ m›, ‹n₂ ≄ m›⟩
 
-instance
+instance lt_substL_eqv
     : AA.SubstitutiveForHand AA.Hand.L (α := ℕ) (· < ·) (· ≃ ·) (· → ·) where
   subst₂ := lt_subst_eqv
 
@@ -241,12 +252,14 @@ theorem lt_eqv_subst {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m < n₁ → m < n�
   apply Order.Base.lt_defn.mpr
   exact ⟨‹m ≤ n₂›, ‹m ≄ n₂›⟩
 
-instance
+instance lt_substR_eqv
     : AA.SubstitutiveForHand AA.Hand.R (α := ℕ) (· < ·) (· ≃ ·) (· → ·) where
   subst₂ := lt_eqv_subst
 
-instance : AA.Substitutive₂ (α := ℕ) (· < ·) (· ≃ ·) (· → ·) :=
-  AA.Substitutive₂.mk
+instance lt_substitutive_eqv
+    : AA.Substitutive₂ (α := ℕ) (· < ·) (· ≃ ·) (· → ·) where
+  substitutiveL := lt_substL_eqv
+  substitutiveR := lt_substR_eqv
 
 theorem lt_step {n : ℕ} : n < step n := by
   show n < step n
@@ -382,7 +395,7 @@ theorem lt_trans {n m k : ℕ} : n < m → m < k → n < k := by
     _ ≤ step m := le_from_lt lt_step
     _ ≤ k      := lt_step_le.mp ‹m < k›
 
-instance : Relation.Trans (α := ℕ) (· < ·) where
+instance lt_transitive : Relation.Trans (α := ℕ) (· < ·) where
   trans := lt_trans
 
 theorem trichotomy {n m : ℕ}
@@ -451,24 +464,26 @@ theorem trichotomy {n m : ℕ}
       exact absurd ‹n ≃ m› (Eqv.symm ‹m ≄ n›)
 
 instance order_derived : Order.Derived ℕ where
-  le_subst_step := inferInstance
-  le_inject_step := inferInstance
-  le_subst_eqv := inferInstance
-  le_refl := inferInstance
-  le_trans := inferInstance
-  le_subst_add := inferInstance
-  le_cancel_add := inferInstance
+  le_substitutive_step := le_substitutive_step
+  le_injective_step := le_injective_step
+  le_substitutive_eqv := le_substitutive_eqv
+  le_reflexive := le_reflexive
+  le_transitive := le_transitive
+  le_substitutive_add := le_substitutive_add
+  le_cancellative_add := le_cancellative_add
   le_antisymm := le_antisymm
   le_from_eqv := le_from_eqv
   le_from_lt := le_from_lt
   le_split := le_split
-  lt_subst_eqv := inferInstance
-  lt_trans := inferInstance
+  lt_substitutive_eqv := lt_substitutive_eqv
+  lt_transitive := lt_transitive
   lt_zero := lt_zero
   lt_step := lt_step
   lt_step_le := lt_step_le
   lt_split := lt_split
   trichotomy := trichotomy
+
+end Derived
 
 end Natural
 end Lean4Axiomatic

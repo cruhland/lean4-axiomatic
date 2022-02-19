@@ -3,6 +3,8 @@ import Lean4Axiomatic.Natural.Sign
 namespace Lean4Axiomatic
 namespace Natural
 
+namespace Derived
+
 variable {ℕ : Type}
 variable [Core ℕ]
 variable [Axioms.Derived ℕ]
@@ -15,9 +17,10 @@ theorem positive_subst {n₁ n₂ : ℕ} : n₁ ≃ n₂ → Positive n₁ → P
   have : n₁ ≄ 0 := Sign.Base.positive_defn.mp ‹Positive n₁›
   apply Sign.Base.positive_defn.mpr
   show n₂ ≄ 0
-  exact AA.substL (self := AA.neq.substL) ‹n₁ ≃ n₂› ‹n₁ ≄ 0›
+  exact AA.substL (self := AA.neq_substL) ‹n₁ ≃ n₂› ‹n₁ ≄ 0›
 
-instance : AA.Substitutive (α := ℕ) Positive (· ≃ ·) (· → ·) where
+instance positive_substitutive
+    : AA.Substitutive (α := ℕ) Positive (· ≃ ·) (· → ·) where
   subst := positive_subst
 
 theorem positive_step {n : ℕ} : Positive n → ∃ m : ℕ, step m ≃ n := by
@@ -54,9 +57,11 @@ theorem positive_add {n m : ℕ} : Positive n → Positive (n + m) := by
     exact Axioms.step_neq_zero
 
 instance sign_derived : Sign.Derived ℕ where
-  positive_subst := inferInstance
+  positive_substitutive := positive_substitutive
   positive_step := positive_step
   positive_add := positive_add
+
+end Derived
 
 end Natural
 end Lean4Axiomatic

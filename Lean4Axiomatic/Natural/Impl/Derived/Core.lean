@@ -4,6 +4,8 @@ import Lean4Axiomatic.Natural.Core
 namespace Lean4Axiomatic
 namespace Natural
 
+namespace Derived
+
 variable {ℕ : Type}
 variable [Core ℕ]
 variable [Axioms.Base ℕ]
@@ -36,6 +38,8 @@ instance axioms_derived : Axioms.Derived ℕ where
   ind_on := ind_on
   cases_on := cases_on
   step_neq := step_neq
+
+end Derived
 
 end Natural
 end Lean4Axiomatic

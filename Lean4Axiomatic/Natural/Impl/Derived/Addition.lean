@@ -3,6 +3,8 @@ import Lean4Axiomatic.Natural.Addition
 namespace Lean4Axiomatic
 namespace Natural
 
+namespace Derived
+
 variable {ℕ : Type}
 variable [Core ℕ]
 variable [Axioms.Derived ℕ]
@@ -57,7 +59,7 @@ theorem add_comm {n m : ℕ} : n + m ≃ m + n := by
       _ ≃ step (m + n) := AA.subst ih
       _ ≃ m + step n   := Eqv.symm add_step
 
-instance : AA.Commutative (α := ℕ) (· + ·) where
+instance add_commutative : AA.Commutative (α := ℕ) (· + ·) where
   comm := add_comm
 
 theorem subst_add {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m := by
@@ -96,15 +98,18 @@ theorem subst_add {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m 
         _ ≃ step (n₂ + m) := AA.subst (ih _ ‹n₁ ≃ n₂›)
         _ ≃ step n₂ + m   := Eqv.symm Addition.step_add
 
-instance
+instance add_substL
     : AA.SubstitutiveForHand AA.Hand.L (α := ℕ) (· + ·) (· ≃ ·) (· ≃ ·) where
   subst₂ := subst_add
 
-instance : AA.SubstitutiveForHand AA.Hand.R (α := ℕ) (· + ·) (· ≃ ·) (· ≃ ·) :=
-  AA.substR_from_substL_swap
+instance add_substR
+    : AA.SubstitutiveForHand AA.Hand.R (α := ℕ) (· + ·) (· ≃ ·) (· ≃ ·) :=
+  AA.substR_from_substL_swap add_substL
 
-instance : AA.Substitutive₂ (α := ℕ) (· + ·) (· ≃ ·) (· ≃ ·) :=
-  AA.Substitutive₂.mk
+instance add_substitutive
+    : AA.Substitutive₂ (α := ℕ) (· + ·) (· ≃ ·) (· ≃ ·) where
+  substitutiveL := add_substL
+  substitutiveR := add_substR
 
 theorem add_one_step {n : ℕ} : n + 1 ≃ step n := by
   calc
@@ -173,12 +178,14 @@ theorem zero_sum_split {n m : ℕ} : n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0 := by
 instance addition_derived : Addition.Derived ℕ where
   add_zero := add_zero
   add_step := add_step
-  add_subst := inferInstance
+  add_substitutive := add_substitutive
   add_one_step := add_one_step
-  add_comm := inferInstance
+  add_commutative := add_commutative
   add_assoc := add_assoc
   cancel_add := cancel_add
   zero_sum_split := zero_sum_split
+
+end Derived
 
 end Natural
 end Lean4Axiomatic

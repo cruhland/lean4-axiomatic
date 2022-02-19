@@ -40,8 +40,8 @@ class Substitutive₂
     {α : Sort u} {β : Sort v}
     (f : α → α → β) (rα : α → α → Prop) (rβ : β → β → Prop)
     where
-  [substitutiveL : SubstitutiveForHand Hand.L f rα rβ]
-  [substitutiveR : SubstitutiveForHand Hand.R f rα rβ]
+  substitutiveL : SubstitutiveForHand Hand.L f rα rβ
+  substitutiveR : SubstitutiveForHand Hand.R f rα rβ
 
 attribute [instance] Substitutive₂.substitutiveL
 attribute [instance] Substitutive₂.substitutiveR
@@ -65,8 +65,10 @@ instance
 def substR_from_substL_swap
     {α : Sort u} {β : Sort v} {f : α → α → β}
     {rα : α → α → Prop} {rβ : β → β → Prop}
-    [Trans rβ] [Swap f rβ] [SubstitutiveForHand Hand.L f rα rβ]
-    : SubstitutiveForHand Hand.R f rα rβ := by
+    [Trans rβ] [Swap f rβ]
+    : SubstitutiveForHand Hand.L f rα rβ →
+    SubstitutiveForHand Hand.R f rα rβ := by
+  intro
   constructor
   intro x₁ x₂ y (_ : rα x₁ x₂)
   show rβ (f y x₁) (f y x₂)
@@ -75,22 +77,23 @@ def substR_from_substL_swap
     rβ (f x₁ y) (f x₂ y) := AA.substL ‹rα x₁ x₂›
     rβ (f x₂ y) (f y x₂) := Swap.swap
 
-instance {α : Sort u} [EqvOp α]
+instance eqv_substL {α : Sort u} [EqvOp α]
     : SubstitutiveForHand Hand.L (α := α) (· ≃ ·) (· ≃ ·) (· → ·) := by
   constructor
   intro x₁ x₂ y (_ : x₁ ≃ x₂) (_ : x₁ ≃ y)
   show x₂ ≃ y
   exact Eqv.trans (Eqv.symm ‹x₁ ≃ x₂›) ‹x₁ ≃ y›
 
-instance {α : Sort u} [EqvOp α]
+instance eqv_substR {α : Sort u} [EqvOp α]
     : SubstitutiveForHand Hand.R (α := α) (· ≃ ·) (· ≃ ·) (· → ·) :=
-  substR_from_substL_swap
+  substR_from_substL_swap eqv_substL
 
-instance {α : Sort u} [EqvOp α]
-    : Substitutive₂ (α := α) (· ≃ ·) (· ≃ ·) (· → ·) :=
-  Substitutive₂.mk
+instance eqv_substitutive {α : Sort u} [EqvOp α]
+    : Substitutive₂ (α := α) (· ≃ ·) (· ≃ ·) (· → ·) where
+  substitutiveL := eqv_substL
+  substitutiveR := eqv_substR
 
-instance neq.substL
+instance neq_substL
     {α : Sort u} [EqvOp α]
     : SubstitutiveForHand Hand.L (α := α) (· ≄ ·) (· ≃ ·) (· → ·) := by
   constructor
@@ -100,11 +103,11 @@ instance neq.substL
   show x₁ ≃ y
   exact Eqv.trans ‹x₁ ≃ x₂› ‹x₂ ≃ y›
 
-instance
+instance neq_substitutive
     {α : Sort u} [EqvOp α] : Substitutive₂ (α := α) (· ≄ ·) (· ≃ ·) (· → ·)
     where
-  substitutiveL := inferInstance
-  substitutiveR := substR_from_substL_swap
+  substitutiveL := neq_substL
+  substitutiveR := substR_from_substL_swap neq_substL
 
 class Cancellative
     (hand : Hand) {α : Sort u} {β : Sort v}
@@ -120,15 +123,15 @@ abbrev cancelR := @cancel Hand.R
 class Cancellative₂
     {α : Sort u} {β : Sort v}
     (f : α → α → β) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop) where
-  [cancellativeL : Cancellative Hand.L f rα rβ]
-  [cancellativeR : Cancellative Hand.R f rα rβ]
+  cancellativeL : Cancellative Hand.L f rα rβ
+  cancellativeR : Cancellative Hand.R f rα rβ
 
 def cancelR_from_cancelL
     {α : Sort u} {β : Sort v}
     {f : α → α → β} {rα : α → α → Prop} {rβ : β → β → Prop}
     [EqvOp β] [Commutative f] [Substitutive₂ rβ (· ≃ ·) (· → ·)]
-    [Cancellative Hand.L f rα rβ]
-    : Cancellative Hand.R f rα rβ := by
+    : Cancellative Hand.L f rα rβ → Cancellative Hand.R f rα rβ := by
+  intro
   constructor
   intro x y₁ y₂ (hyp : rβ (f y₁ x) (f y₂ x))
   show rα y₁ y₂

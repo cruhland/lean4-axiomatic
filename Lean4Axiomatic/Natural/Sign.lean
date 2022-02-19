@@ -9,16 +9,16 @@ class Sign.Base (ℕ : Type) [Core ℕ] where
 
 class Sign.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ]
     extends Sign.Base ℕ where
-  positive_subst : AA.Substitutive Positive (· ≃ ·) (· → ·)
+  positive_substitutive : AA.Substitutive Positive (· ≃ ·) (· → ·)
   positive_step {n : ℕ} : Positive n → ∃ m : ℕ, step m ≃ n
   positive_add {n m : ℕ} : Positive n → Positive (n + m)
 
 namespace Sign
 export Sign.Base (Positive positive_defn)
-export Sign.Derived (positive_step)
+export Sign.Derived (positive_add positive_step)
 end Sign
 
-export Sign (Positive)
+export Sign (Positive positive_add positive_defn positive_step)
 
 end Natural
 end Lean4Axiomatic

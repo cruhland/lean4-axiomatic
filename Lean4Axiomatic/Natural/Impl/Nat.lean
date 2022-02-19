@@ -10,50 +10,51 @@ namespace Natural
 namespace Impl
 namespace Nat
 
-instance : Constructors Nat where
+instance constructors : Constructors Nat where
   zero := Nat.zero
   step := Nat.succ
 
-instance : EqvOp? Nat where
+instance eqvOp? : EqvOp? Nat where
   tildeDash := Eq
   refl := λ {x} => Eq.refl x
   symm := Eq.symm
   trans := Eq.trans
   tildeDashQuestion := Nat.decEq
 
-instance : Equality Nat where
-  eqvOp? := inferInstance
+instance equality : Equality Nat where
+  eqvOp? := eqvOp?
 
 instance : Core Nat := Core.mk
 
-instance : AA.Substitutive (step : Nat → Nat) (· ≃ ·) (· ≃ ·) where
+instance step_substitutive
+    : AA.Substitutive (step : Nat → Nat) (· ≃ ·) (· ≃ ·) where
   subst := congrArg step
 
 theorem succ_injective {n m : Nat} : Nat.succ n = Nat.succ m → n = m
 | Eq.refl _ => Eq.refl _
 
-instance : AA.Injective (step : Nat → Nat) (· ≃ ·) (· ≃ ·) where
+instance step_injective : AA.Injective (step : Nat → Nat) (· ≃ ·) (· ≃ ·) where
   inject := succ_injective
 
-def indImpl
+def ind
     {motive : Nat → Sort v}
     (mz : motive 0) (ms : {n : Nat} → motive n → motive (Nat.succ n)) (n : Nat)
     : motive n :=
   match n with
   | Nat.zero => mz
-  | Nat.succ n => ms (indImpl mz ms n)
+  | Nat.succ n => ms (ind mz ms n)
 
-instance : Axioms.Base Nat where
-  step_substitutive := inferInstance
-  step_injective := inferInstance
+instance axioms_base : Axioms.Base Nat where
+  step_substitutive := step_substitutive
+  step_injective := step_injective
   step_neq_zero := Nat.noConfusion
   -- 2022-01-11: Using `Nat.rec` directly here, gives the following error:
   -- code generator does not support recursor 'Nat.rec' yet, consider using
   -- 'match ... with' and/or structural recursion
-  ind := indImpl
+  ind := ind
 
-instance : Addition.Base Nat where
-  addOp := inferInstance
+instance addition_base : Addition.Base Nat where
+  addOp := _root_.instAddNat
   zero_add := @Nat.zero_add
   step_add := @Nat.succ_add
 
