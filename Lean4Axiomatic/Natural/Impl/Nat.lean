@@ -24,11 +24,17 @@ instance eqvOp? : EqvOp? Nat where
 instance equality : Equality Nat where
   eqvOp? := eqvOp?
 
-instance : Core Nat := Core.mk
+instance literals : Literals Nat where
+  literal := @instOfNatNat
+  literal_zero := Eqv.refl
+  literal_step := Eqv.refl
 
 instance step_substitutive
     : AA.Substitutive (step : Nat → Nat) (· ≃ ·) (· ≃ ·) where
   subst := congrArg step
+
+instance core : Core Nat where
+  step_substitutive := step_substitutive
 
 theorem succ_injective {n m : Nat} : Nat.succ n = Nat.succ m → n = m
 | Eq.refl _ => Eq.refl _
@@ -45,7 +51,6 @@ def ind
   | Nat.succ n => ms (ind mz ms n)
 
 instance axioms_base : Axioms.Base Nat where
-  step_substitutive := step_substitutive
   step_injective := step_injective
   step_neq_zero := Nat.noConfusion
   -- 2022-01-11: Using `Nat.rec` directly here, gives the following error:
@@ -58,7 +63,11 @@ instance addition_base : Addition.Base Nat where
   zero_add := @Nat.zero_add
   step_add := @Nat.succ_add
 
-instance : Decl Nat := Decl.mk
+instance : Decl Nat where
+  toCore := core
+  toAddition := Natural.Derived.addition_derived
+  toSign := Natural.Derived.sign_derived
+  toOrder := Natural.Derived.order_derived
 
 end Nat
 end Impl
