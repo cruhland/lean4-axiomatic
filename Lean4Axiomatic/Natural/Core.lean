@@ -1,8 +1,7 @@
 import Lean4Axiomatic.AbstractAlgebra
 import Lean4Axiomatic.Eqv
 
-namespace Lean4Axiomatic
-namespace Natural
+namespace Lean4Axiomatic.Natural
 
 open Relation (EqvOp?)
 
@@ -148,5 +147,4 @@ export Core (step_substitutive)
 export Equality (eqvOp?)
 export Literals (literal literal_step literal_zero)
 
-end Natural
-end Lean4Axiomatic
+end Lean4Axiomatic.Natural
