@@ -1,6 +1,7 @@
 import Lean4Axiomatic.AbstractAlgebra
 import Lean4Axiomatic.Operators
 
+import Lean4Axiomatic.Natural.Multiplication
 import Lean4Axiomatic.Natural.Order
 import Lean4Axiomatic.Natural.Sign
 
@@ -14,6 +15,7 @@ class Decl (ℕ : Type) where
   toAddition : Addition.Derived ℕ
   toSign : Sign.Derived ℕ
   toOrder : Order.Derived ℕ
+  toMultiplication : Multiplication.Base ℕ
 
 end Natural
 end Lean4Axiomatic

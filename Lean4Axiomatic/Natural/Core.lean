@@ -4,13 +4,13 @@ import Lean4Axiomatic.Eqv
 namespace Lean4Axiomatic
 namespace Natural
 
+open Relation (EqvOp?)
+
 /-!
 # Fundamental definitions and properties of natural numbers
 
 Closely follows the [Peano axioms](https://en.wikipedia.org/wiki/Peano_axioms).
 -/
-
-open Relation (EqvOp?)
 
 /--
 Defines the primitive building blocks of all natural numbers.

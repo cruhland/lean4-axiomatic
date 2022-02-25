@@ -63,11 +63,17 @@ instance addition_base : Addition.Base Nat where
   zero_add := @Nat.zero_add
   step_add := @Nat.succ_add
 
+instance multiplication_base : Multiplication.Base Nat where
+  mulOp := _root_.instMulNat
+  zero_mul := @Nat.zero_mul
+  step_mul := @Nat.succ_mul
+
 instance : Decl Nat where
   toCore := core
   toAddition := Natural.Derived.addition_derived
   toSign := Natural.Derived.sign_derived
   toOrder := Natural.Derived.order_derived
+  toMultiplication := multiplication_base
 
 end Nat
 end Impl
