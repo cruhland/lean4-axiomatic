@@ -1,10 +1,7 @@
 import Lean4Axiomatic.Natural.Order
 import Lean4Axiomatic.Natural.Sign
 
-namespace Lean4Axiomatic
-namespace Natural
-
-namespace Derived
+namespace Lean4Axiomatic.Natural.Derived
 
 variable {ℕ : Type}
 variable [Core ℕ]
@@ -12,6 +9,8 @@ variable [Axioms.Derived ℕ]
 variable [Addition.Derived ℕ]
 variable [Sign.Derived ℕ]
 variable [Order.Base ℕ]
+
+open Sign (Positive)
 
 theorem le_subst_step {n₁ n₂ : ℕ} : n₁ ≤ n₂ → step n₁ ≤ step n₂ := by
   intro (_ : n₁ ≤ n₂)
@@ -483,7 +482,4 @@ instance order_derived : Order.Derived ℕ where
   lt_split := lt_split
   trichotomy := trichotomy
 
-end Derived
-
-end Natural
-end Lean4Axiomatic
+end Lean4Axiomatic.Natural.Derived

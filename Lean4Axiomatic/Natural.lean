@@ -5,10 +5,9 @@ import Lean4Axiomatic.Natural.Multiplication
 import Lean4Axiomatic.Natural.Order
 import Lean4Axiomatic.Natural.Sign
 
-open Operators (TildeDash)
+namespace Lean4Axiomatic.Natural
 
-namespace Lean4Axiomatic
-namespace Natural
+open Operators (TildeDash)
 
 class Decl (ℕ : Type) where
   toCore : Core ℕ
@@ -17,7 +16,9 @@ class Decl (ℕ : Type) where
   toOrder : Order.Derived ℕ
   toMultiplication : Multiplication.Derived ℕ
 
-export Multiplication (mul_commutative mulOp mul_substitutive step_mul zero_mul)
+export Multiplication (
+  mul_commutative mulOp mul_substitutive step_mul zero_mul
+)
+export Sign (Positive positive_add positive_defn positive_step)
 
-end Natural
-end Lean4Axiomatic
+end Lean4Axiomatic.Natural

@@ -1,15 +1,18 @@
 import Lean4Axiomatic.Natural.Sign
 
-namespace Lean4Axiomatic
-namespace Natural
-
-namespace Derived
+namespace Lean4Axiomatic.Natural.Derived
 
 variable {ℕ : Type}
 variable [Core ℕ]
 variable [Axioms.Derived ℕ]
 variable [Addition.Derived ℕ]
 variable [Sign.Base ℕ]
+
+namespace Base
+export Sign (Positive positive_add positive_step)
+end Base
+
+open Base (Positive)
 
 theorem positive_subst {n₁ n₂ : ℕ} : n₁ ≃ n₂ → Positive n₁ → Positive n₂ := by
   intro (_ : n₁ ≃ n₂) (_ : Positive n₁)
@@ -61,7 +64,4 @@ instance sign_derived : Sign.Derived ℕ where
   positive_step := positive_step
   positive_add := positive_add
 
-end Derived
-
-end Natural
-end Lean4Axiomatic
+end Lean4Axiomatic.Natural.Derived
