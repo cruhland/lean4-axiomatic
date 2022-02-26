@@ -15,7 +15,9 @@ class Decl (ℕ : Type) where
   toAddition : Addition.Derived ℕ
   toSign : Sign.Derived ℕ
   toOrder : Order.Derived ℕ
-  toMultiplication : Multiplication.Base ℕ
+  toMultiplication : Multiplication.Derived ℕ
+
+export Multiplication (mul_commutative mulOp mul_substitutive step_mul zero_mul)
 
 end Natural
 end Lean4Axiomatic

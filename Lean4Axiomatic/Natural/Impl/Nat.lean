@@ -3,12 +3,9 @@ import Lean4Axiomatic.Natural
 import Lean4Axiomatic.Natural.Impl.Default
 import Lean4Axiomatic.Natural.Impl.Derived
 
-open Relation (EqvOp?)
+namespace Lean4Axiomatic.Natural.Impl.Nat
 
-namespace Lean4Axiomatic
-namespace Natural
-namespace Impl
-namespace Nat
+open Relation (EqvOp?)
 
 instance constructors : Constructors Nat where
   zero := Nat.zero
@@ -73,9 +70,6 @@ instance : Decl Nat where
   toAddition := Natural.Derived.addition_derived
   toSign := Natural.Derived.sign_derived
   toOrder := Natural.Derived.order_derived
-  toMultiplication := multiplication_base
+  toMultiplication := Natural.Derived.multiplication_derived
 
-end Nat
-end Impl
-end Natural
-end Lean4Axiomatic
+end Lean4Axiomatic.Natural.Impl.Nat
