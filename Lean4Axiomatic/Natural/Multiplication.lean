@@ -1,6 +1,9 @@
 import Lean4Axiomatic.Natural.Addition
+import Lean4Axiomatic.Natural.Sign
 
 namespace Lean4Axiomatic.Natural
+
+open Sign (Positive)
 
 /-!
 # Definition and properties of natural number multiplication
@@ -27,7 +30,8 @@ class Multiplication.Base (ℕ : Type) [Core ℕ] [Addition.Base ℕ] where
 attribute [instance] Multiplication.Base.mulOp
 
 /-- Properties that follow from those provided in `Multiplication.Base`. -/
-class Multiplication.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ]
+class Multiplication.Derived
+    (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign.Base ℕ]
     extends Multiplication.Base ℕ where
   /--
   Multiplication preserves equality of natural numbers; two equal natural
@@ -48,9 +52,17 @@ class Multiplication.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ]
   /-- The order of the factors in a product doesn't matter. -/
   mul_commutative : AA.Commutative (α := ℕ) (· * ·)
 
+  /-- A product is zero iff at least one of its factors is zero. -/
+  zero_product_split {n m : ℕ} : n * m ≃ 0 ↔ n ≃ 0 ∨ m ≃ 0
+
+  /-- The product of positive natural numbers is positive. -/
+  mul_positive {n m : ℕ} : Positive n → Positive m → Positive (n * m)
+
 namespace Multiplication
 export Multiplication.Base (mulOp step_mul zero_mul)
-export Multiplication.Derived (mul_commutative mul_substitutive)
+export Multiplication.Derived (
+  mul_commutative mul_positive mul_substitutive mul_zero zero_product_split
+)
 end Multiplication
 
 end Lean4Axiomatic.Natural

@@ -142,9 +142,4 @@ export Axioms.Base (ind step_injective step_neq_zero)
 export Axioms.Derived (cases_on ind_on)
 end Axioms
 
-export Axioms (ind ind_on step_injective step_neq_zero)
-export Core (step_substitutive)
-export Equality (eqvOp?)
-export Literals (literal literal_step literal_zero)
-
 end Lean4Axiomatic.Natural

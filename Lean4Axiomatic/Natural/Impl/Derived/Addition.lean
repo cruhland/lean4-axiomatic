@@ -114,7 +114,7 @@ instance add_substitutive
 theorem add_one_step {n : ℕ} : n + 1 ≃ step n := by
   calc
     _ ≃ n + 1        := Eqv.refl
-    _ ≃ n + step 0   := AA.substR literal_step
+    _ ≃ n + step 0   := AA.substR Literals.literal_step
     _ ≃ step (n + 0) := add_step
     _ ≃ step n       := AA.subst add_zero
 

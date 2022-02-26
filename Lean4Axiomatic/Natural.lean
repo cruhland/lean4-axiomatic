@@ -16,8 +16,13 @@ class Decl (ℕ : Type) where
   toOrder : Order.Derived ℕ
   toMultiplication : Multiplication.Derived ℕ
 
+export Axioms (cases_on ind ind_on step_injective step_neq_zero)
+export Core (step_substitutive)
+export Equality (eqvOp?)
+export Literals (literal literal_step literal_zero)
 export Multiplication (
-  mul_commutative mulOp mul_substitutive step_mul zero_mul
+  mul_commutative mulOp mul_positive mul_substitutive mul_zero step_mul
+  zero_mul zero_product_split
 )
 export Sign (Positive positive_add positive_defn positive_step)
 

@@ -1,4 +1,5 @@
 import Lean4Axiomatic.Natural.Multiplication
+import Lean4Axiomatic.Natural.Sign
 
 namespace Lean4Axiomatic.Natural.Derived
 
@@ -17,6 +18,8 @@ variable [Multiplication.Base ℕ]
 namespace Base
 export Multiplication (step_mul zero_mul)
 end Base
+
+open Sign (Positive)
 
 /--
 Multiplying by zero on the right always gives zero.
@@ -161,10 +164,81 @@ instance mul_substitutive
   substitutiveL := mul_substL
   substitutiveR := mul_substR
 
-instance multiplication_derived : Multiplication.Derived ℕ where
+/--
+A product is zero iff at least one of its factors is zero.
+
+Intuition
+- forwards: if one factor is nonzero, then the product is a nonempty sum that
+  results in zero. By `Addition.zero_sum_split`, the terms of the sum must be
+  zero.
+- backwards: by `Base.zero_mul` or `Derived.mul_zero`.
+-/
+theorem zero_product_split {n m : ℕ} : n * m ≃ 0 ↔ n ≃ 0 ∨ m ≃ 0 := by
+  apply Iff.intro
+  · show n * m ≃ 0 → n ≃ 0 ∨ m ≃ 0
+    apply Axioms.cases_on (motive := λ x => x * m ≃ 0 → x ≃ 0 ∨ m ≃ 0) n
+    case zero =>
+      intro (_ : 0 * m ≃ 0)
+      show 0 ≃ 0 ∨ m ≃ 0
+      exact Or.inl Eqv.refl
+    case step =>
+      intro n (_ : step n * m ≃ 0)
+      show step n ≃ 0 ∨ m ≃ 0
+      apply Or.inr
+      show m ≃ 0
+      have : n * m + m ≃ 0 := calc
+        n * m + m ≃ _ := Eqv.symm Base.step_mul
+        step n * m ≃ _ := ‹step n * m ≃ 0›
+        0 ≃ _ := Eqv.refl
+      have ⟨_, (_ : m ≃ 0)⟩ := Addition.zero_sum_split ‹n * m + m ≃ 0›
+      exact ‹m ≃ 0›
+  · intro (_ : n ≃ 0 ∨ m ≃ 0)
+    show n * m ≃ 0
+    apply Or.elim ‹n ≃ 0 ∨ m ≃ 0›
+    · intro (_ : n ≃ 0)
+      show n * m ≃ 0
+      calc
+        n * m ≃ _ := AA.substL ‹n ≃ 0›
+        0 * m ≃ _ := Base.zero_mul
+        0     ≃ _ := Eqv.refl
+    · intro (_ : m ≃ 0)
+      show n * m ≃ 0
+      calc
+        n * m ≃ _ := AA.substR ‹m ≃ 0›
+        n * 0 ≃ _ := Derived.mul_zero
+        0     ≃ _ := Eqv.refl
+
+/--
+The product of positive natural numbers is positive.
+
+Intuition: reframe positive as nonzero, then contradict with
+`Derived.zero_product_split`.
+-/
+theorem mul_positive [Sign.Base ℕ] {n m : ℕ}
+    : Positive n → Positive m → Positive (n * m) := by
+  intro (_ : Positive n) (_ : Positive m)
+  show Positive (n * m)
+  have : n ≄ 0 := Sign.positive_defn.mp ‹Positive n›
+  have : m ≄ 0 := Sign.positive_defn.mp ‹Positive m›
+  apply Sign.positive_defn.mpr
+  show n * m ≄ 0
+  intro (_ : n * m ≃ 0)
+  show False
+  have : n ≃ 0 ∨ m ≃ 0 := Derived.zero_product_split.mp ‹n * m ≃ 0›
+  apply Or.elim ‹n ≃ 0 ∨ m ≃ 0›
+  · intro (_ : n ≃ 0)
+    show False
+    exact absurd ‹n ≃ 0› ‹n ≄ 0›
+  · intro (_ : m ≃ 0)
+    show False
+    exact absurd ‹m ≃ 0› ‹m ≄ 0›
+
+instance multiplication_derived [Sign.Base ℕ] : Multiplication.Derived ℕ where
   mul_substitutive := mul_substitutive
   mul_zero := mul_zero
   mul_step := mul_step
   mul_commutative := mul_commutative
+  zero_product_split := zero_product_split
+  mul_positive := mul_positive
 
 end Lean4Axiomatic.Natural.Derived
