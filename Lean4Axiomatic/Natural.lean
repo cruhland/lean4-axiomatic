@@ -21,8 +21,8 @@ export Core (step_substitutive)
 export Equality (eqvOp?)
 export Literals (literal literal_step literal_zero)
 export Multiplication (
-  mul_commutative mulOp mul_positive mul_substitutive mul_zero step_mul
-  zero_mul zero_product_split
+  mul_commutative mul_distributive mulOp mul_positive mul_substitutive mul_zero
+  step_mul zero_mul zero_product_split
 )
 export Sign (Positive positive_add positive_defn positive_step)
 

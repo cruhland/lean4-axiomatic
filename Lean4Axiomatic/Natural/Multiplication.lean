@@ -58,10 +58,14 @@ class Multiplication.Derived
   /-- The product of positive natural numbers is positive. -/
   mul_positive {n m : ℕ} : Positive n → Positive m → Positive (n * m)
 
+  /-- Multiplication distributes over addition. -/
+  mul_distributive : AA.Distributive (α := ℕ) (· * ·) (· + ·)
+
 namespace Multiplication
 export Multiplication.Base (mulOp step_mul zero_mul)
 export Multiplication.Derived (
-  mul_commutative mul_positive mul_substitutive mul_zero zero_product_split
+  mul_commutative mul_distributive mul_positive mul_substitutive mul_zero
+  zero_product_split
 )
 end Multiplication
 
