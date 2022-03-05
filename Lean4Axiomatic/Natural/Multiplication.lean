@@ -61,11 +61,14 @@ class Multiplication.Derived
   /-- Multiplication distributes over addition. -/
   mul_distributive : AA.Distributive (α := ℕ) (· * ·) (· + ·)
 
+  /-- The grouping of the factors in a product doesn't matter. -/
+  mul_associative : AA.Associative (α := ℕ) (· * ·)
+
 namespace Multiplication
 export Multiplication.Base (mulOp step_mul zero_mul)
 export Multiplication.Derived (
-  mul_commutative mul_distributive mul_positive mul_substitutive mul_zero
-  zero_product_split
+  mul_associative mul_commutative mul_distributive mul_positive
+  mul_substitutive mul_zero zero_product_split
 )
 end Multiplication
 
