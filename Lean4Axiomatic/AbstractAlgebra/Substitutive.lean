@@ -48,9 +48,39 @@ class Substitutive₁
 
 export Substitutive₁ (subst₁)
 
+/--
+Class for types and operations that satisfy the unary generalized injective
+property.
+
+For more information see `Injective.inject`.
+
+**Named parameters**
+- `α`: the argument type of the unary operation `f`.
+- `β`: the result type of the unary operation `f`.
+- `f`: the unary operation that obeys the generalized injective property.
+- `rα`: a binary relation over `f`'s argument type `α`.
+- `rβ`: a binary relation over `f`'s result type `β`.
+-/
 class Injective
     {α : Sort u} {β : Sort v} (f : α → β)
     (rα : outParam (α → α → Prop)) (rβ : β → β → Prop) where
+  /--
+  The generalized injective property of an unary operation `f`.
+
+  Operations `f` that have this property can be traced backward in some sense.
+  It is the converse of the substitution property. In other words, if we know
+  that the results of two operations, `f x₁` and `f x₂`, are related by `rβ`,
+  then we can conclude that the inputs `x₁` and `x₂` are related by `rα`.
+
+  Often `α` and `β` will be the same type, and `rα` and `rβ` will be the same
+  relation. The canonical example is the ordinary
+  [injective property of functions](https://w.wiki/4vTb): if we have
+  `f x = f y` for any values `x` and `y`, then we know `x = y`.
+
+  **Named parameters**
+  - see `Injective` for the class parameters.
+  - `x₁` and `x₂`: the arguments to `f`.
+  -/
   inject {x₁ x₂ : α} : rβ (f x₁) (f x₂) → rα x₁ x₂
 
 export Injective (inject)
