@@ -268,6 +268,21 @@ instance eqv_substitutive {α : Sort u} [EqvOp α]
   substitutiveL := eqv_substL
   substitutiveR := substR_from_substL_swap eqv_substL
 
+/--
+The left-hand side of a negated equivalence can be replaced by an equivalent
+value.
+
+**Intuition**: if we know two terms are unequal, and replace the left-hand one
+with an equivalent term, the right-hand term should still be unequal to the new
+term.
+
+**Named parameters**
+- `α`: the type of values involved in the (negated) equivalence.
+
+**Class parameters**
+- `EqvOp α`: needed for (in)equivalence to be expressed between terms of type
+  `α`.
+-/
 def neq_substL
     {α : Sort u} [EqvOp α]
     : SubstitutiveOn Hand.L (α := α) (· ≄ ·) (· ≃ ·) (· → ·) := by
@@ -278,6 +293,19 @@ def neq_substL
   show x₁ ≃ y
   exact Eqv.trans ‹x₁ ≃ x₂› ‹x₂ ≃ y›
 
+/--
+Negated equivalence respects the binary generalized substitution property.
+
+**Intuition**: see `neq_substL` for the left-handed property. The right-handed
+property follows from the symmetry of negated equivalence.
+
+**Named parameters**
+- `α`: the type of values involved in the (negated) equivalence.
+
+**Class parameters**
+- `EqvOp α`: needed for (in)equivalence to be expressed between terms of type
+  `α`.
+-/
 instance neq_substitutive
     {α : Sort u} [EqvOp α] : Substitutive₂ (α := α) (· ≄ ·) (· ≃ ·) (· → ·)
     where
