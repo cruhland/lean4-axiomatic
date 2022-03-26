@@ -312,28 +312,31 @@ instance neq_substitutive
   substitutiveL := neq_substL
   substitutiveR := substR_from_substL_swap neq_substL
 
-class Cancellative
+class CancellativeOn
     (hand : Hand) {α : Sort u} {β : Sort v}
     (f : α → α → β) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop) where
   cancel
     {x y₁ y₂ : α} : rβ (forHand hand f x y₁) (forHand hand f x y₂) → rα y₁ y₂
 
-export Cancellative (cancel)
+export CancellativeOn (cancel)
 
 abbrev cancelL := @cancel Hand.L
 abbrev cancelR := @cancel Hand.R
 
-class Cancellative₂
+class Cancellative
     {α : Sort u} {β : Sort v}
     (f : α → α → β) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop) where
-  cancellativeL : Cancellative Hand.L f rα rβ
-  cancellativeR : Cancellative Hand.R f rα rβ
+  cancellativeL : CancellativeOn Hand.L f rα rβ
+  cancellativeR : CancellativeOn Hand.R f rα rβ
+
+attribute [instance] Cancellative.cancellativeL
+attribute [instance] Cancellative.cancellativeR
 
 def cancelR_from_cancelL
     {α : Sort u} {β : Sort v}
     {f : α → α → β} {rα : α → α → Prop} {rβ : β → β → Prop}
     [EqvOp β] [Commutative f] [Substitutive₂ rβ (· ≃ ·) (· → ·)]
-    : Cancellative Hand.L f rα rβ → Cancellative Hand.R f rα rβ := by
+    : CancellativeOn Hand.L f rα rβ → CancellativeOn Hand.R f rα rβ := by
   intro
   constructor
   intro x y₁ y₂ (hyp : rβ (f y₁ x) (f y₂ x))
