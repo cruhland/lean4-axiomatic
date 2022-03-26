@@ -231,6 +231,18 @@ def substR_from_substL_swap
     rβ (f x₁ y) (f x₂ y) := AA.substL ‹rα x₁ x₂›
     rβ (f x₂ y) (f y x₂) := Swap.swap
 
+/--
+The left-hand side of an equivalence can be replaced by an equivalent value.
+
+**Intuition**: this is a somewhat trivial case of binary substitution,
+essentially just transivity expressed in a slightly different way.
+
+**Named parameters**
+- `α`: the type of values involved in the equivalence.
+
+**Class parameters**
+- `EqvOp α`: needed for equivalence to be expressed between terms of type `α`.
+-/
 def eqv_substL
     {α : Sort u} [EqvOp α]
     : SubstitutiveOn Hand.L (α := α) (· ≃ ·) (· ≃ ·) (· → ·) := by
@@ -239,6 +251,18 @@ def eqv_substL
   show x₂ ≃ y
   exact Eqv.trans (Eqv.symm ‹x₁ ≃ x₂›) ‹x₁ ≃ y›
 
+/--
+Equivalence respects the binary generalized substitution property.
+
+**Intuition**: see `eqv_substL` for the left-handed property. The right-handed
+property follows from the symmetry of equivalence.
+
+**Named parameters**
+- `α`: the type of values involved in the equivalence.
+
+**Class parameters**
+- `EqvOp α`: needed for equivalence to be expressed between terms of type `α`.
+-/
 instance eqv_substitutive {α : Sort u} [EqvOp α]
     : Substitutive₂ (α := α) (· ≃ ·) (· ≃ ·) (· → ·) where
   substitutiveL := eqv_substL
