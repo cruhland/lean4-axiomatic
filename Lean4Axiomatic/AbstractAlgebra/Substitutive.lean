@@ -231,7 +231,7 @@ def substR_from_substL_swap
     rβ (f x₁ y) (f x₂ y) := AA.substL ‹rα x₁ x₂›
     rβ (f x₂ y) (f y x₂) := Swap.swap
 
-instance eqv_substL
+def eqv_substL
     {α : Sort u} [EqvOp α]
     : SubstitutiveOn Hand.L (α := α) (· ≃ ·) (· ≃ ·) (· → ·) := by
   constructor
@@ -239,17 +239,12 @@ instance eqv_substL
   show x₂ ≃ y
   exact Eqv.trans (Eqv.symm ‹x₁ ≃ x₂›) ‹x₁ ≃ y›
 
-instance eqv_substR
-    {α : Sort u} [EqvOp α]
-    : SubstitutiveOn Hand.R (α := α) (· ≃ ·) (· ≃ ·) (· → ·) :=
-  substR_from_substL_swap eqv_substL
-
 instance eqv_substitutive {α : Sort u} [EqvOp α]
     : Substitutive₂ (α := α) (· ≃ ·) (· ≃ ·) (· → ·) where
   substitutiveL := eqv_substL
-  substitutiveR := eqv_substR
+  substitutiveR := substR_from_substL_swap eqv_substL
 
-instance neq_substL
+def neq_substL
     {α : Sort u} [EqvOp α]
     : SubstitutiveOn Hand.L (α := α) (· ≄ ·) (· ≃ ·) (· → ·) := by
   constructor
