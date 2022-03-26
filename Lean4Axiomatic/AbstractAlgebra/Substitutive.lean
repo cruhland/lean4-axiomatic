@@ -197,6 +197,26 @@ instance
     have : rel (f x y) (f x y) := Eqv.refl
     exact substR (rβ := (· → ·)) comm ‹rel (f x y) (f x y)›
 
+/--
+Derives the right-handed binary generalized substitution property from its
+left-handed counterpart, provided that the relation `rβ` satisfies a few
+properties.
+
+**Intuition**: if `rβ` permits exchanging the arguments to `f`, then we can
+switch them, apply left-handed substitution, and switch back.
+
+**Named parameters**
+- `α`: the argument type of the binary operation `f`.
+- `β`: the result type of the binary operation `f`.
+- `f`: the binary operation that obeys the generalized substitution property.
+- `rα`: a binary relation over `f`'s argument type `α`.
+- `rβ`: a binary relation over `f`'s result type `β`.
+
+**Class parameters**
+- `Trans rβ`: needed to join the steps of the proof together.
+- `Swap f rβ`: needed to temporarily move the right argument of `f` to the left
+  position, so that left-handed substitution can be applied to it.
+-/
 def substR_from_substL_swap
     {α : Sort u} {β : Sort v}
     {f : α → α → β} {rα : α → α → Prop} {rβ : β → β → Prop}
