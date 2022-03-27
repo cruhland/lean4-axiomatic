@@ -312,17 +312,75 @@ instance neq_substitutive
   substitutiveL := neq_substL
   substitutiveR := substR_from_substL_swap neq_substL
 
+/--
+Class for types and operations that satisfy either the left- or right-handed
+generalized cancellation property.
+
+For more information see `CancellativeOn.cancel`.
+
+**Named parameters**
+- `hand`: indicates whether the property is left- or right-handed.
+- `α`: the argument type of the binary operation `f`.
+- `β`: the result type of the binary operation `f`.
+- `f`: the binary operation that obeys the generalized cancellation property.
+- `rα`: a binary relation over `f`'s argument type `α`.
+- `rβ`: a binary relation over `f`'s result type `β`.
+-/
 class CancellativeOn
     (hand : Hand) {α : Sort u} {β : Sort v}
     (f : α → α → β) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop) where
+  /--
+  The left- or right-handed generalized cancellation property of a binary
+  operation `f`.
+
+  This property is in some sense the converse of the generalized substitution
+  property; see `SubstitutiveOn.subst₂`. It says: knowing that the results of
+  two invocations of `f` satisfy the relation `rβ` tells us that the two left-
+  or right-handed arguments to `f` satisfy the relation `rα`.
+
+  Often `α` and `β` will be the same type, and `rα` and `rβ` will be the same
+  relation. A simple example is of addition on natural numbers: if we know that
+  `n₁ + m ≃ n₂ + m`, or that `m + n₁ ≃ m + n₂`, then we can conclude that
+  `n₁ ≃ n₂`.
+
+  **Named parameters**
+  - see `CancellativeOn` for the class parameters.
+  - `x`: the "cancelled" argument to `f`; the `hand` parameter
+    indicates which side of `f` it appears on.
+  - `y₁` and `y₂`: the other arguments to `f`; appearing on the side opposite
+    `hand`. They are related by `rα` in the result.
+  -/
   cancel
     {x y₁ y₂ : α} : rβ (forHand hand f x y₁) (forHand hand f x y₂) → rα y₁ y₂
 
 export CancellativeOn (cancel)
 
+/--
+Convenience function for the left-handed generalized cancellation property.
+
+Can often resolve cases where type inference gets stuck when using the more
+general `cancel` function.
+
+See `CancellativeOn.cancel` for detailed documentation.
+-/
 abbrev cancelL := @cancel Hand.L
+
+/--
+Convenience function for the right-handed generalized cancellation property.
+
+Can often resolve cases where type inference gets stuck when using the more
+general `cancel` function.
+
+See `CancellativeOn.cancel` for detailed documentation.
+-/
 abbrev cancelR := @cancel Hand.R
 
+/--
+Convenience class for types and operations that satisfy the full (left- **and**
+right-handed) generalized cancellation property.
+
+See `CancellativeOn` for detailed documentation.
+-/
 class Cancellative
     {α : Sort u} {β : Sort v}
     (f : α → α → β) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop) where
@@ -332,6 +390,27 @@ class Cancellative
 attribute [instance] Cancellative.cancellativeL
 attribute [instance] Cancellative.cancellativeR
 
+/--
+Derives the right-handed generalized cancellation property from its left-handed
+counterpart, provided that the types and operations involved obey some
+restrictions.
+
+**Intuition**: if `f` is commutative and `rβ` supports substitution, then the
+arguments to `f` can be swapped so that left-handed cancellation can be used.
+
+**Named parameters**
+- `α`: the argument type of the binary operation `f`.
+- `β`: the result type of the binary operation `f`.
+- `f`: the binary operation that obeys the generalized cancellation property.
+- `rα`: a binary relation over `f`'s argument type `α`.
+- `rβ`: a binary relation over `f`'s result type `β`.
+
+**Class parameters**
+- `EqvOp β`: needed for both the `Commutative` and `Substitutive₂` parameters
+- `Commutative f`: needed for swapping the arguments to `f`.
+- `Substitutive₂ rβ (· ≃ ·) (· → ·)`: needed to update the right-handed
+  hypothesis involving `rβ` to a left-handed hypothesis.
+-/
 def cancelR_from_cancelL
     {α : Sort u} {β : Sort v}
     {f : α → α → β} {rα : α → α → Prop} {rβ : β → β → Prop}
