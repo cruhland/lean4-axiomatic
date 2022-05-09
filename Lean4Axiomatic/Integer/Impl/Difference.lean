@@ -149,9 +149,12 @@ proportional to the positive and negative parts of the difference,
 respectively.
 
 The multiplication of two differences is then represented by a rectangle, where
-each difference gets a dimension. The subsegments then produce four rectangular
-regions, two colored black and two colored red. The difference in area between
-the black and red regions is the result of the multiplication.
+each difference gets a dimension. The rectangle is divided into four smaller
+rectangles, one for each combination of subsegments. The four regions are
+colored according to the rules for multiplication of signs: if both sides of a
+region are the same color, the region is colored black; if they are different
+colors, the region is colored red. The difference in area between the black and
+red regions is the result of the multiplication.
 -/
 def mul : Difference ℕ → Difference ℕ → Difference ℕ
 | a——b, c——d => (a * c + b * d)——(a * d + b * c)
