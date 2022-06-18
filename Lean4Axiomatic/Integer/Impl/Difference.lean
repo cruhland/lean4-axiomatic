@@ -216,12 +216,22 @@ def add_substitutive
   substitutiveR := AA.substR_from_substL_swap (rS := (· ≃ ·)) add_substitutiveL
 }
 
-def equality : Equality (Difference ℕ) := {
+instance equality : Equality (Difference ℕ) := {
   eqvOp := eqvOp
 }
 
-instance core : Core (Difference ℕ) := {
-  toEquality := equality
+/--
+Every natural number can be represented as a difference.
+
+**Definition intuition**: Taking nothing away from a natural number preserves
+its value.
+-/
+def from_natural : Coe ℕ (Difference ℕ) := {
+  coe := (·——0)
+}
+
+def conversion : Conversion ℕ (Difference ℕ) := {
+  from_natural := from_natural
 }
 
 def addition : Addition.Base (Difference ℕ) := {
@@ -334,9 +344,10 @@ def multiplication : Multiplication.Base (Difference ℕ) := {
   mul_substitutive := mul_substitutive
 }
 
-instance integer : Integer (Difference ℕ) := {
+instance integer : Integer ℕ (Difference ℕ) := {
   toAddition := addition
-  toCore := core
+  toConversion := conversion
+  toEquality := equality
   toMultiplication := multiplication
 }
 
