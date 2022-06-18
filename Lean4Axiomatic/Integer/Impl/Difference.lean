@@ -205,8 +205,8 @@ theorem add_substL {a₁ a₂ b : Difference ℕ} : a₁ ≃ a₂ → a₁ + b �
     (k + p) + (m + q) ≃ _ := Rel.refl
 
 def add_substitutiveL
-    : AA.SubstitutiveOn
-      Hand.L (α := Difference ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·) := {
+    : AA.SubstitutiveOn Hand.L (α := Difference ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·)
+    := {
   subst₂ := λ (_ : True) => add_substL
 }
 
@@ -238,6 +238,54 @@ def addition : Addition.Base (Difference ℕ) := {
   addOp := addOp
   add_substitutive := add_substitutive
   add_commutative := add_commutative
+}
+
+/--
+Negation of differences.
+
+**Definition intuition**: It's easiest to use the "directed gap" interpretation
+of differences to see this. If `a——b` represents the process of traveling from
+`a` to `b`, then its negation should represent the opposite process: traveling
+from `b` to `a`.
+-/
+def neg : Difference ℕ → Difference ℕ
+| a——b => b——a
+
+instance negOp : Neg (Difference ℕ) := {
+  neg := neg
+}
+
+/--
+Negating two equivalent differences preserves their equivalence.
+
+**Property intuition**: For negation to make sense as an operation (i.e., have
+a consistent definition as a function) on integers, this property must be true.
+
+**Proof intuition**: Nothing too insightful here, it's just expanding the
+definitions of negation and equality and performing some algebra.
+-/
+theorem neg_subst {a₁ a₂ : Difference ℕ} : a₁ ≃ a₂ → -a₁ ≃ -a₂ := by
+  revert a₁; intro (n——m); revert a₂; intro (k——j)
+  intro (_ : n——m ≃ k——j)
+  show -(n——m) ≃ -(k——j)
+  have : n + j ≃ k + m := ‹n——m ≃ k——j›
+  show m——n ≃ j——k
+  show m + k ≃ j + n
+  calc
+    m + k ≃ _ := AA.comm
+    k + m ≃ _ := Rel.symm ‹n + j ≃ k + m›
+    n + j ≃ _ := AA.comm
+    j + n ≃ _ := Rel.refl
+
+def neg_substitutive
+    : AA.Substitutive₁ (α := Difference ℕ) (-·) (· ≃ ·) (· ≃ ·)
+    := {
+  subst₁ := neg_subst
+}
+
+def negation : Negation.Base (Difference ℕ) := {
+  negOp := negOp
+  neg_substitutive := neg_substitutive
 }
 
 /--
@@ -349,6 +397,7 @@ instance integer : Integer ℕ (Difference ℕ) := {
   toConversion := conversion
   toEquality := equality
   toMultiplication := multiplication
+  toNegation := negation
 }
 
 end Lean4Axiomatic.Integer.Impl.Difference
