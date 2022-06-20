@@ -79,10 +79,38 @@ def add_substitutive
   substitutiveR := AA.substR_from_substL_swap (rS := (· ≃ ·)) add_substitutiveL
 }
 
+/--
+Addition of natural number differences is associative.
+
+**Proof intuition**: Expand definitions to see that we need to show the
+equivalence of two differences of natural number sums. The left and right
+elements of the differences are directly equivalent via associativity of
+natural number addition, so convert the differences into ordered pairs and use
+associativity element-wise.
+-/
+def add_assoc {a b c : Difference ℕ} : (a + b) + c ≃ a + (b + c) := by
+  revert a; intro (n——m); revert b; intro (k——j); revert c; intro (p——q)
+  show (n——m + k——j) + p——q ≃ n——m + (k——j + p——q)
+  show (n + k)——(m + j) + p——q ≃ n——m + (k + p)——(j + q)
+  show ((n + k) + p)——((m + j) + q) ≃ (n + (k + p))——(m + (j + q))
+  show from_prod ((n + k) + p, (m + j) + q)
+     ≃ from_prod (n + (k + p), m + (j + q))
+  apply AA.subst₁
+  show ((n + k) + p, (m + j) + q) ≃ (n + (k + p), m + (j + q))
+  calc
+    ((n + k) + p, (m + j) + q) ≃ _ := AA.substL AA.assoc
+    (n + (k + p), (m + j) + q) ≃ _ := AA.substR AA.assoc
+    (n + (k + p), m + (j + q)) ≃ _ := Rel.refl
+
+def add_associative : AA.Associative (α := Difference ℕ) (· + ·) := {
+  assoc := add_assoc
+}
+
 def addition : Addition.Base (Difference ℕ) := {
   addOp := addOp
   add_substitutive := add_substitutive
   add_commutative := add_commutative
+  add_associative := add_associative
 }
 
 end Lean4Axiomatic.Integer.Impl.Difference
