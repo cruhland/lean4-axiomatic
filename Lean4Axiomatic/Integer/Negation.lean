@@ -43,6 +43,7 @@ class Negation.Base
   neg_inverse : AA.Inverse (α := ℤ) (-·) (· + ·)
 
 attribute [instance] Negation.Base.negOp
+attribute [instance] Negation.Base.neg_substitutive
 
 namespace Negation
 export Negation.Base (negOp)
