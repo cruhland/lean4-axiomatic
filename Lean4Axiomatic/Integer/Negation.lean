@@ -5,7 +5,7 @@ import Lean4Axiomatic.Integer.Core
 namespace Lean4Axiomatic.Integer
 
 /-!
-# Definition and properties of integer negation and subtraction
+# Definition and properties of integer negation
 -/
 
 /--
@@ -41,6 +41,8 @@ class Negation.Base
 
   /-- An integer added to its negation is always zero. -/
   neg_inverse : AA.Inverse (α := ℤ) (-·) (· + ·)
+
+attribute [instance] Negation.Base.negOp
 
 namespace Negation
 export Negation.Base (negOp)
