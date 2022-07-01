@@ -51,9 +51,12 @@ class Negation.Derived
     (ℕ : Type) [Natural ℕ]
     (ℤ : Type) [Equality ℤ] [Conversion ℕ ℤ]
     [Addition.Base ℕ ℤ] [Multiplication.Base ℕ ℤ]
-    :=
+    extends Negation.Base ℕ ℤ :=
   /-- Multiplying by zero always gives zero. -/
   mul_absorbing : AA.Absorbing (α := ℤ) 0 (· * ·)
+
+  /-- Negation can be moved between a product and either one of its factors. -/
+  neg_semicompatible_mul : AA.Semicompatible (α := ℤ) (-·) (· * ·)
 
 namespace Negation
 export Negation.Base (negOp)
