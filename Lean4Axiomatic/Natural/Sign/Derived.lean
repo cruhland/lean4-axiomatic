@@ -12,7 +12,7 @@ namespace Lean4Axiomatic.Natural.Sign
 variable {ℕ : Type}
 variable [Core ℕ]
 variable [Axioms ℕ]
-variable [Addition.Derived ℕ]
+variable [Addition ℕ]
 variable [Sign ℕ]
 
 open Signed (Positive)
@@ -79,15 +79,15 @@ theorem positive_add {n m : ℕ} : Positive n → Positive (n + m) := by
   apply cases_on (motive := λ m => Positive (n + m)) m
   case zero =>
     show Positive (n + 0)
-    apply AA.subst₁ (rβ := (· → ·)) (Rel.symm Addition.add_zero)
+    apply AA.subst₁ (rβ := (· → ·)) (Rel.symm add_zero)
     exact ‹Positive n›
   case step =>
     intro m
     show Positive (n + step m)
-    apply AA.subst₁ (rβ := (· → ·)) (Rel.symm Addition.add_step)
+    apply AA.subst₁ (rβ := (· → ·)) (Rel.symm add_step)
     show Positive (step (n + m))
     apply Signed.positive_defn.mpr
     show step (n + m) ≄ 0
-    exact Axioms.step_neq_zero
+    exact step_neq_zero
 
 end Lean4Axiomatic.Natural.Sign
