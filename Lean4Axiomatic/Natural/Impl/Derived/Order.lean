@@ -289,7 +289,7 @@ theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
         n + d ≃ _ := ‹n + d ≃ m›
         m     ≃ _ := Rel.refl
     have : Positive d := Signed.positive_defn.mpr ‹d ≄ 0›
-    have ⟨d', (_ : step d' ≃ d)⟩ := Sign.positive_step ‹Positive d›
+    have ⟨d', (_ : step d' ≃ d)⟩ := positive_step ‹Positive d›
     show step n ≤ m
     apply Order.Base.le_defn.mpr
     exists d'
@@ -356,7 +356,7 @@ theorem lt_defn_add {n m : ℕ} : n < m ↔ ∃ k, Positive k ∧ m ≃ n + k :=
     show step n ≤ m
     apply Base.le_defn.mpr
     show ∃ k, step n + k ≃ m
-    have ⟨k', (_ : step k' ≃ k)⟩ := Sign.positive_step ‹Positive k›
+    have ⟨k', (_ : step k' ≃ k)⟩ := positive_step ‹Positive k›
     exists k'
     show step n + k' ≃ m
     calc
