@@ -1,6 +1,5 @@
 import Lean4Axiomatic.Natural
 import Lean4Axiomatic.Natural.Impl.Default
-import Lean4Axiomatic.Natural.Impl.Derived
 
 namespace Lean4Axiomatic.Natural.Impl.Nat
 
@@ -66,7 +65,7 @@ instance addition : Addition Nat := {
   step_add := @Nat.succ_add
 }
 
-instance multiplication_base : Multiplication.Base Nat := {
+instance multiplication : Multiplication Nat := {
   mulOp := _root_.instMulNat
   zero_mul := @Nat.zero_mul
   step_mul := @Nat.succ_mul
@@ -84,7 +83,7 @@ instance : Natural Nat := {
   toAddition := addition
   toSign := Natural.Default.sign
   toOrder := Natural.Default.order
-  toMultiplication := Natural.Derived.multiplication_derived
+  toMultiplication := multiplication
   toExponentiation := exponentiation_base
 }
 

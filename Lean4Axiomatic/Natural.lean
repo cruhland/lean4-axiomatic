@@ -1,6 +1,4 @@
 import Lean4Axiomatic.Natural.Exponentiation
-import Lean4Axiomatic.Natural.Order
-import Lean4Axiomatic.Natural.Sign
 
 namespace Lean4Axiomatic
 
@@ -24,7 +22,7 @@ class Natural (ℕ : Type) :=
   toAddition : Addition ℕ
   toSign : Sign ℕ
   toOrder : Order ℕ
-  toMultiplication : Multiplication.Derived ℕ
+  toMultiplication : Multiplication ℕ
   toExponentiation : Exponentiation.Base ℕ
 
 namespace Natural
@@ -37,10 +35,5 @@ attribute [instance] toOrder
 attribute [instance] toSign
 
 export Exponentiation (powOp pow_step pow_zero)
-export Multiplication (
-  mul_associative mul_cancellative mul_commutative mul_distributive mulOp
-  mul_positive mul_split_zero mul_step mul_substitutive_eq mul_substitutive_lt
-  step_mul zero_mul
-)
 
 end Lean4Axiomatic.Natural
