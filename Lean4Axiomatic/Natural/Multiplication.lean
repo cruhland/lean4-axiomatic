@@ -32,7 +32,7 @@ attribute [instance] Multiplication.Base.mulOp
 
 /-- Properties that follow from those provided in `Multiplication.Base`. -/
 class Multiplication.Derived
-    (ℕ : Type) [Core ℕ] [Addition ℕ] [Sign ℕ] [Order.Base ℕ]
+    (ℕ : Type) [Core ℕ] [Addition ℕ] [Sign ℕ] [Order ℕ]
     extends Multiplication.Base ℕ where
   /--
   Multiplication preserves equality of natural numbers; two equal natural

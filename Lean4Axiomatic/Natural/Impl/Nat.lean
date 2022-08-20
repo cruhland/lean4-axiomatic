@@ -78,13 +78,14 @@ instance exponentiation_base : Exponentiation.Base Nat := {
   pow_step := rfl
 }
 
-instance : Natural Nat where
+instance : Natural Nat := {
   toCore := core
   toAxioms := axioms
   toAddition := addition
   toSign := Natural.Default.sign
-  toOrder := Natural.Derived.order_derived
+  toOrder := Natural.Default.order
   toMultiplication := Natural.Derived.multiplication_derived
   toExponentiation := exponentiation_base
+}
 
 end Lean4Axiomatic.Natural.Impl.Nat

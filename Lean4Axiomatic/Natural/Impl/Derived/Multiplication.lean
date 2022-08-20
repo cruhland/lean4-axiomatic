@@ -16,7 +16,7 @@ variable [Core ℕ]
 variable [Axioms ℕ]
 variable [Addition ℕ]
 variable [Sign ℕ]
-variable [Order.Derived ℕ]
+variable [Order ℕ]
 variable [Multiplication.Base ℕ]
 
 namespace Base
@@ -321,13 +321,13 @@ theorem subst_mul_lt
   intro (_ : Positive m) (_ : n₁ < n₂)
   show n₁ * m < n₂ * m
   have ⟨(d : ℕ), (_ : Positive d), (_ : n₂ ≃ n₁ + d)⟩ :=
-    Order.lt_defn_add.mp ‹n₁ < n₂›
+    lt_defn_add.mp ‹n₁ < n₂›
   have : n₂ * m ≃ n₁ * m + d * m := calc
     n₂ * m         ≃ _ := AA.substL ‹n₂ ≃ n₁ + d›
     (n₁ + d) * m   ≃ _ := AA.distribR
     n₁ * m + d * m ≃ _ := Rel.refl
   have : Positive (d * m) := Derived.mul_positive ‹Positive d› ‹Positive m›
-  exact Order.lt_defn_add.mpr
+  exact lt_defn_add.mpr
     ⟨d * m, ‹Positive (d * m)›, ‹n₂ * m ≃ n₁ * m + d * m›⟩
 
 def mul_substL_lt
@@ -355,8 +355,8 @@ def mul_cancelL
   intro x y₁ y₂ (_ : x ≄ 0) (_ : x * y₁ ≃ x * y₂)
   show y₁ ≃ y₂
   have : Positive x := Signed.positive_defn.mpr ‹x ≄ 0›
-  have notTwoOfThree := (Order.trichotomy (x * y₁) (x * y₂)).atMostOne
-  match (Order.trichotomy y₁ y₂).atLeastOne with
+  have notTwoOfThree := (trichotomy (x * y₁) (x * y₂)).atMostOne
+  match (trichotomy y₁ y₂).atLeastOne with
   | AA.OneOfThree.first (_ : y₁ < y₂) =>
     have : x * y₁ < x * y₂ := AA.substRC ‹Positive x› ‹y₁ < y₂›
     have twoOfThree :=
