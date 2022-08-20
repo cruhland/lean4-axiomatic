@@ -23,17 +23,14 @@ class Natural (ℕ : Type) :=
   toSign : Sign ℕ
   toOrder : Order ℕ
   toMultiplication : Multiplication ℕ
-  toExponentiation : Exponentiation.Base ℕ
+  toExponentiation : Exponentiation ℕ
 
-namespace Natural
+attribute [instance] Natural.toAddition
+attribute [instance] Natural.toAxioms
+attribute [instance] Natural.toCore
+attribute [instance] Natural.toExponentiation
+attribute [instance] Natural.toMultiplication
+attribute [instance] Natural.toOrder
+attribute [instance] Natural.toSign
 
-attribute [instance] toAddition
-attribute [instance] toAxioms
-attribute [instance] toCore
-attribute [instance] toMultiplication
-attribute [instance] toOrder
-attribute [instance] toSign
-
-export Exponentiation (powOp pow_step pow_zero)
-
-end Lean4Axiomatic.Natural
+end Lean4Axiomatic
