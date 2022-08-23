@@ -7,7 +7,7 @@ import Lean4Axiomatic.Integer.Subtraction
 namespace Lean4Axiomatic.Integer.Impl.Default
 
 variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Core ℕ ℤ] [Addition.Base ℕ ℤ] [Negation ℕ ℤ]
+variable {ℤ : Type} [Core ℕ ℤ] [Addition ℕ ℤ] [Negation ℕ ℤ]
 
 /-- Define subtraction of a value from another as adding its negation. -/
 def sub (a b : ℤ) : ℤ := a + (-b)

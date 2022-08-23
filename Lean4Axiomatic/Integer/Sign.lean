@@ -17,7 +17,7 @@ section prelim
 
 variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Core ℕ ℤ]
-variable [Addition.Base ℕ ℤ] [Multiplication.Base ℕ ℤ] [Negation ℕ ℤ]
+variable [Addition ℕ ℤ] [Multiplication.Base ℕ ℤ] [Negation ℕ ℤ]
 
 /--
 A positive or negative integer of unit magnitude.
@@ -273,7 +273,7 @@ end prelim
 class Sign
     (ℕ : Type) [outParam (Natural ℕ)]
     (ℤ : Type)
-      [outParam (Core ℕ ℤ)] [outParam (Addition.Base ℕ ℤ)]
+      [outParam (Core ℕ ℤ)] [outParam (Addition ℕ ℤ)]
       [outParam (Multiplication.Base ℕ ℤ)] [outParam (Negation ℕ ℤ)]
     :=
   /-- Definitions of `Positive` and `Negative`, and their basic properties. -/
@@ -294,7 +294,7 @@ export Sign (negative_defn positive_defn)
 -/
 
 variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Core ℕ ℤ] [Addition.Base ℕ ℤ] [Multiplication.Base ℕ ℤ]
+variable {ℤ : Type} [Core ℕ ℤ] [Addition ℕ ℤ] [Multiplication.Base ℕ ℤ]
 variable [Negation ℕ ℤ] [Sign ℕ ℤ]
 
 /-- Extract and simplify the underlying equivalence from `Positive`. -/
