@@ -1,10 +1,8 @@
 import Lean4Axiomatic.Integer.Subtraction
 
-/-!
-# Default implementation of subtraction axioms
--/
+/-! # Generic implementation of integer subtraction and properties -/
 
-namespace Lean4Axiomatic.Integer.Impl.Default
+namespace Lean4Axiomatic.Integer.Impl.Generic
 
 variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Core ℕ ℤ] [Addition ℕ ℤ] [Negation ℕ ℤ]
@@ -21,4 +19,4 @@ instance subtraction : Subtraction ℕ ℤ := {
   sub_defn := Rel.refl
 }
 
-end Lean4Axiomatic.Integer.Impl.Default
+end Lean4Axiomatic.Integer.Impl.Generic

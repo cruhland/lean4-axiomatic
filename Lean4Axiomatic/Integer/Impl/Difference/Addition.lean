@@ -4,8 +4,7 @@ namespace Lean4Axiomatic.Integer.Impl.Difference
 
 /-! ## Addition of formal differences -/
 
-variable {ℕ : Type}
-variable [Natural ℕ]
+variable {ℕ : Type} [Natural ℕ]
 
 /--
 Addition of differences.
