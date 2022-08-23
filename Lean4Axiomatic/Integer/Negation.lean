@@ -43,7 +43,7 @@ export Negation (negOp)
 
 variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Core ℕ ℤ]
-variable [Addition ℕ ℤ] [Multiplication.Base ℕ ℤ] [Negation ℕ ℤ]
+variable [Addition ℕ ℤ] [Multiplication ℕ ℤ] [Negation ℕ ℤ]
 
 open Signed (Positive)
 

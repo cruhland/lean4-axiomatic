@@ -4,7 +4,7 @@ namespace Lean4Axiomatic.Integer.Impl.Default
 
 variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Core ℕ ℤ]
-variable [Addition ℕ ℤ] [Multiplication.Base ℕ ℤ] [Negation ℕ ℤ]
+variable [Addition ℕ ℤ] [Multiplication ℕ ℤ] [Negation ℕ ℤ]
 
 open Signed (Negative Positive)
 

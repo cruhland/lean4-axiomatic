@@ -35,7 +35,7 @@ export Subtraction (sub_defn subOp)
 -/
 
 variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Core ℕ ℤ] [Addition ℕ ℤ] [Multiplication.Base ℕ ℤ]
+variable {ℤ : Type} [Core ℕ ℤ] [Addition ℕ ℤ] [Multiplication ℕ ℤ]
 variable [Negation ℕ ℤ] [Sign ℕ ℤ] [Subtraction ℕ ℤ]
 
 /--

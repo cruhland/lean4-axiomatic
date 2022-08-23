@@ -6,7 +6,7 @@ import Lean4Axiomatic.Integer.Subtraction
 
 namespace Lean4Axiomatic
 
-open Integer (Addition Core Multiplication.Base Negation Sign Subtraction)
+open Integer (Addition Core Multiplication Negation Sign Subtraction)
 
 /--
 The class of [integers](https://en.wikipedia.org/wiki/Integer).
@@ -31,14 +31,9 @@ construct an instance.
 class Integer (ℕ : Type) [Natural ℕ] (ℤ : Type) :=
   toCore : Core ℕ ℤ
   toAddition : Addition ℕ ℤ
-  toMultiplication : Multiplication.Base ℕ ℤ
+  toMultiplication : Multiplication ℕ ℤ
   toNegation : Negation ℕ ℤ
   toSign : Sign ℕ ℤ
   toSubtraction : Subtraction ℕ ℤ
 
-namespace Integer
-
-export Multiplication (mulOp)
-export Negation (negOp)
-
-end Lean4Axiomatic.Integer
+end Lean4Axiomatic
