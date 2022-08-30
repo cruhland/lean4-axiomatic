@@ -1,3 +1,4 @@
+import Lean4Axiomatic.Integer.Impl.Generic.Order
 import Lean4Axiomatic.Integer.Impl.Generic.Subtraction
 import Lean4Axiomatic.Integer.Impl.Difference.Sign
 
@@ -12,6 +13,7 @@ instance integer : Integer ℕ (Difference ℕ) := {
   toCore := core
   toMultiplication := multiplication
   toNegation := negation
+  toOrder := Generic.order
   toSign := sign
   toSubtraction := Generic.subtraction
 }

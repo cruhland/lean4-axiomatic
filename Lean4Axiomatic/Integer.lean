@@ -1,3 +1,4 @@
+import Lean4Axiomatic.Integer.Order
 import Lean4Axiomatic.Integer.Subtraction
 
 /-!
@@ -6,7 +7,7 @@ import Lean4Axiomatic.Integer.Subtraction
 
 namespace Lean4Axiomatic
 
-open Integer (Addition Core Multiplication Negation Sign Subtraction)
+open Integer (Addition Core Multiplication Negation Order Sign Subtraction)
 
 /--
 The class of [integers](https://en.wikipedia.org/wiki/Integer).
@@ -33,7 +34,10 @@ class Integer (ℕ : Type) [Natural ℕ] (ℤ : Type) :=
   toAddition : Addition ℕ ℤ
   toMultiplication : Multiplication ℕ ℤ
   toNegation : Negation ℕ ℤ
+  toOrder : Order ℕ ℤ
   toSign : Sign ℕ ℤ
   toSubtraction : Subtraction ℕ ℤ
+
+attribute [instance] Integer.toOrder
 
 end Lean4Axiomatic
