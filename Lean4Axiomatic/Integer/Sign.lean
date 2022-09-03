@@ -297,15 +297,38 @@ variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Core ℕ ℤ] [Addition ℕ ℤ] [Multiplication ℕ ℤ]
 variable [Negation ℕ ℤ] [Sign ℕ ℤ]
 
+/-- An integer is positive if it's equivalent to a positive natural number. -/
+def positive_intro_nat
+    {m : ℕ} {a : ℤ} : Positive m → a ≃ coe m → Positive a
+    := by
+  intro (_ : Positive m) (_ : a ≃ coe m)
+  show Positive a
+  have : a ≃ 1 * coe m := Rel.trans ‹a ≃ coe m› (Rel.symm AA.identL)
+  have : SignedMagnitude a sqrt1_one :=
+    SignedMagnitude.intro m ‹Positive m› ‹a ≃ 1 * coe m›
+  exact positive_defn.mpr ‹SignedMagnitude a sqrt1_one›
+
+/--
+Extract evidence that a positive integer is equivalent to a positive natural
+number.
+-/
+def positive_elim_nat
+    {a : ℤ} : Positive a → ∃ n : ℕ, Positive n ∧ a ≃ coe n
+    := by
+  intro (_ : Positive a)
+  show ∃ n, Positive n ∧ a ≃ coe n
+  have (SignedMagnitude.intro (n : ℕ) (_ : Positive n) (_ : a ≃ 1 * coe n)) :=
+    positive_defn.mp ‹Positive a›
+  have : a ≃ coe n := Rel.trans ‹a ≃ 1 * coe n› AA.identL
+  exact Exists.intro n (And.intro ‹Positive n› ‹a ≃ coe n›)
+
 /-- Extract and simplify the underlying equivalence from `Positive`. -/
 theorem positive_eqv {a : ℤ} : Positive a → ∃ (n : ℕ), a ≃ coe n := by
   intro (_ : Positive a)
   show ∃ n, a ≃ coe n
-  have : SignedMagnitude a sqrt1_one := positive_defn.mp ‹Positive a›
-  have (Exists.intro (n : ℕ) (_ : a ≃ 1 * coe n)) := this.eqv
-  exists n
-  show a ≃ coe n
-  exact Rel.trans ‹a ≃ 1 * coe n› AA.identL
+  have (Exists.intro (n : ℕ) (And.intro (_ : Positive n) (_ : a ≃ coe n))) :=
+    positive_elim_nat ‹Positive a›
+  exact Exists.intro n ‹a ≃ coe n›
 
 /-- Extract and simplify the underlying equivalence from `Negative`. -/
 theorem negative_eqv {a : ℤ} : Negative a → ∃ (n : ℕ), a ≃ -(coe n) := by

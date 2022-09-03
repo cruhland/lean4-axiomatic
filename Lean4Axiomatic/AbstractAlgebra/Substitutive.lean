@@ -90,6 +90,56 @@ class Injective
 
 export Injective (inject)
 
+section neqv
+
+variable {α : Sort u} {β : Sort v} [EqvOp α] [EqvOp β] {f : α → β}
+
+/--
+A function is substitutive over non-equivalence if it's injective over
+equivalence.
+
+**Property and proof intuition**: It's the contrapositive of the injective
+property.
+-/
+theorem subst_neqv
+    {x₁ x₂ : α} [Injective f (· ≃ ·) (· ≃ ·)] : x₁ ≄ x₂ → f x₁ ≄ f x₂
+    := by
+  intro (_ : x₁ ≃ x₂ → False) (_ : f x₁ ≃ f x₂)
+  show False
+  apply ‹x₁ ≃ x₂ → False›
+  show x₁ ≃ x₂
+  exact inject ‹f x₁ ≃ f x₂›
+
+instance substitutive_neqv_from_injective_eqv
+    [Injective f (· ≃ ·) (· ≃ ·)] : Substitutive₁ f (· ≄ ·) (· ≄ ·)
+    := {
+  subst₁ := subst_neqv
+}
+
+/--
+A function is injective over non-equivalence if it's substitutive over
+equivalence.
+
+**Property and proof intuition**: It's the contrapositive of the substitutive
+property.
+-/
+theorem inject_neqv
+    {x₁ x₂ : α} [Substitutive₁ f (· ≃ ·) (· ≃ ·)] : f x₁ ≄ f x₂ → x₁ ≄ x₂
+    := by
+  intro (_ : f x₁ ≃ f x₂ → False) (_ : x₁ ≃ x₂)
+  show False
+  apply ‹f x₁ ≃ f x₂ → False›
+  show f x₁ ≃ f x₂
+  exact subst₁ ‹x₁ ≃ x₂›
+
+instance injective_neqv_from_substitutive_eqv
+    [Substitutive₁ f (· ≃ ·) (· ≃ ·)] : Injective f (· ≄ ·) (· ≄ ·)
+    := {
+  inject := inject_neqv
+}
+
+end neqv
+
 /--
 Class for types and operations that satisfy either the left- or right-handed
 heterogeneous binary generalized substitution property.

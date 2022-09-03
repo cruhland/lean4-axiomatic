@@ -46,6 +46,7 @@ class Addition (ℕ : Type) [Natural ℕ] (ℤ : Type) [Core ℕ ℤ] :=
 
 attribute [instance] Addition.addOp
 attribute [instance] Addition.add_associative
+attribute [instance] Addition.add_commutative
 attribute [instance] Addition.add_compatible_from_natural
 attribute [instance] Addition.add_identity
 attribute [instance] Addition.add_substitutive

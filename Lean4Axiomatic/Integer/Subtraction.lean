@@ -87,33 +87,77 @@ instance sub_substitutive
 }
 
 /--
+Subtracting an integer from itself yields zero.
+
+**Property and proof intuition**: This is equivalent to the additive inverse
+property.
+-/
+theorem sub_same {a : ℤ} : a - a ≃ 0 := calc
+  a - a  ≃ _ := sub_defn
+  a + -a ≃ _ := AA.inverseR
+  0      ≃ _ := Rel.refl
+
+/--
 Equivalent integers are the only ones to differ by zero.
 
 **Proof intuition**: The reverse direction is trivial; the forward direction
 uses the additive inverse property and the assumption `a - b ≃ 0` to replace
 `a` with `b`.
 -/
-theorem sub_eqv_zero {a b : ℤ} : a - b ≃ 0 ↔ a ≃ b := by
+theorem zero_diff_iff_eqv {a b : ℤ} : a - b ≃ 0 ↔ a ≃ b := by
   apply Iff.intro
   case mp =>
     intro (_ : a - b ≃ 0)
     show a ≃ b
     calc
-      a              ≃ _ := Rel.symm AA.identR
-      a + 0          ≃ _ := AA.substR (Rel.symm AA.inverseL)
-      a + (-b + b)   ≃ _ := Rel.symm AA.assoc
-      (a + (-b)) + b ≃ _ := AA.substL (Rel.symm sub_defn)
-      (a - b) + b    ≃ _ := AA.substL ‹a - b ≃ 0›
-      0 + b          ≃ _ := AA.identL
-      b              ≃ _ := Rel.refl
+      a            ≃ _ := Rel.symm AA.identR
+      a + 0        ≃ _ := AA.substR (Rel.symm AA.inverseL)
+      a + (-b + b) ≃ _ := Rel.symm AA.assoc
+      (a + -b) + b ≃ _ := AA.substL (Rel.symm sub_defn)
+      (a - b) + b  ≃ _ := AA.substL ‹a - b ≃ 0›
+      0 + b        ≃ _ := AA.identL
+      b            ≃ _ := Rel.refl
   case mpr =>
     intro (_ : a ≃ b)
     show a - b ≃ 0
     calc
-      a - b    ≃ _ := AA.substL ‹a ≃ b›
-      b - b    ≃ _ := sub_defn
-      b + (-b) ≃ _ := AA.inverseR
-      0        ≃ _ := Rel.refl
+      a - b  ≃ _ := AA.substL ‹a ≃ b›
+      b - b  ≃ _ := sub_same
+      0      ≃ _ := Rel.refl
+
+/--
+The right-hand operand of subtraction can be moved to the left-hand operand of
+addition on the other side of an equivalence.
+
+**Property intuition**: This is a very common technique in algebra.
+
+**Proof intuition**: There's no key idea for this proof, other than using
+algebra on integers to obtain expressions where assumptions can be used.
+-/
+theorem subR_move_addL {a b c : ℤ} : a - b ≃ c ↔ a ≃ b + c := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a - b ≃ c)
+    show a ≃ b + c
+    calc
+      a            ≃ _ := Rel.symm AA.identR
+      a + 0        ≃ _ := AA.substR (Rel.symm AA.inverseL)
+      a + (-b + b) ≃ _ := Rel.symm AA.assoc
+      (a + -b) + b ≃ _ := AA.substL (Rel.symm sub_defn)
+      (a - b) + b  ≃ _ := AA.substL ‹a - b ≃ c›
+      c + b        ≃ _ := AA.comm
+      b + c        ≃ _ := Rel.refl
+  case mpr =>
+    intro (_ : a ≃ b + c)
+    show a - b ≃ c
+    calc
+      a - b        ≃ _ := AA.substL ‹a ≃ b + c›
+      b + c - b    ≃ _ := AA.substL AA.comm
+      c + b - b    ≃ _ := sub_defn
+      c + b + -b   ≃ _ := AA.assoc
+      c + (b + -b) ≃ _ := AA.substR AA.inverseR
+      c + 0        ≃ _ := AA.identR
+      c            ≃ _ := Rel.refl
 
 /--
 Multiplication distributes over subtraction (on the left).
@@ -150,7 +194,7 @@ This seems to be consistent with our intuitive understanding of multiplication.
 def mul_cancelL {a b c : ℤ} : a ≄ 0 → a * b ≃ a * c → b ≃ c := by
   intro (_ : a ≄ 0) (_ : a * b ≃ a * c)
   show b ≃ c
-  have : a * b - a * c ≃ 0 := sub_eqv_zero.mpr ‹a * b ≃ a * c›
+  have : a * b - a * c ≃ 0 := zero_diff_iff_eqv.mpr ‹a * b ≃ a * c›
   have : a * (b - c) ≃ 0 := Rel.trans AA.distribL ‹a * b - a * c ≃ 0›
   have : a ≃ 0 ∨ b - c ≃ 0 := mul_split_zero.mp ‹a * (b - c) ≃ 0›
   match ‹a ≃ 0 ∨ b - c ≃ 0› with
@@ -159,7 +203,7 @@ def mul_cancelL {a b c : ℤ} : a ≄ 0 → a * b ≃ a * c → b ≃ c := by
     exact absurd ‹a ≃ 0› ‹a ≄ 0›
   | Or.inr (_ : b - c ≃ 0) =>
     show b ≃ c
-    exact sub_eqv_zero.mp ‹b - c ≃ 0›
+    exact zero_diff_iff_eqv.mp ‹b - c ≃ 0›
 
 def mul_cancellativeL
     : AA.CancellativeOn Hand.L (α := ℤ) (· * ·) (· ≄ 0) (· ≃ ·) (· ≃ ·)
