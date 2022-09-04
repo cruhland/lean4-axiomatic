@@ -81,6 +81,7 @@ class Signed
   trichotomy
     (a : α) : AA.ExactlyOneOfThree (a ≃ 0) (Positive a) (Negative a)
 
+attribute [instance] Signed.positive_substitutive
 attribute [instance] Signed.negative_substitutive
 
 namespace Signed

@@ -81,4 +81,165 @@ theorem gt_iff_pos_diff {a b : ℤ} : a > b ↔ Positive (a - b) := by
     have : b ≄ a := Rel.symm (mt zero_diff_iff_eqv.mpr ‹a - b ≄ 0›)
     exact And.intro ‹b ≤ a› ‹b ≄ a›
 
+/--
+Equivalent integers can be substituted on the left of the `· ≤ ·` relation.
+
+**Property intuition**: This must be true for `· ≤ ·` to be a valid integer
+relation.
+
+**Proof intuition**: The result follows from transitivity and substitution on
+the underlying definition of `· ≤ ·`.
+-/
+theorem le_substL_eqv {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → a₁ ≤ b → a₂ ≤ b := by
+  intro (_ : a₁ ≃ a₂) (_ : a₁ ≤ b)
+  show a₂ ≤ b
+  have (Exists.intro (k : ℕ) (_ : b ≃ a₁ + coe k)) :=
+    le_iff_add_nat.mp ‹a₁ ≤ b›
+  apply le_iff_add_nat.mpr
+  show ∃ (k : ℕ), b ≃ a₂ + coe k
+  have : b ≃ a₂ + coe k := Rel.trans ‹b ≃ a₁ + coe k› (AA.substL ‹a₁ ≃ a₂›)
+  exact Exists.intro k ‹b ≃ a₂ + coe k›
+
+/--
+Equivalent integers can be substituted on the right of the `· ≤ ·` relation.
+
+**Property intuition**: This must be true for `· ≤ ·` to be a valid integer
+relation.
+
+**Proof intuition**: The result follows from transitivity and substitution on
+the underlying definition of `· ≤ ·`.
+-/
+theorem le_substR_eqv {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → b ≤ a₁ → b ≤ a₂ := by
+  intro (_ : a₁ ≃ a₂) (_ : b ≤ a₁)
+  show b ≤ a₂
+  have (Exists.intro (k : ℕ) (_ : a₁ ≃ b + coe k)) :=
+    le_iff_add_nat.mp ‹b ≤ a₁›
+  apply le_iff_add_nat.mpr
+  show ∃ (k : ℕ), a₂ ≃ b + coe k
+  have : a₂ ≃ b + coe k := Rel.trans (Rel.symm ‹a₁ ≃ a₂›) ‹a₁ ≃ b + coe k›
+  exact Exists.intro k ‹a₂ ≃ b + coe k›
+
+instance le_substitutive_eqv
+    : AA.Substitutive₂ (α := ℤ) (· ≤ ·) AA.tc (· ≃ ·) (· → ·)
+    := {
+  substitutiveL := { subst₂ := λ (_ : True) => le_substL_eqv }
+  substitutiveR := { subst₂ := λ (_ : True) => le_substR_eqv }
+}
+
+/--
+Equivalent integers can be substituted on the left of the `· < ·` relation.
+
+**Property intuition**: This must be true for `· < ·` to be a valid integer
+relation.
+
+**Proof intuition**: The result follows from substitution on the underlying
+definition of `· < ·`.
+-/
+theorem lt_substL_eqv {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → a₁ < b → a₂ < b := by
+  intro (_ : a₁ ≃ a₂) (_ : a₁ < b)
+  show a₂ < b
+  have (And.intro (_ : a₁ ≤ b) (_ : a₁ ≄ b)) := lt_iff_le_neqv.mp ‹a₁ < b›
+  apply lt_iff_le_neqv.mpr
+  show a₂ ≤ b ∧ a₂ ≄ b
+  have : a₂ ≤ b := AA.substLFn ‹a₁ ≃ a₂› ‹a₁ ≤ b›
+  have : a₂ ≄ b := AA.substLFn (f := (· ≄ ·)) ‹a₁ ≃ a₂› ‹a₁ ≄ b›
+  exact And.intro ‹a₂ ≤ b› ‹a₂ ≄ b›
+
+/--
+Equivalent integers can be substituted on the right of the `· < ·` relation.
+
+**Property intuition**: This must be true for `· < ·` to be a valid integer
+relation.
+
+**Proof intuition**: The result follows from substitution on the underlying
+definition of `· < ·`.
+-/
+theorem lt_substR_eqv {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → b < a₁ → b < a₂ := by
+  intro (_ : a₁ ≃ a₂) (_ : b < a₁)
+  show b < a₂
+  have (And.intro (_ : b ≤ a₁) (_ : b ≄ a₁)) := lt_iff_le_neqv.mp ‹b < a₁›
+  apply lt_iff_le_neqv.mpr
+  show b ≤ a₂ ∧ b ≄ a₂
+  have : b ≤ a₂ := AA.substRFn ‹a₁ ≃ a₂› ‹b ≤ a₁›
+  have : b ≄ a₂ := AA.substRFn (f := (· ≄ ·)) ‹a₁ ≃ a₂› ‹b ≄ a₁›
+  exact And.intro ‹b ≤ a₂› ‹b ≄ a₂›
+
+instance lt_substitutive_eqv
+    : AA.Substitutive₂ (α := ℤ) (· < ·) AA.tc (· ≃ ·) (· → ·)
+    := {
+  substitutiveL := { subst₂ := λ (_ : True) => lt_substL_eqv }
+  substitutiveR := { subst₂ := λ (_ : True) => lt_substR_eqv }
+}
+
+/--
+The `· < ·` relation is preserved when the same value is added on the left to
+both sides.
+
+**Property intuition**: Both values are changed by the same amount, so their
+ordering won't be affected.
+
+**Proof intuition**: Convert the `· < ·` relation into subtraction; then the
+common value gets canceled out.
+-/
+theorem add_substL_lt {a b c : ℤ} : a < b → a + c < b + c := by
+  intro (_ : a < b)
+  show a + c < b + c
+  have : Positive (b - a) := gt_iff_pos_diff.mp ‹a < b›
+  apply gt_iff_pos_diff.mpr
+  show Positive (b + c - (a + c))
+  have : b - a ≃ b + c - (a + c) := Rel.symm sub_sums_sameR
+  exact AA.subst₁ (rβ := (· → ·)) ‹b - a ≃ b + c - (a + c)› ‹Positive (b - a)›
+
+def add_substitutiveL_lt
+    : AA.SubstitutiveOn Hand.L (α := ℤ) (· + ·) AA.tc (· < ·) (· < ·)
+    := {
+  subst₂ := λ (_ : True) => add_substL_lt
+}
+
+instance add_substitutive_lt
+    : AA.Substitutive₂ (α := ℤ) (· + ·) AA.tc (· < ·) (· < ·)
+    := {
+  substitutiveL :=
+    add_substitutiveL_lt
+  substitutiveR :=
+    AA.substR_from_substL_swap (rS := (· ≃ ·)) add_substitutiveL_lt
+}
+
+/--
+The `· < ·` relation on sums with the same left operand is preserved when that
+operand is removed from both.
+
+**Property intuition**: Both remaining values had been changed by the same
+amount due to the sums, so their ordering won't be affected.
+
+**Proof intuition**: Convert the `· < ·` relation into subtraction; then the
+common value gets canceled out.
+-/
+theorem add_cancelL_lt {a b c : ℤ} : c + a < c + b → a < b := by
+  intro (_ : c + a < c + b)
+  show a < b
+  have : Positive (c + b - (c + a)) := gt_iff_pos_diff.mp ‹c + a < c + b›
+  apply gt_iff_pos_diff.mpr
+  show Positive (b - a)
+  have : c + b - (c + a) ≃ b - a := calc
+    c + b - (c + a) ≃ _ := AA.substL AA.comm
+    b + c - (c + a) ≃ _ := AA.substR AA.comm
+    b + c - (a + c) ≃ _ := sub_sums_sameR
+    b - a ≃ _ := Rel.refl
+  apply AA.subst₁ (rβ := (· → ·)) ‹c + b - (c + a) ≃ b - a›
+  exact ‹Positive (c + b - (c + a))›
+
+def add_cancellativeL_lt
+    : AA.CancellativeOn Hand.L (α := ℤ) (· + ·) AA.tc (· < ·) (· < ·)
+    := {
+  cancel := λ (_ : True) => add_cancelL_lt
+}
+
+instance add_cancellative_lt
+    : AA.Cancellative (α := ℤ) (· + ·) AA.tc (· < ·) (· < ·)
+    := {
+  cancellativeL := add_cancellativeL_lt
+  cancellativeR := AA.cancelR_from_cancelL add_cancellativeL_lt
+}
+
 end Lean4Axiomatic.Integer

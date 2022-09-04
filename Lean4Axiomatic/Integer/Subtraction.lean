@@ -184,6 +184,24 @@ instance mul_distributive_sub : AA.Distributive (α := ℤ) (· * ·) (· - ·) 
 }
 
 /--
+When subtracting two sums, if they both have the same right-hand operand, it
+can be removed, leaving just the difference of the left-hand operands.
+
+**Intuition**: This follows from the basic algebraic properties of integers.
+-/
+theorem sub_sums_sameR {a b c : ℤ} : a + c - (b + c) ≃ a - b := calc
+  a + c - (b + c)           ≃ _ := sub_defn
+  a + c + -(b + c)          ≃ _ := AA.substR (Rel.symm mul_neg_one)
+  a + c + -1 * (b + c)      ≃ _ := AA.substR AA.distribL
+  a + c + (-1 * b + -1 * c) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
+  a + -1 * b + (c + -1 * c) ≃ _ := AA.substR (AA.substR mul_neg_one)
+  a + -1 * b + (c + -c)     ≃ _ := AA.substR AA.inverseR
+  a + -1 * b + 0            ≃ _ := AA.identR
+  a + -1 * b                ≃ _ := AA.substR mul_neg_one
+  a + -b                    ≃ _ := Rel.symm sub_defn
+  a - b                     ≃ _ := Rel.refl
+
+/--
 Multiplication by a nonzero value on the left is injective.
 
 **Property and proof intuition**: Viewing multiplication as a scaling
