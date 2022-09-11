@@ -5,7 +5,7 @@ import Lean4Axiomatic.Integer.Subtraction
 namespace Lean4Axiomatic.Integer
 
 open Coe (coe)
-open Signed (Positive)
+open Signed (Negative Positive)
 
 /-! ## Axioms -/
 
@@ -172,7 +172,7 @@ instance lt_substitutive_eqv
 }
 
 /--
-The `· < ·` relation is preserved when the same value is added on the left to
+The `· < ·` relation is preserved when the same value is added on the right to
 both sides.
 
 **Property intuition**: Both values are changed by the same amount, so their
@@ -240,6 +240,84 @@ instance add_cancellative_lt
     := {
   cancellativeL := add_cancellativeL_lt
   cancellativeR := AA.cancelR_from_cancelL add_cancellativeL_lt
+}
+
+/--
+The `· < ·` relation is preserved when both sides are multiplied on the right
+by the same positive value.
+
+**Property intuition**: Both values are scaled away from zero by the same
+factor, so their ordering won't be affected; positive values become more
+positive and negative values become more negative.
+
+**Proof intuition**: The goal `a * c < b * c` can be expressed as
+`Positive (b * c - a * c)`, which factors into `Positive ((b - a) * c)`. The
+result follows by showing that the two factors being positive means that their
+product is positive.
+-/
+theorem mul_substL_lt {a b c : ℤ} : Positive c → a < b → a * c < b * c := by
+  intro (_ : Positive c) (_ : a < b)
+  show a * c < b * c
+  have : Positive (b - a) := gt_iff_pos_diff.mp ‹a < b›
+  apply gt_iff_pos_diff.mpr
+  show Positive (b * c - a * c)
+  apply AA.subst₁ (rβ := (· → ·)) AA.distribR
+  show Positive ((b - a) * c)
+  exact mul_preserves_positive ‹Positive (b - a)› ‹Positive c›
+
+def mul_substitutiveL_lt
+    : AA.SubstitutiveOn Hand.L (α := ℤ) (· * ·) Positive (· < ·) (· < ·)
+    := {
+  subst₂ := mul_substL_lt
+}
+
+instance mul_substitutive_lt
+    : AA.Substitutive₂ (α := ℤ) (· * ·) Positive (· < ·) (· < ·)
+    := {
+  substitutiveL :=
+    mul_substitutiveL_lt
+  substitutiveR :=
+    AA.substR_from_substL_swap (rS := (· ≃ ·)) mul_substitutiveL_lt
+}
+
+/--
+The `· < ·` relation on products with the same (positive) left factor is
+preserved when that factor is removed from both products.
+
+**Property intuition**: Both values are scaled towards zero by the same factor,
+so their ordering won't be affected; positive values become less positive and
+negative values become less negative.
+
+**Proof intuition**: The assumption `c * a < c * b` can be expressed as
+`Positive (c * b - c * a)`, which factors into `Positive (c * (b - a))`. Thus
+`c` and `b - a` must have the same sign, and since `c` is positive, `b - a` is
+as well, giving the result.
+-/
+theorem mul_cancelL_lt {a b c : ℤ} : Positive c → c * a < c * b → a < b := by
+  intro (_ : Positive c) (_ : c * a < c * b)
+  show a < b
+  have : Positive (c * b - c * a) := gt_iff_pos_diff.mp ‹c * a < c * b›
+  apply gt_iff_pos_diff.mpr
+  show Positive (b - a)
+  have : Positive (c * (b - a)) :=
+    AA.subst₁ (rβ := (· → ·)) (Rel.symm AA.distribL) ‹Positive (c * b - c * a)›
+  have : SameSqrt1 c (b - a) :=
+    positive_mul_iff_same_sqrt1.mp ‹Positive (c * (b - a))›
+  have : Positive (b - a) :=
+    same_sqrt1_positive ‹SameSqrt1 c (b - a)› ‹Positive c›
+  exact this
+
+def mul_cancellativeL_lt
+    : AA.CancellativeOn Hand.L (α := ℤ) (· * ·) Positive (· < ·) (· < ·)
+    := {
+  cancel := mul_cancelL_lt
+}
+
+instance mul_cancellative_lt
+    : AA.Cancellative (α := ℤ) (· * ·) Positive (· < ·) (· < ·)
+    := {
+  cancellativeL := mul_cancellativeL_lt
+  cancellativeR := AA.cancelR_from_cancelL mul_cancellativeL_lt
 }
 
 end Lean4Axiomatic.Integer
