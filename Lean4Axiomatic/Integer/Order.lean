@@ -301,10 +301,10 @@ theorem mul_cancelL_lt {a b c : ℤ} : Positive c → c * a < c * b → a < b :=
   show Positive (b - a)
   have : Positive (c * (b - a)) :=
     AA.subst₁ (rβ := (· → ·)) (Rel.symm AA.distribL) ‹Positive (c * b - c * a)›
-  have : SameSqrt1 c (b - a) :=
-    positive_mul_iff_same_sqrt1.mp ‹Positive (c * (b - a))›
+  have : SameSign c (b - a) :=
+    positive_mul_iff_same_sign.mp ‹Positive (c * (b - a))›
   have : Positive (b - a) :=
-    same_sqrt1_positive ‹SameSqrt1 c (b - a)› ‹Positive c›
+    same_sign_positive ‹SameSign c (b - a)› ‹Positive c›
   exact this
 
 def mul_cancellativeL_lt

@@ -59,8 +59,8 @@ theorem neg_diff_lt {n m : ℕ} : Negative (n——m) ↔ n < m := by
     apply Natural.lt_defn_add.mpr
     show ∃ (k : ℕ), Positive k ∧ m ≃ n + k
     have
-      (SignedMagnitude.intro (k : ℕ) (_ : Positive k) (_ : n——m ≃ -1 * coe k))
-        := Generic.negative_defn.mp ‹Negative (n——m)›
+      (NonzeroWithSign.intro (k : ℕ) (_ : Positive k) (_ : n——m ≃ -1 * coe k))
+        := Generic.negative_iff_sign_neg1.mp ‹Negative (n——m)›
     have : n——m ≃ 0——k := Rel.trans ‹n——m ≃ -1 * coe k› (Rel.symm neg_diff)
     have : n + k ≃ 0 + m := ‹n——m ≃ 0——k›
     have : m ≃ n + k := calc
@@ -71,11 +71,11 @@ theorem neg_diff_lt {n m : ℕ} : Negative (n——m) ↔ n < m := by
   case mpr =>
     intro (_ : n < m)
     show Negative (n——m)
-    apply Generic.negative_defn.mpr
-    show SignedMagnitude (n——m) sqrt1_neg_one
+    apply Generic.negative_iff_sign_neg1.mpr
+    show NonzeroWithSign (n——m) (-1)
     have (Exists.intro k (And.intro (_ : Positive k) (_ : m ≃ n + k))) :=
       Natural.lt_defn_add.mp ‹n < m›
-    apply SignedMagnitude.intro k ‹Positive k›
+    apply NonzeroWithSign.intro k ‹Positive k›
     show n——m ≃ -1 * coe k
     have : 0——k ≃ -1 * coe k := neg_diff
     apply (Rel.trans · ‹0——k ≃ -1 * coe k›)
@@ -103,14 +103,14 @@ theorem pos_diff_gt {n m : ℕ} : Positive (n——m) ↔ n > m := by
   case mp =>
     intro (_ : Positive (n——m))
     have
-      (SignedMagnitude.intro (k : ℕ) (_ : Positive k) (_ : n——m ≃ 1 * coe k))
-        := Generic.positive_defn.mp ‹Positive (n——m)›
+      (NonzeroWithSign.intro (k : ℕ) (_ : Positive k) (_ : n——m ≃ 1 * coe k))
+        := Generic.positive_iff_sign_pos1.mp ‹Positive (n——m)›
     show m < n
     apply neg_diff_lt.mp
     show Negative (m——n)
-    apply Generic.negative_defn.mpr
-    show SignedMagnitude (m——n) sqrt1_neg_one
-    apply SignedMagnitude.intro k ‹Positive k›
+    apply Generic.negative_iff_sign_neg1.mpr
+    show NonzeroWithSign (m——n) (-1)
+    apply NonzeroWithSign.intro k ‹Positive k›
     show m——n ≃ -1 * coe k
     calc
       m——n           ≃ _ := Rel.symm neg_involutive
@@ -121,13 +121,13 @@ theorem pos_diff_gt {n m : ℕ} : Positive (n——m) ↔ n > m := by
   case mpr =>
     intro (_ : m < n)
     show Positive (n——m)
-    apply Generic.positive_defn.mpr
-    show SignedMagnitude (n——m) sqrt1_one
+    apply Generic.positive_iff_sign_pos1.mpr
+    show NonzeroWithSign (n——m) 1
     have : Negative (m——n) := neg_diff_lt.mpr ‹m < n›
     have
-      (SignedMagnitude.intro (k : ℕ) (_ : Positive k) (_ : m——n ≃ -1 * coe k))
-        := Generic.negative_defn.mp ‹Negative (m——n)›
-    apply SignedMagnitude.intro k ‹Positive k›
+      (NonzeroWithSign.intro (k : ℕ) (_ : Positive k) (_ : m——n ≃ -1 * coe k))
+        := Generic.negative_iff_sign_neg1.mp ‹Negative (m——n)›
+    apply NonzeroWithSign.intro k ‹Positive k›
     show n——m ≃ 1 * coe k
     calc
       n——m              ≃ _ := Rel.symm neg_involutive
@@ -200,8 +200,8 @@ def signed : Signed (Difference ℕ) := {
 
 instance sign : Sign ℕ (Difference ℕ) := {
   signed := signed
-  positive_defn := Generic.positive_defn
-  negative_defn := Generic.negative_defn
+  positive_iff_sign_pos1 := Generic.positive_iff_sign_pos1
+  negative_iff_sign_neg1 := Generic.negative_iff_sign_neg1
 }
 
 end Lean4Axiomatic.Integer.Impl.Difference

@@ -30,39 +30,42 @@ to be easy to use with algebra.
 **Named parameters**
 - `a`: The integer satisfying the property.
 -/
-def SquareRootOfUnity (a : ℤ) : Prop := a * a ≃ 1
+class Sqrt1 (a : ℤ) : Prop :=
+  /-- The underlying property represented by `Sqrt1`. -/
+  elim : a * a ≃ 1
 
 /--
-The `SquareRootOfUnity` predicate respects equivalence.
+The `Sqrt1` predicate respects equivalence.
 
-**Property intuition**: This must be true for `SquareRootOfUnity` to make sense
-as a predicate.
+**Property intuition**: This must be true for `Sqrt1` to make sense as a
+predicate.
 
-**Proof intuition**: Expand the definition of `SquareRootOfUnity` to obtain an
-equivalence involving multiplication. Since multiplication is substitutive, the
-result follows easily.
+**Proof intuition**: Expand the definition of `Sqrt1` to obtain an equivalence
+involving multiplication. Since multiplication is substitutive, the result
+follows easily.
 -/
-theorem sqrt1_subst
-    {a₁ a₂ : ℤ} : a₁ ≃ a₂ → SquareRootOfUnity a₁ → SquareRootOfUnity a₂
-    := by
-  intro (_ : a₁ ≃ a₂) (_ : a₁ * a₁ ≃ 1)
-  show a₂ * a₂ ≃ 1
-  calc
+theorem sqrt1_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → Sqrt1 a₁ → Sqrt1 a₂ := by
+  intro (_ : a₁ ≃ a₂) (_ : Sqrt1 a₁)
+  show Sqrt1 a₂
+  have : a₂ * a₂ ≃ 1 := calc
     a₂ * a₂ ≃ _ := AA.substL (Rel.symm ‹a₁ ≃ a₂›)
     a₁ * a₂ ≃ _ := AA.substR (Rel.symm ‹a₁ ≃ a₂›)
-    a₁ * a₁ ≃ _ := ‹a₁ * a₁ ≃ 1›
+    a₁ * a₁ ≃ _ := ‹Sqrt1 a₁›.elim
     1       ≃ _ := Rel.refl
+  exact Sqrt1.mk ‹a₂ * a₂ ≃ 1›
 
-instance sqrt1_substitutive
-    : AA.Substitutive₁ SquareRootOfUnity (· ≃ ·) (· → ·)
-    := {
+instance sqrt1_substitutive : AA.Substitutive₁ Sqrt1 (· ≃ ·) (· → ·) := {
   subst₁ := sqrt1_subst
 }
 
 /-- One is a square root of unity. -/
-theorem sqrt1_one : SquareRootOfUnity 1 := by
+theorem sqrt1_one : (1 : ℤ) * 1 ≃ 1 := by
   show 1 * 1 ≃ 1
   exact AA.identL
+
+instance : Sqrt1 1 := {
+  elim := sqrt1_one
+}
 
 /--
 Negative one is a square root of unity.
@@ -70,14 +73,17 @@ Negative one is a square root of unity.
 **Property and proof intuition**: Multiplying two negative numbers gives a
 positive result, and if the magnitudes are `1`, the result will also be `1`.
 -/
-theorem sqrt1_neg_one : SquareRootOfUnity (-1) := by
-  show (-1) * (-1) ≃ 1
+theorem sqrt1_neg_one : (-1 : ℤ) * (-1) ≃ 1 := by
   calc
     (-1) * (-1)   ≃ _ := Rel.symm AA.scompatL
     (-(1 * (-1))) ≃ _ := AA.subst₁ (Rel.symm AA.scompatR)
     (-(-(1 * 1))) ≃ _ := neg_involutive
     1 * 1         ≃ _ := sqrt1_one
     1             ≃ _ := Rel.refl
+
+instance : Sqrt1 (-1) := {
+  elim := sqrt1_neg_one
+}
 
 /--
 The product of square roots of unity is also a square root of unity.
@@ -90,19 +96,18 @@ the magnitude of the result. Thus, regardless of the signs involved, a product
 of two square roots of unity can only be `1` or `-1`.
 
 **Proof intuition**: Rearrange factors with associativity to isolate `a` and
-`b` into products with themselves. By the definition of `SquareRootOfUnity`,
-those products must each be `1`; thus the product of the products is also `1`.
+`b` into products with themselves. By the definition of `Sqrt1`, those products
+must each be `1`; thus the product of the products is also `1`.
 -/
-theorem mul_preserves_sqrt1
-    {a b : ℤ}
-    : SquareRootOfUnity a → SquareRootOfUnity b → SquareRootOfUnity (a * b)
+instance mul_preserves_sqrt1
+    {a b : ℤ} [Sqrt1 a] [Sqrt1 b] : Sqrt1 (a * b)
     := by
-  intro (_ : a * a ≃ 1) (_ : b * b ≃ 1)
+  apply Sqrt1.mk
   show (a * b) * (a * b) ≃ 1
   calc
     (a * b) * (a * b) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
-    (a * a) * (b * b) ≃ _ := AA.substL ‹a * a ≃ 1›
-    1 * (b * b)       ≃ _ := AA.substR ‹b * b ≃ 1›
+    (a * a) * (b * b) ≃ _ := AA.substL ‹Sqrt1 a›.elim
+    1 * (b * b)       ≃ _ := AA.substR ‹Sqrt1 b›.elim
     1 * 1             ≃ _ := sqrt1_one
     1                 ≃ _ := Rel.refl
 
@@ -114,16 +119,18 @@ The sign value is either positive (represented by `1`) or negative (represented
 by `-1`). The magnitude must be a positive natural number.
 
 This data structure is a foundation for defining the `Positive`, `Negative`,
-and `Nonzero` predicates on integers.
+and `Nonzero` predicates on integers. It can be easier to work with than those,
+because it represents positive and negative numbers in a uniform way that's
+suited to algebraic operations.
 
 **Parameters**
 - `a`: The integer to represent in signed-magnitude form.
 - `s`: The sign value.
-- `SquareRootOfUnity s`: Ensures that `s` is either `1` or `-1`.
+- `Sqrt1 s`: Ensures that `s` is either `1` or `-1`.
 -/
-inductive SignedMagnitude (a : ℤ) {s : ℤ} (_ : SquareRootOfUnity s) : Prop
+inductive NonzeroWithSign (a : ℤ) (s : ℤ) [sqrt1 : Sqrt1 s] : Prop
 | /--
-  `SignedMagnitude`'s only constructor.
+  `NonzeroWithSign`'s only constructor.
 
   **Parameters**
   - `m`: The magnitude value.
@@ -133,25 +140,22 @@ inductive SignedMagnitude (a : ℤ) {s : ℤ} (_ : SquareRootOfUnity s) : Prop
   intro (m : ℕ) (pos : Positive m) (eqv : a ≃ s * coe m)
 
 /--
-`SignedMagnitude` respects equivalence of signs.
+`NonzeroWithSign` respects equivalence of signs.
 
 **Property intuition**: If signs `s₁` and `s₂` are equivalent, and we have a
-`SignedMagnitude` for `s₁`, then that can be converted into a `SignedMagnitude`
-for `s₂`. This _must_ be true for `SignedMagnitude` to be a valid predicate.
+`NonzeroWithSign` for `s₁`, then that can be converted into a `NonzeroWithSign`
+for `s₂`. This _must_ be true for `NonzeroWithSign` to be a valid predicate.
 
 **Proof intuition**: Extract the equivalence for `s₁`, substitute `s₂` into it,
-and build a new `SignedMagnitude` on `s₂`.
+and build a new `NonzeroWithSign` on `s₂`.
 -/
-theorem signedMagnitude_sqrt1_subst
-    {a s₁ s₂ : ℤ} {_ : SquareRootOfUnity s₁} (_ : s₁ ≃ s₂)
-    : SignedMagnitude a ‹SquareRootOfUnity s₁›
-    → have : SquareRootOfUnity s₂ :=
-        AA.subst₁ (rβ := (· → ·)) ‹s₁ ≃ s₂› ‹SquareRootOfUnity s₁›
-      SignedMagnitude a ‹SquareRootOfUnity s₂›
+theorem nonzeroWithSign_sqrt1_subst
+    {a s₁ s₂ : ℤ} {_ : Sqrt1 s₁} {_ : Sqrt1 s₂} (_ : s₁ ≃ s₂)
+    : NonzeroWithSign a s₁ → NonzeroWithSign a s₂
     := by
-  intro (SignedMagnitude.intro (m : ℕ) (_ : Positive m) (_ : a ≃ s₁ * coe m))
+  intro (NonzeroWithSign.intro (m : ℕ) (_ : Positive m) (_ : a ≃ s₁ * coe m))
   have : a ≃ s₂ * coe m := Rel.trans ‹a ≃ s₁ * coe m› (AA.substL ‹s₁ ≃ s₂›)
-  exact SignedMagnitude.intro m ‹Positive m› ‹a ≃ s₂ * coe m›
+  exact NonzeroWithSign.intro m ‹Positive m› ‹a ≃ s₂ * coe m›
 
 /--
 Given two integers in signed-magnitude form, we can put their product in
@@ -161,23 +165,20 @@ signed-magnitude form as well.
 be put into signed-magnitude form.
 
 **Proof intuition**: From previous results, we know that multiplication
-preserves `SquareRootOfUnity`, and `Positive` on natural numbers. Then we just
-need to show that the product of two signed-magnitude forms can itself be put
-into signed-magnitude form; this follows mostly from algebra on multiplication.
+preserves `Sqrt1` and `Positive` on natural numbers. Then we just need to show
+that the product of two signed-magnitude forms can itself be put into
+signed-magnitude form; this follows mostly from algebra on multiplication.
 -/
-theorem mul_preserves_signedMagnitude
-    {a b as bs : ℤ}
-    {a_sqrt1 : SquareRootOfUnity as} {b_sqrt1 : SquareRootOfUnity bs}
-    : SignedMagnitude a a_sqrt1 → SignedMagnitude b b_sqrt1
-    → have : SquareRootOfUnity (as * bs) := mul_preserves_sqrt1 a_sqrt1 b_sqrt1
-      SignedMagnitude (a * b) ‹SquareRootOfUnity (as * bs)›
+theorem mul_preserves_nonzeroWithSign
+    {a b as bs : ℤ} {a_sqrt1 : Sqrt1 as} {b_sqrt1 : Sqrt1 bs}
+    : NonzeroWithSign a as → NonzeroWithSign b bs
+    → NonzeroWithSign (a * b) (as * bs)
     := by
   intro
-    (SignedMagnitude.intro (am : ℕ) (_ : Positive am) (_ : a ≃ as * coe am))
+    (NonzeroWithSign.intro (am : ℕ) (_ : Positive am) (_ : a ≃ as * coe am))
   intro
-    (SignedMagnitude.intro (bm : ℕ) (_ : Positive bm) (_ : b ≃ bs * coe bm))
-  have : SquareRootOfUnity (as * bs) := mul_preserves_sqrt1 a_sqrt1 b_sqrt1
-  show SignedMagnitude (a * b) ‹SquareRootOfUnity (as * bs)›
+    (NonzeroWithSign.intro (bm : ℕ) (_ : Positive bm) (_ : b ≃ bs * coe bm))
+  show NonzeroWithSign (a * b) (as * bs)
   have : Positive (am * bm) := Natural.mul_positive ‹Positive am› ‹Positive bm›
   have : a * b ≃ (as * bs) * coe (am * bm) := calc
     a * b                         ≃ _ := AA.substL ‹a ≃ as * coe am›
@@ -185,17 +186,16 @@ theorem mul_preserves_signedMagnitude
     (as * coe am) * (bs * coe bm) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
     (as * bs) * (coe am * coe bm) ≃ _ := AA.substR (Rel.symm AA.compat₂)
     (as * bs) * coe (am * bm)     ≃ _ := Rel.refl
-  exact SignedMagnitude.intro
+  exact NonzeroWithSign.intro
     (am * bm) ‹Positive (am * bm)› ‹a * b ≃ (as * bs) * coe (am * bm)›
 
 /--
-A positive or negative integer.
+Evidence that an integer is not zero, with no other details.
 
-Represents nonzero integers as the product of a nonzero sign (`1` or `-1`) and
-a positive magnitude. This is convenient for use in algebraic proofs.
+Same as `NonzeroWithSign`, but the sign is a field instead of a parameter.
 
 **Parameters**
-- `a`: The integer that is positive or negative.
+- `a`: The integer that is not zero.
 -/
 inductive Nonzero (a : ℤ) : Prop :=
 | /--
@@ -205,43 +205,39 @@ inductive Nonzero (a : ℤ) : Prop :=
   - See `Nonzero` for the class-level parameters.
   - `sign`: Has value `1` if `a` is positive, or `-1` if `a` is negative.
   - `sqrt1`: Evidence that `sign` is `1` or `-1`.
-  - `sm`: Evidence that `sign` denotes the sign of `a`.
+  - `nws`: Evidence that `sign` is the sign of `a`.
   -/
   intro
     (sign : ℤ)
-    (sqrt1 : SquareRootOfUnity sign)
-    (sm : SignedMagnitude a sqrt1)
+    (sqrt1 : Sqrt1 sign)
+    (nws : NonzeroWithSign a sign)
 
 /--
 Convenience constructor that infers early arguments of `Nonzero.intro` from the
-last, `SignedMagnitude` argument.
+last, `NonzeroWithSign` argument.
 -/
-def Nonzero.mk
-    {a s : ℤ} {sqrt1 : SquareRootOfUnity s}
-    : SignedMagnitude a sqrt1 → Nonzero a :=
+def Nonzero.mk {a s : ℤ} {sqrt1 : Sqrt1 s} : NonzeroWithSign a s → Nonzero a :=
   Nonzero.intro s sqrt1
 
 /--
 The product of nonzero integers is nonzero.
 
 **Property and proof intuition**: `Nonzero` can be decomposed into a sign value
-and a `SignedMagnitude` value. Previous results have shown that both of those
+and a `NonzeroWithSign` value. Previous results have shown that both of those
 components are preserved under multiplication, so a `Nonzero` value for the
 product of `Nonzero` integers can always be constructed.
 -/
 theorem mul_preserves_nonzero
     {a b : ℤ} : Nonzero a → Nonzero b → Nonzero (a * b)
     := by
-  intro (Nonzero.intro as
-      (a_sqrt1 : SquareRootOfUnity as) (a_sm : SignedMagnitude a a_sqrt1))
-  intro (Nonzero.intro bs
-      (b_sqrt1 : SquareRootOfUnity bs) (b_sm : SignedMagnitude b b_sqrt1))
+  intro (Nonzero.intro as (_ : Sqrt1 as) nwsa)
+  intro (Nonzero.intro bs (_ : Sqrt1 bs) nwsb)
+  have : NonzeroWithSign a as := nwsa
+  have : NonzeroWithSign b bs := nwsb
   show Nonzero (a * b)
-  have : SquareRootOfUnity (as * bs) :=
-    mul_preserves_sqrt1 ‹SquareRootOfUnity as› ‹SquareRootOfUnity bs›
-  have : SignedMagnitude (a * b) ‹SquareRootOfUnity (as * bs)› :=
-    mul_preserves_signedMagnitude a_sm b_sm
-  exact Nonzero.mk ‹SignedMagnitude (a * b) ‹SquareRootOfUnity (as * bs)››
+  have : NonzeroWithSign (a * b) (as * bs) :=
+    mul_preserves_nonzeroWithSign ‹NonzeroWithSign a as› ‹NonzeroWithSign b bs›
+  exact Nonzero.mk ‹NonzeroWithSign (a * b) (as * bs)›
 
 end prelim
 
@@ -259,15 +255,15 @@ class Sign
   /-- Definitions of `Positive` and `Negative`, and their basic properties. -/
   signed : Signed ℤ
 
-  /-- An integer is positive iff it has sign `1` in signed-magnitude form. -/
-  positive_defn {a : ℤ} : Positive a ↔ SignedMagnitude a sqrt1_one
+  /-- An integer is positive iff it has sign `1`. -/
+  positive_iff_sign_pos1 {a : ℤ} : Positive a ↔ NonzeroWithSign a 1
 
-  /-- An integer is negative iff it has sign `-1` in signed-magnitude form. -/
-  negative_defn {a : ℤ} : Negative a ↔ SignedMagnitude a sqrt1_neg_one
+  /-- An integer is negative iff it has sign `-1`. -/
+  negative_iff_sign_neg1 {a : ℤ} : Negative a ↔ NonzeroWithSign a (-1)
 
 attribute [instance] Sign.signed
 
-export Sign (negative_defn positive_defn)
+export Sign (negative_iff_sign_neg1 positive_iff_sign_pos1)
 
 /-!
 ## Derived properties
@@ -284,9 +280,9 @@ def positive_intro_nat
   intro (_ : Positive m) (_ : a ≃ coe m)
   show Positive a
   have : a ≃ 1 * coe m := Rel.trans ‹a ≃ coe m› (Rel.symm AA.identL)
-  have : SignedMagnitude a sqrt1_one :=
-    SignedMagnitude.intro m ‹Positive m› ‹a ≃ 1 * coe m›
-  exact positive_defn.mpr ‹SignedMagnitude a sqrt1_one›
+  have : NonzeroWithSign a 1 :=
+    NonzeroWithSign.intro m ‹Positive m› ‹a ≃ 1 * coe m›
+  exact positive_iff_sign_pos1.mpr ‹NonzeroWithSign a 1›
 
 /--
 Extract evidence that a positive integer is equivalent to a positive natural
@@ -297,8 +293,8 @@ def positive_elim_nat
     := by
   intro (_ : Positive a)
   show ∃ n, Positive n ∧ a ≃ coe n
-  have (SignedMagnitude.intro (n : ℕ) (_ : Positive n) (_ : a ≃ 1 * coe n)) :=
-    positive_defn.mp ‹Positive a›
+  have (NonzeroWithSign.intro (n : ℕ) (_ : Positive n) (_ : a ≃ 1 * coe n)) :=
+    positive_iff_sign_pos1.mp ‹Positive a›
   have : a ≃ coe n := Rel.trans ‹a ≃ 1 * coe n› AA.identL
   exact Exists.intro n (And.intro ‹Positive n› ‹a ≃ coe n›)
 
@@ -312,9 +308,9 @@ def negative_intro_nat
   intro (_ : Positive m) (_ : a ≃ -(coe m))
   show Negative a
   have : a ≃ -1 * coe m := Rel.trans ‹a ≃ -(coe m)› (Rel.symm mul_neg_one)
-  have : SignedMagnitude a sqrt1_neg_one :=
-    SignedMagnitude.intro m ‹Positive m› ‹a ≃ -1 * coe m›
-  exact negative_defn.mpr ‹SignedMagnitude a sqrt1_neg_one›
+  have : NonzeroWithSign a (-1) :=
+    NonzeroWithSign.intro m ‹Positive m› ‹a ≃ -1 * coe m›
+  exact negative_iff_sign_neg1.mpr ‹NonzeroWithSign a (-1)›
 
 /--
 Extract evidence that a negative integer is equivalent to the negation of a
@@ -325,8 +321,8 @@ def negative_elim_nat
     := by
   intro (_ : Negative a)
   show ∃ n, Positive n ∧ a ≃ -(coe n)
-  have (SignedMagnitude.intro (n : ℕ) (_ : Positive n) (_ : a ≃ -1 * coe n)) :=
-    negative_defn.mp ‹Negative a›
+  have (NonzeroWithSign.intro (n : ℕ) (_ : Positive n) (_ : a ≃ -1 * coe n)) :=
+    negative_iff_sign_neg1.mp ‹Negative a›
   have : a ≃ -(coe n) := Rel.trans ‹a ≃ -1 * coe n› mul_neg_one
   exact Exists.intro n (And.intro ‹Positive n› ‹a ≃ -(coe n)›)
 
@@ -346,17 +342,17 @@ The only square roots of unity in the integers are `1` and `-1`.
 `Natural.sqrt1`. Zero squared is zero, and integers greater than one or less
 than negative one all have squares that are greater than one.
 -/
-theorem sqrt1_cases {a : ℤ} : SquareRootOfUnity a ↔ a ≃ 1 ∨ a ≃ -1 := by
+theorem sqrt1_cases {a : ℤ} : Sqrt1 a ↔ a ≃ 1 ∨ a ≃ -1 := by
   apply Iff.intro
   case mp =>
-    intro (_ : a * a ≃ 1)
+    intro (_ : Sqrt1 a)
     show a ≃ 1 ∨ a ≃ -1
     match (Signed.trichotomy a).atLeastOne with
     | AA.OneOfThree.first (_ : a ≃ 0) =>
       apply False.elim
       show False
       have : 1 ≃ 0 := calc
-        1     ≃ _ := Rel.symm ‹a * a ≃ 1›
+        1     ≃ _ := Rel.symm ‹Sqrt1 a›.elim
         a * a ≃ _ := AA.substL ‹a ≃ 0›
         0 * a ≃ _ := AA.absorbL
         0     ≃ _ := Rel.refl
@@ -370,7 +366,7 @@ theorem sqrt1_cases {a : ℤ} : SquareRootOfUnity a ↔ a ≃ 1 ∨ a ≃ -1 := 
         coe (n * n)   ≃ _ := AA.compat₂
         coe n * coe n ≃ _ := AA.substL (Rel.symm ‹a ≃ coe n›)
         a * coe n     ≃ _ := AA.substR (Rel.symm ‹a ≃ coe n›)
-        a * a         ≃ _ := ‹a * a ≃ 1›
+        a * a         ≃ _ := ‹Sqrt1 a›.elim
         1             ≃ _ := Rel.refl
       have : n * n ≃ 1 := AA.inject ‹coe (n * n) ≃ coe (1 : ℕ)›
       have : n ≃ 1 := Natural.sqrt1.mp ‹n * n ≃ 1›
@@ -392,7 +388,7 @@ theorem sqrt1_cases {a : ℤ} : SquareRootOfUnity a ↔ a ≃ 1 ∨ a ≃ -1 := 
         (-(coe n * -(coe n)))   ≃ _ := AA.scompatL
         (-(coe n)) * (-(coe n)) ≃ _ := AA.substL (Rel.symm ‹a ≃ -(coe n)›)
         a * (-(coe n))          ≃ _ := AA.substR (Rel.symm ‹a ≃ -(coe n)›)
-        a * a                   ≃ _ := ‹a * a ≃ 1›
+        a * a                   ≃ _ := ‹Sqrt1 a›.elim
         1                       ≃ _ := Rel.refl
       have : n * n ≃ 1 := AA.inject ‹coe (n * n) ≃ coe (1 : ℕ)›
       have : n ≃ 1 := Natural.sqrt1.mp ‹n * n ≃ 1›
@@ -404,44 +400,46 @@ theorem sqrt1_cases {a : ℤ} : SquareRootOfUnity a ↔ a ≃ 1 ∨ a ≃ -1 := 
         (-1)       ≃ _ := Rel.refl
   case mpr =>
     intro (_ : a ≃ 1 ∨ a ≃ -1)
-    show SquareRootOfUnity a
+    show Sqrt1 a
     match ‹a ≃ 1 ∨ a ≃ -1› with
     | Or.inl (_ : a ≃ 1) =>
-      have : SquareRootOfUnity 1 := sqrt1_one
-      exact AA.subst₁ (rβ := (· → ·)) (Rel.symm ‹a ≃ 1›) this
+      have : Sqrt1 1 := inferInstance
+      have : Sqrt1 a := AA.subst₁ (rβ := (· → ·)) (Rel.symm ‹a ≃ 1›) ‹Sqrt1 1›
+      exact this
     | Or.inr (_ : a ≃ -1) =>
-      have : SquareRootOfUnity (-1) := sqrt1_neg_one
-      exact AA.subst₁ (rβ := (· → ·)) (Rel.symm ‹a ≃ -1›) this
+      have : Sqrt1 (-1) := inferInstance
+      have : Sqrt1 a :=
+        AA.subst₁ (rβ := (· → ·)) (Rel.symm ‹a ≃ -1›) ‹Sqrt1 (-1)›
+      exact this
 
 /--
-Every `SignedMagnitude` has a sign value that's either `1` or `-1`.
+Every `NonzeroWithSign` has a sign value that's either `1` or `-1`.
 
-This is a lemma that's useful for the proof of `nonzero_defn`.
+This is a lemma that's useful for the proof of `nonzero_iff_pos_or_neg`.
 
 **Property and proof intuition**: We already know from `sqrt1_cases` that sign
 values can only be `1` or `-1`. So this result just uses that fact to show what
-the precise type of `SignedMagnitude` is allowed to be.
+the precise type of `NonzeroWithSign` is allowed to be.
 -/
-theorem signedMagnitude_cases
-    {a s : ℤ} {sqrt1 : SquareRootOfUnity s}
-    : SignedMagnitude a sqrt1 →
-    SignedMagnitude a sqrt1_one ∨ SignedMagnitude a sqrt1_neg_one
+theorem nonzeroWithSign_cases
+    {a s : ℤ} {sqrt1 : Sqrt1 s}
+    : NonzeroWithSign a s → NonzeroWithSign a 1 ∨ NonzeroWithSign a (-1)
     := by
-  intro (_ : SignedMagnitude a sqrt1)
-  show SignedMagnitude a sqrt1_one ∨ SignedMagnitude a sqrt1_neg_one
-  have : s ≃ 1 ∨ s ≃ -1 := sqrt1_cases.mp ‹SquareRootOfUnity s›
+  intro (_ : NonzeroWithSign a s)
+  show NonzeroWithSign a 1 ∨ NonzeroWithSign a (-1)
+  have : s ≃ 1 ∨ s ≃ -1 := sqrt1_cases.mp ‹Sqrt1 s›
   match ‹s ≃ 1 ∨ s ≃ -1› with
   | Or.inl (_ : s ≃ 1) =>
     apply Or.inl
-    show SignedMagnitude a sqrt1_one
-    exact signedMagnitude_sqrt1_subst ‹s ≃ 1› ‹SignedMagnitude a sqrt1›
+    show NonzeroWithSign a 1
+    exact nonzeroWithSign_sqrt1_subst ‹s ≃ 1› ‹NonzeroWithSign a s›
   | Or.inr (_ : s ≃ -1) =>
     apply Or.inr
-    show SignedMagnitude a sqrt1_neg_one
-    exact signedMagnitude_sqrt1_subst ‹s ≃ -1› ‹SignedMagnitude a sqrt1›
+    show NonzeroWithSign a (-1)
+    exact nonzeroWithSign_sqrt1_subst ‹s ≃ -1› ‹NonzeroWithSign a s›
 
 /--
-All signed-magnitude representations of the same integer have the same sign.
+All `Nonzero` representations of the same integer have the same sign.
 
 **Property intuition**: From trichotomy, all nonzero integers are either
 positive or negative, not both.
@@ -450,129 +448,137 @@ positive or negative, not both.
 the signs are equal, we are done. Otherwise, the integer must be both
 positive and negative, contradiction.
 -/
-theorem signedMagnitude_sqrt1_inject
-    {a s₁ s₂ : ℤ}
-    {sqrt1₁ : SquareRootOfUnity s₁} {sqrt1₂ : SquareRootOfUnity s₂}
-    : SignedMagnitude a sqrt1₁ → SignedMagnitude a sqrt1₂ → s₁ ≃ s₂
+theorem nonzeroWithSign_sign_inject
+    {a s₁ s₂ : ℤ} {_ : Sqrt1 s₁} {_ : Sqrt1 s₂}
+    : NonzeroWithSign a s₁ → NonzeroWithSign a s₂ → s₁ ≃ s₂
     := by
-  intro (_ : SignedMagnitude a sqrt1₁) (_ : SignedMagnitude a sqrt1₂)
+  intro (_ : NonzeroWithSign a s₁) (_ : NonzeroWithSign a s₂)
   show s₁ ≃ s₂
-  have : s₁ ≃ 1 ∨ s₁ ≃ -1 := sqrt1_cases.mp sqrt1₁
-  have : s₂ ≃ 1 ∨ s₂ ≃ -1 := sqrt1_cases.mp sqrt1₂
-  have
-    : s₁ ≃ s₂ ∨ (SignedMagnitude a sqrt1_one ∧ SignedMagnitude a sqrt1_neg_one)
-    := match ‹s₁ ≃ 1 ∨ s₁ ≃ -1› with
-  | Or.inl (_ : s₁ ≃ 1) =>
-    match ‹s₂ ≃ 1 ∨ s₂ ≃ -1› with
-    | Or.inl (_ : s₂ ≃ 1) =>
-      have : s₁ ≃ s₂ := Rel.trans ‹s₁ ≃ 1› (Rel.symm ‹s₂ ≃ 1›)
-      Or.inl ‹s₁ ≃ s₂›
-    | Or.inr (_ : s₂ ≃ -1) =>
-      have sm_pos : SignedMagnitude a sqrt1_one :=
-        signedMagnitude_sqrt1_subst ‹s₁ ≃ 1› ‹SignedMagnitude a sqrt1₁›
-      have sm_neg : SignedMagnitude a sqrt1_neg_one :=
-        signedMagnitude_sqrt1_subst ‹s₂ ≃ -1› ‹SignedMagnitude a sqrt1₂›
-      Or.inr (And.intro sm_pos sm_neg)
-  | Or.inr (_ : s₁ ≃ -1) =>
-    match ‹s₂ ≃ 1 ∨ s₂ ≃ -1› with
-    | Or.inl (_ : s₂ ≃ 1) =>
-      have sm_neg : SignedMagnitude a sqrt1_neg_one :=
-        signedMagnitude_sqrt1_subst ‹s₁ ≃ -1› ‹SignedMagnitude a sqrt1₁›
-      have sm_pos : SignedMagnitude a sqrt1_one :=
-        signedMagnitude_sqrt1_subst ‹s₂ ≃ 1› ‹SignedMagnitude a sqrt1₂›
-      Or.inr (And.intro sm_pos sm_neg)
-    | Or.inr (_ : s₂ ≃ -1) =>
-      have : s₁ ≃ s₂ := Rel.trans ‹s₁ ≃ -1› (Rel.symm ‹s₂ ≃ -1›)
-      Or.inl ‹s₁ ≃ s₂›
+  have : s₁ ≃ 1 ∨ s₁ ≃ -1 := sqrt1_cases.mp ‹Sqrt1 s₁›
+  have : s₂ ≃ 1 ∨ s₂ ≃ -1 := sqrt1_cases.mp ‹Sqrt1 s₂›
+  have : s₁ ≃ s₂ ∨ (NonzeroWithSign a 1 ∧ NonzeroWithSign a (-1)) :=
+    match ‹s₁ ≃ 1 ∨ s₁ ≃ -1› with
+    | Or.inl (_ : s₁ ≃ 1) =>
+      match ‹s₂ ≃ 1 ∨ s₂ ≃ -1› with
+      | Or.inl (_ : s₂ ≃ 1) =>
+        have : s₁ ≃ s₂ := Rel.trans ‹s₁ ≃ 1› (Rel.symm ‹s₂ ≃ 1›)
+        Or.inl ‹s₁ ≃ s₂›
+      | Or.inr (_ : s₂ ≃ -1) =>
+        have : NonzeroWithSign a 1 :=
+          nonzeroWithSign_sqrt1_subst ‹s₁ ≃ 1› ‹NonzeroWithSign a s₁›
+        have : NonzeroWithSign a (-1) :=
+          nonzeroWithSign_sqrt1_subst ‹s₂ ≃ -1› ‹NonzeroWithSign a s₂›
+        Or.inr (And.intro ‹NonzeroWithSign a 1› ‹NonzeroWithSign a (-1)›)
+    | Or.inr (_ : s₁ ≃ -1) =>
+      match ‹s₂ ≃ 1 ∨ s₂ ≃ -1› with
+      | Or.inl (_ : s₂ ≃ 1) =>
+        have : NonzeroWithSign a (-1) :=
+          nonzeroWithSign_sqrt1_subst ‹s₁ ≃ -1› ‹NonzeroWithSign a s₁›
+        have : NonzeroWithSign a 1 :=
+          nonzeroWithSign_sqrt1_subst ‹s₂ ≃ 1› ‹NonzeroWithSign a s₂›
+        Or.inr (And.intro ‹NonzeroWithSign a 1› ‹NonzeroWithSign a (-1)›)
+      | Or.inr (_ : s₂ ≃ -1) =>
+        have : s₁ ≃ s₂ := Rel.trans ‹s₁ ≃ -1› (Rel.symm ‹s₂ ≃ -1›)
+        Or.inl ‹s₁ ≃ s₂›
   match this with
   | Or.inl (_ : s₁ ≃ s₂) =>
     exact ‹s₁ ≃ s₂›
-  | Or.inr (And.intro
-      (_ : SignedMagnitude a sqrt1_one)
-      (_ : SignedMagnitude a sqrt1_neg_one)) =>
-    have : Positive a := positive_defn.mpr ‹SignedMagnitude a sqrt1_one›
-    have : Negative a := negative_defn.mpr ‹SignedMagnitude a sqrt1_neg_one›
+  | Or.inr (And.intro (_ : NonzeroWithSign a 1) (_ : NonzeroWithSign a (-1))) =>
+    have : Positive a := positive_iff_sign_pos1.mpr ‹NonzeroWithSign a 1›
+    have : Negative a := negative_iff_sign_neg1.mpr ‹NonzeroWithSign a (-1)›
     have : Positive a ∧ Negative a := And.intro ‹Positive a› ‹Negative a›
     exact absurd ‹Positive a ∧ Negative a› not_positive_and_negative
 
 /-- Evidence that two integers have the same sign. -/
-inductive SameSqrt1 (a b : ℤ) : Prop :=
+inductive SameSign (a b : ℤ) : Prop :=
 | /--
-  Create an instance of `SameSqrt1`.
+  Create an instance of `SameSign`.
 
   **Parameters**:
   - `sign`: The sign value of `a` and `b`, as an integer.
   - `sqrt1`: Ensures that `sign` is a valid sign (i.e., has value `1` or `-1`).
-  - `sm_a`: Evidence that `a` has sign `sign`.
-  - `sm_b`: Evidence that `b` has sign `sign`.
+  - `nwsa`: Evidence that `a` has sign `sign`.
+  - `nwsb`: Evidence that `b` has sign `sign`.
   -/
   intro
     (sign : ℤ)
-    (sqrt1 : SquareRootOfUnity sign)
-    (sm_a : SignedMagnitude a sqrt1)
-    (sm_b : SignedMagnitude b sqrt1)
+    (sqrt1 : Sqrt1 sign)
+    (nwsa : NonzeroWithSign a sign)
+    (nwsb : NonzeroWithSign b sign)
+
+/--
+Convenience constructor for `SameSign`.
+
+Only needs the `NonzeroWithSign` arguments passed explicitly; the others are
+inferred.
+-/
+def SameSign.mk
+    {a b s : ℤ} [Sqrt1 s] (_ : NonzeroWithSign a s) (_ : NonzeroWithSign b s)
+    : SameSign a b
+    :=
+  SameSign.intro s ‹Sqrt1 s› ‹NonzeroWithSign a s› ‹NonzeroWithSign b s›
 
 /--
 If two integers have the same sign, and one is positive, the other _must_ be
 positive.
 
 **Proof intuition**: Expand all definitions; use properties of
-`SignedMagnitude`.
+`NonzeroWithSign`.
 -/
-theorem same_sqrt1_positive
-    {a b : ℤ} : SameSqrt1 a b → Positive a → Positive b
+theorem same_sign_positive
+    {a b : ℤ} : SameSign a b → Positive a → Positive b
     := by
-  intro (SameSqrt1.intro
-    (s : ℤ)
-    (sqrt1 : SquareRootOfUnity s)
-    (sm_a : SignedMagnitude a sqrt1)
-    (sm_b : SignedMagnitude b sqrt1))
+  intro (SameSign.intro (s : ℤ) (_ : Sqrt1 s) nwsa nwsb)
+  have : NonzeroWithSign a s := nwsa
+  have : NonzeroWithSign b s := nwsb
   intro (_ : Positive a)
   show Positive b
-  have sm_1 : SignedMagnitude a sqrt1_one := positive_defn.mp ‹Positive a›
-  have : s ≃ 1 := signedMagnitude_sqrt1_inject sm_a sm_1
-  have : SignedMagnitude b sqrt1_one :=
-    signedMagnitude_sqrt1_subst ‹s ≃ 1› sm_b
-  have : Positive b := positive_defn.mpr ‹SignedMagnitude b sqrt1_one›
+  have : NonzeroWithSign a 1 := positive_iff_sign_pos1.mp ‹Positive a›
+  have : s ≃ 1 :=
+    nonzeroWithSign_sign_inject ‹NonzeroWithSign a s› ‹NonzeroWithSign a 1›
+  have : NonzeroWithSign b 1 :=
+    nonzeroWithSign_sqrt1_subst ‹s ≃ 1› ‹NonzeroWithSign b s›
+  have : Positive b := positive_iff_sign_pos1.mpr ‹NonzeroWithSign b 1›
   exact this
 
 /--
 Nonzero integers are either, and only, positive or negative.
 
-**Property intuition**: As the name `nonzero_defn` implies, this captures our
-intuitive notion of what a nonzero integer is.
+**Property intuition**: If an integer is not zero, then by trichotomy, it must
+be either positive or negative.
 
 **Proof intuition**: Converts `Nonzero`, `Positive`, and `Negative` to and from
-their `SignedMagnitude` representations via `signedMagnitude_cases`,
-`positive_defn`, and `negative_defn`.
+their `NonzeroWithSign` representations via `nonzeroWithSign_cases`,
+`positive_iff_sign_pos1`, and `negative_iff_sign_neg1`.
 -/
-theorem nonzero_defn {a : ℤ} : Nonzero a ↔ Positive a ∨ Negative a := by
+theorem nonzero_iff_pos_or_neg
+    {a : ℤ} : Nonzero a ↔ Positive a ∨ Negative a
+    := by
   apply Iff.intro
   case mp =>
     intro (_ : Nonzero a)
     show Positive a ∨ Negative a
-    have (Nonzero.intro
-        (s : ℤ) (sqrt1 : SquareRootOfUnity s) (_ : SignedMagnitude a sqrt1)) :=
-      ‹Nonzero a›
-    have : SignedMagnitude a sqrt1_one ∨ SignedMagnitude a sqrt1_neg_one :=
-      signedMagnitude_cases ‹SignedMagnitude a sqrt1›
-    match ‹SignedMagnitude a sqrt1_one ∨ SignedMagnitude a sqrt1_neg_one› with
-    | Or.inl (_ : SignedMagnitude a sqrt1_one) =>
-      have : Positive a := positive_defn.mpr ‹SignedMagnitude a sqrt1_one›
+    have (Nonzero.intro (s : ℤ) (_ : Sqrt1 s) nwsa) := ‹Nonzero a›
+    have : NonzeroWithSign a s := nwsa
+    have : NonzeroWithSign a 1 ∨ NonzeroWithSign a (-1) :=
+      nonzeroWithSign_cases ‹NonzeroWithSign a s›
+    match ‹NonzeroWithSign a 1 ∨ NonzeroWithSign a (-1)› with
+    | Or.inl (_ : NonzeroWithSign a 1) =>
+      have : Positive a := positive_iff_sign_pos1.mpr ‹NonzeroWithSign a 1›
       exact Or.inl ‹Positive a›
-    | Or.inr (_ : SignedMagnitude a sqrt1_neg_one) =>
-      have : Negative a := negative_defn.mpr ‹SignedMagnitude a sqrt1_neg_one›
+    | Or.inr (_ : NonzeroWithSign a (-1)) =>
+      have : Negative a := negative_iff_sign_neg1.mpr ‹NonzeroWithSign a (-1)›
       exact Or.inr ‹Negative a›
   case mpr =>
     intro (_ : Positive a ∨ Negative a)
     show Nonzero a
     match ‹Positive a ∨ Negative a› with
     | Or.inl (_ : Positive a) =>
-      have : SignedMagnitude a sqrt1_one := positive_defn.mp ‹Positive a›
-      exact Nonzero.mk ‹SignedMagnitude a sqrt1_one›
+      have : NonzeroWithSign a 1 := positive_iff_sign_pos1.mp ‹Positive a›
+      exact Nonzero.mk ‹NonzeroWithSign a 1›
     | Or.inr (_ : Negative a) =>
-      have : SignedMagnitude a sqrt1_neg_one := negative_defn.mp ‹Negative a›
-      exact Nonzero.mk ‹SignedMagnitude a sqrt1_neg_one›
+      have : NonzeroWithSign a (-1) := negative_iff_sign_neg1.mp ‹Negative a›
+      exact Nonzero.mk ‹NonzeroWithSign a (-1)›
 
 /--
 Provide evidence that an integer is equivalent, or not equivalent, to zero.
@@ -592,17 +598,17 @@ theorem zero? (a : ℤ) : AA.ExactlyOneOfTwo (a ≃ 0) (Nonzero a) := by
     | AA.OneOfThree.first (_ : a ≃ 0) =>
       exact Or.inl ‹a ≃ 0›
     | AA.OneOfThree.second (_ : Positive a) =>
-      have : Nonzero a := nonzero_defn.mpr (Or.inl ‹Positive a›)
+      have : Nonzero a := nonzero_iff_pos_or_neg.mpr (Or.inl ‹Positive a›)
       exact Or.inr ‹Nonzero a›
     | AA.OneOfThree.third (_ : Negative a) =>
-      have : Nonzero a := nonzero_defn.mpr (Or.inr ‹Negative a›)
+      have : Nonzero a := nonzero_iff_pos_or_neg.mpr (Or.inr ‹Negative a›)
       exact Or.inr ‹Nonzero a›
   case right =>
     intro (And.intro (_ : a ≃ 0) (_ : Nonzero a))
     show False
     apply tri.atMostOne
     show AA.TwoOfThree (a ≃ 0) (Positive a) (Negative a)
-    have : Positive a ∨ Negative a := nonzero_defn.mp ‹Nonzero a›
+    have : Positive a ∨ Negative a := nonzero_iff_pos_or_neg.mp ‹Nonzero a›
     match ‹Positive a ∨ Negative a› with
     | Or.inl (_ : Positive a) =>
       exact AA.TwoOfThree.oneAndTwo ‹a ≃ 0› ‹Positive a›
@@ -709,72 +715,67 @@ nonzero factors, and then accounts for all possible combinations of their
 signs. The reverse direction follows easily from the fact that a sign squared
 is always `1`.
 -/
-theorem positive_mul_iff_same_sqrt1
-    {a b : ℤ} : Positive (a * b) ↔ SameSqrt1 a b
+theorem positive_mul_iff_same_sign
+    {a b : ℤ} : Positive (a * b) ↔ SameSign a b
     := by
   let ab := a * b
   apply Iff.intro
   case mp =>
     intro (_ : Positive ab)
-    show SameSqrt1 a b
-    have : Nonzero ab := nonzero_defn.mpr (Or.inl ‹Positive ab›)
+    show SameSign a b
+    have : Nonzero ab := nonzero_iff_pos_or_neg.mpr (Or.inl ‹Positive ab›)
     have (And.intro (_ : Nonzero a) (_ : Nonzero b)) :=
       nonzero_factors_if_nonzero_product ‹Nonzero ab›
-    have (Nonzero.intro _ sqrt1a (_ : SignedMagnitude a sqrt1a)) := ‹Nonzero a›
-    have (Nonzero.intro _ sqrt1b (_ : SignedMagnitude b sqrt1b)) := ‹Nonzero b›
-    have smac : SignedMagnitude a sqrt1_one ∨ SignedMagnitude a sqrt1_neg_one
-      := signedMagnitude_cases ‹SignedMagnitude a sqrt1a›
-    have smbc : SignedMagnitude b sqrt1_one ∨ SignedMagnitude b sqrt1_neg_one
-      := signedMagnitude_cases ‹SignedMagnitude b sqrt1b›
-    have : SameSqrt1 a b ∨ SignedMagnitude ab sqrt1_neg_one := match smac with
-    | Or.inl (sm_a : SignedMagnitude a sqrt1_one) =>
-      match smbc with
-      | Or.inl (sm_b : SignedMagnitude b sqrt1_one) =>
-        Or.inl (SameSqrt1.intro 1 sqrt1_one sm_a sm_b)
-      | Or.inr (sm_b : SignedMagnitude b sqrt1_neg_one) =>
-        have sqrt1 : SquareRootOfUnity (1 * -1) :=
-          mul_preserves_sqrt1 sqrt1_one sqrt1_neg_one
-        have sm_ab : SignedMagnitude ab sqrt1 :=
-          mul_preserves_signedMagnitude sm_a sm_b
-        have : SignedMagnitude ab sqrt1_neg_one :=
-          signedMagnitude_sqrt1_subst AA.identL ‹SignedMagnitude ab sqrt1›
-        Or.inr ‹SignedMagnitude ab sqrt1_neg_one›
-    | Or.inr (sm_a : SignedMagnitude a sqrt1_neg_one) =>
-      match smbc with
-      | Or.inl (sm_b : SignedMagnitude b sqrt1_one) =>
-        have sqrt1 : SquareRootOfUnity (-1 * 1) :=
-          mul_preserves_sqrt1 sqrt1_neg_one sqrt1_one
-        have sm_ab : SignedMagnitude ab sqrt1 :=
-          mul_preserves_signedMagnitude sm_a sm_b
-        have : SignedMagnitude ab sqrt1_neg_one :=
-          signedMagnitude_sqrt1_subst AA.identR ‹SignedMagnitude ab sqrt1›
-        Or.inr ‹SignedMagnitude ab sqrt1_neg_one›
-      | Or.inr (sm_b : SignedMagnitude b sqrt1_neg_one) =>
-        Or.inl (SameSqrt1.intro (-1) sqrt1_neg_one sm_a sm_b)
-    match ‹SameSqrt1 a b ∨ SignedMagnitude ab sqrt1_neg_one› with
-    | Or.inl (_ : SameSqrt1 a b) =>
-      exact ‹SameSqrt1 a b›
-    | Or.inr (_ : SignedMagnitude ab sqrt1_neg_one) =>
+    have (Nonzero.intro (sa : ℤ) (_ : Sqrt1 sa) nwsa) := ‹Nonzero a›
+    have (Nonzero.intro (sb : ℤ) (_ : Sqrt1 sb) nwsb) := ‹Nonzero b›
+    have : NonzeroWithSign a sa := nwsa
+    have : NonzeroWithSign b sb := nwsb
+    have nwsac : NonzeroWithSign a 1 ∨ NonzeroWithSign a (-1)
+      := nonzeroWithSign_cases ‹NonzeroWithSign a sa›
+    have nwsbc : NonzeroWithSign b 1 ∨ NonzeroWithSign b (-1)
+      := nonzeroWithSign_cases ‹NonzeroWithSign b sb›
+    have : SameSign a b ∨ NonzeroWithSign ab (-1) := match nwsac with
+    | Or.inl (nwsa : NonzeroWithSign a 1) =>
+      match nwsbc with
+      | Or.inl (nwsb : NonzeroWithSign b 1) =>
+        Or.inl (SameSign.mk nwsa nwsb)
+      | Or.inr (nwsb : NonzeroWithSign b (-1)) =>
+        have : NonzeroWithSign ab (1 * -1) :=
+          mul_preserves_nonzeroWithSign nwsa nwsb
+        have : NonzeroWithSign ab (-1) :=
+          nonzeroWithSign_sqrt1_subst AA.identL ‹NonzeroWithSign ab (1 * -1)›
+        Or.inr ‹NonzeroWithSign ab (-1)›
+    | Or.inr (nwsa : NonzeroWithSign a (-1)) =>
+      match nwsbc with
+      | Or.inl (nwsb : NonzeroWithSign b 1) =>
+        have : NonzeroWithSign ab (-1 * 1) :=
+          mul_preserves_nonzeroWithSign nwsa nwsb
+        have : NonzeroWithSign ab (-1) :=
+          nonzeroWithSign_sqrt1_subst AA.identR ‹NonzeroWithSign ab (-1 * 1)›
+        Or.inr ‹NonzeroWithSign ab (-1)›
+      | Or.inr (nwsb : NonzeroWithSign b (-1)) =>
+        Or.inl (SameSign.mk nwsa nwsb)
+    match ‹SameSign a b ∨ NonzeroWithSign ab (-1)› with
+    | Or.inl (_ : SameSign a b) =>
+      exact ‹SameSign a b›
+    | Or.inr (_ : NonzeroWithSign ab (-1)) =>
       have : Negative ab :=
-        negative_defn.mpr ‹SignedMagnitude ab sqrt1_neg_one›
+        negative_iff_sign_neg1.mpr ‹NonzeroWithSign ab (-1)›
       have positive_and_negative : Positive ab ∧ Negative ab :=
         And.intro ‹Positive ab› ‹Negative ab›
       exact absurd positive_and_negative not_positive_and_negative
   case mpr =>
-    intro (_ : SameSqrt1 a b)
-    show Positive (a * b)
-    have (SameSqrt1.intro
-      (s : ℤ) (sqrt1 : SquareRootOfUnity s)
-      (sm_a : SignedMagnitude a sqrt1) (sm_b : SignedMagnitude b sqrt1)) :=
-        ‹SameSqrt1 a b›
-    have : s * s ≃ 1 := sqrt1
-    have : SquareRootOfUnity (s * s) := mul_preserves_sqrt1 sqrt1 sqrt1
-    have sm_ab : SignedMagnitude (a * b) ‹SquareRootOfUnity (s * s)› :=
-      mul_preserves_signedMagnitude sm_a sm_b
-    have : SignedMagnitude (a * b) sqrt1_one :=
-      signedMagnitude_sqrt1_subst ‹s * s ≃ 1› sm_ab
-    have : Positive (a * b) :=
-      positive_defn.mpr ‹SignedMagnitude (a * b) sqrt1_one›
+    intro (_ : SameSign a b)
+    show Positive ab
+    have (SameSign.intro (s : ℤ) (_ : Sqrt1 s) nwsa nwsb) := ‹SameSign a b›
+    have : NonzeroWithSign a s := nwsa
+    have : NonzeroWithSign b s := nwsb
+    have : s * s ≃ 1 := ‹Sqrt1 s›.elim
+    have : NonzeroWithSign ab (s * s) :=
+      mul_preserves_nonzeroWithSign nwsa nwsb
+    have : NonzeroWithSign ab 1 :=
+      nonzeroWithSign_sqrt1_subst ‹s * s ≃ 1› ‹NonzeroWithSign ab (s * s)›
+    have : Positive ab := positive_iff_sign_pos1.mpr ‹NonzeroWithSign ab 1›
     exact this
 
 /--
@@ -791,10 +792,11 @@ theorem mul_preserves_positive
     := by
   intro (_ : Positive a) (_ : Positive b)
   show Positive (a * b)
-  have sm_a : SignedMagnitude a sqrt1_one := positive_defn.mp ‹Positive a›
-  have sm_b : SignedMagnitude b sqrt1_one := positive_defn.mp ‹Positive b›
-  have : SameSqrt1 a b := SameSqrt1.intro 1 sqrt1_one sm_a sm_b
-  have : Positive (a * b) := positive_mul_iff_same_sqrt1.mpr ‹SameSqrt1 a b›
+  have : NonzeroWithSign a 1 := positive_iff_sign_pos1.mp ‹Positive a›
+  have : NonzeroWithSign b 1 := positive_iff_sign_pos1.mp ‹Positive b›
+  have : SameSign a b :=
+    SameSign.mk ‹NonzeroWithSign a 1› ‹NonzeroWithSign b 1›
+  have : Positive (a * b) := positive_mul_iff_same_sign.mpr ‹SameSign a b›
   exact this
 
 end Lean4Axiomatic.Integer

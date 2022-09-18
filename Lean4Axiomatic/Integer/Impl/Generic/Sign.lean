@@ -21,8 +21,8 @@ These definitions are in a separate `Ops` class so that subsequent results in
 this file can use the canonical `Positive` and `Negative` predicates.
 -/
 instance signed_ops : Signed.Ops ℤ := {
-  Positive := λ (a : ℤ) => SignedMagnitude a sqrt1_one
-  Negative := λ (a : ℤ) => SignedMagnitude a sqrt1_neg_one
+  Positive := λ (a : ℤ) => NonzeroWithSign a 1
+  Negative := λ (a : ℤ) => NonzeroWithSign a (-1)
 }
 
 /--
@@ -34,7 +34,7 @@ natural number by the integer `1` should produce a positive integer.
 
 **Proof intuition**: Trivial because `Positive` is defined as this property.
 -/
-theorem positive_defn {a : ℤ} : Positive a ↔ SignedMagnitude a sqrt1_one :=
+theorem positive_iff_sign_pos1 {a : ℤ} : Positive a ↔ NonzeroWithSign a 1 :=
   Iff.intro id id
 
 /--
@@ -46,7 +46,7 @@ natural number by the integer `-1` should produce a negative integer.
 
 **Proof intuition**: Trivial because `Negative` is defined as this property.
 -/
-theorem negative_defn {a : ℤ} : Negative a ↔ SignedMagnitude a sqrt1_neg_one :=
+theorem negative_iff_sign_neg1 {a : ℤ} : Negative a ↔ NonzeroWithSign a (-1) :=
   Iff.intro id id
 
 /--
@@ -61,10 +61,10 @@ equivalence for substitution, the result follows by transitivity.
 -/
 theorem positive_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → Positive a₁ → Positive a₂ := by
   intro (_ : a₁ ≃ a₂)
-  intro (SignedMagnitude.intro (m : ℕ) (_ : Positive m) (_ : a₁ ≃ 1 * ↑m))
-  show SignedMagnitude a₂ sqrt1_one
+  intro (NonzeroWithSign.intro (m : ℕ) (_ : Positive m) (_ : a₁ ≃ 1 * ↑m))
+  show NonzeroWithSign a₂ 1
   have : a₂ ≃ 1 * ↑m := Rel.trans (Rel.symm ‹a₁ ≃ a₂›) ‹a₁ ≃ 1 * ↑m›
-  exact SignedMagnitude.intro m ‹Positive m› ‹a₂ ≃ 1 * ↑m›
+  exact NonzeroWithSign.intro m ‹Positive m› ‹a₂ ≃ 1 * ↑m›
 
 def positive_substitutive
     : AA.Substitutive₁ (α := ℤ) Positive (· ≃ ·) (· → ·)
@@ -84,10 +84,10 @@ equivalence for substitution, the result follows by transitivity.
 -/
 theorem negative_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → Negative a₁ → Negative a₂ := by
   intro (_ : a₁ ≃ a₂)
-  intro (SignedMagnitude.intro (m : ℕ) (_ : Positive m) (_ : a₁ ≃ -1 * ↑m))
-  show SignedMagnitude a₂ sqrt1_neg_one
+  intro (NonzeroWithSign.intro (m : ℕ) (_ : Positive m) (_ : a₁ ≃ -1 * ↑m))
+  show NonzeroWithSign a₂ (-1)
   have : a₂ ≃ -1 * ↑m := Rel.trans (Rel.symm ‹a₁ ≃ a₂›) ‹a₁ ≃ -1 * ↑m›
-  exact SignedMagnitude.intro m ‹Positive m› ‹a₂ ≃ -1 * ↑m›
+  exact NonzeroWithSign.intro m ‹Positive m› ‹a₂ ≃ -1 * ↑m›
 
 def negative_substitutive
     : AA.Substitutive₁ (α := ℤ) Negative (· ≃ ·) (· → ·)

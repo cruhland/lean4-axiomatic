@@ -236,4 +236,24 @@ instance mul_cancellative
   cancellativeR := AA.cancelR_from_cancelL mul_cancellativeL
 }
 
+/--
+Decidable equivalence for integers.
+
+**Property intuition**: Every integer has a finite value, so it should be
+possible for an algorithm to decide if two of them are equivalent.
+
+**Proof intuition**: We already know how to decide if an integer is zero. Use
+that on the value `a - b`, then change the result into the desired form.
+-/
+theorem eqv? (a b : ℤ) : a ≃ b ∨ a ≄ b := by
+  have : a - b ≃ 0 ∨ Nonzero (a - b) := (zero? (a - b)).left
+  match ‹a - b ≃ 0 ∨ Nonzero (a - b)› with
+  | Or.inl (_ : a - b ≃ 0) =>
+    have : a ≃ b := zero_diff_iff_eqv.mp ‹a - b ≃ 0›
+    exact Or.inl ‹a ≃ b›
+  | Or.inr (_ : Nonzero (a - b)) =>
+    have : a - b ≄ 0 := nonzero_iff_neqv_zero.mp ‹Nonzero (a - b)›
+    have : a ≄ b := mt zero_diff_iff_eqv.mpr ‹a - b ≄ 0›
+    exact Or.inr ‹a ≄ b›
+
 end Lean4Axiomatic.Integer
