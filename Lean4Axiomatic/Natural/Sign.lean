@@ -104,12 +104,12 @@ theorem positive_add {n m : ℕ} : Positive n → Positive (n + m) := by
   apply cases_on (motive := λ m => Positive (n + m)) m
   case zero =>
     show Positive (n + 0)
-    apply AA.subst₁ (rβ := (· → ·)) (Rel.symm add_zero)
+    apply AA.substFn (Rel.symm add_zero)
     exact ‹Positive n›
   case step =>
     intro m
     show Positive (n + step m)
-    apply AA.subst₁ (rβ := (· → ·)) (Rel.symm add_step)
+    apply AA.substFn (Rel.symm add_step)
     show Positive (step (n + m))
     apply Signed.positive_defn.mpr
     show step (n + m) ≄ 0

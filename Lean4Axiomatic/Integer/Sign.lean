@@ -404,12 +404,11 @@ theorem sqrt1_cases {a : ℤ} : Sqrt1 a ↔ a ≃ 1 ∨ a ≃ -1 := by
     match ‹a ≃ 1 ∨ a ≃ -1› with
     | Or.inl (_ : a ≃ 1) =>
       have : Sqrt1 1 := inferInstance
-      have : Sqrt1 a := AA.subst₁ (rβ := (· → ·)) (Rel.symm ‹a ≃ 1›) ‹Sqrt1 1›
+      have : Sqrt1 a := AA.substFn (Rel.symm ‹a ≃ 1›) ‹Sqrt1 1›
       exact this
     | Or.inr (_ : a ≃ -1) =>
       have : Sqrt1 (-1) := inferInstance
-      have : Sqrt1 a :=
-        AA.subst₁ (rβ := (· → ·)) (Rel.symm ‹a ≃ -1›) ‹Sqrt1 (-1)›
+      have : Sqrt1 a := AA.substFn (Rel.symm ‹a ≃ -1›) ‹Sqrt1 (-1)›
       exact this
 
 /--

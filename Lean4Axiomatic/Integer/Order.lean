@@ -188,7 +188,7 @@ theorem add_substL_lt {a b c : ℤ} : a < b → a + c < b + c := by
   apply gt_iff_pos_diff.mpr
   show Positive (b + c - (a + c))
   have : b - a ≃ b + c - (a + c) := Rel.symm sub_sums_sameR
-  exact AA.subst₁ (rβ := (· → ·)) ‹b - a ≃ b + c - (a + c)› ‹Positive (b - a)›
+  exact AA.substFn ‹b - a ≃ b + c - (a + c)› ‹Positive (b - a)›
 
 def add_substitutiveL_lt
     : AA.SubstitutiveOn Hand.L (α := ℤ) (· + ·) AA.tc (· < ·) (· < ·)
@@ -226,7 +226,7 @@ theorem add_cancelL_lt {a b c : ℤ} : c + a < c + b → a < b := by
     b + c - (c + a) ≃ _ := AA.substR AA.comm
     b + c - (a + c) ≃ _ := sub_sums_sameR
     b - a ≃ _ := Rel.refl
-  apply AA.subst₁ (rβ := (· → ·)) ‹c + b - (c + a) ≃ b - a›
+  apply AA.substFn ‹c + b - (c + a) ≃ b - a›
   exact ‹Positive (c + b - (c + a))›
 
 def add_cancellativeL_lt
@@ -261,7 +261,7 @@ theorem mul_substL_lt {a b c : ℤ} : Positive c → a < b → a * c < b * c := 
   have : Positive (b - a) := gt_iff_pos_diff.mp ‹a < b›
   apply gt_iff_pos_diff.mpr
   show Positive (b * c - a * c)
-  apply AA.subst₁ (rβ := (· → ·)) AA.distribR
+  apply AA.substFn AA.distribR
   show Positive ((b - a) * c)
   exact mul_preserves_positive ‹Positive (b - a)› ‹Positive c›
 
@@ -300,7 +300,7 @@ theorem mul_cancelL_lt {a b c : ℤ} : Positive c → c * a < c * b → a < b :=
   apply gt_iff_pos_diff.mpr
   show Positive (b - a)
   have : Positive (c * (b - a)) :=
-    AA.subst₁ (rβ := (· → ·)) (Rel.symm AA.distribL) ‹Positive (c * b - c * a)›
+    AA.substFn (Rel.symm AA.distribL) ‹Positive (c * b - c * a)›
   have : SameSign c (b - a) :=
     positive_mul_iff_same_sign.mp ‹Positive (c * (b - a))›
   have : Positive (b - a) :=

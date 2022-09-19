@@ -500,7 +500,7 @@ theorem lt_zero_pos {n : ℕ} : Positive n ↔ n > 0 := by
     show Positive n
     have ⟨k, ⟨(_ : Positive k), (_ : n ≃ 0 + k)⟩⟩ := lt_defn_add.mp ‹0 < n›
     have : k ≃ n := Rel.symm (Rel.trans ‹n ≃ 0 + k› zero_add)
-    exact AA.subst₁ (f := Positive) (rβ := (· → ·)) ‹k ≃ n› ‹Positive k›
+    exact AA.substFn ‹k ≃ n› ‹Positive k›
 
 /-- Weakens equivalence to _less than or equal to_. -/
 theorem le_from_eqv {n m : ℕ} : n ≃ m → n ≤ m := by
