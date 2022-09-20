@@ -320,4 +320,49 @@ instance mul_cancellative_lt
   cancellativeR := AA.cancelR_from_cancelL mul_cancellativeL_lt
 }
 
+/--
+Negation reverses order.
+
+**Property intuition**: The sequence of negative integers, in the standard
+order, is backwards compared to the positive integers: counting upwards,
+negative integers reduce in magnitude (get closer to zero) while positive
+integers increase in magnitude (get farther from zero).
+
+**Proof intuition**: Expanding the definition of ordering into a property about
+positive integers, the proof just requires showing that two integer expressions
+are the same.
+-/
+theorem lt_neg_flip {a b : ℤ} : a < b ↔ -b < -a := by
+  have : -a - -b ≃ b - a := calc
+    (-a) - -b    ≃ _ := sub_defn
+    (-a) + -(-b) ≃ _ := AA.substR neg_involutive
+    (-a) + b     ≃ _ := AA.comm
+    b + -a       ≃ _ := Rel.symm sub_defn
+    b - a        ≃ _ := Rel.refl
+  apply Iff.intro
+  case mp =>
+    intro (_ : a < b)
+    show -b < -a
+    have : Positive (b - a) := gt_iff_pos_diff.mp ‹a < b›
+    apply gt_iff_pos_diff.mpr
+    show Positive (-a - -b)
+    exact AA.substFn (Rel.symm ‹-a - -b ≃ b - a›) ‹Positive (b - a)›
+  case mpr =>
+    intro (_ : -b < -a)
+    show a < b
+    have : Positive (-a - -b) := gt_iff_pos_diff.mp ‹-b < -a›
+    apply gt_iff_pos_diff.mpr
+    show Positive (b - a)
+    exact AA.substFn ‹-a - -b ≃ b - a› ‹Positive (-a - -b)›
+
+instance lt_substitutive_neg
+    : AA.Substitutive₁ (α := ℤ) (-·) (· < ·) (· > ·)
+    := {
+  subst₁ := lt_neg_flip.mp
+}
+
+instance lt_injective_neg : AA.Injective (α := ℤ) (-·) (· < ·) (· > ·) := {
+  inject := lt_neg_flip.mpr
+}
+
 end Lean4Axiomatic.Integer
