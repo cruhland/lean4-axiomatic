@@ -365,4 +365,42 @@ instance lt_injective_neg : AA.Injective (α := ℤ) (-·) (· < ·) (· > ·) :
   inject := lt_neg_flip.mpr
 }
 
+/--
+The less-than relation is transitive.
+
+**Property intuition**: This is a fundamental property of total ordering
+relations: all elements of the ordered type are covered by the relation, and
+orderings of nearby elements can be chained to give orderings of distant
+elements.
+
+**Proof intuition**: Expanding the definition of less-than into a property of
+integer subtraction being positive, the result follows from adding the two
+smaller properties and using algebra to show that it produces the conclusion.
+-/
+theorem lt_trans {a b c : ℤ} : a < b → b < c → a < c := by
+  intro (_ : a < b) (_ : b < c)
+  show a < c
+  have : Positive (b - a) := gt_iff_pos_diff.mp ‹a < b›
+  have : Positive (c - b) := gt_iff_pos_diff.mp ‹b < c›
+  apply gt_iff_pos_diff.mpr
+  show Positive (c - a)
+  have : Positive ((c - b) + (b - a)) :=
+    add_preserves_positive ‹Positive (c - b)› ‹Positive (b - a)›
+  have : (c - b) + (b - a) ≃ c - a := calc
+    (c - b) + (b - a)   ≃ _ := AA.substL sub_defn
+    (c + -b) + (b - a)  ≃ _ := AA.substR sub_defn
+    (c + -b) + (b + -a) ≃ _ := AA.assoc
+    c + (-b + (b + -a)) ≃ _ := AA.substR (Rel.symm AA.assoc)
+    c + ((-b + b) + -a) ≃ _ := AA.substR (AA.substL AA.inverseL)
+    c + (0 + -a)        ≃ _ := AA.substR AA.identL
+    c + -a              ≃ _ := Rel.symm sub_defn
+    c - a               ≃ _ := Rel.refl
+  have : Positive (c - a) :=
+    AA.substFn ‹(c - b) + (b - a) ≃ c - a› ‹Positive ((c - b) + (b - a))›
+  exact this
+
+instance lt_transitive : Relation.Transitive (α := ℤ) (· < ·) := {
+  trans := lt_trans
+}
+
 end Lean4Axiomatic.Integer

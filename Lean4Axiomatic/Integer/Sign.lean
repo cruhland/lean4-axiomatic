@@ -778,6 +778,35 @@ theorem positive_mul_iff_same_sign
     exact this
 
 /--
+The sum of positive integers is positive.
+
+**Property intuition**: Since this holds in the natural numbers, it must also
+hold in the integers.
+
+**Proof intuition**: Expand the definition of positive into equivalences of
+integers to positive natural numbers, and show that adding them together gives
+an equivalence that satisfies positivity.
+-/
+theorem add_preserves_positive
+    {a b : ℤ} : Positive a → Positive b → Positive (a + b)
+    := by
+  intro (_ : Positive a) (_ : Positive b)
+  show Positive (a + b)
+  have (Exists.intro (n : ℕ) (And.intro (_ : Positive n) (_ : a ≃ coe n))) :=
+    positive_elim_nat ‹Positive a›
+  have (Exists.intro (m : ℕ) (And.intro (_ : Positive m) (_ : b ≃ coe m))) :=
+    positive_elim_nat ‹Positive b›
+  have : Positive (n + m) := Natural.positive_add ‹Positive n›
+  have : a + b ≃ coe (n + m) := calc
+    a + b         ≃ _ := AA.substL ‹a ≃ coe n›
+    coe n + b     ≃ _ := AA.substR ‹b ≃ coe m›
+    coe n + coe m ≃ _ := Rel.symm AA.compat₂
+    coe (n + m)   ≃ _ := Rel.refl
+  have : Positive (a + b) :=
+    positive_intro_nat ‹Positive (n + m)› ‹a + b ≃ coe (n + m)›
+  exact this
+
+/--
 The product of positive integers is positive.
 
 **Property intuition**: Since this holds for natural numbers, it must hold for
