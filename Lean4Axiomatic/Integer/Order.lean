@@ -82,6 +82,40 @@ theorem gt_iff_pos_diff {a b : ℤ} : a > b ↔ Positive (a - b) := by
     exact And.intro ‹b ≤ a› ‹b ≄ a›
 
 /--
+Equivalence between the _less than_ relation on integers and their
+difference being negative.
+
+**Property intuition**: For nonnegative values, this makes sense: taking away a
+larger value from a smaller one should leave a negative amount behind. Taking
+away a negative value is the same as adding its positive equivalent, which will
+still give a negative result because the other number was "more negative".
+
+**Proof intuition**: Flip the ordering around to be _greater than_, and derive
+a positive difference. Then swap the operands of the difference back, and show
+that it's now negative.
+-/
+theorem lt_iff_neg_diff {a b : ℤ} : a < b ↔ Negative (a - b) := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a < b)
+    show Negative (a - b)
+    have : Positive (b - a) := gt_iff_pos_diff.mp ‹a < b›
+    have : Positive (-(a - b)) :=
+      AA.substFn (Rel.symm sub_neg_flip) ‹Positive (b - a)›
+    have : Negative (a - b) :=
+      negative_iff_negated_positive.mpr ‹Positive (-(a - b))›
+    exact this
+  case mpr =>
+    intro (_ : Negative (a - b))
+    show a < b
+    have : Negative (-(b - a)) :=
+      AA.substFn (Rel.symm sub_neg_flip) ‹Negative (a - b)›
+    have : Positive (b - a) :=
+      positive_iff_negated_negative.mpr ‹Negative (-(b - a))›
+    have : a < b := gt_iff_pos_diff.mpr ‹Positive (b - a)›
+    exact this
+
+/--
 Equivalent integers can be substituted on the left of the `· ≤ ·` relation.
 
 **Property intuition**: This must be true for `· ≤ ·` to be a valid integer
@@ -402,5 +436,56 @@ theorem lt_trans {a b c : ℤ} : a < b → b < c → a < c := by
 instance lt_transitive : Relation.Transitive (α := ℤ) (· < ·) := {
   trans := lt_trans
 }
+
+/--
+Any pair of integers can only be in one of three relations: _less than_,
+_greater than_, or _equivalence_.
+
+**Property intuition**: We expect this to be true because we know the integers
+are totally ordered.
+
+**Proof intuition**: Convert into sign trichotomy on `a - b`.
+-/
+theorem order_trichotomy
+    (a b : ℤ) : AA.ExactlyOneOfThree (a < b) (a ≃ b) (a > b)
+    := by
+  have abTri
+    : AA.ExactlyOneOfThree (a - b ≃ 0) (Positive (a - b)) (Negative (a - b))
+    := Signed.trichotomy (a - b)
+  apply AA.ExactlyOneOfThree.mk
+  case atLeastOne =>
+    show AA.OneOfThree (a < b) (a ≃ b) (a > b)
+    match abTri.atLeastOne with
+    | AA.OneOfThree.first (_ : a - b ≃ 0) =>
+      have : a ≃ b := zero_diff_iff_eqv.mp ‹a - b ≃ 0›
+      exact AA.OneOfThree.second ‹a ≃ b›
+    | AA.OneOfThree.second (_ : Positive (a - b)) =>
+      have : a > b := gt_iff_pos_diff.mpr ‹Positive (a - b)›
+      exact AA.OneOfThree.third ‹a > b›
+    | AA.OneOfThree.third (_ : Negative (a - b)) =>
+      have : a < b := lt_iff_neg_diff.mpr ‹Negative (a - b)›
+      exact AA.OneOfThree.first ‹a < b›
+  case atMostOne =>
+    intro (_ : AA.TwoOfThree (a < b) (a ≃ b) (a > b))
+    show False
+    let ab := a - b
+    have abTwo : AA.TwoOfThree (ab ≃ 0) (Positive ab) (Negative ab) :=
+      match ‹AA.TwoOfThree (a < b) (a ≃ b) (a > b)› with
+      | AA.TwoOfThree.oneAndTwo (_ : a < b) (_ : a ≃ b) =>
+        have : Negative ab := lt_iff_neg_diff.mp ‹a < b›
+        have : ab ≃ 0 := zero_diff_iff_eqv.mpr ‹a ≃ b›
+        AA.TwoOfThree.oneAndThree ‹ab ≃ 0› ‹Negative ab›
+      | AA.TwoOfThree.oneAndThree (_ : a < b) (_ : a > b) =>
+        have : Negative ab := lt_iff_neg_diff.mp ‹a < b›
+        have : Positive ab := gt_iff_pos_diff.mp ‹a > b›
+        AA.TwoOfThree.twoAndThree ‹Positive ab› ‹Negative ab›
+      | AA.TwoOfThree.twoAndThree (_ : a ≃ b) (_ : a > b) =>
+        have : ab ≃ 0 := zero_diff_iff_eqv.mpr ‹a ≃ b›
+        have : Positive ab := gt_iff_pos_diff.mp ‹a > b›
+        AA.TwoOfThree.oneAndTwo ‹ab ≃ 0› ‹Positive ab›
+    have abNotTwo
+      : ¬ AA.TwoOfThree (ab ≃ 0) (Positive ab) (Negative ab)
+      := abTri.atMostOne
+    exact absurd abTwo abNotTwo
 
 end Lean4Axiomatic.Integer

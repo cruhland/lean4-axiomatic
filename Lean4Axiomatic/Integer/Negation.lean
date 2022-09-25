@@ -176,4 +176,21 @@ instance neg_injective : AA.Injective (α := ℤ) (-·) (· ≃ ·) (· ≃ ·) 
   inject := neg_inject
 }
 
+/--
+Negation is compatible with addition; i.e., it distributes over addition.
+
+**Property intuition**: Visualizing integers as vectors, the theorem says that
+adding vectors and then reflecting the result across zero is the same as
+reflecting the vectors before adding them.
+
+**Proof intuition**: Negation is the same as multiplication by -1. The result
+follows from the distributive property.
+-/
+theorem neg_compat_add {a b : ℤ} : -(a + b) ≃ -a + -b := calc
+  -(a + b)            ≃ _ := Rel.symm mul_neg_one
+  (-1) * (a + b)      ≃ _ := AA.distribL
+  (-1) * a + (-1) * b ≃ _ := AA.substL mul_neg_one
+  (-a) + (-1) * b     ≃ _ := AA.substR mul_neg_one
+  (-a) + -b           ≃ _ := Rel.refl
+
 end Lean4Axiomatic.Integer

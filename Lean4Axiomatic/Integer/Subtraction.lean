@@ -256,4 +256,24 @@ theorem eqv? (a b : ℤ) : a ≃ b ∨ a ≄ b := by
     have : a ≄ b := mt zero_diff_iff_eqv.mpr ‹a - b ≄ 0›
     exact Or.inr ‹a ≄ b›
 
+/--
+Negation of subtraction swaps the operands.
+
+**Property intuition**: The result of subtraction depends on the ordering of
+the two operands. Negating the result is equivalent to reversing the operands'
+order.
+
+**Proof intuition**: Represent subtraction as addition; the negation operator
+distributes to both operands. It undoes the negation of one operand, and adds
+negation to the other. With negation swapped, the sum is still equivalent to
+subtraction, but in the opposite order.
+-/
+theorem sub_neg_flip {a b : ℤ} : -(a - b) ≃ b - a := calc
+  (-(a - b))   ≃ _ := AA.subst₁ sub_defn
+  (-(a + -b))  ≃ _ := neg_compat_add
+  (-a) + -(-b) ≃ _ := AA.substR neg_involutive
+  (-a) + b     ≃ _ := AA.comm
+  b + -a       ≃ _ := Rel.symm sub_defn
+  b - a        ≃ _ := Rel.refl
+
 end Lean4Axiomatic.Integer

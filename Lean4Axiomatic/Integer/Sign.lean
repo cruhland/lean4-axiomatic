@@ -112,6 +112,21 @@ instance mul_preserves_sqrt1
     1                 ≃ _ := Rel.refl
 
 /--
+The negation of a square root of unity is also a square root of unity.
+
+**Property intuition**: Squaring removes negation, so anything that results in
+one when squared will give the same result even if negated.
+
+**Proof intuition**: Negation is the same as multiplication by -1. Since -1 is
+a square root of unity, the result follows because a product of square roots of
+unity is also a square root of unity.
+-/
+instance neg_preserves_sqrt1 {a : ℤ} [Sqrt1 a] : Sqrt1 (-a) := by
+  have : Sqrt1 (-1 * a) := inferInstance
+  have : Sqrt1 (-a) := AA.substFn mul_neg_one ‹Sqrt1 (-1 * a)›
+  exact this
+
+/--
 Demonstrates that an integer can be factored into _sign_ and _magnitude_
 components.
 
@@ -188,6 +203,38 @@ theorem mul_preserves_nonzeroWithSign
     (as * bs) * coe (am * bm)     ≃ _ := Rel.refl
   exact NonzeroWithSign.intro
     (am * bm) ‹Positive (am * bm)› ‹a * b ≃ (as * bs) * coe (am * bm)›
+
+/--
+Negation can be exchanged between the value and the sign of `NonzeroWithSign`.
+
+**Property intuition**: If `-a` has sign `s`, then `a` must have the opposite
+sign `-s`.
+
+**Proof intuition**: Expand the definition of `NonzeroWithSign` and perform
+some algebra on the equivalence involving `a` and `s`.
+-/
+theorem nonzeroWithSign_swap_neg
+    {a s : ℤ} {_ : Sqrt1 s} : NonzeroWithSign (-a) s ↔ NonzeroWithSign a (-s)
+    := by
+  apply Iff.intro
+  case mp =>
+    intro (NonzeroWithSign.intro (n : ℕ) (_ : Positive n) (_ : -a ≃ s * coe n))
+    show NonzeroWithSign a (-s)
+    have : a ≃ -s * coe n := calc
+      a              ≃ _ := Rel.symm neg_involutive
+      (-(-a))        ≃ _ := AA.subst₁ ‹-a ≃ s * coe n›
+      (-(s * coe n)) ≃ _ := AA.scompatL
+      (-s) * coe n   ≃ _ := Rel.refl
+    exact NonzeroWithSign.intro n ‹Positive n› ‹a ≃ -s * coe n›
+  case mpr =>
+    intro (NonzeroWithSign.intro (n : ℕ) (_ : Positive n) (_ : a ≃ -s * coe n))
+    show NonzeroWithSign (-a) s
+    have : -a ≃ s * coe n := calc
+      (-a)            ≃ _ := AA.subst₁ ‹a ≃ -s * coe n›
+      (-(-s * coe n)) ≃ _ := AA.scompatL
+      (-(-s)) * coe n ≃ _ := AA.substL neg_involutive
+      s * coe n       ≃ _ := Rel.refl
+    exact NonzeroWithSign.intro n ‹Positive n› ‹-a ≃ s * coe n›
 
 /--
 Evidence that an integer is not zero, with no other details.
@@ -826,5 +873,63 @@ theorem mul_preserves_positive
     SameSign.mk ‹NonzeroWithSign a 1› ‹NonzeroWithSign b 1›
   have : Positive (a * b) := positive_mul_iff_same_sign.mpr ‹SameSign a b›
   exact this
+
+/--
+The negations of positive values are negative.
+
+**Proof intuition**: Convert to `NonzeroWithSign` and negate the sign operand.
+-/
+theorem positive_iff_negated_negative
+    {a : ℤ} : Positive a ↔ Negative (-a)
+    := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : Positive a)
+    show Negative (-a)
+    have nwsa : NonzeroWithSign a 1 := positive_iff_sign_pos1.mp ‹Positive a›
+    have : NonzeroWithSign a (-(-1)) :=
+      nonzeroWithSign_sqrt1_subst (Rel.symm neg_involutive) nwsa
+    have : NonzeroWithSign (-a) (-1) :=
+      nonzeroWithSign_swap_neg.mpr ‹NonzeroWithSign a (-(-1))›
+    have : Negative (-a) :=
+      negative_iff_sign_neg1.mpr ‹NonzeroWithSign (-a) (-1)›
+    exact this
+  case mpr =>
+    intro (_ : Negative (-a))
+    show Positive a
+    have : NonzeroWithSign (-a) (-1) :=
+      negative_iff_sign_neg1.mp ‹Negative (-a)›
+    have : NonzeroWithSign a (-(-1)) :=
+      nonzeroWithSign_swap_neg.mp ‹NonzeroWithSign (-a) (-1)›
+    have : NonzeroWithSign a 1 :=
+      nonzeroWithSign_sqrt1_subst neg_involutive ‹NonzeroWithSign a (-(-1))›
+    have : Positive a := positive_iff_sign_pos1.mpr ‹NonzeroWithSign a 1›
+    exact this
+
+/--
+The negations of negative values are positive.
+
+**Proof intuition**: Convert to `NonzeroWithSign` and negate the sign operand.
+-/
+theorem negative_iff_negated_positive
+    {a : ℤ} : Negative a ↔ Positive (-a)
+    := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : Negative a)
+    show Positive (-a)
+    have : NonzeroWithSign a (-1) := negative_iff_sign_neg1.mp ‹Negative a›
+    have : NonzeroWithSign (-a) 1 :=
+      nonzeroWithSign_swap_neg.mpr ‹NonzeroWithSign a (-1)›
+    have : Positive (-a) := positive_iff_sign_pos1.mpr ‹NonzeroWithSign (-a) 1›
+    exact this
+  case mpr =>
+    intro (_ : Positive (-a))
+    show Negative a
+    have : NonzeroWithSign (-a) 1 := positive_iff_sign_pos1.mp ‹Positive (-a)›
+    have : NonzeroWithSign a (-1) :=
+      nonzeroWithSign_swap_neg.mp ‹NonzeroWithSign (-a) 1›
+    have : Negative a := negative_iff_sign_neg1.mpr ‹NonzeroWithSign a (-1)›
+    exact this
 
 end Lean4Axiomatic.Integer

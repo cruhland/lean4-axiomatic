@@ -152,7 +152,7 @@ equal to
 
 The whole proof is just translating from one form of trichotomy into the other.
 -/
-theorem trichotomy
+theorem sign_trichotomy
     (a : Difference ℕ) : AA.ExactlyOneOfThree (a ≃ 0) (Positive a) (Negative a)
     := by
   revert a; intro (n——m)
@@ -195,7 +195,7 @@ theorem trichotomy
 def signed : Signed (Difference ℕ) := {
   positive_substitutive := Generic.positive_substitutive
   negative_substitutive := Generic.negative_substitutive
-  trichotomy := trichotomy
+  trichotomy := sign_trichotomy
 }
 
 instance sign : Sign ℕ (Difference ℕ) := {
