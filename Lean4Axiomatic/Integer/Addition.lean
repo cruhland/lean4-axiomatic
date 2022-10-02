@@ -53,4 +53,16 @@ attribute [instance] Addition.add_substitutive
 
 export Addition (addOp)
 
+/-! ## Derived properties -/
+
+variable {ℕ : Type} [Natural ℕ]
+variable {ℤ : Type} [Core ℕ ℤ] [Addition ℕ ℤ]
+
+/--
+Non-typeclass version of `add_associative`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+theorem add_assoc {a b c : ℤ} : (a + b) + c ≃ a + (b + c) := AA.assoc
+
 end Lean4Axiomatic.Integer

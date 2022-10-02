@@ -96,6 +96,6 @@ theorem one_neqv_zero : (1 : ℤ) ≄ 0 := by
   have : (1 : ℕ) ≃ 0 := AA.inject ‹coe (1 : ℕ) ≃ coe (0 : ℕ)›
   have : Natural.step (0 : ℕ) ≃ 0 :=
     Rel.trans (Rel.symm Natural.literal_step) ‹(1 : ℕ) ≃ 0›
-  exact absurd ‹Natural.step (0 : ℕ) ≃ 0› Natural.step_neq_zero
+  exact absurd ‹Natural.step (0 : ℕ) ≃ 0› Natural.step_neqv_zero
 
 end Lean4Axiomatic.Integer

@@ -53,15 +53,19 @@ theorem positive_subst {n₁ n₂ : ℕ} : n₁ ≃ n₂ → Positive n₁ → P
   intro (_ : n₁ ≃ n₂) (_ : Positive n₁)
   show Positive n₂
   have : n₁ ≄ 0 := Signed.positive_defn.mp ‹Positive n₁›
-  apply Signed.positive_defn.mpr
-  show n₂ ≄ 0
-  exact AA.substL (f := (· ≄ ·)) (rβ := (· → ·)) ‹n₁ ≃ n₂› ‹n₁ ≄ 0›
+  have : n₂ ≄ 0 := AA.neqv_substL ‹n₁ ≃ n₂› ‹n₁ ≄ 0›
+  have : Positive n₂ := Signed.positive_defn.mpr ‹n₂ ≄ 0›
+  exact this
 
 instance positive_substitutive
     : AA.Substitutive₁ (α := ℕ) Positive (· ≃ ·) (· → ·)
     := {
   subst₁ := positive_subst
 }
+
+/-- One is a positive natural number. -/
+theorem one_positive : Positive (1 : ℕ) :=
+  Signed.positive_defn.mpr one_neqv_zero
 
 /--
 Every positive natural number is the successor of a natural number.
@@ -113,6 +117,6 @@ theorem positive_add {n m : ℕ} : Positive n → Positive (n + m) := by
     show Positive (step (n + m))
     apply Signed.positive_defn.mpr
     show step (n + m) ≄ 0
-    exact step_neq_zero
+    exact step_neqv_zero
 
 end Lean4Axiomatic.Natural

@@ -17,7 +17,7 @@ Defines the primitive building blocks of all natural numbers.
 
 Provides the first two Peano axioms; see `Axioms.Base` for the rest.
 -/
-class Constructors (ℕ : Type) :=
+class Constructors (ℕ : outParam Type) :=
   /--
   **Peano axiom 1**: `zero` is a natural number.
 
@@ -51,7 +51,7 @@ attribute [instance] Equality.eqvOp?
 export Equality (eqvOp?)
 
 /-- Definitions pertaining to numeric literal support for natural numbers. -/
-class Literals (ℕ : Type) [Constructors ℕ] [Equality ℕ] :=
+class Literals (ℕ : outParam Type) [outParam (Constructors ℕ)] [outParam (Equality ℕ)] :=
   /--
   Enables representation of natural numbers by numeric literals.
 
@@ -100,9 +100,9 @@ export Core (step_substitutive)
 Provides the remaining Peano axioms for natural numbers (see `Constructors`
 for the first two).
 -/
-class Axioms (ℕ : Type) [Core ℕ] :=
+class Axioms (ℕ : outParam Type) [outParam (Core ℕ)] :=
   /-- **Peano axiom 3**: zero is not the successor of any natural number. -/
-  step_neq_zero {n : ℕ} : step n ≄ 0
+  step_neqv_zero {n : ℕ} : step n ≄ 0
 
   /--
   **Peano axiom 4**: two natural numbers are equal if their successors are.
@@ -123,7 +123,7 @@ class Axioms (ℕ : Type) [Core ℕ] :=
 
 attribute [instance] Axioms.step_injective
 
-export Axioms (ind step_injective step_neq_zero)
+export Axioms (ind step_injective step_neqv_zero)
 
 /-!
 ## Derived properties
@@ -151,14 +151,14 @@ def cases_on
     {motive : ℕ → Prop} (n : ℕ)
     (zero : motive 0) (step : ∀ n, motive (step n)) : motive n
     :=
-  ind_on n zero (λ n ih => step n)
+  ind_on n zero (λ n _ => step n)
 
 /-- A natural number is never equal to its successor. -/
-theorem step_neq {n : ℕ} : step n ≄ n := by
+theorem step_neqv {n : ℕ} : step n ≄ n := by
   apply ind_on (motive := λ n => step n ≄ n) n
   case zero =>
     show step 0 ≄ 0
-    exact Axioms.step_neq_zero
+    exact step_neqv_zero
   case step =>
     intro n (ih : step n ≄ n)
     show step (step n) ≄ step n
@@ -167,5 +167,12 @@ theorem step_neq {n : ℕ} : step n ≄ n := by
     apply ih
     show step n ≃ n
     exact AA.inject ‹step (step n) ≃ step n›
+
+/-- Zero and one are different natural numbers. -/
+theorem one_neqv_zero : (1 : ℕ) ≄ 0 := by
+  have : step 0 ≃ 1 := Rel.symm literal_step
+  have : step 0 ≄ 0 := step_neqv_zero
+  have : 1 ≄ 0 := AA.neqv_substL ‹step 0 ≃ 1› ‹step 0 ≄ 0›
+  exact this
 
 end Lean4Axiomatic.Natural

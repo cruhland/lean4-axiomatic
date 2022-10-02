@@ -319,7 +319,7 @@ theorem lt_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ < m → n₂ <
   show n₂ < m
   have ⟨(_ : n₁ ≤ m), (_ : n₁ ≄ m)⟩ := lt_defn.mp ‹n₁ < m›
   have : n₂ ≤ m := AA.substLFn ‹n₁ ≃ n₂› ‹n₁ ≤ m›
-  have : n₂ ≄ m := AA.substLFn (f := (· ≄ ·)) ‹n₁ ≃ n₂› ‹n₁ ≄ m›
+  have : n₂ ≄ m := AA.neqv_substL ‹n₁ ≃ n₂› ‹n₁ ≄ m›
   apply lt_defn.mpr
   exact ⟨‹n₂ ≤ m›, ‹n₂ ≄ m›⟩
 
@@ -337,7 +337,7 @@ theorem lt_eqv_subst {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m < n₁ → m < n�
   show m < n₂
   have ⟨(_ : m ≤ n₁), (_ : m ≄ n₁)⟩ := lt_defn.mp ‹m < n₁›
   have : m ≤ n₂ := AA.substRFn ‹n₁ ≃ n₂› ‹m ≤ n₁›
-  have : m ≄ n₂ := AA.substRFn (f := (· ≄ ·)) ‹n₁ ≃ n₂› ‹m ≄ n₁›
+  have : m ≄ n₂ := AA.neqv_substR ‹n₁ ≃ n₂› ‹m ≄ n₁›
   apply lt_defn.mpr
   exact ⟨‹m ≤ n₂›, ‹m ≄ n₂›⟩
 
@@ -365,7 +365,7 @@ theorem lt_step {n : ℕ} : n < step n := by
     show n + 1 ≃ step n
     exact add_one_step
   · show n ≄ step n
-    exact Rel.symm step_neq
+    exact Rel.symm step_neqv
 
 /--
 A useful way to convert between _less than_ and _less than or equal to_ while
@@ -418,7 +418,7 @@ theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
         n          ≃ _ := Rel.symm add_zero
         n + 0      ≃ _ := Rel.refl
       have : step d ≃ 0 := AA.cancelL ‹n + step d ≃ n + 0›
-      exact absurd this Axioms.step_neq_zero
+      exact absurd ‹step d ≃ 0› step_neqv_zero
     show n < m
     apply lt_defn.mpr
     exact ⟨‹n ≤ m›, ‹n ≄ m›⟩
@@ -440,9 +440,9 @@ theorem lt_defn_add {n m : ℕ} : n < m ↔ ∃ k, Positive k ∧ m ≃ n + k :=
     exists step k
     apply And.intro
     · show Positive (step k)
-      apply Signed.positive_defn.mpr
-      show step k ≄ 0
-      exact Axioms.step_neq_zero
+      have : step k ≄ 0 := step_neqv_zero
+      have : Positive (step k) := Signed.positive_defn.mpr ‹step k ≄ 0›
+      exact this
     · show m ≃ n + step k
       calc
         m            ≃ _ := Rel.symm ‹step n + k ≃ m›
@@ -475,7 +475,7 @@ theorem lt_zero {n : ℕ} : n ≮ 0 := by
     step (n + d) ≃ _ := Rel.symm step_add
     step n + d   ≃ _ := ‹step n + d ≃ 0›
     0            ≃ _ := Rel.refl
-  exact absurd ‹step (n + d) ≃ 0› Axioms.step_neq_zero
+  exact absurd ‹step (n + d) ≃ 0› step_neqv_zero
 
 /--
 A natural number is positive iff it's greater than zero.
@@ -606,7 +606,7 @@ theorem trichotomy (n m : ℕ)
           exists step m
           exact zero_add
         · show 0 ≄ step m
-          exact Rel.symm Axioms.step_neq_zero
+          exact Rel.symm step_neqv_zero
     case step =>
       intro n (ih : AA.OneOfThree (n < m) (n ≃ m) (n > m))
       show AA.OneOfThree (step n < m) (step n ≃ m) (step n > m)

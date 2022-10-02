@@ -150,18 +150,14 @@ theorem subst_mul_eq {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ * m ≃ n₂ *
       exact Rel.refl
     case step =>
       intro n₂ (_ : 0 ≃ step n₂)
-      apply False.elim
-      show False
-      exact absurd (Rel.symm ‹0 ≃ step n₂›) Axioms.step_neq_zero
+      exact absurd (Rel.symm ‹0 ≃ step n₂›) step_neqv_zero
   case step =>
     intro n₁ (ih : ∀ y, n₁ ≃ y → n₁ * m ≃ y * m) n₂
     show step n₁ ≃ n₂ → step n₁ * m ≃ n₂ * m
     apply cases_on (motive := λ y => step n₁ ≃ y → step n₁ * m ≃ y * m)
     case zero =>
       intro (_ : step n₁ ≃ 0)
-      apply False.elim
-      show False
-      exact absurd ‹step n₁ ≃ 0› Axioms.step_neq_zero
+      exact absurd ‹step n₁ ≃ 0› step_neqv_zero
     case step =>
       intro n₂ (_ : step n₁ ≃ step n₂)
       show step n₁ * m ≃ step n₂ * m
@@ -473,7 +469,7 @@ theorem sqrt1 {n : ℕ} : n * n ≃ 1 ↔ n ≃ 1 := by
         n * n   ≃ _ := AA.substL ‹n ≃ 0›
         0 * n   ≃ _ := AA.absorbL
         0       ≃ _ := Rel.refl
-      exact absurd ‹step (0 : ℕ) ≃ 0› step_neq_zero
+      exact absurd ‹step (0 : ℕ) ≃ 0› step_neqv_zero
     | AA.OneOfThree.second (_ : n ≃ 1) =>
       exact ‹n ≃ 1›
     | AA.OneOfThree.third (_ : n > 1) =>

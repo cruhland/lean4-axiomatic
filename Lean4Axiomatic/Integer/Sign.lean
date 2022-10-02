@@ -373,6 +373,19 @@ def negative_elim_nat
   have : a ≃ -(coe n) := Rel.trans ‹a ≃ -1 * coe n› mul_neg_one
   exact Exists.intro n (And.intro ‹Positive n› ‹a ≃ -(coe n)›)
 
+/--
+Negative one (the negation of one) is a negative integer.
+
+**Proof intuition**: A negative integer is the negation of a positive natural
+number, in this case one.
+-/
+theorem neg_one_negative : Negative (-1 : ℤ) := by
+  have : Positive (1 : ℕ) := Natural.one_positive
+  have : (-1 : ℤ) ≃ -(coe (1 : ℕ)) := Rel.refl
+  have : Negative (-1) :=
+    negative_intro_nat ‹Positive (1 : ℕ)› ‹(-1 : ℤ) ≃ -(coe (1 : ℕ))›
+  exact this
+
 /-- Corollary of trichotomy that saves space in proofs. -/
 theorem not_positive_and_negative {a : ℤ} : ¬(Positive a ∧ Negative a) := by
   intro (And.intro (_ : Positive a) (_ : Negative a))

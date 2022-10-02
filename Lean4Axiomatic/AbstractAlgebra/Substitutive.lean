@@ -598,42 +598,48 @@ value.
 **Intuition**: if we know two terms are unequal, and replace the left-hand one
 with an equivalent term, the right-hand term should still be unequal to the new
 term.
-
-**Named parameters**
-- `α`: the type of values involved in the (negated) equivalence.
-
-**Class parameters**
-- `EqvOp α`: needed for (in)equivalence to be expressed between terms of type
-  `α`.
 -/
-def neq_substL
-    {α : Sort u} [EqvOp α]
-    : SubstitutiveOn Hand.L (α := α) (· ≄ ·) tc (· ≃ ·) (· → ·) := by
-  constructor
-  intro x₁ x₂ y _ (_ : x₁ ≃ x₂) (_ : x₁ ≄ y) (_ : x₂ ≃ y)
+theorem neqv_substL
+    {α : Sort u} [EqvOp α] {x₁ x₂ y : α} : x₁ ≃ x₂ → x₁ ≄ y → x₂ ≄ y
+    := by
+  intro (_ : x₁ ≃ x₂) (_ : x₁ ≄ y) (_ : x₂ ≃ y)
   show False
   apply ‹x₁ ≄ y›
   show x₁ ≃ y
   exact Rel.trans ‹x₁ ≃ x₂› ‹x₂ ≃ y›
 
+def neqv_substitutiveL
+    {α : Sort u} [EqvOp α]
+    : SubstitutiveOn Hand.L (α := α) (· ≄ ·) tc (· ≃ ·) (· → ·) := {
+  subst₂ := λ (_ : True) => neqv_substL
+}
+
 /--
 Negated equivalence respects the binary generalized substitution property.
 
-**Intuition**: see `neq_substL` for the left-handed property. The right-handed
+**Intuition**: see `neqv_substL` for the left-handed property. The right-handed
 property follows from the symmetry of negated equivalence.
-
-**Named parameters**
-- `α`: the type of values involved in the (negated) equivalence.
-
-**Class parameters**
-- `EqvOp α`: needed for (in)equivalence to be expressed between terms of type
-  `α`.
 -/
-instance neq_substitutive
-    {α : Sort u} [EqvOp α] : Substitutive₂ (α := α) (· ≄ ·) tc (· ≃ ·) (· → ·)
-    where
-  substitutiveL := neq_substL
-  substitutiveR := substR_from_substL_swap (rS := (· ↔ ·)) neq_substL
+instance neqv_substitutive
+    {α : Sort u} [EqvOp α]
+    : Substitutive₂ (α := α) (· ≄ ·) tc (· ≃ ·) (· → ·)
+    := {
+  substitutiveL := neqv_substitutiveL
+  substitutiveR := substR_from_substL_swap (rS := (· ↔ ·)) neqv_substitutiveL
+}
+
+/--
+The right-hand side of a negated equivalence can be replaced by an equivalent
+value.
+
+**Intuition**: if we know two terms are unequal, and replace the right-hand one
+with an equivalent term, the left-hand term should still be unequal to the new
+term.
+-/
+theorem neqv_substR
+    {α : Sort u} [EqvOp α] {x₁ x₂ y : α} : x₁ ≃ x₂ → y ≄ x₁ → y ≄ x₂
+    :=
+  AA.substRFn (f := (· ≄ ·))
 
 namespace Prod
 

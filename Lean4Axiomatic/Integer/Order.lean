@@ -5,6 +5,7 @@ import Lean4Axiomatic.Integer.Subtraction
 namespace Lean4Axiomatic.Integer
 
 open Coe (coe)
+open Natural (step)
 open Signed (Negative Positive)
 
 /-! ## Axioms -/
@@ -59,7 +60,7 @@ theorem gt_iff_pos_diff {a b : ℤ} : a > b ↔ Positive (a - b) := by
       le_iff_add_nat.mp ‹b ≤ a›
     have : a - b ≃ coe k := subR_move_addL.mpr ‹a ≃ b + coe k›
     have : a - b ≄ 0 := mt zero_diff_iff_eqv.mp (Rel.symm ‹b ≄ a›)
-    have : coe k ≄ 0 := AA.substLFn (f := (· ≄ ·)) ‹a - b ≃ coe k› ‹a - b ≄ 0›
+    have : coe k ≄ 0 := AA.neqv_substL ‹a - b ≃ coe k› ‹a - b ≄ 0›
     have : k ≄ 0 := AA.inject ‹coe k ≄ coe (0 : ℕ)›
     have : Positive k := Signed.positive_defn.mpr ‹k ≄ 0›
     have : Positive (a - b) := positive_intro_nat ‹Positive k› ‹a - b ≃ coe k›
@@ -77,7 +78,7 @@ theorem gt_iff_pos_diff {a b : ℤ} : a > b ↔ Positive (a - b) := by
     have : k ≄ 0 := Signed.positive_defn.mp ‹Positive k›
     have : (coe k : ℤ) ≄ coe 0 := AA.subst₁ ‹k ≄ 0›
     have : a - b ≄ 0 :=
-      AA.substLFn (f := (· ≄ ·)) (Rel.symm ‹a - b ≃ coe k›) ‹(coe k : ℤ) ≄ 0›
+      AA.neqv_substL (Rel.symm ‹a - b ≃ coe k›) ‹(coe k : ℤ) ≄ 0›
     have : b ≄ a := Rel.symm (mt zero_diff_iff_eqv.mpr ‹a - b ≄ 0›)
     exact And.intro ‹b ≤ a› ‹b ≄ a›
 
@@ -176,7 +177,7 @@ theorem lt_substL_eqv {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → a₁ < b → a₂ 
   apply lt_iff_le_neqv.mpr
   show a₂ ≤ b ∧ a₂ ≄ b
   have : a₂ ≤ b := AA.substLFn ‹a₁ ≃ a₂› ‹a₁ ≤ b›
-  have : a₂ ≄ b := AA.substLFn (f := (· ≄ ·)) ‹a₁ ≃ a₂› ‹a₁ ≄ b›
+  have : a₂ ≄ b := AA.neqv_substL ‹a₁ ≃ a₂› ‹a₁ ≄ b›
   exact And.intro ‹a₂ ≤ b› ‹a₂ ≄ b›
 
 /--
@@ -195,7 +196,7 @@ theorem lt_substR_eqv {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → b < a₁ → b < a
   apply lt_iff_le_neqv.mpr
   show b ≤ a₂ ∧ b ≄ a₂
   have : b ≤ a₂ := AA.substRFn ‹a₁ ≃ a₂› ‹b ≤ a₁›
-  have : b ≄ a₂ := AA.substRFn (f := (· ≄ ·)) ‹a₁ ≃ a₂› ‹b ≄ a₁›
+  have : b ≄ a₂ := AA.neqv_substR ‹a₁ ≃ a₂› ‹b ≄ a₁›
   exact And.intro ‹b ≤ a₂› ‹b ≄ a₂›
 
 instance lt_substitutive_eqv
@@ -487,5 +488,93 @@ theorem order_trichotomy
       : ¬ AA.TwoOfThree (ab ≃ 0) (Positive ab) (Negative ab)
       := abTri.atMostOne
     exact absurd abTwo abNotTwo
+
+/--
+_Less than or equivalent to_ is reflexive.
+
+**Property intuition**: Equivalence is already reflexive.
+
+**Proof intuition**: The difference between the two operands of _less than or
+equivalent to_ must be a natural number; zero in this case.
+-/
+theorem le_refl {a : ℤ} : a ≤ a := by
+  apply le_iff_add_nat.mpr
+  show ∃ (k : ℕ), a ≃ a + coe k
+  have : a ≃ a + coe (0 : ℕ) := calc
+    a               ≃ _ := Rel.symm AA.identR
+    a + 0           ≃ _ := Rel.refl
+    a + coe (0 : ℕ) ≃ _ := Rel.refl
+  exact Exists.intro 0 ‹a ≃ a + coe (0 : ℕ)›
+
+/--
+_Less than or equivalent to_ is literally the same as _less than_ OR
+_equivalent to_.
+
+**Proof intuition**: For the forwards direction, if `a ≃ b` then we are done;
+if `a ≄ b` then `a ≤ b` lets us conclude `a < b`. The reverse direction follows
+directly from definitions.
+-/
+theorem le_iff_lt_or_eqv {a b : ℤ} : a ≤ b ↔ a < b ∨ a ≃ b := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a ≤ b)
+    show a < b ∨ a ≃ b
+    have : a ≃ b ∨ a ≄ b := eqv? a b
+    have : a < b ∨ a ≃ b := match ‹a ≃ b ∨ a ≄ b› with
+    | Or.inl (_ : a ≃ b) =>
+      Or.inr ‹a ≃ b›
+    | Or.inr (_ : a ≄ b) =>
+      have : a < b := lt_iff_le_neqv.mpr (And.intro ‹a ≤ b› ‹a ≄ b›)
+      Or.inl ‹a < b›
+    exact this
+  case mpr =>
+    intro (_ : a < b ∨ a ≃ b)
+    show a ≤ b
+    have : a ≤ b := match ‹a < b ∨ a ≃ b› with
+    | Or.inl (_ : a < b) =>
+      have (And.intro (_ : a ≤ b) _) := lt_iff_le_neqv.mp ‹a < b›
+      ‹a ≤ b›
+    | Or.inr (_ : a ≃ b) =>
+      have : a ≤ a := le_refl
+      have : a ≤ b := AA.substRFn ‹a ≃ b› ‹a ≤ a›
+      ‹a ≤ b›
+    exact this
+
+/--
+Incrementing an integer always increases it.
+
+**Proof intuition**: For the _less than_ relation to hold, the difference of
+the operands, `a - (a + 1)`, must be negative. Algebra shows that it's
+equivalent to `-1`, so the proof follows.
+-/
+theorem lt_inc {a : ℤ} : a < a + 1 := by
+  apply lt_iff_neg_diff.mpr
+  show Negative (a - (a + 1))
+  have : a - (a + 1) ≃ -1 := calc
+    a - (a + 1)   ≃ _ := sub_defn
+    a + -(a + 1)  ≃ _ := AA.substR neg_compat_add
+    a + (-a + -1) ≃ _ := Rel.symm AA.assoc
+    (a + -a) + -1 ≃ _ := AA.substL AA.inverseR
+    (0 : ℤ) + -1  ≃ _ := AA.identL
+    (-1)          ≃ _ := Rel.refl
+  apply AA.substFn (Rel.symm ‹a - (a + 1) ≃ -1›)
+  show Negative (-1)
+  exact neg_one_negative
+
+/--
+One way of converting _less than or equivalent to_ into _less than_ requires
+incrementing the right operand.
+
+**Property and proof intuition**: We must have `a ≄ b + 1` because `b < b + 1`.
+-/
+theorem le_widen_lt {a b : ℤ} : a ≤ b → a < b + 1 := by
+  intro (_ : a ≤ b)
+  show a < b + 1
+  have : b < b + 1 := lt_inc
+  have : a < b ∨ a ≃ b := le_iff_lt_or_eqv.mp ‹a ≤ b›
+  have : a < b + 1 := match ‹a < b ∨ a ≃ b› with
+  | Or.inl (_ : a < b) => Rel.trans ‹a < b› ‹b < b + 1›
+  | Or.inr (_ : a ≃ b) => AA.substLFn (Rel.symm ‹a ≃ b›) ‹b < b + 1›
+  exact this
 
 end Lean4Axiomatic.Integer

@@ -58,7 +58,7 @@ def ind
 
 local instance axioms : Axioms Nat := {
   step_injective := step_injective
-  step_neq_zero := Nat.noConfusion
+  step_neqv_zero := Nat.noConfusion
   -- 2022-01-11: Using `Nat.rec` directly here, gives the following error:
   -- code generator does not support recursor 'Nat.rec' yet, consider using
   -- 'match ... with' and/or structural recursion

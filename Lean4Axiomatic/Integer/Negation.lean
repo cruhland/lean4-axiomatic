@@ -48,6 +48,13 @@ variable [Addition ℕ ℤ] [Multiplication ℕ ℤ] [Negation ℕ ℤ]
 open Signed (Positive)
 
 /--
+Non-typeclass version of `neg_inverse.inverseL`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+theorem neg_invL {a : ℤ} : -a + a ≃ 0 := AA.inverseL
+
+/--
 Zero is a left absorbing element for multiplication.
 
 **Property intuition**: A sum of zero terms should produce the empty sum, i.e.

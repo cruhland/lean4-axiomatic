@@ -141,10 +141,7 @@ theorem subst_add {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m 
       exact Rel.refl
     case step =>
       intro n₂ (_ : 0 ≃ step n₂)
-      show 0 + m ≃ step n₂ + m
-      apply False.elim
-      show False
-      exact Axioms.step_neq_zero (Rel.symm ‹0 ≃ step n₂›)
+      exact absurd (Rel.symm ‹0 ≃ step n₂›) step_neqv_zero
   case step =>
     intro n₁ (ih : ∀ y, n₁ ≃ y → n₁ + m ≃ y + m) n₂
     show step n₁ ≃ n₂ → step n₁ + m ≃ n₂ + m
@@ -152,9 +149,7 @@ theorem subst_add {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m 
     case zero =>
       intro (_ : step n₁ ≃ 0)
       show step n₁ + m ≃ 0 + m
-      apply False.elim
-      show False
-      exact Axioms.step_neq_zero ‹step n₁ ≃ 0›
+      exact absurd ‹step n₁ ≃ 0› step_neqv_zero
     case step =>
       intro n₂ (_ : step n₁ ≃ step n₂)
       show step n₁ + m ≃ step n₂ + m
@@ -270,8 +265,9 @@ theorem zero_sum_split {n m : ℕ} : n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0 := by
     show step n ≃ 0 ∧ m ≃ 0
     apply False.elim
     show False
+    have : step (n + m) ≃ step n + m := Rel.symm Addition.step_add
     have : step (n + m) ≃ 0 :=
-      Rel.trans (Rel.symm Addition.step_add) ‹step n + m ≃ 0›
-    exact Axioms.step_neq_zero ‹step (n + m) ≃ 0›
+      Rel.trans ‹step (n + m) ≃ step n + m› ‹step n + m ≃ 0›
+    exact absurd ‹step (n + m) ≃ 0› step_neqv_zero
 
 end Lean4Axiomatic.Natural
