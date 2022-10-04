@@ -3,5 +3,6 @@
 -- actually needed.
 import Lean4Axiomatic.Integer.Impl.Difference
 import Lean4Axiomatic.Natural.Impl.Nat
+import Lean4Axiomatic.Rational.Impl.Fraction
 
 def hello := "world"

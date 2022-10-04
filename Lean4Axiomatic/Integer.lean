@@ -29,7 +29,7 @@ construct an instance.
 **Class parameters**
 - `Natural ℕ`: Evidence that `ℕ` implements the natural numbers.
 -/
-class Integer (ℕ : Type) [Natural ℕ] (ℤ : Type) :=
+class Integer (ℕ : outParam Type) [outParam (Natural ℕ)] (ℤ : Type) :=
   toCore : Core ℕ ℤ
   toAddition : Addition ℕ ℤ
   toMultiplication : Multiplication ℕ ℤ
@@ -38,6 +38,12 @@ class Integer (ℕ : Type) [Natural ℕ] (ℤ : Type) :=
   toSign : Sign ℕ ℤ
   toSubtraction : Subtraction ℕ ℤ
 
+attribute [instance] Integer.toAddition
+attribute [instance] Integer.toCore
+attribute [instance] Integer.toMultiplication
+attribute [instance] Integer.toNegation
 attribute [instance] Integer.toOrder
+attribute [instance] Integer.toSign
+attribute [instance] Integer.toSubtraction
 
 end Lean4Axiomatic

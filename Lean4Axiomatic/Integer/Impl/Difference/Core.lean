@@ -26,7 +26,7 @@ structure Difference (α : Type) : Type :=
   init : α
   take : α
 
-infixl:90 "——" => Difference.mk
+infix:90 "——" => Difference.mk
 
 namespace Difference
 
