@@ -88,6 +88,30 @@ instance rational : Rational (Fraction ℤ) := {
   eqvOp := tildeDash (ℕ := ℕ) (ℤ := ℤ)
 }
 
+/-- Addition of integer fractions. -/
+def add : Fraction ℤ → Fraction ℤ → Fraction ℤ
+| p//q, r//s => (p * s + q * r)//(q * s)
+
+instance addOp : Add (Fraction ℤ) := {
+  add := add
+}
+
+/-- Multiplication of integer fractions. -/
+def mul : Fraction ℤ → Fraction ℤ → Fraction ℤ
+| p//q, r//s => (p * r)//(q * s)
+
+instance mulOp : Mul (Fraction ℤ) := {
+  mul := mul
+}
+
+/-- Negation of integer fractions. -/
+def neg : Fraction ℤ → Fraction ℤ
+| p//q => (-p)//q
+
+instance negOp : Neg (Fraction ℤ) := {
+  neg := neg
+}
+
 end Fraction
 
 end Lean4Axiomatic.Rational.Impl
