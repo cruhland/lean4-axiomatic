@@ -209,7 +209,7 @@ operation, this says that if two values are equivalent after being scaled by
 the same amount, then their unscaled values must have been equivalent as well.
 This seems to be consistent with our intuitive understanding of multiplication.
 -/
-def mul_cancelL {a b c : ℤ} : a ≄ 0 → a * b ≃ a * c → b ≃ c := by
+theorem mul_cancelL {a b c : ℤ} : a ≄ 0 → a * b ≃ a * c → b ≃ c := by
   intro (_ : a ≄ 0) (_ : a * b ≃ a * c)
   show b ≃ c
   have : a * b - a * c ≃ 0 := zero_diff_iff_eqv.mpr ‹a * b ≃ a * c›
@@ -235,6 +235,14 @@ instance mul_cancellative
   cancellativeL := mul_cancellativeL
   cancellativeR := AA.cancelR_from_cancelL mul_cancellativeL
 }
+
+/--
+Multiplication by a nonzero value on the right is injective.
+
+**Property and proof intuition**: See `mul_cancelL`.
+-/
+theorem mul_cancelR {a b c : ℤ} : a ≄ 0 → b * a ≃ c * a → b ≃ c :=
+  AA.cancelRC (C := (· ≄ 0))
 
 /--
 Decidable equivalence for integers.
