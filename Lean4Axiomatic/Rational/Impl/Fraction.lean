@@ -499,6 +499,40 @@ instance eqvOp : EqvOp (Fraction ℤ) := {
 }
 
 /--
+Replacing the numerator of a fraction with an equivalent value gives an
+equivalent result.
+
+**Property intuition**: This must be true for fractions to be a useful data
+structure.
+
+**Proof intuition**: Expand the definition of equivalence; use substitution of
+integer multiplication.
+-/
+theorem substL {a₁ a₂ b : ℤ} [Nonzero b] : a₁ ≃ a₂ → a₁//b ≃ a₂//b := by
+  intro (_ : a₁ ≃ a₂)
+  show a₁//b ≃ a₂//b
+  show a₁ * b ≃ a₂ * b
+  exact AA.substL ‹a₁ ≃ a₂›
+
+/--
+Replacing the denominator of a fraction with an equivalent value gives an
+equivalent result.
+
+**Property intuition**: This must be true for fractions to be a useful data
+structure.
+
+**Proof intuition**: Expand the definition of equivalence; use substitution of
+integer multiplication.
+-/
+theorem substR
+    {a b₁ b₂ : ℤ} [Nonzero b₁] [Nonzero b₂] : b₁ ≃ b₂ → a//b₁ ≃ a//b₂
+    := by
+  intro (_ : b₁ ≃ b₂)
+  show a//b₁ ≃ a//b₂
+  show a * b₂ ≃ a * b₁
+  exact AA.substR (Rel.symm ‹b₁ ≃ b₂›)
+
+/--
 Addition of fractions.
 
 Uses naive fraction addition, and the proof that naive fraction addition always
