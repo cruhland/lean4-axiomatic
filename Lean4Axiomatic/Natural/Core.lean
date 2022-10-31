@@ -168,11 +168,4 @@ theorem step_neqv {n : ℕ} : step n ≄ n := by
     show step n ≃ n
     exact AA.inject ‹step (step n) ≃ step n›
 
-/-- Zero and one are different natural numbers. -/
-theorem one_neqv_zero : (1 : ℕ) ≄ 0 := by
-  have : step 0 ≃ 1 := Rel.symm literal_step
-  have : step 0 ≄ 0 := step_neqv_zero
-  have : 1 ≄ 0 := AA.neqv_substL ‹step 0 ≃ 1› ‹step 0 ≄ 0›
-  exact this
-
 end Lean4Axiomatic.Natural

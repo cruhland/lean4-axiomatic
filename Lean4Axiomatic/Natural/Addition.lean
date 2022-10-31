@@ -102,6 +102,20 @@ instance add_semicompatible_step : AA.Semicompatible (α := ℕ) step (· + ·) 
   semicompatibleR := AA.SemicompatibleOn.mk (Rel.symm add_step)
 }
 
+/--
+The `step` operation can be exchanged between the operands of an addition.
+
+**Property intuition**: It doesn't matter which operand is incremented; the
+result will be the same.
+
+**Proof intuition**: Use `step_add` and `add_step` to bring the increment to
+the outside of the sum and then back to the other operand.
+-/
+theorem step_add_swap {n m : ℕ} : step n + m ≃ n + step m := calc
+  step n + m   ≃ _ := step_add
+  step (n + m) ≃ _ := Rel.symm add_step
+  n + step m   ≃ _ := Rel.refl
+
 /-- Exchanging the operands of an addition does not change the result. -/
 theorem add_comm {n m : ℕ} : n + m ≃ m + n := by
   apply ind_on (motive := λ n => n + m ≃ m + n) n

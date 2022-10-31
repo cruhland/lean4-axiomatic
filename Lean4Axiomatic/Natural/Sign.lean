@@ -63,9 +63,20 @@ instance positive_substitutive
   subst₁ := positive_subst
 }
 
+/--
+The successor of any natural number is positive.
+
+**Intuition**: By the axioms, successors are not zero, and positive numbers are
+exactly the nonzero numbers.
+-/
+theorem step_positive {n : ℕ} : Positive (step n) :=
+  Signed.positive_defn.mpr step_neqv_zero
+
 /-- One is a positive natural number. -/
 theorem one_positive : Positive (1 : ℕ) :=
-  Signed.positive_defn.mpr one_neqv_zero
+  have : step 0 ≃ 1 := Rel.symm literal_step
+  have : Positive (step 0) := step_positive
+  positive_subst ‹step 0 ≃ 1› ‹Positive (step 0)›
 
 /--
 Every positive natural number is the successor of a natural number.

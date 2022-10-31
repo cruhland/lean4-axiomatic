@@ -22,16 +22,20 @@ variable {ℤ : Type} [Core ℕ ℤ]
 variable [Addition ℕ ℤ] [Multiplication ℕ ℤ] [Negation ℕ ℤ]
 
 /--
-A positive or negative integer of unit magnitude.
+Square root of unity: an integer whose square is one.
 
-Only `1` and `-1` satisfy this property. It's formulated using multiplication
-to be easy to use with algebra.
+Only `1` and `-1` satisfy this property. This makes it useful for indicating
+when an integer is a "pure sign"; that is, a positive or negative integer of
+unit magnitude. Pure signs can be multiplied by positive integers to produce
+any nonzero integer.
+
+This property is easy work with algebraically because it uses multiplication.
 
 **Named parameters**
 - `a`: The integer satisfying the property.
 -/
 class Sqrt1 (a : ℤ) : Prop :=
-  /-- The underlying property represented by `Sqrt1`. -/
+  /-- The underlying property expressed by `Sqrt1`. -/
   elim : a * a ≃ 1
 
 /--
@@ -127,7 +131,7 @@ instance neg_preserves_sqrt1 {a : ℤ} [Sqrt1 a] : Sqrt1 (-a) := by
   exact this
 
 /--
-Demonstrates that an integer can be factored into _sign_ and _magnitude_
+Demonstrates that a nonzero integer can be factored into _sign_ and _magnitude_
 components.
 
 The sign value is either positive (represented by `1`) or negative (represented
@@ -139,13 +143,13 @@ because it represents positive and negative numbers in a uniform way that's
 suited to algebraic operations.
 
 **Parameters**
-- `a`: The integer to represent in signed-magnitude form.
+- `a`: The nonzero integer to represent in signed-magnitude form.
 - `s`: The sign value.
-- `Sqrt1 s`: Ensures that `s` is either `1` or `-1`.
+- `sqrt1`: Ensures that `s` is either `1` or `-1`.
 -/
 inductive NonzeroWithSign (a : ℤ) (s : ℤ) [sqrt1 : Sqrt1 s] : Prop
 | /--
-  `NonzeroWithSign`'s only constructor.
+  Construct evidence that the integer `a` is nonzero, with sign component `s`.
 
   **Parameters**
   - `m`: The magnitude value.
@@ -153,6 +157,35 @@ inductive NonzeroWithSign (a : ℤ) (s : ℤ) [sqrt1 : Sqrt1 s] : Prop
   - `eqv`: Proof that `a` is a product of the sign and the magnitude.
   -/
   intro (m : ℕ) (pos : Positive m) (eqv : a ≃ s * coe m)
+
+/--
+A pure sign (i.e., a square root of unity) is its own sign value.
+
+**Intuition**: Set the magnitude component of `NonzeroWithSign` to one.
+-/
+def NonzeroWithSign.for_sign {s : ℤ} [Sqrt1 s] : NonzeroWithSign s s :=
+  have : Positive 1 := Natural.one_positive
+  have : s ≃ s * 1 := Rel.symm AA.identR
+  NonzeroWithSign.intro (1 : ℕ) ‹Positive (1 : ℕ)› ‹s ≃ s * 1›
+
+/--
+`NonzeroWithSign` respects equivalence of its nonzero integer parameter.
+
+**Property intuition**: This is necessary for `NonzeroWithSign` to be a valid
+predicate.
+
+**Proof intuition**: The underlying relation for `NonzeroWithSign` is
+equivalence, so replacing `a₁` with `a₂` follows from transitivity.
+-/
+theorem NonzeroWithSign.subst_nonzero
+    {a₁ a₂ s : ℤ} {_ : Sqrt1 s}
+    : a₁ ≃ a₂ → NonzeroWithSign a₁ s → NonzeroWithSign a₂ s
+    := by
+  intro (_ : a₁ ≃ a₂)
+  intro (NonzeroWithSign.intro (m : ℕ) (_ : Positive m) (_ : a₁ ≃ s * coe m))
+  show NonzeroWithSign a₂ s
+  have : a₂ ≃ s * coe m := Rel.trans (Rel.symm ‹a₁ ≃ a₂›) ‹a₁ ≃ s * coe m›
+  exact NonzeroWithSign.intro m ‹Positive m› ‹a₂ ≃ s * coe m›
 
 /--
 `NonzeroWithSign` respects equivalence of signs.
@@ -164,7 +197,7 @@ for `s₂`. This _must_ be true for `NonzeroWithSign` to be a valid predicate.
 **Proof intuition**: Extract the equivalence for `s₁`, substitute `s₂` into it,
 and build a new `NonzeroWithSign` on `s₂`.
 -/
-theorem nonzeroWithSign_sqrt1_subst
+theorem NonzeroWithSign.subst_sign
     {a s₁ s₂ : ℤ} {_ : Sqrt1 s₁} {_ : Sqrt1 s₂} (_ : s₁ ≃ s₂)
     : NonzeroWithSign a s₁ → NonzeroWithSign a s₂
     := by
@@ -244,7 +277,7 @@ Same as `NonzeroWithSign`, but the sign is a field instead of a parameter.
 **Parameters**
 - `a`: The integer that is not zero.
 -/
-inductive Nonzero (a : ℤ) : Prop :=
+class inductive Nonzero (a : ℤ) : Prop :=
 | /--
   Construct evidence that the integer `a` is nonzero.
 
@@ -266,6 +299,25 @@ last, `NonzeroWithSign` argument.
 def Nonzero.mk {a s : ℤ} {sqrt1 : Sqrt1 s} : NonzeroWithSign a s → Nonzero a :=
   Nonzero.intro s sqrt1
 
+/-- Sign values (i.e., square roots of unity) are nonzero. -/
+instance nonzero_sqrt1 {s : ℤ} [Sqrt1 s] : Nonzero s :=
+  Nonzero.mk NonzeroWithSign.for_sign
+
+/--
+The `Nonzero` predicate respects equivalence.
+
+**Property intuition**: Necessary for `Nonzero` to be a valid predicate.
+
+**Proof intuition**: Follows directly from substitution on `NonzeroWithSign`.
+-/
+theorem nonzero_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → Nonzero a₁ → Nonzero a₂ := by
+  intro (_ : a₁ ≃ a₂) (Nonzero.intro (s : ℤ) (_ : Sqrt1 s) nws)
+  have : NonzeroWithSign a₁ s := nws
+  show Nonzero a₂
+  have : NonzeroWithSign a₂ s :=
+    NonzeroWithSign.subst_nonzero ‹a₁ ≃ a₂› ‹NonzeroWithSign a₁ s›
+  exact Nonzero.mk ‹NonzeroWithSign a₂ s›
+
 /--
 The product of nonzero integers is nonzero.
 
@@ -285,6 +337,32 @@ theorem mul_preserves_nonzero
   have : NonzeroWithSign (a * b) (as * bs) :=
     mul_preserves_nonzeroWithSign ‹NonzeroWithSign a as› ‹NonzeroWithSign b bs›
   exact Nonzero.mk ‹NonzeroWithSign (a * b) (as * bs)›
+
+/-- Instance version of `mul_preserves_nonzero`. -/
+instance mul_preserves_nonzero_inst
+    {a b : ℤ} [Nonzero a] [Nonzero b] : Nonzero (a * b)
+    :=
+  mul_preserves_nonzero ‹Nonzero a› ‹Nonzero b›
+
+/--
+The negation of a nonzero integer is nonzero.
+
+**Property intuition**: Negation only results in zero when the input is zero.
+
+**Proof intuition**: Negation is equivalent to multiplication by `-1`, which is
+a nonzero integer, so its product with the nonzero input is also nonzero.
+-/
+theorem neg_preserves_nonzero {a : ℤ} : Nonzero a → Nonzero (-a) := by
+  intro (_ : Nonzero a)
+  show Nonzero (-a)
+  have : Nonzero (-1) := nonzero_sqrt1
+  have : Nonzero (-1 * a) := mul_preserves_nonzero ‹Nonzero (-1)› ‹Nonzero a›
+  have : Nonzero (-a) := nonzero_subst mul_neg_one ‹Nonzero (-1 * a)›
+  exact this
+
+/-- Instance version of `neg_preserves_nonzero`. -/
+instance neg_preserves_nonzero_inst {a : ℤ} [Nonzero a] : Nonzero (-a) :=
+  neg_preserves_nonzero ‹Nonzero a›
 
 end prelim
 
@@ -489,13 +567,13 @@ theorem nonzeroWithSign_cases
   have : s ≃ 1 ∨ s ≃ -1 := sqrt1_cases.mp ‹Sqrt1 s›
   match ‹s ≃ 1 ∨ s ≃ -1› with
   | Or.inl (_ : s ≃ 1) =>
-    apply Or.inl
-    show NonzeroWithSign a 1
-    exact nonzeroWithSign_sqrt1_subst ‹s ≃ 1› ‹NonzeroWithSign a s›
+    have : NonzeroWithSign a 1 :=
+      NonzeroWithSign.subst_sign ‹s ≃ 1› ‹NonzeroWithSign a s›
+    exact Or.inl ‹NonzeroWithSign a 1›
   | Or.inr (_ : s ≃ -1) =>
-    apply Or.inr
-    show NonzeroWithSign a (-1)
-    exact nonzeroWithSign_sqrt1_subst ‹s ≃ -1› ‹NonzeroWithSign a s›
+    have : NonzeroWithSign a (-1) :=
+      NonzeroWithSign.subst_sign ‹s ≃ -1› ‹NonzeroWithSign a s›
+    exact Or.inr ‹NonzeroWithSign a (-1)›
 
 /--
 All `Nonzero` representations of the same integer have the same sign.
@@ -524,17 +602,17 @@ theorem nonzeroWithSign_sign_inject
         Or.inl ‹s₁ ≃ s₂›
       | Or.inr (_ : s₂ ≃ -1) =>
         have : NonzeroWithSign a 1 :=
-          nonzeroWithSign_sqrt1_subst ‹s₁ ≃ 1› ‹NonzeroWithSign a s₁›
+          NonzeroWithSign.subst_sign ‹s₁ ≃ 1› ‹NonzeroWithSign a s₁›
         have : NonzeroWithSign a (-1) :=
-          nonzeroWithSign_sqrt1_subst ‹s₂ ≃ -1› ‹NonzeroWithSign a s₂›
+          NonzeroWithSign.subst_sign ‹s₂ ≃ -1› ‹NonzeroWithSign a s₂›
         Or.inr (And.intro ‹NonzeroWithSign a 1› ‹NonzeroWithSign a (-1)›)
     | Or.inr (_ : s₁ ≃ -1) =>
       match ‹s₂ ≃ 1 ∨ s₂ ≃ -1› with
       | Or.inl (_ : s₂ ≃ 1) =>
         have : NonzeroWithSign a (-1) :=
-          nonzeroWithSign_sqrt1_subst ‹s₁ ≃ -1› ‹NonzeroWithSign a s₁›
+          NonzeroWithSign.subst_sign ‹s₁ ≃ -1› ‹NonzeroWithSign a s₁›
         have : NonzeroWithSign a 1 :=
-          nonzeroWithSign_sqrt1_subst ‹s₂ ≃ 1› ‹NonzeroWithSign a s₂›
+          NonzeroWithSign.subst_sign ‹s₂ ≃ 1› ‹NonzeroWithSign a s₂›
         Or.inr (And.intro ‹NonzeroWithSign a 1› ‹NonzeroWithSign a (-1)›)
       | Or.inr (_ : s₂ ≃ -1) =>
         have : s₁ ≃ s₂ := Rel.trans ‹s₁ ≃ -1› (Rel.symm ‹s₂ ≃ -1›)
@@ -596,7 +674,7 @@ theorem same_sign_positive
   have : s ≃ 1 :=
     nonzeroWithSign_sign_inject ‹NonzeroWithSign a s› ‹NonzeroWithSign a 1›
   have : NonzeroWithSign b 1 :=
-    nonzeroWithSign_sqrt1_subst ‹s ≃ 1› ‹NonzeroWithSign b s›
+    NonzeroWithSign.subst_sign ‹s ≃ 1› ‹NonzeroWithSign b s›
   have : Positive b := positive_iff_sign_pos1.mpr ‹NonzeroWithSign b 1›
   exact this
 
@@ -758,7 +836,7 @@ theorem nonzero_factors_if_nonzero_product
   have : a * b ≄ 0 := nonzero_iff_neqv_zero.mp ‹Nonzero (a * b)›
   have : ¬(a ≃ 0 ∨ b ≃ 0) := mt mul_split_zero.mpr ‹a * b ≄ 0›
   have (And.intro (_ : a ≄ 0) (_ : b ≄ 0)) :=
-    not_or_iff_and_not.mp ‹¬(a ≃ 0 ∨ b ≃ 0)›
+    Logic.not_or_iff_and_not.mp ‹¬(a ≃ 0 ∨ b ≃ 0)›
   have : Nonzero a := nonzero_iff_neqv_zero.mpr ‹a ≄ 0›
   have : Nonzero b := nonzero_iff_neqv_zero.mpr ‹b ≄ 0›
   exact And.intro ‹Nonzero a› ‹Nonzero b›
@@ -802,7 +880,7 @@ theorem positive_mul_iff_same_sign
         have : NonzeroWithSign ab (1 * -1) :=
           mul_preserves_nonzeroWithSign nwsa nwsb
         have : NonzeroWithSign ab (-1) :=
-          nonzeroWithSign_sqrt1_subst AA.identL ‹NonzeroWithSign ab (1 * -1)›
+          NonzeroWithSign.subst_sign AA.identL ‹NonzeroWithSign ab (1 * -1)›
         Or.inr ‹NonzeroWithSign ab (-1)›
     | Or.inr (nwsa : NonzeroWithSign a (-1)) =>
       match nwsbc with
@@ -810,7 +888,7 @@ theorem positive_mul_iff_same_sign
         have : NonzeroWithSign ab (-1 * 1) :=
           mul_preserves_nonzeroWithSign nwsa nwsb
         have : NonzeroWithSign ab (-1) :=
-          nonzeroWithSign_sqrt1_subst AA.identR ‹NonzeroWithSign ab (-1 * 1)›
+          NonzeroWithSign.subst_sign AA.identR ‹NonzeroWithSign ab (-1 * 1)›
         Or.inr ‹NonzeroWithSign ab (-1)›
       | Or.inr (nwsb : NonzeroWithSign b (-1)) =>
         Or.inl (SameSign.mk nwsa nwsb)
@@ -833,7 +911,7 @@ theorem positive_mul_iff_same_sign
     have : NonzeroWithSign ab (s * s) :=
       mul_preserves_nonzeroWithSign nwsa nwsb
     have : NonzeroWithSign ab 1 :=
-      nonzeroWithSign_sqrt1_subst ‹s * s ≃ 1› ‹NonzeroWithSign ab (s * s)›
+      NonzeroWithSign.subst_sign ‹s * s ≃ 1› ‹NonzeroWithSign ab (s * s)›
     have : Positive ab := positive_iff_sign_pos1.mpr ‹NonzeroWithSign ab 1›
     exact this
 
@@ -901,7 +979,7 @@ theorem positive_iff_negated_negative
     show Negative (-a)
     have nwsa : NonzeroWithSign a 1 := positive_iff_sign_pos1.mp ‹Positive a›
     have : NonzeroWithSign a (-(-1)) :=
-      nonzeroWithSign_sqrt1_subst (Rel.symm neg_involutive) nwsa
+      NonzeroWithSign.subst_sign (Rel.symm neg_involutive) nwsa
     have : NonzeroWithSign (-a) (-1) :=
       nonzeroWithSign_swap_neg.mpr ‹NonzeroWithSign a (-(-1))›
     have : Negative (-a) :=
@@ -915,7 +993,7 @@ theorem positive_iff_negated_negative
     have : NonzeroWithSign a (-(-1)) :=
       nonzeroWithSign_swap_neg.mp ‹NonzeroWithSign (-a) (-1)›
     have : NonzeroWithSign a 1 :=
-      nonzeroWithSign_sqrt1_subst neg_involutive ‹NonzeroWithSign a (-(-1))›
+      NonzeroWithSign.subst_sign neg_involutive ‹NonzeroWithSign a (-(-1))›
     have : Positive a := positive_iff_sign_pos1.mpr ‹NonzeroWithSign a 1›
     exact this
 

@@ -201,8 +201,8 @@ function, and thus it fully reproduces the state of the pair.
 - `β`: The `Type` of the pair's right element.
 -/
 def depFn_from_prod : α × β → ((hand : Hand) → hand.pick α β)
-| (a, b), Hand.L => a
-| (a, b), Hand.R => b
+| (a, _), Hand.L => a
+| (_, b), Hand.R => b
 
 /--
 Evidence that all codomains in the dependent function representation of ordered
