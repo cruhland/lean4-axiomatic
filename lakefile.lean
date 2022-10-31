@@ -9,7 +9,7 @@ lean_lib Lean4Axiomatic {
   -- add library configuration options here
 }
 
-@[defaultTarget]
+@[default_target]
 lean_exe «lean4-axiomatic» {
   root := `Main
 }
