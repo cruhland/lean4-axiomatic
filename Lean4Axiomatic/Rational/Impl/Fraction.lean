@@ -533,6 +533,17 @@ theorem substR
   exact AA.substR (Rel.symm ‹b₁ ≃ b₂›)
 
 /--
+Every integer can be represented as a fraction.
+
+**Intuition**: Dividing by `1` leaves the input unchanged. Or, a denominator of
+`1` means that every unit of the numerator is the same "size" as the integer
+`1`.
+-/
+instance from_integer : Coe ℤ (Fraction ℤ) := {
+  coe := (·//1)
+}
+
+/--
 Addition of fractions.
 
 Uses naive fraction addition, and the proof that naive fraction addition always
