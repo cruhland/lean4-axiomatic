@@ -543,6 +543,11 @@ instance from_integer : Coe ℤ (Fraction ℤ) := {
   coe := (·//1)
 }
 
+/-- Natural number literals can be converted into fractions. -/
+instance literal {n : Nat} : OfNat (Fraction ℤ) n := {
+  ofNat := Coe.coe (OfNat.ofNat n : ℤ)
+}
+
 /--
 Addition of fractions.
 
