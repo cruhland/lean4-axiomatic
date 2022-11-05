@@ -755,6 +755,27 @@ theorem neg_subst {p₁ p₂ : Fraction ℤ} : p₁ ≃ p₂ → -p₁ ≃ -p₂
     (-(p₂n * p₁d)) ≃ _ := AA.scompatL
     (-p₂n) * p₁d   ≃ _ := Rel.refl
 
+/-- Class providing evidence that a fraction is not zero. -/
+class Nonzero (p : Fraction ℤ) :=
+  /-- A fraction is nonzero if and only if its numerator is nonzero. -/
+  [numerator_nonzero : Integer.Nonzero p.numerator]
+
+/- Automatically derive `Fraction.Nonzero` from `Integer.Nonzero`. -/
+attribute [instance] Nonzero.mk
+
+/--
+Reciprocal of a fraction.
+
+Has a `Nonzero` constraint because the numerator must be nonzero to become the
+denominator.
+-/
+def reciprocal (p : Fraction ℤ) [Nonzero p] : Fraction ℤ := by
+  revert p; intro (a//b) (_ : Nonzero (a//b))
+  have : Integer.Nonzero a := ‹Nonzero (a//b)›.numerator_nonzero
+  exact b//a
+
+postfix:120 "⁻¹" => reciprocal
+
 instance rational : Rational (Fraction ℤ) := {
   eqvOp := eqvOp
   addOp := addOp
