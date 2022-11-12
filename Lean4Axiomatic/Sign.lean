@@ -38,8 +38,7 @@ class Positivity
   positive_defn {a : α} : Positive a ↔ a ≄ 0
 
 /--
-Class that provides canonical `Positive` and `Negative` predicates over a type
-`α`.
+Class that provides canonical signedness predicates over a type `α`.
 
 This class is separate from `Signed` as a convenience: when implementing
 the properties for `Signed`, it's cleaner and more consistent to be able to
@@ -54,11 +53,14 @@ class Ops (α : Type u) extends Positivity.Ops α :=
   /-- Predicate that holds only for negative values. -/
   Negative : α → Prop
 
-export Ops (Negative)
+  /-- Predicate that holds for values that are not zero. -/
+  Nonzero : α → Prop
+
+export Ops (Negative Nonzero)
 
 end Signed
 
-open Signed (Negative Positive)
+open Signed (Negative Nonzero Positive)
 
 /-- Class for types `α` that have positive and negative values. -/
 class Signed
@@ -79,7 +81,10 @@ class Signed
 
   /-- Every value is one, and only one, of zero, positive, or negative. -/
   trichotomy
-    (a : α) : AA.ExactlyOneOfThree (a ≃ 0) (Positive a) (Negative a)
+    (x : α) : AA.ExactlyOneOfThree (x ≃ 0) (Positive x) (Negative x)
+
+  /-- A nonzero value is either positive or negative. -/
+  nonzero_iff_pos_or_neg {x : α} : Nonzero x ↔ Positive x ∨ Negative x
 
 attribute [instance] Signed.positive_substitutive
 attribute [instance] Signed.negative_substitutive

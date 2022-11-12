@@ -377,18 +377,25 @@ class Sign
       [outParam (Core ℕ ℤ)] [outParam (Addition ℕ ℤ)]
       [outParam (Multiplication ℕ ℤ)] [outParam (Negation ℕ ℤ)]
     :=
-  /-- Definitions of `Positive` and `Negative`, and their basic properties. -/
-  signed : Signed ℤ
+  /-- Definitions of signedness predicates. -/
+  ops : Signed.Ops ℤ
 
   /-- An integer is positive iff it has sign `1`. -/
-  positive_iff_sign_pos1 {a : ℤ} : Positive a ↔ NonzeroWithSign a 1
+  positive_iff_sign_pos1 {a : ℤ} : Signed.Positive a ↔ NonzeroWithSign a 1
 
   /-- An integer is negative iff it has sign `-1`. -/
-  negative_iff_sign_neg1 {a : ℤ} : Negative a ↔ NonzeroWithSign a (-1)
+  negative_iff_sign_neg1 {a : ℤ} : Signed.Negative a ↔ NonzeroWithSign a (-1)
 
-attribute [instance] Sign.signed
+  /-- An integer is nonzero iff it satisfies `Integer.Nonzero`. -/
+  nonzero_iff_nonzero_impl {a : ℤ} : Signed.Nonzero a ↔ Integer.Nonzero a
 
-export Sign (negative_iff_sign_neg1 positive_iff_sign_pos1)
+  /-- Every value is one, and only one, of zero, positive, or negative. -/
+  sign_trichotomy
+    (a : ℤ) : AA.ExactlyOneOfThree (a ≃ 0) (Positive a) (Negative a)
+
+attribute [instance] Sign.ops
+
+export Sign (negative_iff_sign_neg1 positive_iff_sign_pos1 sign_trichotomy)
 
 /-!
 ## Derived properties
@@ -397,6 +404,48 @@ export Sign (negative_iff_sign_neg1 positive_iff_sign_pos1)
 variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Core ℕ ℤ] [Addition ℕ ℤ] [Multiplication ℕ ℤ]
 variable [Negation ℕ ℤ] [Sign ℕ ℤ]
+
+/--
+The `Positive` predicate respects equivalence.
+
+**Property intuition**: This must be true for `Positive` to make sense as a
+predicate.
+
+**Proof intuition**: The definition of `Positive` is an equivalence between the
+integer argument of the predicate and an expression. Since we also have an
+equivalence for substitution, the result follows by transitivity.
+-/
+theorem positive_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → Positive a₁ → Positive a₂ := by
+  intro (_ : a₁ ≃ a₂) (_ : Positive a₁)
+  show Positive a₂
+  have (NonzeroWithSign.intro (m : ℕ) (_ : Positive m) (_ : a₁ ≃ 1 * ↑m)) :=
+    positive_iff_sign_pos1.mp ‹Positive a₁›
+  have : a₂ ≃ 1 * ↑m := Rel.trans (Rel.symm ‹a₁ ≃ a₂›) ‹a₁ ≃ 1 * ↑m›
+  have : NonzeroWithSign a₂ 1 :=
+    NonzeroWithSign.intro m ‹Positive m› ‹a₂ ≃ 1 * ↑m›
+  have : Positive a₂ := positive_iff_sign_pos1.mpr ‹NonzeroWithSign a₂ 1›
+  exact this
+
+/--
+The `Negative` predicate respects equivalence.
+
+**Property intuition**: This must be true for `Negative` to make sense as a
+predicate.
+
+**Proof intuition**: The definition of `Negative` is an equivalence between the
+integer argument of the predicate and an expression. Since we also have an
+equivalence for substitution, the result follows by transitivity.
+-/
+theorem negative_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → Negative a₁ → Negative a₂ := by
+  intro (_ : a₁ ≃ a₂) (_ : Negative a₁)
+  show Negative a₂
+  have (NonzeroWithSign.intro (m : ℕ) (_ : Positive m) (_ : a₁ ≃ -1 * ↑m)) :=
+    negative_iff_sign_neg1.mp ‹Negative a₁›
+  have : a₂ ≃ -1 * ↑m := Rel.trans (Rel.symm ‹a₁ ≃ a₂›) ‹a₁ ≃ -1 * ↑m›
+  have : NonzeroWithSign a₂ (-1) :=
+    NonzeroWithSign.intro m ‹Positive m› ‹a₂ ≃ -1 * ↑m›
+  have : Negative a₂ := negative_iff_sign_neg1.mpr ‹NonzeroWithSign a₂ (-1)›
+  exact this
 
 /-- An integer is positive if it's equivalent to a positive natural number. -/
 def positive_intro_nat
@@ -470,7 +519,7 @@ theorem not_positive_and_negative {a : ℤ} : ¬(Positive a ∧ Negative a) := b
   have two : AA.TwoOfThree (a ≃ 0) (Positive a) (Negative a) :=
     AA.TwoOfThree.twoAndThree ‹Positive a› ‹Negative a›
   have not_two : ¬ AA.TwoOfThree (a ≃ 0) (Positive a) (Negative a) :=
-    (Signed.trichotomy a).atMostOne
+    (sign_trichotomy a).atMostOne
   exact absurd two not_two
 
 /--
@@ -485,7 +534,7 @@ theorem sqrt1_cases {a : ℤ} : Sqrt1 a ↔ a ≃ 1 ∨ a ≃ -1 := by
   case mp =>
     intro (_ : Sqrt1 a)
     show a ≃ 1 ∨ a ≃ -1
-    match (Signed.trichotomy a).atLeastOne with
+    match (sign_trichotomy a).atLeastOne with
     | AA.OneOfThree.first (_ : a ≃ 0) =>
       apply False.elim
       show False
@@ -716,6 +765,15 @@ theorem nonzero_iff_pos_or_neg
     | Or.inr (_ : Negative a) =>
       have : NonzeroWithSign a (-1) := negative_iff_sign_neg1.mp ‹Negative a›
       exact Nonzero.mk ‹NonzeroWithSign a (-1)›
+
+/-- Integers meet all the requirements of a signed type. -/
+instance signed : Signed ℤ := {
+  positive_substitutive := { subst₁ := positive_subst }
+  negative_substitutive := { subst₁ := negative_subst }
+  trichotomy := sign_trichotomy
+  nonzero_iff_pos_or_neg :=
+    Relation.iff_trans Sign.nonzero_iff_nonzero_impl nonzero_iff_pos_or_neg
+}
 
 /--
 Provide evidence that an integer is equivalent, or not equivalent, to zero.

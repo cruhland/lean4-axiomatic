@@ -192,16 +192,11 @@ theorem sign_trichotomy
       natOrderTri.atMostOne
     exact absurd twoOfThree notTwoOfThree
 
-def signed : Signed (Difference ℕ) := {
-  positive_substitutive := Generic.positive_substitutive
-  negative_substitutive := Generic.negative_substitutive
-  trichotomy := sign_trichotomy
-}
-
 instance sign : Sign ℕ (Difference ℕ) := {
-  signed := signed
   positive_iff_sign_pos1 := Generic.positive_iff_sign_pos1
   negative_iff_sign_neg1 := Generic.negative_iff_sign_neg1
+  nonzero_iff_nonzero_impl := Generic.nonzero_iff_nonzero_impl
+  sign_trichotomy := sign_trichotomy
 }
 
 end Lean4Axiomatic.Integer.Impl.Difference

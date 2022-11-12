@@ -11,18 +11,19 @@ variable [Addition ℕ ℤ] [Multiplication ℕ ℤ] [Negation ℕ ℤ]
 open Signed (Negative Positive)
 
 /--
-Definitions of the `Positive` and `Negative` predicates on integers.
+Definitions of signedness predicates on integers.
 
 These definitions are generic in that they don't depend on the underlying
 implementation of the integers (the type `ℤ`). This allows them to be used by
 any integer implementation directly.
 
 These definitions are in a separate `Ops` class so that subsequent results in
-this file can use the canonical `Positive` and `Negative` predicates.
+this file can use the canonical predicate names.
 -/
 instance signed_ops : Signed.Ops ℤ := {
   Positive := λ (a : ℤ) => NonzeroWithSign a 1
   Negative := λ (a : ℤ) => NonzeroWithSign a (-1)
+  Nonzero := Nonzero
 }
 
 /--
@@ -50,49 +51,13 @@ theorem negative_iff_sign_neg1 {a : ℤ} : Negative a ↔ NonzeroWithSign a (-1)
   Iff.intro id id
 
 /--
-The `Positive` predicate respects equivalence.
+The `Signed.Nonzero` predicate is equivalent to the `Integer.Nonzero` class.
 
-**Property intuition**: This must be true for `Positive` to make sense as a
-predicate.
-
-**Proof intuition**: The definition of `Positive` is an equivalence between the
-integer argument of the predicate and an expression. Since we also have an
-equivalence for substitution, the result follows by transitivity.
+**Intuition**: Defined to be the case in `signed_ops`.
 -/
-theorem positive_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → Positive a₁ → Positive a₂ := by
-  intro (_ : a₁ ≃ a₂)
-  intro (NonzeroWithSign.intro (m : ℕ) (_ : Positive m) (_ : a₁ ≃ 1 * ↑m))
-  show NonzeroWithSign a₂ 1
-  have : a₂ ≃ 1 * ↑m := Rel.trans (Rel.symm ‹a₁ ≃ a₂›) ‹a₁ ≃ 1 * ↑m›
-  exact NonzeroWithSign.intro m ‹Positive m› ‹a₂ ≃ 1 * ↑m›
-
-def positive_substitutive
-    : AA.Substitutive₁ (α := ℤ) Positive (· ≃ ·) (· → ·)
-    := {
-  subst₁ := positive_subst
-}
-
-/--
-The `Negative` predicate respects equivalence.
-
-**Property intuition**: This must be true for `Negative` to make sense as a
-predicate.
-
-**Proof intuition**: The definition of `Negative` is an equivalence between the
-integer argument of the predicate and an expression. Since we also have an
-equivalence for substitution, the result follows by transitivity.
--/
-theorem negative_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → Negative a₁ → Negative a₂ := by
-  intro (_ : a₁ ≃ a₂)
-  intro (NonzeroWithSign.intro (m : ℕ) (_ : Positive m) (_ : a₁ ≃ -1 * ↑m))
-  show NonzeroWithSign a₂ (-1)
-  have : a₂ ≃ -1 * ↑m := Rel.trans (Rel.symm ‹a₁ ≃ a₂›) ‹a₁ ≃ -1 * ↑m›
-  exact NonzeroWithSign.intro m ‹Positive m› ‹a₂ ≃ -1 * ↑m›
-
-def negative_substitutive
-    : AA.Substitutive₁ (α := ℤ) Negative (· ≃ ·) (· → ·)
-    := {
-  subst₁ := negative_subst
-}
+theorem nonzero_iff_nonzero_impl
+    {a : ℤ} : Signed.Nonzero a ↔ Integer.Nonzero a
+    :=
+  Iff.intro id id
 
 end Lean4Axiomatic.Integer.Impl.Generic

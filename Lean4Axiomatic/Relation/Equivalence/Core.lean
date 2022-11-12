@@ -228,8 +228,35 @@ Logical implication (i.e. the function type or the arrow type) is transitive.
 because intermediate deductions can be combined into a larger, more significant
 result. Alternatively, this is just function composition.
 -/
+theorem implication_trans {p q r : Prop} : (p → q) → (q → r) → (p → r) :=
+  flip Function.comp
+
 instance implication_transitive : Transitive (· → ·) := {
-  trans := flip Function.comp
+  trans := implication_trans
+}
+
+/--
+Logical equivalence (i.e. the biconditional or "if and only if") is transitive.
+
+**Property intuition**: This relation holds when two propositions have the same
+truth value, so we would expect it to be transitive.
+
+**Proof intuition**: Expand the definitions and use transitivity of implication
+in both directions to show the result.
+-/
+theorem iff_trans {p q r : Prop} : (p ↔ q) → (q ↔ r) → (p ↔ r) := by
+  intro (_ : p ↔ q) (_ : q ↔ r)
+  show p ↔ r
+  apply Iff.intro
+  case mp =>
+    show p → r
+    exact implication_trans ‹p ↔ q›.mp ‹q ↔ r›.mp
+  case mpr =>
+    show r → p
+    exact implication_trans ‹q ↔ r›.mpr ‹p ↔ q›.mpr
+
+instance iff_transitive : Transitive (· ↔ ·) := {
+  trans := iff_trans
 }
 
 namespace Equivalence
