@@ -114,4 +114,44 @@ theorem add_substR {p q₁ q₂ : Fraction ℤ} : q₁ ≃ q₂ → p + q₁ ≃
     q₂ + p ≃ _ := add_comm
     p + q₂ ≃ _ := eqv_refl
 
+/--
+Fraction addition is associative.
+
+**Property intuition**: Fractions are scaled integers, so we expect
+associativity to carry over.
+
+**Proof intuition**: Expand definitions until each side of the equivalence is a
+single fraction. The denominators are clearly equivalent by associativity of
+integer multiplication. The numerators are equivalent via distributivity, and
+associativity of addition, over integers.
+-/
+theorem add_assoc {p q r : Fraction ℤ} : (p + q) + r ≃ p + (q + r) := by
+  revert p; intro (pn//pd); revert q; intro (qn//qd); revert r; intro (rn//rd)
+  show (pn//pd + qn//qd) + rn//rd ≃ pn//pd + (qn//qd + rn//rd)
+  calc
+    (pn//pd + qn//qd) + rn//rd
+      ≃ _ := eqv_refl
+    (pn * qd + pd * qn)//(pd * qd) + rn//rd
+      ≃ _ := eqv_refl
+    ((pn * qd + pd * qn) * rd + (pd * qd) * rn)//((pd * qd) * rd)
+      ≃ _ := substL (AA.substL AA.distribR)
+    (((pn * qd) * rd + (pd * qn) * rd) + (pd * qd) * rn)//((pd * qd) * rd)
+      ≃ _ := substL (AA.substL (AA.substL AA.assoc))
+    ((pn * (qd * rd) + (pd * qn) * rd) + (pd * qd) * rn)//((pd * qd) * rd)
+      ≃ _ := substL (AA.substL (AA.substR AA.assoc))
+    ((pn * (qd * rd) + pd * (qn * rd)) + (pd * qd) * rn)//((pd * qd) * rd)
+      ≃ _ := substL (AA.substR AA.assoc)
+    ((pn * (qd * rd) + pd * (qn * rd)) + pd * (qd * rn))//((pd * qd) * rd)
+      ≃ _ := substL AA.assoc
+    (pn * (qd * rd) + (pd * (qn * rd) + pd * (qd * rn)))//((pd * qd) * rd)
+      ≃ _ := substL (AA.substR (Rel.symm AA.distribL))
+    (pn * (qd * rd) + pd * (qn * rd + qd * rn))//((pd * qd) * rd)
+      ≃ _ := substR AA.assoc
+    (pn * (qd * rd) + pd * (qn * rd + qd * rn))//(pd * (qd * rd))
+      ≃ _ := eqv_refl
+    pn//pd + (qn * rd + qd * rn)//(qd * rd)
+      ≃ _ := eqv_refl
+    pn//pd + (qn//qd + rn//rd)
+      ≃ _ := eqv_refl
+
 end Lean4Axiomatic.Rational.Impl.Fraction
