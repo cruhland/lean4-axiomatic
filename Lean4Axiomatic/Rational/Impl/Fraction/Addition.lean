@@ -154,4 +154,34 @@ theorem add_assoc {p q r : Fraction ℤ} : (p + q) + r ≃ p + (q + r) := by
     pn//pd + (qn//qd + rn//rd)
       ≃ _ := eqv_refl
 
+/--
+Zero is a left identity element for fraction addition.
+
+**Property intuition**: Fractions are scaled integers, so we expect
+identity elements to carry over.
+
+**Proof intuition**: Expand definitions, add, and simplify.
+-/
+theorem add_identL {p : Fraction ℤ} : 0 + p ≃ p := by
+  revert p; intro (pn//pd)
+  show 0//1 + pn//pd ≃ pn//pd
+  calc
+    (0 : ℤ)//1 + pn//pd         ≃ _ := eqv_refl
+    (0 * pd + 1 * pn)//(1 * pd) ≃ _ := substL (AA.substL AA.absorbL)
+    (0 + 1 * pn)//(1 * pd)      ≃ _ := substL AA.identL
+    (1 * pn)//(1 * pd)          ≃ _ := substL AA.identL
+    pn//(1 * pd)                ≃ _ := substR AA.identL
+    pn//pd                      ≃ _ := eqv_refl
+
+/--
+Zero is a right identity element for fraction addition.
+
+**Property intuition**: Fractions are scaled integers, so we expect
+identity elements to carry over.
+
+**Proof intuition**: Combine commutativity with the left identity proof.
+-/
+theorem add_identR {p : Fraction ℤ} : p + 0 ≃ p :=
+  eqv_trans add_comm add_identL
+
 end Lean4Axiomatic.Rational.Impl.Fraction
