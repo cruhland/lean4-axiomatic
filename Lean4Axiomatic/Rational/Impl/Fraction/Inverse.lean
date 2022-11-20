@@ -1,6 +1,9 @@
-import Lean4Axiomatic.Rational.Impl.Fraction.Core
+import Lean4Axiomatic.Rational.Impl.Fraction.Addition
+import Lean4Axiomatic.Rational.Impl.Fraction.Multiplication
 
 namespace Lean4Axiomatic.Rational.Impl.Fraction
+
+open Integer (Nonzero)
 
 variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Integer ℕ ℤ]
@@ -37,6 +40,67 @@ theorem neg_subst {p₁ p₂ : Fraction ℤ} : p₁ ≃ p₂ → -p₁ ≃ -p₂
     (-(p₁n * p₂d)) ≃ _ := AA.subst₁ ‹p₁n * p₂d ≃ p₂n * p₁d›
     (-(p₂n * p₁d)) ≃ _ := AA.scompatL
     (-p₂n) * p₁d   ≃ _ := Rel.refl
+
+/--
+Addition of fractions with the same denominator can be accomplished by adding
+their numerators.
+
+**Property intuition**: The numerators are at the same "scale" because the
+denominators are the same, so they can be added as integers.
+
+**Proof intuition**: Evaluate the addition, then pull out the common factor of
+`d` in the numerator using integer distributivity. With a factor of `d` in the
+numerator and denominator, the fraction is the result of multiplication by
+`d//d`, which is `1`. So the common factor can be removed, achieving the goal.
+-/
+theorem add_eqv_denominators
+    {a b d : ℤ} [Nonzero d] : a//d + b//d ≃ (a + b)//d
+    := calc
+  a//d + b//d
+    ≃ _ := eqv_refl
+  (a * d + d * b)//(d * d)
+    ≃ _ := substL (AA.substR AA.comm)
+  (a * d + b * d)//(d * d)
+    ≃ _ := substL (Rel.symm AA.distribR)
+  ((a + b) * d)//(d * d)
+    ≃ _ := eqv_refl
+  (a + b)//d * d//d
+    ≃ _ := mul_substR (eqv_one_iff_numerator_eqv_denominator.mpr Rel.refl)
+  (a + b)//d * 1
+    ≃ _ := mul_identR
+  (a + b)//d
+    ≃ _ := eqv_refl
+
+/--
+The negation of a fraction is its left additive inverse.
+
+**Property intuition**: Fractions should obey all the algebraic properties of
+integers.
+
+**Proof intuition**: The denominators are the same, so the numerators can be
+directly added. But the numerators are additive inverses, so they sum to zero,
+and thus the entire result is zero.
+-/
+theorem add_inverseL {p : Fraction ℤ} : -p + p ≃ 0 := by
+  revert p; intro (pn//pd)
+  show -(pn//pd) + pn//pd ≃ 0
+  calc
+    -(pn//pd) + pn//pd ≃ _ := eqv_refl
+    (-pn)//pd + pn//pd ≃ _ := add_eqv_denominators
+    (-pn + pn)//pd     ≃ _ := substL AA.inverseL
+    0//pd              ≃ _ := eqv_zero_iff_numerator_eqv_zero.mpr Rel.refl
+    0                  ≃ _ := eqv_refl
+
+/--
+The negation of a fraction is its right additive inverse.
+
+**Property intuition**: Fractions should obey all the algebraic properties of
+integers.
+
+**Proof intuition**: Follows from the left additive inverse and commutativity.
+-/
+theorem add_inverseR {p : Fraction ℤ} : p + -p ≃ 0 :=
+  eqv_trans add_comm add_inverseL
 
 /-- Class providing evidence that a fraction is not zero. -/
 class Nonzero (p : Fraction ℤ) :=

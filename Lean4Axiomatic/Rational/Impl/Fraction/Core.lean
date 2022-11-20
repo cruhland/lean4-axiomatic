@@ -143,4 +143,76 @@ instance literal {n : Nat} : OfNat (Fraction ℤ) n := {
   ofNat := Coe.coe (OfNat.ofNat n : ℤ)
 }
 
+/--
+Fractions are equivalent to zero exactly when their numerators are.
+
+**Property intuition**: The numerator of a fraction is the integer value that
+is "scaled down" by the denominator. So the fraction should represent zero only
+when its numerator is zero, and vice versa.
+
+**Proof intuition**: In both directions, expand equivalence between fractions
+into equivalence between integers. The goals follow easily from integer facts.
+-/
+theorem eqv_zero_iff_numerator_eqv_zero
+    {p : Fraction ℤ} : p ≃ 0 ↔ p.numerator ≃ 0
+    := by
+  revert p; intro (pn//pd)
+  apply Iff.intro
+  case mp =>
+    intro (_ : pn//pd ≃ 0)
+    show pn ≃ 0
+    have : pn//pd ≃ 0//1 := ‹pn//pd ≃ 0›
+    have : pn * 1 ≃ 0 * pd := ‹pn//pd ≃ 0//1›
+    calc
+      pn     ≃ _ := Rel.symm AA.identR
+      pn * 1 ≃ _ := ‹pn * 1 ≃ 0 * pd›
+      0 * pd ≃ _ := AA.absorbL
+      0      ≃ _ := Rel.refl
+  case mpr =>
+    intro (_ : pn ≃ 0)
+    show pn//pd ≃ 0
+    show pn//pd ≃ 0//1
+    show pn * 1 ≃ 0 * pd
+    calc
+      pn * 1 ≃ _ := AA.identR
+      pn     ≃ _ := ‹pn ≃ 0›
+      0      ≃ _ := Rel.symm AA.absorbL
+      0 * pd ≃ _ := Rel.refl
+
+/--
+Fractions are equivalent to one exactly when their numerators and denominators
+are equivalent.
+
+**Property intuition**: The denominator of a fraction denotes what the quantity
+of the numerator must be for the fraction to be equivalent to one, and that's
+exactly what this property expresses.
+
+**Proof intuition**: In both directions, expand equivalence between fractions
+into equivalence between integers. The goals follow easily from integer facts.
+-/
+theorem eqv_one_iff_numerator_eqv_denominator
+    {p : Fraction ℤ} : p ≃ 1 ↔ p.numerator ≃ p.denominator
+    := by
+  revert p; intro (pn//pd)
+  apply Iff.intro
+  case mp =>
+    intro (_ : pn//pd ≃ 1)
+    show pn ≃ pd
+    have : pn//pd ≃ 1//1 := ‹pn//pd ≃ 1//1›
+    have : pn * 1 ≃ 1 * pd := ‹pn//pd ≃ 1//1›
+    calc
+      pn     ≃ _ := Rel.symm AA.identR
+      pn * 1 ≃ _ := ‹pn * 1 ≃ 1 * pd›
+      1 * pd ≃ _ := AA.identL
+      pd     ≃ _ := Rel.refl
+  case mpr =>
+    intro (_ : pn ≃ pd)
+    show pn//pd ≃ 1
+    show pn//pd ≃ 1//1
+    show pn * 1 ≃ 1 * pd
+    calc
+      pn * 1 ≃ _ := AA.substL ‹pn ≃ pd›
+      pd * 1 ≃ _ := AA.comm
+      1 * pd ≃ _ := Rel.refl
+
 end Lean4Axiomatic.Rational.Impl.Fraction

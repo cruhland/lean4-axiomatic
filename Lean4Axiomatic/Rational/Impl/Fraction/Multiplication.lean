@@ -78,4 +78,55 @@ theorem mul_substR {p q₁ q₂ : Fraction ℤ} : q₁ ≃ q₂ → p * q₁ ≃
     q₂ * p ≃ _ := mul_comm
     p * q₂ ≃ _ := eqv_refl
 
+/--
+Fraction multiplication is associative.
+
+**Property intuition**: We'd expect this to be true due to the viewpoint that
+fractions are scaled integers.
+
+**Proof intuition**: Evaluate all multiplications until a single fraction is
+obtained. Associativity on its numerator and denominator gives the result.
+-/
+theorem mul_assoc {p q r : Fraction ℤ} : (p * q) * r ≃ p * (q * r) := by
+  revert p; intro (pn//pd); revert q; intro (qn//qd); revert r; intro (rn//rd)
+  show (pn//pd * qn//qd) * rn//rd ≃ pn//pd * (qn//qd * rn//rd)
+  calc
+    (pn//pd * qn//qd) * rn//rd         ≃ _ := eqv_refl
+    (pn * qn)//(pd * qd) * rn//rd      ≃ _ := eqv_refl
+    ((pn * qn) * rn)//((pd * qd) * rd) ≃ _ := substL AA.assoc
+    (pn * (qn * rn))//((pd * qd) * rd) ≃ _ := substR AA.assoc
+    (pn * (qn * rn))//(pd * (qd * rd)) ≃ _ := eqv_refl
+    pn//pd * (qn * rn)//(qd * rd)      ≃ _ := eqv_refl
+    pn//pd * (qn//qd * rn//rd)         ≃ _ := eqv_refl
+
+/--
+One is the left multiplicative identity for fractions.
+
+**Property intuition**: We'd expect this to be true due to the viewpoint that
+fractions are scaled integers.
+
+**Proof intuition**: Evaluate the multiplication to obtain a single fraction.
+Use the integer multiplicative identity on its numerator and denominator.
+-/
+theorem mul_identL {p : Fraction ℤ} : 1 * p ≃ p := by
+  revert p; intro (pn//pd)
+  show 1 * pn//pd ≃ pn//pd
+  calc
+    1 * pn//pd         ≃ _ := eqv_refl
+    1//1 * pn//pd      ≃ _ := eqv_refl
+    (1 * pn)//(1 * pd) ≃ _ := substL AA.identL
+    pn//(1 * pd)       ≃ _ := substR AA.identL
+    pn//pd             ≃ _ := eqv_refl
+
+/--
+One is the right multiplicative identity for fractions.
+
+**Property intuition**: We'd expect this to be true due to the viewpoint that
+fractions are scaled integers.
+
+**Proof intuition**: Follows from left identity via commutativity.
+-/
+theorem mul_identR {p : Fraction ℤ} : p * 1 ≃ p :=
+  eqv_trans mul_comm mul_identL
+
 end Lean4Axiomatic.Rational.Impl.Fraction
