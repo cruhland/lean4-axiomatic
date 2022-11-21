@@ -1,6 +1,8 @@
-import Lean4Axiomatic.Rational.Impl.Fraction.Core
+import Lean4Axiomatic.Rational.Impl.Fraction.Addition
 
 namespace Lean4Axiomatic.Rational.Impl.Fraction
+
+open Integer (Nonzero)
 
 variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Integer ℕ ℤ]
@@ -128,5 +130,132 @@ fractions are scaled integers.
 -/
 theorem mul_identR {p : Fraction ℤ} : p * 1 ≃ p :=
   eqv_trans mul_comm mul_identL
+
+/--
+A common factor on the left of the numerator and denominator can be removed.
+
+**Property and proof intuition**: A fraction of products, in the numerator and
+denominator, is equivalent to a product of fractions of the factors. If the two
+factors on the left of the numerator and denominator are the same, then the
+corresponding fraction factor is equivalent to one, and doesn't contribute to
+the result.
+-/
+theorem cancelL
+    {a b c : ℤ} [Nonzero a] [Nonzero c] : (a * b)//(a * c) ≃ b//c
+    := calc
+  (a * b)//(a * c)
+    ≃ _ := eqv_refl
+  a//a * b//c
+    ≃ _ := mul_substL (eqv_one_iff_numerator_eqv_denominator.mpr Rel.refl)
+  1 * b//c
+    ≃ _ := mul_identL
+  b//c
+    ≃ _ := eqv_refl
+
+/--
+A common factor on the right of the numerator and denominator can be removed.
+
+**Property and proof intuition**: This follows from left-cancellation and
+commutativity.
+-/
+theorem cancelR
+    {a b c : ℤ} [Nonzero a] [Nonzero c] : (b * a)//(c * a) ≃ b//c
+    := calc
+  (b * a)//(c * a) ≃ _ := substL AA.comm
+  (a * b)//(c * a) ≃ _ := substR AA.comm
+  (a * b)//(a * c) ≃ _ := cancelL
+  b//c             ≃ _ := eqv_refl
+
+/--
+Addition of fractions with the same denominator can be accomplished by adding
+their numerators.
+
+**Property intuition**: The numerators are at the same "scale" because the
+denominators are the same, so they can be added as integers.
+
+**Proof intuition**: Evaluate the addition, then pull out the common factor of
+`d` in the numerator using integer distributivity. With a factor of `d` in the
+numerator and denominator, the fraction is the result of multiplication by
+`d//d`, which is `1`. So the common factor can be removed, achieving the goal.
+-/
+theorem add_eqv_denominators
+    {a b d : ℤ} [Nonzero d] : a//d + b//d ≃ (a + b)//d
+    := calc
+  a//d + b//d
+    ≃ _ := eqv_refl
+  (a * d + d * b)//(d * d)
+    ≃ _ := substL (AA.substR AA.comm)
+  (a * d + b * d)//(d * d)
+    ≃ _ := substL (Rel.symm AA.distribR)
+  ((a + b) * d)//(d * d)
+    ≃ _ := cancelR
+  (a + b)//d
+    ≃ _ := eqv_refl
+
+/--
+Fraction multiplication (on the left) distributes over fraction addition.
+
+**Property intuition**: We'd expect this to be true due to the viewpoint that
+fractions are scaled integers.
+
+**Proof intuition**: Evaluate the addition and multiplication of the left-hand
+side to produce a single fraction. Use integer distributivity to make the
+numerator a sum. Split the fraction into a sum of fractions with the same
+denominator. Cancel common factors and separate each term into a product of the
+input fractions.
+-/
+theorem mul_distribL {p q r : Fraction ℤ} : p * (q + r) ≃ p * q + p * r := by
+  revert p; intro (pn//pd); revert q; intro (qn//qd); revert r; intro (rn//rd)
+  show pn//pd * (qn//qd + rn//rd) ≃ pn//pd * qn//qd + pn//pd * rn//rd
+  have : Nonzero (pd * (rd * qd)) := Integer.mul_preserves_nonzero_inst
+  calc
+    pn//pd * (qn//qd + rn//rd)
+      ≃ _ := eqv_refl
+    pn//pd * (qn * rd + qd * rn)//(qd * rd)
+      ≃ _ := eqv_refl
+    (pn * (qn * rd + qd * rn))//(pd * (qd * rd))
+      ≃ _ := substL AA.distribL
+    (pn * (qn * rd) + pn * (qd * rn))//(pd * (qd * rd))
+      ≃ _ := eqv_symm add_eqv_denominators
+    (pn * (qn * rd))//(pd * (qd * rd)) + (pn * (qd * rn))//(pd * (qd * rd))
+      ≃ _ := add_substL (substL (Rel.symm AA.assoc))
+    ((pn * qn) * rd)//(pd * (qd * rd)) + (pn * (qd * rn))//(pd * (qd * rd))
+      ≃ _ := add_substL (substR (Rel.symm AA.assoc))
+    ((pn * qn) * rd)//((pd * qd) * rd) + (pn * (qd * rn))//(pd * (qd * rd))
+      ≃ _ := add_substL cancelR
+    (pn * qn)//(pd * qd) + (pn * (qd * rn))//(pd * (qd * rd))
+      ≃ _ := add_substR (substL (AA.substR AA.comm))
+    (pn * qn)//(pd * qd) + (pn * (rn * qd))//(pd * (qd * rd))
+      ≃ _ :=
+        add_substR
+          (substR (nz₂ := ‹Nonzero (pd * (rd * qd))›) (AA.substR AA.comm))
+    (pn * qn)//(pd * qd) + (pn * (rn * qd))//(pd * (rd * qd))
+      ≃ _ := add_substR (substL (Rel.symm AA.assoc))
+    (pn * qn)//(pd * qd) + ((pn * rn) * qd)//(pd * (rd * qd))
+      ≃ _ := add_substR (substR (Rel.symm AA.assoc))
+    (pn * qn)//(pd * qd) + ((pn * rn) * qd)//((pd * rd) * qd)
+      ≃ _ := add_substR cancelR
+    (pn * qn)//(pd * qd) + (pn * rn)//(pd * rd)
+      ≃ _ := eqv_refl
+    pn//pd * qn//qd + (pn * rn)//(pd * rd)
+      ≃ _ := eqv_refl
+    pn//pd * qn//qd + pn//pd * rn//rd
+      ≃ _ := eqv_refl
+
+/--
+Fraction multiplication (on the right) distributes over fraction addition.
+
+**Property intuition**: We'd expect this to be true due to the viewpoint that
+fractions are scaled integers.
+
+**Proof intuition**: Follows from left-distributivity and commutativity of
+addition and multiplication.
+-/
+theorem mul_distribR {p q r : Fraction ℤ} : (q + r) * p ≃ q * p + r * p := calc
+  (q + r) * p   ≃ _ := mul_comm
+  p * (q + r)   ≃ _ := mul_distribL
+  p * q + p * r ≃ _ := add_substL mul_comm
+  q * p + p * r ≃ _ := add_substR mul_comm
+  q * p + r * p ≃ _ := eqv_refl
 
 end Lean4Axiomatic.Rational.Impl.Fraction

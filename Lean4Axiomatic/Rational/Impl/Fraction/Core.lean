@@ -120,7 +120,8 @@ structure.
 integer multiplication.
 -/
 theorem substR
-    {a b₁ b₂ : ℤ} [Nonzero b₁] [Nonzero b₂] : b₁ ≃ b₂ → a//b₁ ≃ a//b₂
+    {a b₁ b₂ : ℤ} [nz₁ : Nonzero b₁] [nz₂ : Nonzero b₂]
+    : b₁ ≃ b₂ → a//b₁ ≃ a//b₂
     := by
   intro (_ : b₁ ≃ b₂)
   show a//b₁ ≃ a//b₂

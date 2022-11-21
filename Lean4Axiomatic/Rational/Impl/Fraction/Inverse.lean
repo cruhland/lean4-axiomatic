@@ -1,9 +1,6 @@
-import Lean4Axiomatic.Rational.Impl.Fraction.Addition
 import Lean4Axiomatic.Rational.Impl.Fraction.Multiplication
 
 namespace Lean4Axiomatic.Rational.Impl.Fraction
-
-open Integer (Nonzero)
 
 variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Integer ℕ ℤ]
@@ -40,36 +37,6 @@ theorem neg_subst {p₁ p₂ : Fraction ℤ} : p₁ ≃ p₂ → -p₁ ≃ -p₂
     (-(p₁n * p₂d)) ≃ _ := AA.subst₁ ‹p₁n * p₂d ≃ p₂n * p₁d›
     (-(p₂n * p₁d)) ≃ _ := AA.scompatL
     (-p₂n) * p₁d   ≃ _ := Rel.refl
-
-/--
-Addition of fractions with the same denominator can be accomplished by adding
-their numerators.
-
-**Property intuition**: The numerators are at the same "scale" because the
-denominators are the same, so they can be added as integers.
-
-**Proof intuition**: Evaluate the addition, then pull out the common factor of
-`d` in the numerator using integer distributivity. With a factor of `d` in the
-numerator and denominator, the fraction is the result of multiplication by
-`d//d`, which is `1`. So the common factor can be removed, achieving the goal.
--/
-theorem add_eqv_denominators
-    {a b d : ℤ} [Nonzero d] : a//d + b//d ≃ (a + b)//d
-    := calc
-  a//d + b//d
-    ≃ _ := eqv_refl
-  (a * d + d * b)//(d * d)
-    ≃ _ := substL (AA.substR AA.comm)
-  (a * d + b * d)//(d * d)
-    ≃ _ := substL (Rel.symm AA.distribR)
-  ((a + b) * d)//(d * d)
-    ≃ _ := eqv_refl
-  (a + b)//d * d//d
-    ≃ _ := mul_substR (eqv_one_iff_numerator_eqv_denominator.mpr Rel.refl)
-  (a + b)//d * 1
-    ≃ _ := mul_identR
-  (a + b)//d
-    ≃ _ := eqv_refl
 
 /--
 The negation of a fraction is its left additive inverse.
