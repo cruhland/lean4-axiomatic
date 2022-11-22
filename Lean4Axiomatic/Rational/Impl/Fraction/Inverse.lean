@@ -117,4 +117,31 @@ theorem recip_subst
     a * d ≃ _ := AA.comm
     d * a ≃ _ := Rel.refl
 
+/--
+The reciprocal of a nonzero fraction is its left multiplicative inverse.
+
+**Property and proof intuition**: Multiplying a fraction by its reciprocal puts
+the same factors in the numerator and denominator. They all cancel, giving the
+result `1`.
+-/
+theorem recip_inverseL {p : Fraction ℤ} [Nonzero p] : p⁻¹ * p ≃ 1 := by
+  revert p; intro (pn//pd) (_ : Nonzero (pn//pd))
+  show (pn//pd)⁻¹ * pn//pd ≃ 1
+  have : Integer.Nonzero pn := ‹Nonzero (pn//pd)›.numerator_nonzero
+  calc
+    (pn//pd)⁻¹ * pn//pd  ≃ _ := eqv_refl
+    pd//pn * pn//pd      ≃ _ := eqv_refl
+    (pd * pn)//(pn * pd) ≃ _ := substL AA.comm
+    (pn * pd)//(pn * pd) ≃ _ := eqv_one_iff_numer_eqv_denom.mpr Rel.refl
+    1                    ≃ _ := eqv_refl
+
+/--
+The reciprocal of a nonzero fraction is its right multiplicative inverse.
+
+**Property and proof intuition**: Follows from commutativity of multiplication
+and the reciprocal being the left multiplicative inverse.
+-/
+theorem recip_inverseR {p : Fraction ℤ} [Nonzero p] : p * p⁻¹ ≃ 1 :=
+  eqv_trans mul_comm recip_inverseL
+
 end Lean4Axiomatic.Rational.Impl.Fraction

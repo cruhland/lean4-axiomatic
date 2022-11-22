@@ -143,14 +143,10 @@ the result.
 theorem cancelL
     {a b c : ℤ} [Nonzero a] [Nonzero c] : (a * b)//(a * c) ≃ b//c
     := calc
-  (a * b)//(a * c)
-    ≃ _ := eqv_refl
-  a//a * b//c
-    ≃ _ := mul_substL (eqv_one_iff_numerator_eqv_denominator.mpr Rel.refl)
-  1 * b//c
-    ≃ _ := mul_identL
-  b//c
-    ≃ _ := eqv_refl
+  (a * b)//(a * c) ≃ _ := eqv_refl
+  a//a * b//c      ≃ _ := mul_substL (eqv_one_iff_numer_eqv_denom.mpr Rel.refl)
+  1 * b//c         ≃ _ := mul_identL
+  b//c             ≃ _ := eqv_refl
 
 /--
 A common factor on the right of the numerator and denominator can be removed.

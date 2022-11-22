@@ -191,7 +191,7 @@ exactly what this property expresses.
 **Proof intuition**: In both directions, expand equivalence between fractions
 into equivalence between integers. The goals follow easily from integer facts.
 -/
-theorem eqv_one_iff_numerator_eqv_denominator
+theorem eqv_one_iff_numer_eqv_denom
     {p : Fraction ℤ} : p ≃ 1 ↔ p.numerator ≃ p.denominator
     := by
   revert p; intro (pn//pd)
