@@ -59,6 +59,19 @@ theorem add_inverseL {p : Fraction ℤ} : -p + p ≃ 0 := by
     0                  ≃ _ := eqv_refl
 
 /--
+Subtraction of fractions.
+
+**Definition intuition**: Adding the negation is the same as subtraction, e.g.
+`5 - 3` is the same as `5 + (-3)`.
+-/
+def sub (p q : Fraction ℤ) : Fraction ℤ := p + (-q)
+
+/-- Provides the `· - ·` notation for subtraction. -/
+instance sub_inst : Sub (Fraction ℤ) := {
+  sub := sub
+}
+
+/--
 The negation of a fraction is its right additive inverse.
 
 **Property intuition**: Fractions should obey all the algebraic properties of
