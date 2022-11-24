@@ -144,4 +144,14 @@ and the reciprocal being the left multiplicative inverse.
 theorem recip_inverseR {p : Fraction ℤ} [Nonzero p] : p * p⁻¹ ≃ 1 :=
   eqv_trans mul_comm recip_inverseL
 
+/--
+Division of fractions.
+
+**Definition intuition**: Multiplying by the reciprocal is the same as
+division, e.g. `2 / 3` is the same as `2 * (1 / 3)`.
+-/
+def div (p q : Fraction ℤ) [Nonzero q] : Fraction ℤ := p * q⁻¹
+
+infixl:70 " / " => div
+
 end Lean4Axiomatic.Rational.Impl.Fraction
