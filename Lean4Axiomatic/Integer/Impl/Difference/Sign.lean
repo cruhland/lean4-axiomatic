@@ -192,11 +192,26 @@ theorem sign_trichotomy
       natOrderTri.atMostOne
     exact absurd twoOfThree notTwoOfThree
 
-instance sign : Sign ℕ (Difference ℕ) := {
+/--
+Implementation of the
+[signum function](https://en.wikipedia.org/wiki/Sign_function) for differences.
+
+**Definition intuition**: For a difference `n——m`, gives the correct sign value
+according to the ordering of `n` and `m`.
+-/
+def sgn : Difference ℕ → Difference ℕ
+| n——m =>
+  match Ord.compare n m with
+  | Ordering.lt => -1
+  | Ordering.eq => 0
+  | Ordering.gt => 1
+
+instance sign : Sign (Difference ℕ) := {
   positive_iff_sign_pos1 := Generic.positive_iff_sign_pos1
   negative_iff_sign_neg1 := Generic.negative_iff_sign_neg1
   nonzero_iff_nonzero_impl := Generic.nonzero_iff_nonzero_impl
   sign_trichotomy := sign_trichotomy
+  sgn := sgn
 }
 
 end Lean4Axiomatic.Integer.Impl.Difference

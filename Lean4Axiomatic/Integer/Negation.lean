@@ -16,8 +16,8 @@ Definition of negation, and properties that it must satisfy.
 All other properties of negation can be derived from these.
 -/
 class Negation
-    (ℕ : outParam Type) [outParam (Natural ℕ)]
-    (ℤ : Type) [outParam (Core ℕ ℤ)] [outParam (Addition ℕ ℤ)]
+    {ℕ : outParam Type} [outParam (Natural ℕ)]
+    (ℤ : Type) [outParam (Core ℤ)] [outParam (Addition (ℕ := ℕ) ℤ)]
     :=
   /-- Definition of and syntax for negation. -/
   negOp : Neg ℤ
@@ -42,8 +42,8 @@ export Negation (negOp)
 -/
 
 variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Core ℕ ℤ]
-variable [Addition ℕ ℤ] [Multiplication ℕ ℤ] [Negation ℕ ℤ]
+variable {ℤ : Type} [Core (ℕ := ℕ) ℤ]
+variable [Addition ℤ] [Multiplication ℤ] [Negation ℤ]
 
 open Signed (Positive)
 

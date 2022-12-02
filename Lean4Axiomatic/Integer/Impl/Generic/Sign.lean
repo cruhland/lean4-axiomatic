@@ -5,8 +5,8 @@ import Lean4Axiomatic.Integer.Sign
 namespace Lean4Axiomatic.Integer.Impl.Generic
 
 variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Core ℕ ℤ]
-variable [Addition ℕ ℤ] [Multiplication ℕ ℤ] [Negation ℕ ℤ]
+variable {ℤ : Type} [Core (ℕ := ℕ) ℤ]
+variable [Addition ℤ] [Multiplication ℤ] [Negation ℤ]
 
 open Signed (Negative Positive)
 

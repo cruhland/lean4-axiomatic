@@ -8,7 +8,7 @@ namespace Lean4Axiomatic.Integer.Impl.Difference
 
 variable {ℕ : Type} [Natural ℕ]
 
-instance integer : Integer ℕ (Difference ℕ) := {
+instance integer : Integer (ℕ := ℕ) (Difference ℕ) := {
   toAddition := addition
   toCore := core
   toMultiplication := multiplication

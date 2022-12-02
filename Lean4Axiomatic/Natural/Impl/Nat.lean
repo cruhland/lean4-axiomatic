@@ -83,12 +83,22 @@ local instance exponentiation : Exponentiation Nat := {
   pow_step := rfl
 }
 
+local instance order : Order Nat := {
+  leOp := Generic.le_ex_add
+  le_defn := Iff.intro id id
+
+  ltOp := Generic.lt_le_neqv
+  lt_defn := Iff.intro id id
+
+  compare := instOrdNat.compare
+}
+
 instance : Natural Nat := {
   toCore := core
   toAxioms := axioms
   toAddition := addition
   toSign := Generic.sign
-  toOrder := Generic.order
+  toOrder := order
   toMultiplication := multiplication
   toExponentiation := exponentiation
 }

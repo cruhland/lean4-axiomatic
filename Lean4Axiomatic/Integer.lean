@@ -29,14 +29,14 @@ construct an instance.
 **Class parameters**
 - `Natural ℕ`: Evidence that `ℕ` implements the natural numbers.
 -/
-class Integer (ℕ : outParam Type) [outParam (Natural ℕ)] (ℤ : Type) :=
-  toCore : Core ℕ ℤ
-  toAddition : Addition ℕ ℤ
-  toMultiplication : Multiplication ℕ ℤ
-  toNegation : Negation ℕ ℤ
-  toOrder : Order ℕ ℤ
-  toSign : Sign ℕ ℤ
-  toSubtraction : Subtraction ℕ ℤ
+class Integer {ℕ : outParam Type} [outParam (Natural ℕ)] (ℤ : Type) :=
+  toCore : Core (ℕ := ℕ) ℤ
+  toAddition : Addition ℤ
+  toMultiplication : Multiplication ℤ
+  toNegation : Negation ℤ
+  toOrder : Order ℤ
+  toSign : Sign ℤ
+  toSubtraction : Subtraction ℤ
 
 attribute [instance] Integer.toAddition
 attribute [instance] Integer.toCore

@@ -8,7 +8,7 @@ import Lean4Axiomatic.Rational.Impl.Fraction.Multiplication
 namespace Lean4Axiomatic.Rational.Impl.Fraction
 
 variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Integer ℕ ℤ]
+variable {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
 
 instance rational : Rational (Fraction ℤ) := {
   eqvOp := eqvOp

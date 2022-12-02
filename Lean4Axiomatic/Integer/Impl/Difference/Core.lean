@@ -216,13 +216,13 @@ instance from_natural_injective
   inject := from_ℕ_inject
 }
 
-instance conversion : Conversion ℕ (Difference ℕ) := {
+instance conversion : Conversion (ℕ := ℕ) (Difference ℕ) := {
   from_natural := from_natural
   from_natural_injective := from_natural_injective
   from_natural_substitutive := from_natural_substitutive
 }
 
-instance core : Core ℕ (Difference ℕ) := Core.mk
+instance core : Core (ℕ := ℕ) (Difference ℕ) := Core.mk
 
 end Difference
 

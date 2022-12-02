@@ -28,7 +28,7 @@ structure Fraction (α : Type) : Type :=
 local infix:90 "//" => Naive.Fraction.mk
 
 variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Integer ℕ ℤ]
+variable {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
 
 /--
 Create an ordered pair of integers from a `Naive.Fraction ℤ`.

@@ -11,7 +11,10 @@ open Signed (Negative Positive)
 /-! ## Axioms -/
 
 /-- Class defining the basic ordering relations on integers. -/
-class Order (ℕ : Type) [Natural ℕ] (ℤ : Type) [Core ℕ ℤ] [Addition ℕ ℤ] :=
+class Order
+    {ℕ : outParam Type} [outParam (Natural ℕ)]
+    (ℤ : Type) [outParam (Core ℤ)] [outParam (Addition (ℕ := ℕ) ℤ)]
+    :=
   /-- Definition of and syntax for the _less than or equal to_ relation. -/
   leOp : LE ℤ
 
@@ -33,8 +36,8 @@ attribute [instance] Order.ltOp
 export Order (le_iff_add_nat leOp lt_iff_le_neqv ltOp)
 
 variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Core ℕ ℤ] [Addition ℕ ℤ] [Multiplication ℕ ℤ]
-variable [Negation ℕ ℤ] [Subtraction ℕ ℤ] [Sign ℕ ℤ] [Order ℕ ℤ]
+variable {ℤ : Type} [Core ℤ] [Addition ℤ] [Multiplication (ℕ := ℕ) ℤ]
+variable [Negation ℤ] [Subtraction ℤ] [Sign ℤ] [Order ℤ]
 
 /-! ## Derived properties -/
 

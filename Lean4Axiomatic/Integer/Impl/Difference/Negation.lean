@@ -81,7 +81,7 @@ def neg_inverse : AA.Inverse (α := Difference ℕ) (-·) (· + ·) := {
   inverseR := AA.inverseR_from_inverseL neg_inverseL
 }
 
-instance negation : Negation ℕ (Difference ℕ) := {
+instance negation : Negation (ℕ := ℕ) (Difference ℕ) := {
   negOp := negOp
   neg_substitutive := neg_substitutive
   neg_inverse := neg_inverse

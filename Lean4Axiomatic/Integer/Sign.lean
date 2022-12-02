@@ -18,8 +18,8 @@ open Signed (Negative Positive)
 section prelim
 
 variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Core ℕ ℤ]
-variable [Addition ℕ ℤ] [Multiplication ℕ ℤ] [Negation ℕ ℤ]
+variable {ℤ : Type} [Core (ℕ := ℕ) ℤ]
+variable [Addition ℤ] [Multiplication ℤ] [Negation ℤ]
 
 /--
 Square root of unity: an integer whose square is one.
@@ -58,17 +58,19 @@ theorem sqrt1_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → Sqrt1 a₁ → Sqrt1 a
     1       ≃ _ := Rel.refl
   exact Sqrt1.mk ‹a₂ * a₂ ≃ 1›
 
-instance sqrt1_substitutive : AA.Substitutive₁ Sqrt1 (· ≃ ·) (· → ·) := {
+instance sqrt1_substitutive
+    : AA.Substitutive₁ (α := ℤ) Sqrt1 (· ≃ ·) (· → ·)
+    := {
   subst₁ := sqrt1_subst
 }
 
 /-- One is a square root of unity. -/
-theorem sqrt1_one : (1 : ℤ) * 1 ≃ 1 := by
+theorem one_mul_one_eqv_one : (1 : ℤ) * 1 ≃ 1 := by
   show 1 * 1 ≃ 1
   exact AA.identL
 
-instance : Sqrt1 1 := {
-  elim := sqrt1_one
+instance sqrt1_one : Sqrt1 (1 : ℤ) := {
+  elim := one_mul_one_eqv_one
 }
 
 /--
@@ -77,16 +79,16 @@ Negative one is a square root of unity.
 **Property and proof intuition**: Multiplying two negative numbers gives a
 positive result, and if the magnitudes are `1`, the result will also be `1`.
 -/
-theorem sqrt1_neg_one : (-1 : ℤ) * (-1) ≃ 1 := by
+theorem neg_one_mul_neg_one_eqv_one : (-1 : ℤ) * (-1) ≃ 1 := by
   calc
-    (-1) * (-1)   ≃ _ := Rel.symm AA.scompatL
-    (-(1 * (-1))) ≃ _ := AA.subst₁ (Rel.symm AA.scompatR)
-    (-(-(1 * 1))) ≃ _ := neg_involutive
-    1 * 1         ≃ _ := sqrt1_one
-    1             ≃ _ := Rel.refl
+    (-1 : ℤ) * (-1) ≃ _ := Rel.symm AA.scompatL
+    (-(1 * (-1)))   ≃ _ := AA.subst₁ (Rel.symm AA.scompatR)
+    (-(-(1 * 1)))   ≃ _ := neg_involutive
+    1 * 1           ≃ _ := one_mul_one_eqv_one
+    1               ≃ _ := Rel.refl
 
-instance : Sqrt1 (-1) := {
-  elim := sqrt1_neg_one
+instance sqrt1_neg_one : Sqrt1 (-1 : ℤ) := {
+  elim := neg_one_mul_neg_one_eqv_one
 }
 
 /--
@@ -112,7 +114,7 @@ instance mul_preserves_sqrt1
     (a * b) * (a * b) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
     (a * a) * (b * b) ≃ _ := AA.substL ‹Sqrt1 a›.elim
     1 * (b * b)       ≃ _ := AA.substR ‹Sqrt1 b›.elim
-    1 * 1             ≃ _ := sqrt1_one
+    1 * 1             ≃ _ := one_mul_one_eqv_one
     1                 ≃ _ := Rel.refl
 
 /--
@@ -355,8 +357,8 @@ a nonzero integer, so its product with the nonzero input is also nonzero.
 theorem neg_preserves_nonzero {a : ℤ} : Nonzero a → Nonzero (-a) := by
   intro (_ : Nonzero a)
   show Nonzero (-a)
-  have : Nonzero (-1) := nonzero_sqrt1
-  have : Nonzero (-1 * a) := mul_preserves_nonzero ‹Nonzero (-1)› ‹Nonzero a›
+  have : Nonzero (-1 : ℤ) := nonzero_sqrt1
+  have : Nonzero (-1 * a) := mul_preserves_nonzero ‹Nonzero (-1 : ℤ)› ‹Nonzero a›
   have : Nonzero (-a) := nonzero_subst mul_neg_one ‹Nonzero (-1 * a)›
   exact this
 
@@ -372,10 +374,10 @@ end prelim
 
 /-- Class defining integer signedness, and properties that it must satisfy. -/
 class Sign
-    (ℕ : Type) [outParam (Natural ℕ)]
+    {ℕ : outParam Type} [outParam (Natural ℕ)]
     (ℤ : Type)
-      [outParam (Core ℕ ℤ)] [outParam (Addition ℕ ℤ)]
-      [outParam (Multiplication ℕ ℤ)] [outParam (Negation ℕ ℤ)]
+      [outParam (Core ℤ)] [outParam (Addition ℤ)]
+      [outParam (Multiplication ℤ)] [outParam (Negation (ℕ := ℕ) ℤ)]
     :=
   /-- Definitions of signedness predicates. -/
   ops : Signed.Ops ℤ
@@ -393,17 +395,25 @@ class Sign
   sign_trichotomy
     (a : ℤ) : AA.ExactlyOneOfThree (a ≃ 0) (Positive a) (Negative a)
 
+  /--
+  The [signum function](https://en.wikipedia.org/wiki/Sign_function).
+
+  Returns `1`, `0`, or `-1` if the input integer is positive, zero, or
+  negative, respectively.
+  -/
+  sgn : ℤ → ℤ
+
 attribute [instance] Sign.ops
 
-export Sign (negative_iff_sign_neg1 positive_iff_sign_pos1 sign_trichotomy)
+export Sign (negative_iff_sign_neg1 positive_iff_sign_pos1 sgn sign_trichotomy)
 
 /-!
 ## Derived properties
 -/
 
 variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Core ℕ ℤ] [Addition ℕ ℤ] [Multiplication ℕ ℤ]
-variable [Negation ℕ ℤ] [Sign ℕ ℤ]
+variable {ℤ : Type} [Core ℤ] [Addition ℤ] [Multiplication (ℕ := ℕ) ℤ]
+variable [Negation ℤ] [Sign ℤ]
 
 /--
 The `Positive` predicate respects equivalence.
@@ -590,12 +600,12 @@ theorem sqrt1_cases {a : ℤ} : Sqrt1 a ↔ a ≃ 1 ∨ a ≃ -1 := by
     show Sqrt1 a
     match ‹a ≃ 1 ∨ a ≃ -1› with
     | Or.inl (_ : a ≃ 1) =>
-      have : Sqrt1 1 := inferInstance
-      have : Sqrt1 a := AA.substFn (Rel.symm ‹a ≃ 1›) ‹Sqrt1 1›
+      have : Sqrt1 (1 : ℤ) := sqrt1_one
+      have : Sqrt1 a := AA.substFn (Rel.symm ‹a ≃ 1›) ‹Sqrt1 (1 : ℤ)›
       exact this
     | Or.inr (_ : a ≃ -1) =>
-      have : Sqrt1 (-1) := inferInstance
-      have : Sqrt1 a := AA.substFn (Rel.symm ‹a ≃ -1›) ‹Sqrt1 (-1)›
+      have : Sqrt1 (-1 : ℤ) := sqrt1_neg_one
+      have : Sqrt1 a := AA.substFn (Rel.symm ‹a ≃ -1›) ‹Sqrt1 (-1 : ℤ)›
       exact this
 
 /--

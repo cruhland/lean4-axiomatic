@@ -18,7 +18,7 @@ Definition of the _less than or equal to_ and _less than_ relations.
 
 All other properties of ordering on natural numbers can be derived from this.
 -/
-class Order (ℕ : Type) [Core ℕ] [Addition ℕ] :=
+class Order (ℕ : Type) [Core ℕ] [Addition ℕ] extends Ord ℕ :=
   /-- Definition of and syntax for the _less than or equal to_ relation. -/
   leOp : LE ℕ
 

@@ -68,14 +68,6 @@ variable [Addition ℕ]
 local instance le_ex_add : LE ℕ := LE.mk λ n m => ∃ k : ℕ, n + k ≃ m
 def lt_le_neqv : LT ℕ := LT.mk λ n m => n ≤ m ∧ n ≄ m
 
-def order : Order ℕ := {
-  leOp := le_ex_add
-  le_defn := Iff.intro id id
-
-  ltOp := lt_le_neqv
-  lt_defn := Iff.intro id id
-}
-
 end order
 
 end Lean4Axiomatic.Natural.Impl.Generic

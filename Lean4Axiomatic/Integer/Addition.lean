@@ -18,7 +18,10 @@ All other properties of addition can be derived from these.
 **Class parameters**
 - `Core ℤ`: Required to express most properties of addition.
 -/
-class Addition (ℕ : Type) [Natural ℕ] (ℤ : Type) [Core ℕ ℤ] :=
+class Addition
+    {ℕ : outParam Type} [outParam (Natural ℕ)]
+    (ℤ : Type) [outParam (Core (ℕ := ℕ) ℤ)]
+    :=
   /-- Definition of and syntax for addition. -/
   addOp : Add ℤ
 
@@ -56,7 +59,7 @@ export Addition (addOp)
 /-! ## Derived properties -/
 
 variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Core ℕ ℤ] [Addition ℕ ℤ]
+variable {ℤ : Type} [Core ℤ] [Addition (ℕ := ℕ) ℤ]
 
 /--
 Non-typeclass version of `add_associative`.

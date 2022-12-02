@@ -17,8 +17,10 @@ Definition of subtraction, and properties that it must satisfy.
 All other properties of subtraction can be derived from these.
 -/
 class Subtraction
-    (ℕ : Type) [Natural ℕ]
-    (ℤ : Type) [Core ℕ ℤ] [Addition ℕ ℤ] [Negation ℕ ℤ]
+    {ℕ : outParam Type} [outParam (Natural ℕ)]
+    (ℤ : Type)
+      [outParam (Core ℤ)] [outParam (Addition ℤ)]
+      [outParam (Negation (ℕ := ℕ) ℤ)]
     :=
   /-- Definition of and syntax for subtraction. -/
   subOp : Sub ℤ
@@ -35,8 +37,8 @@ export Subtraction (sub_defn subOp)
 -/
 
 variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Core ℕ ℤ] [Addition ℕ ℤ] [Multiplication ℕ ℤ]
-variable [Negation ℕ ℤ] [Sign ℕ ℤ] [Subtraction ℕ ℤ]
+variable {ℤ : Type} [Core ℤ] [Addition ℤ] [Multiplication (ℕ := ℕ) ℤ]
+variable [Negation ℤ] [Sign ℤ] [Subtraction ℤ]
 
 /--
 Subtraction is left-substitutive.

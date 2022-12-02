@@ -34,7 +34,9 @@ ordinary integer `1`; and in general we have `n//n ≃ 1`. Integers at the same
 scale can be added directly (`a//n + b//n ≃ (a + b)//n`), and this is what
 motivates the definition of addition for fractions.
 -/
-structure Fraction {ℕ : Type} [Natural ℕ] (ℤ : Type) [Integer ℕ ℤ] : Type :=
+structure Fraction
+    {ℕ : Type} [Natural ℕ] (ℤ : Type) [Integer (ℕ := ℕ) ℤ] : Type
+    :=
   numerator : ℤ
   denominator : ℤ
   [denominator_nonzero : Nonzero denominator]
@@ -42,7 +44,7 @@ structure Fraction {ℕ : Type} [Natural ℕ] (ℤ : Type) [Integer ℕ ℤ] : T
 namespace Fraction
 
 variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Integer ℕ ℤ]
+variable {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
 
 infix:90 "//" => Fraction.mk
 
