@@ -83,22 +83,285 @@ local instance exponentiation : Exponentiation Nat := {
   pow_step := rfl
 }
 
-local instance order : Order Nat := {
+local instance sign : Sign Nat := Generic.sign
+
+def order : Order Nat := {
   leOp := Generic.le_ex_add
   le_defn := Iff.intro id id
 
   ltOp := Generic.lt_le_neqv
   lt_defn := Iff.intro id id
+}
 
-  compare := instOrdNat.compare
+open Generic (le lt)
+
+def compare : Nat → Nat → Ordering := instOrdNat.compare
+
+/--
+Converts the Prelude's _less than or equal to_ relation on `Nat` to ours.
+
+**Proof intuition**: Induction on the structure of `n ≤ m`.
+-/
+theorem impl_le_from_prelude_le {n m : Nat} : n ≤ m → le n m
+| Nat.le.refl => by
+  show le n n
+  show ∃ k, n + k ≃ n
+  have : n + 0 ≃ n := AA.identR
+  exact Exists.intro 0 ‹n + 0 ≃ n›
+| @Nat.le.step _ m' (_ : n ≤ m') => by
+  show le n (step m')
+  have : le n m' := impl_le_from_prelude_le ‹n ≤ m'›
+  have (Exists.intro k (_ : n + k ≃ m')) := ‹le n m'›
+  have : n + step k ≃ step m' := calc
+    n + step k   ≃ _ := add_step
+    step (n + k) ≃ _ := AA.subst₁ ‹n + k ≃ m'›
+    step m'      ≃ _ := Rel.refl
+  have : ∃ k, n + k ≃ step m' := Exists.intro (step k) ‹n + step k ≃ step m'›
+  have : le n (step m') := ‹∃ k, n + k ≃ step m'›
+  exact this
+
+/--
+Converts our _less than or equivalent to_ relation on `Nat` to the Prelude's
+version.
+
+**Proof intuition**: Induction on `m`, with a case split on the the value `k`
+from `le`'s definition in the inductive step.
+-/
+theorem prelude_le_from_impl_le {n : Nat} : {m : Nat} → le n m → n ≤ m
+| 0, Exists.intro k (_ : n + k ≃ 0) => by
+  show n ≤ 0
+  have (And.intro (_ : n ≃ 0) (_ : k ≃ 0)) := zero_sum_split ‹n + k ≃ 0›
+  have : n = 0 := ‹n ≃ 0›
+  match ‹n = 0› with
+  | rfl => exact Nat.le.refl
+| Nat.succ m', Exists.intro 0 (_ : n + 0 ≃ step m') => by
+  show n ≤ step m'
+  have : n ≃ step m' := Rel.trans (Rel.symm AA.identR) ‹n + 0 ≃ step m'›
+  have : n = step m' := ‹n ≃ step m'›
+  match ‹n = step m'› with
+  | rfl => exact Nat.le.refl
+| Nat.succ m', Exists.intro (Nat.succ k') (_ : n + step k' ≃ step m') => by
+  show n ≤ step m'
+  have : step (n + k') ≃ step m' := calc
+    step (n + k') ≃ _ := Rel.symm add_step
+    n + step k'   ≃ _ := ‹n + step k' ≃ step m'›
+    step m'       ≃ _ := Rel.refl
+  have : n + k' ≃ m' := AA.inject ‹step (n + k') ≃ step m'›
+  have : ∃ k', n + k' ≃ m' := Exists.intro k' ‹n + k' ≃ m'›
+  have : le n m' := ‹∃ k', n + k' ≃ m'›
+  have : n ≤ m' := prelude_le_from_impl_le ‹le n m'›
+  have : n ≤ step m' := Nat.le.step ‹n ≤ m'›
+  exact this
+
+/--
+Our _less then or equivalent to_ relation on `Nat` is equivalent to the
+Prelude's.
+-/
+theorem prelude_le_iff_impl_le {n m : Nat} : n ≤ m ↔ le n m :=
+  Iff.intro impl_le_from_prelude_le prelude_le_from_impl_le
+
+/--
+Our _less than_ relation on `Nat` is equivalent to the Prelude's.
+
+**Proof intuition**: For the Prelude-to-ours direction, derive `n ≤ m` from
+`n < m`, then convert to `le n m`. Derive `n ≄ m` by contradiction with
+`n ≤ m`. Combine them to obtain `lt n m`. For the ours-to-Prelude direction,
+split `lt n m` into `le n m` and `n ≄ m`. Convert `le n m` to `n ≤ m` and split
+it into `n = m ∨ n < m`. Eliminate the first case by contradiction with
+`n ≃ m`, leaving the second case as the result.
+-/
+theorem prelude_lt_iff_impl_lt {n m : Nat} : n < m ↔ lt n m := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : n < m)
+    show lt n m
+    have : step n ≤ m := ‹n < m›
+    have : step n ≤ step m := Nat.le_succ_of_le ‹step n ≤ m›
+    have : n ≤ m := Nat.le_of_succ_le_succ ‹step n ≤ step m›
+    have : le n m := prelude_le_iff_impl_le.mp ‹n ≤ m›
+    have : n ≄ m := by
+      intro (_ : n ≃ m)
+      show False
+      have : n = m := ‹n ≃ m›
+      rw [‹n = m›] at ‹step n ≤ m›
+      have : ¬(step m ≤ m) := Nat.not_succ_le_self m
+      exact absurd ‹step m ≤ m› ‹¬(step m ≤ m)›
+    have : lt n m := And.intro ‹le n m› ‹n ≄ m›
+    exact this
+  case mpr =>
+    intro (_ : lt n m)
+    show n < m
+    have (And.intro (_ : le n m) (_ : n ≄ m)) := ‹lt n m›
+    have : n ≤ m := prelude_le_iff_impl_le.mpr ‹le n m›
+    have : n = m ∨ n < m := Nat.eq_or_lt_of_le ‹n ≤ m›
+    match ‹n = m ∨ n < m› with
+    | Or.inl (_ : n = m) =>
+      have : n ≠ m := ‹n ≄ m›
+      exact absurd ‹n = m› ‹n ≠ m›
+    | Or.inr (_ : n < m) =>
+      exact ‹n < m›
+
+/--
+If `compare` returns `Ordering.lt`, its first argument is less than its second
+argument.
+
+**Proof intuition**: Split the definition of `compare` into cases and eliminate
+the incorrect ones by contradiction.
+-/
+theorem compare_lt {n m : Nat} : compare n m = Ordering.lt ↔ lt n m := by
+  apply Iff.intro
+  case mp =>
+    intro (h : compare n m = Ordering.lt)
+    show lt n m
+    simp [compare, Ord.compare, compareOfLessAndEq] at h
+    split at h
+    case inl =>
+      have : lt n m := prelude_lt_iff_impl_lt.mp ‹n < m›
+      exact this
+    case inr =>
+      split at h <;> contradiction
+  case mpr =>
+    intro (_ : lt n m)
+    show compare n m = Ordering.lt
+    simp [compare, Ord.compare, compareOfLessAndEq]
+    split
+    case inl =>
+      show Ordering.lt = Ordering.lt
+      rfl
+    case inr =>
+      have : ¬(n < m) := by assumption
+      have : n < m := prelude_lt_iff_impl_lt.mpr ‹lt n m›
+      exact absurd ‹n < m› ‹¬(n < m)›
+
+/--
+If `compare` returns `Ordering.eq`, its arguments are equivalent.
+
+**Proof intuition**: Split the definition of `compare` into cases and eliminate
+the incorrect ones by contradiction.
+-/
+theorem compare_eq {n m : Nat} : compare n m = Ordering.eq ↔ n ≃ m := by
+  apply Iff.intro
+  case mp =>
+    intro (h : compare n m = Ordering.eq)
+    show n ≃ m
+    simp [compare, Ord.compare, compareOfLessAndEq] at h
+    split at h
+    case inl =>
+      have : n < m := by assumption
+      contradiction
+    case inr =>
+      split at h
+      case inl =>
+        have : n = m := by assumption
+        have : n ≃ m := ‹n = m›
+        exact this
+      case inr =>
+        have : n ≠ m := by assumption
+        contradiction
+  case mpr =>
+    intro (_ : n ≃ m)
+    show compare n m = Ordering.eq
+    simp [compare, Ord.compare, compareOfLessAndEq]
+    split
+    case inl =>
+      have : n < m := by assumption
+      have : n = m := ‹n ≃ m›
+      rw [‹n = m›] at ‹n < m›
+      have : ¬(m < m) := Nat.lt_irrefl m
+      exact absurd ‹m < m› ‹¬(m < m)›
+    case inr =>
+      split
+      case inl =>
+        show Ordering.eq = Ordering.eq
+        rfl
+      case inr =>
+        have : n ≠ m := by assumption
+        have : n = m := ‹n ≃ m›
+        exact absurd ‹n = m› ‹n ≠ m›
+
+/--
+If `compare` returns `Ordering.gt`, its first argument is greater than its
+second argument.
+
+**Proof intuition**: Split the definition of `compare` into cases and eliminate
+the incorrect ones by contradiction and trichotomy.
+-/
+theorem compare_gt {n m : Nat} : compare n m = Ordering.gt ↔ lt m n := by
+  apply Iff.intro
+  case mp =>
+    intro (h : compare n m = Ordering.gt)
+    show lt m n
+    simp [compare, Ord.compare, compareOfLessAndEq] at h
+    split at h
+    case inl =>
+      have : n < m := by assumption
+      contradiction
+    case inr =>
+      split at h
+      case inl =>
+        have : n = m := by assumption
+        contradiction
+      case inr =>
+        have : ¬(n < m) := by assumption
+        have : ¬(n = m) := by assumption
+        have : n > m ∨ n ≤ m := Nat.lt_or_ge m n
+        match ‹n > m ∨ n ≤ m› with
+        | Or.inl (_ : n > m) =>
+          have : m < n := ‹n > m›
+          have : lt m n := prelude_lt_iff_impl_lt.mp ‹m < n›
+          exact this
+        | Or.inr (_ : n ≤ m) =>
+          have : n = m ∨ n < m := Nat.eq_or_lt_of_le ‹n ≤ m›
+          match ‹n = m ∨ n < m› with
+          | Or.inl (_ : n = m) =>
+            exact absurd ‹n = m› ‹¬(n = m)›
+          | Or.inr (_ : n < m) =>
+            exact absurd ‹n < m› ‹¬(n < m)›
+  case mpr =>
+    intro (_ : lt m n)
+    show compare n m = Ordering.gt
+    have notTwo : ¬ AA.TwoOfThree (lt n m) (n ≃ m) (lt m n) :=
+      (trichotomy (order_inst := order) n m).atMostOne
+    simp [compare, Ord.compare, compareOfLessAndEq]
+    split
+    case inl =>
+      have : n < m := by assumption
+      show False
+      have : lt n m := prelude_lt_iff_impl_lt.mp ‹n < m›
+      have two : AA.TwoOfThree (lt n m) (n ≃ m) (lt m n) :=
+        AA.TwoOfThree.oneAndThree ‹lt n m› ‹lt m n›
+      exact absurd two notTwo
+    case inr =>
+      split
+      case inl =>
+        have : n = m := by assumption
+        show False
+        have : n ≃ m := ‹n = m›
+        have two : AA.TwoOfThree (lt n m) (n ≃ m) (lt m n) :=
+          AA.TwoOfThree.twoAndThree ‹n ≃ m› ‹lt m n›
+        exact absurd two notTwo
+      case inr =>
+        show Ordering.gt = Ordering.gt
+        rfl
+
+-- Needed for `compare_inst`, but delayed so its ordering operators don't
+-- conflict with the Prelude ones used in the proofs above.
+attribute [local instance] order
+
+local instance compare_inst : Compare Nat := {
+  compare := compare
+  compare_lt := compare_lt
+  compare_eq := compare_eq
+  compare_gt := compare_gt
 }
 
 instance : Natural Nat := {
   toCore := core
   toAxioms := axioms
   toAddition := addition
-  toSign := Generic.sign
+  toSign := sign
   toOrder := order
+  toCompare := compare_inst
   toMultiplication := multiplication
   toExponentiation := exponentiation
 }

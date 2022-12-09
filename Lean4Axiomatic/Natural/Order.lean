@@ -18,7 +18,7 @@ Definition of the _less than or equal to_ and _less than_ relations.
 
 All other properties of ordering on natural numbers can be derived from this.
 -/
-class Order (ℕ : Type) [Core ℕ] [Addition ℕ] extends Ord ℕ :=
+class Order (ℕ : Type) [Core ℕ] [Addition ℕ] :=
   /-- Definition of and syntax for the _less than or equal to_ relation. -/
   leOp : LE ℕ
 
@@ -54,7 +54,7 @@ variable [Core ℕ]
 variable [Axioms ℕ]
 variable [Addition ℕ]
 variable [Sign ℕ]
-variable [Order ℕ]
+variable [order_inst : Order ℕ]
 
 /--
 The _less than or equal to_ relation is preserved when both sides are
@@ -645,5 +645,26 @@ theorem trichotomy (n m : ℕ)
       show False
       have ⟨_, (_ : m ≄ n)⟩ := lt_defn.mp ‹n > m›
       exact absurd ‹n ≃ m› (Rel.symm ‹m ≄ n›)
+
+/--
+Defines `compare`, a comparison function on natural numbers, that determines
+the ordering between any two of them: whether one is less than, equivalent to,
+or greater than the other.
+-/
+class Compare (ℕ : Type) [Core ℕ] [Addition ℕ] [Order ℕ] extends Ord ℕ :=
+  /--
+  If `compare` returns `Ordering.lt`, its first argument is less than its
+  second argument.
+  -/
+  compare_lt {n m : ℕ} : compare n m = Ordering.lt ↔ n < m
+
+  /-- If `compare` returns `Ordering.eq`, its arguments are equivalent. -/
+  compare_eq {n m : ℕ} : compare n m = Ordering.eq ↔ n ≃ m
+
+  /--
+  If `compare` returns `Ordering.gt`, its first argument is greater than its
+  second argument.
+  -/
+  compare_gt {n m : ℕ} : compare n m = Ordering.gt ↔ n > m
 
 end Lean4Axiomatic.Natural

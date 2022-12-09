@@ -65,8 +65,11 @@ section order
 variable [Core ℕ]
 variable [Addition ℕ]
 
-local instance le_ex_add : LE ℕ := LE.mk λ n m => ∃ k : ℕ, n + k ≃ m
-def lt_le_neqv : LT ℕ := LT.mk λ n m => n ≤ m ∧ n ≄ m
+def le (n m : ℕ) : Prop := ∃ k : ℕ, n + k ≃ m
+local instance le_ex_add : LE ℕ := LE.mk le
+
+def lt (n m : ℕ) : Prop := n ≤ m ∧ n ≄ m
+def lt_le_neqv : LT ℕ := LT.mk lt
 
 end order
 

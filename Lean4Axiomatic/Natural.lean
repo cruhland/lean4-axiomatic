@@ -22,11 +22,13 @@ class Natural (ℕ : Type) :=
   toAddition : Addition ℕ
   toSign : Sign ℕ
   toOrder : Order ℕ
+  toCompare : Compare ℕ
   toMultiplication : Multiplication ℕ
   toExponentiation : Exponentiation ℕ
 
 attribute [instance] Natural.toAddition
 attribute [instance] Natural.toAxioms
+attribute [instance] Natural.toCompare
 attribute [instance] Natural.toCore
 attribute [instance] Natural.toExponentiation
 attribute [instance] Natural.toMultiplication
