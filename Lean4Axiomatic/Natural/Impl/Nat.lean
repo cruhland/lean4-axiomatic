@@ -98,6 +98,38 @@ open Generic (le lt)
 def compare : Nat → Nat → Ordering := instOrdNat.compare
 
 /--
+Replacing `compare`'s left operand with an equivalent natural number gives an
+identical result.
+
+**Property intuition**: This must be true for `compare` to be a valid function.
+
+**Proof intuition**: Equivalence of `Nat`s is just equality, so all functions
+are trivially substitutive.
+-/
+theorem compare_substL
+    {n₁ n₂ m : Nat} : n₁ ≃ n₂ → compare n₁ m = compare n₂ m
+    := by
+  intro (_ : n₁ ≃ n₂)
+  show compare n₁ m = compare n₂ m
+  rw [‹n₁ ≃ n₂›]
+
+/--
+Replacing `compare`'s right operand with an equivalent natural number gives an
+identical result.
+
+**Property intuition**: This must be true for `compare` to be a valid function.
+
+**Proof intuition**: Equivalence of `Nat`s is just equality, so all functions
+are trivially substitutive.
+-/
+theorem compare_substR
+    {n₁ n₂ m : Nat} : n₁ ≃ n₂ → compare m n₁ = compare m n₂
+    := by
+  intro (_ : n₁ ≃ n₂)
+  show compare m n₁ = compare m n₂
+  rw [‹n₁ ≃ n₂›]
+
+/--
 Converts the Prelude's _less than or equal to_ relation on `Nat` to ours.
 
 **Proof intuition**: Induction on the structure of `n ≤ m`.
@@ -350,6 +382,8 @@ attribute [local instance] order
 
 local instance compare_inst : Compare Nat := {
   compare := compare
+  compare_substL := compare_substL
+  compare_substR := compare_substR
   compare_lt := compare_lt
   compare_eq := compare_eq
   compare_gt := compare_gt

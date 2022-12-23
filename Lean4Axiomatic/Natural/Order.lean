@@ -578,6 +578,45 @@ instance lt_transitive : Relation.Transitive (α := ℕ) (· < ·) := {
 }
 
 /--
+The same number can be added (on the right) to both sides of a _less than_
+relation, preserving the ordering of the left operands.
+
+**Property intuition**: Increasing two numbers by the same amount keeps them
+the same distance apart.
+
+**Proof intuition**: Split _less than_ into _less than or equivalent to_ and
+_not equivalent to_. Show that both of them are preserved under addition. Put
+them back together.
+-/
+theorem lt_substL_add {n₁ n₂ m : ℕ} : n₁ < n₂ → n₁ + m < n₂ + m := by
+  intro (_ : n₁ < n₂)
+  show n₁ + m < n₂ + m
+  have (And.intro (_ : n₁ ≤ n₂) (_ : n₁ ≄ n₂)) := lt_defn.mp ‹n₁ < n₂›
+  have : n₁ + m ≤ n₂ + m := AA.substL ‹n₁ ≤ n₂›
+  have : n₁ + m ≄ n₂ + m := mt AA.cancelR ‹n₁ ≄ n₂›
+  have : n₁ + m < n₂ + m :=
+    lt_defn.mpr (And.intro ‹n₁ + m ≤ n₂ + m› ‹n₁ + m ≄ n₂ + m›)
+  exact this
+
+/--
+The same number can be added (on the left) to both sides of a _less than_
+relation, preserving the ordering of the right operands.
+
+**Property intuition**: Increasing two numbers by the same amount keeps them
+the same distance apart.
+
+**Proof intuition**: Use commutativity of addition with the opposite-hand
+version of this theorem.
+-/
+theorem lt_substR_add {n₁ n₂ m : ℕ} : n₁ < n₂ → m + n₁ < m + n₂ := by
+  intro (_ : n₁ < n₂)
+  show m + n₁ < m + n₂
+  have : n₁ + m < n₂ + m := lt_substL_add ‹n₁ < n₂›
+  have : m + n₁ < n₂ + m := AA.substLFn AA.comm ‹n₁ + m < n₂ + m›
+  have : m + n₁ < m + n₂ := AA.substRFn AA.comm ‹m + n₁ < n₂ + m›
+  exact this
+
+/--
 Very general property about ordering which often simplifies proofs that would
 otherwise have had to use induction.
 -/
@@ -653,6 +692,18 @@ or greater than the other.
 -/
 class Compare (ℕ : Type) [Core ℕ] [Addition ℕ] [Order ℕ] extends Ord ℕ :=
   /--
+  Replacing `compare`'s left operand with an equivalent natural number gives an
+  identical result.
+  -/
+  compare_substL {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → compare n₁ m = compare n₂ m
+
+  /--
+  Replacing `compare`'s right operand with an equivalent natural number gives
+  an identical result.
+  -/
+  compare_substR {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → compare m n₁ = compare m n₂
+
+  /--
   If `compare` returns `Ordering.lt`, its first argument is less than its
   second argument.
   -/
@@ -666,5 +717,58 @@ class Compare (ℕ : Type) [Core ℕ] [Addition ℕ] [Order ℕ] extends Ord ℕ
   second argument.
   -/
   compare_gt {n m : ℕ} : compare n m = Ordering.gt ↔ n > m
+
+export Compare (compare_eq compare_gt compare_lt compare_substL compare_substR)
+
+variable [Compare ℕ]
+
+/--
+Increasing `compare`'s operands by the same amount gives an identical result.
+
+**Property intuition**: The distance between the operands doesn't change.
+
+**Proof intuition**: There are three possible relations between `compare`'s
+operands, by trichotomy. Show via substitution and transitivity that each one
+is unchanged under addition.
+-/
+theorem compare_add {n m k : ℕ} : compare n m = compare (n + k) (m + k) := by
+  have tri : AA.OneOfThree (n < m) (n ≃ m) (n > m) :=
+    (trichotomy n m).atLeastOne
+  match tri with
+  | AA.OneOfThree.first (_ : n < m) =>
+    have : compare n m = Ordering.lt := compare_lt.mpr ‹n < m›
+    have : n + k < m + k := lt_substL_add ‹n < m›
+    have : compare (n + k) (m + k) = Ordering.lt := compare_lt.mpr this
+    calc
+      compare n m
+        = _ := ‹compare n m = Ordering.lt›
+      Ordering.lt
+        = _ := by rw [‹compare (n + k) (m + k) = Ordering.lt›]
+      compare (n + k) (m + k)
+        = _ := rfl
+  | AA.OneOfThree.second (_ : n ≃ m) =>
+    have : compare n m = Ordering.eq := compare_eq.mpr ‹n ≃ m›
+    have : n + k ≃ m + k := AA.substL ‹n ≃ m›
+    have : compare (n + k) (m + k) = Ordering.eq :=
+      compare_eq.mpr ‹n + k ≃ m + k›
+    calc
+      compare n m
+        = _ := ‹compare n m = Ordering.eq›
+      Ordering.eq
+        = _ := Eq.symm ‹compare (n + k) (m + k) = Ordering.eq›
+      compare (n + k) (m + k)
+        = _ := rfl
+  | AA.OneOfThree.third (_ : n > m) =>
+    have : compare n m = Ordering.gt := compare_gt.mpr ‹n > m›
+    have : n + k > m + k := lt_substL_add ‹n > m›
+    have : compare (n + k) (m + k) = Ordering.gt :=
+      compare_gt.mpr ‹n + k > m + k›
+    calc
+      compare n m
+        = _ := ‹compare n m = Ordering.gt›
+      Ordering.gt
+        = _ := Eq.symm ‹compare (n + k) (m + k) = Ordering.gt›
+      compare (n + k) (m + k)
+        = _ := rfl
 
 end Lean4Axiomatic.Natural

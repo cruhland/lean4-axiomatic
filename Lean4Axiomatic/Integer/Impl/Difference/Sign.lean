@@ -200,11 +200,105 @@ Implementation of the
 according to the ordering of `n` and `m`.
 -/
 def sgn : Difference ℕ → Difference ℕ
-| n——m =>
-  match Ord.compare n m with
-  | Ordering.lt => -1
-  | Ordering.eq => 0
-  | Ordering.gt => 1
+| n——m => ord_sgn (compare n m)
+
+/--
+Zero is the only difference with sign value zero.
+
+**Property intuition**: Zero is neither positive nor negative, so it gets its
+own sign value.
+
+**Proof intuition**: All differences with value zero have components that are
+equivalent. The `sgn` function evaluates to zero in that case.
+-/
+theorem sgn_zero {a : Difference ℕ} : a ≃ 0 ↔ sgn a ≃ 0 := by
+  revert a; intro (n——m)
+  apply Iff.intro
+  case mp =>
+    intro (_ : n——m ≃ 0)
+    show sgn (n——m) ≃ 0
+    have : n ≃ m := zero_diff_eqv.mp ‹n——m ≃ 0›
+    have : compare n m = Ordering.eq := Natural.compare_eq.mpr this
+    have : ord_sgn (compare n m) ≃ ord_sgn Ordering.eq :=
+      ord_sgn_subst (ℤ := Difference ℕ) this
+    have : ord_sgn (compare n m) ≃ 0 := this
+    have : sgn (n——m) ≃ 0 := this
+    exact this
+  case mpr =>
+    intro (_ : sgn (n——m) ≃ 0)
+    show n——m ≃ 0
+    have : ord_sgn (compare n m) ≃ 0 := ‹sgn (n——m) ≃ 0›
+    have : ord_sgn (compare n m) ≃ ord_sgn Ordering.eq := this
+    have : compare n m = Ordering.eq := ord_sgn_inject this
+    have : n ≃ m := Natural.compare_eq.mp this
+    have : n——m ≃ 0 := zero_diff_eqv.mpr this
+    exact this
+
+/--
+Only positive differences have sign value one.
+
+**Property intuition**: The definition of the `sgn` function is for all, and
+only, positive integers to have sign value one.
+
+**Proof intuition**: All positive differences have a first component that's
+greater than their second component. The `sgn` function evaluates to one in
+that case.
+-/
+theorem sgn_positive {a : Difference ℕ} : Positive a ↔ sgn a ≃ 1 := by
+  revert a; intro (n——m)
+  apply Iff.intro
+  case mp =>
+    intro (_ : Positive (n——m))
+    show sgn (n——m) ≃ 1
+    have : n > m := pos_diff_gt.mp ‹Positive (n——m)›
+    have : compare n m = Ordering.gt := Natural.compare_gt.mpr this
+    have : ord_sgn (compare n m) ≃ ord_sgn Ordering.gt :=
+      ord_sgn_subst (ℤ := Difference ℕ) this
+    have : ord_sgn (compare n m) ≃ 1 := this
+    have : sgn (n——m) ≃ 1 := this
+    exact this
+  case mpr =>
+    intro (_ : sgn (n——m) ≃ 1)
+    show Positive (n——m)
+    have : ord_sgn (compare n m) ≃ 1 := ‹sgn (n——m) ≃ 1›
+    have : ord_sgn (compare n m) ≃ ord_sgn Ordering.gt := this
+    have : compare n m = Ordering.gt := ord_sgn_inject this
+    have : n > m := Natural.compare_gt.mp this
+    have : Positive (n——m) := pos_diff_gt.mpr this
+    exact this
+
+/--
+Only negative differences have sign value negative one.
+
+**Property intuition**: The definition of the `sgn` function is for all, and
+only, negative integers to have sign value negative one.
+
+**Proof intuition**: All negative differences have a first component that's
+less than their second component. The `sgn` function evaluates to negative one
+in that case.
+-/
+theorem sgn_negative {a : Difference ℕ} : Negative a ↔ sgn a ≃ -1 := by
+  revert a; intro (n——m)
+  apply Iff.intro
+  case mp =>
+    intro (_ : Negative (n——m))
+    show sgn (n——m) ≃ -1
+    have : n < m := neg_diff_lt.mp ‹Negative (n——m)›
+    have : compare n m = Ordering.lt := Natural.compare_lt.mpr this
+    have : ord_sgn (compare n m) ≃ ord_sgn Ordering.lt :=
+      ord_sgn_subst (ℤ := Difference ℕ) this
+    have : ord_sgn (compare n m) ≃ -1 := this
+    have : sgn (n——m) ≃ -1 := this
+    exact this
+  case mpr =>
+    intro (_ : sgn (n——m) ≃ -1)
+    show Negative (n——m)
+    have : ord_sgn (compare n m) ≃ -1 := ‹sgn (n——m) ≃ -1›
+    have : ord_sgn (compare n m) ≃ ord_sgn Ordering.lt := this
+    have : compare n m = Ordering.lt := ord_sgn_inject this
+    have : n < m := Natural.compare_lt.mp this
+    have : Negative (n——m) := neg_diff_lt.mpr this
+    exact this
 
 instance sign : Sign (Difference ℕ) := {
   positive_iff_sign_pos1 := Generic.positive_iff_sign_pos1
@@ -212,6 +306,9 @@ instance sign : Sign (Difference ℕ) := {
   nonzero_iff_nonzero_impl := Generic.nonzero_iff_nonzero_impl
   sign_trichotomy := sign_trichotomy
   sgn := sgn
+  sgn_zero := sgn_zero
+  sgn_positive := sgn_positive
+  sgn_negative := sgn_negative
 }
 
 end Lean4Axiomatic.Integer.Impl.Difference

@@ -366,6 +366,67 @@ theorem neg_preserves_nonzero {a : ℤ} : Nonzero a → Nonzero (-a) := by
 instance neg_preserves_nonzero_inst {a : ℤ} [Nonzero a] : Nonzero (-a) :=
   neg_preserves_nonzero ‹Nonzero a›
 
+/--
+Convert `Ordering` values into standard integer sign values.
+
+Interprets the `Ordering` as being in relation to zero; e.g. `Ordering.lt` is
+assigned `-1` because integers less than zero are negative.
+-/
+def ord_sgn : Ordering → ℤ
+| Ordering.lt => -1
+| Ordering.eq => 0
+| Ordering.gt => 1
+
+/--
+The `ord_sgn` function produces a unique integer for every `Ordering` value.
+
+**Property intuition**: All functions on `Ordering` automatically have this
+property, because `Ordering` values can be compared for equality.
+
+**Proof intuition**: Use substitution of equality to make the result follow
+trivially from reflexivity of equivalence.
+-/
+theorem ord_sgn_subst
+    {o₁ o₂ : Ordering} : o₁ = o₂ → ord_sgn o₁ ≃ ord_sgn (ℤ := ℤ) o₂
+    := by
+  intro (_ : o₁ = o₂)
+  show ord_sgn o₁ ≃ ord_sgn o₂
+  rw [‹o₁ = o₂›]
+  show ord_sgn o₂ ≃ ord_sgn o₂
+  exact Rel.refl
+
+/--
+Every integer result of the `ord_sgn` function is obtained from a unique
+`Ordering` value.
+
+**Property intuition**: This is because `ord_sgn` does not map two `Ordering`
+values to the same integer.
+
+**Proof intuition**: Follows by brute force: compare results of `ord_sgn` for
+every possible pair of inputs. Show that the results are equivalent only when
+the inputs are equal.
+-/
+theorem ord_sgn_inject
+    : {o₁ o₂ : Ordering} → ord_sgn o₁ ≃ ord_sgn (ℤ := ℤ) o₂ → o₁ = o₂
+| Ordering.lt, Ordering.lt, (_ : -1 ≃ (-1 : ℤ)) =>
+  rfl
+| Ordering.lt, Ordering.eq, (_ : -1 ≃ (0 : ℤ)) =>
+  absurd (by assumption) neg_one_neqv_zero
+| Ordering.lt, Ordering.gt, (_ : -1 ≃ (1 : ℤ)) =>
+  absurd (by assumption) neg_one_neqv_one
+| Ordering.eq, Ordering.lt, (_ : 0 ≃ (-1 : ℤ)) =>
+  absurd (by assumption) (Rel.symm neg_one_neqv_zero)
+| Ordering.eq, Ordering.eq, (_ : 0 ≃ (0 : ℤ)) =>
+  rfl
+| Ordering.eq, Ordering.gt, (_ : 0 ≃ (1 : ℤ)) =>
+  absurd (by assumption) (Rel.symm one_neqv_zero)
+| Ordering.gt, Ordering.lt, (_ : 1 ≃ (-1 : ℤ)) =>
+  absurd (by assumption) (Rel.symm neg_one_neqv_one)
+| Ordering.gt, Ordering.eq, (_ : 1 ≃ (0 : ℤ)) =>
+  absurd (by assumption) one_neqv_zero
+| Ordering.gt, Ordering.gt, (_ : 1 ≃ (1 : ℤ)) =>
+  rfl
+
 end prelim
 
 /-!
@@ -402,6 +463,15 @@ class Sign
   negative, respectively.
   -/
   sgn : ℤ → ℤ
+
+  /-- Zero is the only integer with sign value zero. -/
+  sgn_zero {a : ℤ} : a ≃ 0 ↔ sgn a ≃ 0
+
+  /-- Only positive integers have sign value one. -/
+  sgn_positive {a : ℤ} : Positive a ↔ sgn a ≃ 1
+
+  /-- Only negative integers have sign value negative one. -/
+  sgn_negative {a : ℤ} : Negative a ↔ sgn a ≃ -1
 
 attribute [instance] Sign.ops
 

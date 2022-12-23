@@ -45,7 +45,51 @@ variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Core (ℕ := ℕ) ℤ]
 variable [Addition ℤ] [Multiplication ℤ] [Negation ℤ]
 
+open Coe (coe)
+open Natural (step)
 open Signed (Positive)
+
+/--
+The integer negative one (`-1`) is not equivalent to zero.
+
+**Proof intuition**: Assume that it is; add one to both sides, obtaining
+`0 ≃ 1`. Contradict with `0 ≄ 1` to prove the negation.
+-/
+theorem neg_one_neqv_zero : -1 ≄ (0 : ℤ) := by
+  intro (_ : -1 ≃ (0 : ℤ))
+  show False
+  have : 1 ≃ 0 := calc
+    1      ≃ _ := Rel.symm AA.identR
+    1 + 0  ≃ _ := AA.substR (Rel.symm ‹-1 ≃ (0 : ℤ)›)
+    1 + -1 ≃ _ := AA.inverseR
+    0      ≃ _ := Rel.refl
+  have : 1 ≄ 0 := one_neqv_zero (ℤ := ℤ)
+  exact absurd ‹1 ≃ (0 : ℤ)› ‹1 ≄ (0 : ℤ)›
+
+/--
+The integer negative one (`-1`) is not equivalent to one.
+
+**Proof intuition**: Assume that it is; add one to both sides, obtaining
+`0 ≃ 2`. Convert into natural numbers, `coe 0 ≃ coe 2`, then contradict with
+the axiom `step n ≄ 0` to prove the negation.
+-/
+theorem neg_one_neqv_one : -1 ≄ (1 : ℤ) := by
+  intro (_ : -1 ≃ (1 : ℤ))
+  show False
+  have : step 0 ≃ 1 := Rel.symm Natural.literal_step
+  have : coe (step 1) ≃ coe 0 := calc
+    coe (step 1)       ≃ _ := AA.subst₁ (AA.subst₁ (Rel.symm AA.identR))
+    coe (step (1 + 0)) ≃ _ := AA.subst₁ AA.scompatR
+    coe (1 + step 0)   ≃ _ := AA.subst₁ (AA.substR ‹step 0 ≃ 1›)
+    coe (1 + 1)        ≃ _ := AA.compat₂
+    coe 1 + coe 1      ≃ _ := Rel.refl
+    1 + 1              ≃ _ := AA.substR (Rel.symm ‹-1 ≃ (1 : ℤ)›)
+    1 + -1             ≃ _ := AA.inverseR
+    0                  ≃ _ := Rel.refl
+    coe 0              ≃ _ := Rel.refl
+  have : step 1 ≃ 0 := AA.inject ‹coe (step 1) ≃ coe (0 : ℕ)›
+  have : step 1 ≄ 0 := Natural.step_neqv_zero
+  exact absurd ‹step 1 ≃ 0› ‹step 1 ≄ 0›
 
 /--
 Non-typeclass version of `neg_inverse.inverseL`.
