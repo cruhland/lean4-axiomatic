@@ -54,7 +54,7 @@ theorem add_inverseL {p : Fraction ℤ} : -p + p ≃ 0 := by
   calc
     -(pn//pd) + pn//pd ≃ _ := eqv_refl
     (-pn)//pd + pn//pd ≃ _ := add_eqv_denominators
-    (-pn + pn)//pd     ≃ _ := substL AA.inverseL
+    (-pn + pn)//pd     ≃ _ := substN AA.inverseL
     0//pd              ≃ _ := eqv_zero_iff_numerator_eqv_zero.mpr Rel.refl
     0                  ≃ _ := eqv_refl
 
@@ -144,7 +144,7 @@ theorem recip_inverseL {p : Fraction ℤ} [Nonzero p] : p⁻¹ * p ≃ 1 := by
   calc
     (pn//pd)⁻¹ * pn//pd  ≃ _ := eqv_refl
     pd//pn * pn//pd      ≃ _ := eqv_refl
-    (pd * pn)//(pn * pd) ≃ _ := substL AA.comm
+    (pd * pn)//(pn * pd) ≃ _ := substN AA.comm
     (pn * pd)//(pn * pd) ≃ _ := eqv_one_iff_numer_eqv_denom.mpr Rel.refl
     1                    ≃ _ := eqv_refl
 

@@ -105,7 +105,7 @@ structure.
 **Proof intuition**: Expand the definition of equivalence; use substitution of
 integer multiplication.
 -/
-theorem substL {a₁ a₂ b : ℤ} [Nonzero b] : a₁ ≃ a₂ → a₁//b ≃ a₂//b := by
+theorem substN {a₁ a₂ b : ℤ} [Nonzero b] : a₁ ≃ a₂ → a₁//b ≃ a₂//b := by
   intro (_ : a₁ ≃ a₂)
   show a₁//b ≃ a₂//b
   show a₁ * b ≃ a₂ * b
@@ -121,7 +121,7 @@ structure.
 **Proof intuition**: Expand the definition of equivalence; use substitution of
 integer multiplication.
 -/
-theorem substR
+theorem substD
     {a b₁ b₂ : ℤ} [nz₁ : Nonzero b₁] [nz₂ : Nonzero b₂]
     : b₁ ≃ b₂ → a//b₁ ≃ a//b₂
     := by

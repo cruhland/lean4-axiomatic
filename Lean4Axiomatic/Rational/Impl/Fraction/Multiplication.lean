@@ -95,8 +95,8 @@ theorem mul_assoc {p q r : Fraction ℤ} : (p * q) * r ≃ p * (q * r) := by
   calc
     (pn//pd * qn//qd) * rn//rd         ≃ _ := eqv_refl
     (pn * qn)//(pd * qd) * rn//rd      ≃ _ := eqv_refl
-    ((pn * qn) * rn)//((pd * qd) * rd) ≃ _ := substL AA.assoc
-    (pn * (qn * rn))//((pd * qd) * rd) ≃ _ := substR AA.assoc
+    ((pn * qn) * rn)//((pd * qd) * rd) ≃ _ := substN AA.assoc
+    (pn * (qn * rn))//((pd * qd) * rd) ≃ _ := substD AA.assoc
     (pn * (qn * rn))//(pd * (qd * rd)) ≃ _ := eqv_refl
     pn//pd * (qn * rn)//(qd * rd)      ≃ _ := eqv_refl
     pn//pd * (qn//qd * rn//rd)         ≃ _ := eqv_refl
@@ -116,8 +116,8 @@ theorem mul_identL {p : Fraction ℤ} : 1 * p ≃ p := by
   calc
     1 * pn//pd         ≃ _ := eqv_refl
     1//1 * pn//pd      ≃ _ := eqv_refl
-    (1 * pn)//(1 * pd) ≃ _ := substL AA.identL
-    pn//(1 * pd)       ≃ _ := substR AA.identL
+    (1 * pn)//(1 * pd) ≃ _ := substN AA.identL
+    pn//(1 * pd)       ≃ _ := substD AA.identL
     pn//pd             ≃ _ := eqv_refl
 
 /--
@@ -157,8 +157,8 @@ commutativity.
 theorem cancelR
     {a b c : ℤ} [Nonzero a] [Nonzero c] : (b * a)//(c * a) ≃ b//c
     := calc
-  (b * a)//(c * a) ≃ _ := substL AA.comm
-  (a * b)//(c * a) ≃ _ := substR AA.comm
+  (b * a)//(c * a) ≃ _ := substN AA.comm
+  (a * b)//(c * a) ≃ _ := substD AA.comm
   (a * b)//(a * c) ≃ _ := cancelL
   b//c             ≃ _ := eqv_refl
 
@@ -180,9 +180,9 @@ theorem add_eqv_denominators
   a//d + b//d
     ≃ _ := eqv_refl
   (a * d + d * b)//(d * d)
-    ≃ _ := substL (AA.substR AA.comm)
+    ≃ _ := substN (AA.substR AA.comm)
   (a * d + b * d)//(d * d)
-    ≃ _ := substL (Rel.symm AA.distribR)
+    ≃ _ := substN (Rel.symm AA.distribR)
   ((a + b) * d)//(d * d)
     ≃ _ := cancelR
   (a + b)//d
@@ -210,25 +210,25 @@ theorem mul_distribL {p q r : Fraction ℤ} : p * (q + r) ≃ p * q + p * r := b
     pn//pd * (qn * rd + qd * rn)//(qd * rd)
       ≃ _ := eqv_refl
     (pn * (qn * rd + qd * rn))//(pd * (qd * rd))
-      ≃ _ := substL AA.distribL
+      ≃ _ := substN AA.distribL
     (pn * (qn * rd) + pn * (qd * rn))//(pd * (qd * rd))
       ≃ _ := eqv_symm add_eqv_denominators
     (pn * (qn * rd))//(pd * (qd * rd)) + (pn * (qd * rn))//(pd * (qd * rd))
-      ≃ _ := add_substL (substL (Rel.symm AA.assoc))
+      ≃ _ := add_substL (substN (Rel.symm AA.assoc))
     ((pn * qn) * rd)//(pd * (qd * rd)) + (pn * (qd * rn))//(pd * (qd * rd))
-      ≃ _ := add_substL (substR (Rel.symm AA.assoc))
+      ≃ _ := add_substL (substD (Rel.symm AA.assoc))
     ((pn * qn) * rd)//((pd * qd) * rd) + (pn * (qd * rn))//(pd * (qd * rd))
       ≃ _ := add_substL cancelR
     (pn * qn)//(pd * qd) + (pn * (qd * rn))//(pd * (qd * rd))
-      ≃ _ := add_substR (substL (AA.substR AA.comm))
+      ≃ _ := add_substR (substN (AA.substR AA.comm))
     (pn * qn)//(pd * qd) + (pn * (rn * qd))//(pd * (qd * rd))
       ≃ _ :=
         add_substR
-          (substR (nz₂ := ‹Nonzero (pd * (rd * qd))›) (AA.substR AA.comm))
+          (substD (nz₂ := ‹Nonzero (pd * (rd * qd))›) (AA.substR AA.comm))
     (pn * qn)//(pd * qd) + (pn * (rn * qd))//(pd * (rd * qd))
-      ≃ _ := add_substR (substL (Rel.symm AA.assoc))
+      ≃ _ := add_substR (substN (Rel.symm AA.assoc))
     (pn * qn)//(pd * qd) + ((pn * rn) * qd)//(pd * (rd * qd))
-      ≃ _ := add_substR (substR (Rel.symm AA.assoc))
+      ≃ _ := add_substR (substD (Rel.symm AA.assoc))
     (pn * qn)//(pd * qd) + ((pn * rn) * qd)//((pd * rd) * qd)
       ≃ _ := add_substR cancelR
     (pn * qn)//(pd * qd) + (pn * rn)//(pd * rd)

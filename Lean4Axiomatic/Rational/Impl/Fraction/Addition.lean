@@ -134,19 +134,19 @@ theorem add_assoc {p q r : Fraction ℤ} : (p + q) + r ≃ p + (q + r) := by
     (pn * qd + pd * qn)//(pd * qd) + rn//rd
       ≃ _ := eqv_refl
     ((pn * qd + pd * qn) * rd + (pd * qd) * rn)//((pd * qd) * rd)
-      ≃ _ := substL (AA.substL AA.distribR)
+      ≃ _ := substN (AA.substL AA.distribR)
     (((pn * qd) * rd + (pd * qn) * rd) + (pd * qd) * rn)//((pd * qd) * rd)
-      ≃ _ := substL (AA.substL (AA.substL AA.assoc))
+      ≃ _ := substN (AA.substL (AA.substL AA.assoc))
     ((pn * (qd * rd) + (pd * qn) * rd) + (pd * qd) * rn)//((pd * qd) * rd)
-      ≃ _ := substL (AA.substL (AA.substR AA.assoc))
+      ≃ _ := substN (AA.substL (AA.substR AA.assoc))
     ((pn * (qd * rd) + pd * (qn * rd)) + (pd * qd) * rn)//((pd * qd) * rd)
-      ≃ _ := substL (AA.substR AA.assoc)
+      ≃ _ := substN (AA.substR AA.assoc)
     ((pn * (qd * rd) + pd * (qn * rd)) + pd * (qd * rn))//((pd * qd) * rd)
-      ≃ _ := substL AA.assoc
+      ≃ _ := substN AA.assoc
     (pn * (qd * rd) + (pd * (qn * rd) + pd * (qd * rn)))//((pd * qd) * rd)
-      ≃ _ := substL (AA.substR (Rel.symm AA.distribL))
+      ≃ _ := substN (AA.substR (Rel.symm AA.distribL))
     (pn * (qd * rd) + pd * (qn * rd + qd * rn))//((pd * qd) * rd)
-      ≃ _ := substR AA.assoc
+      ≃ _ := substD AA.assoc
     (pn * (qd * rd) + pd * (qn * rd + qd * rn))//(pd * (qd * rd))
       ≃ _ := eqv_refl
     pn//pd + (qn * rd + qd * rn)//(qd * rd)
@@ -167,10 +167,10 @@ theorem add_identL {p : Fraction ℤ} : 0 + p ≃ p := by
   show 0//1 + pn//pd ≃ pn//pd
   calc
     (0 : ℤ)//1 + pn//pd         ≃ _ := eqv_refl
-    (0 * pd + 1 * pn)//(1 * pd) ≃ _ := substL (AA.substL AA.absorbL)
-    (0 + 1 * pn)//(1 * pd)      ≃ _ := substL AA.identL
-    (1 * pn)//(1 * pd)          ≃ _ := substL AA.identL
-    pn//(1 * pd)                ≃ _ := substR AA.identL
+    (0 * pd + 1 * pn)//(1 * pd) ≃ _ := substN (AA.substL AA.absorbL)
+    (0 + 1 * pn)//(1 * pd)      ≃ _ := substN AA.identL
+    (1 * pn)//(1 * pd)          ≃ _ := substN AA.identL
+    pn//(1 * pd)                ≃ _ := substD AA.identL
     pn//pd                      ≃ _ := eqv_refl
 
 /--
