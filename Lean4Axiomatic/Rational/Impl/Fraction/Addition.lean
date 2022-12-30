@@ -2,7 +2,7 @@ import Lean4Axiomatic.Rational.Impl.Fraction.Core
 
 namespace Lean4Axiomatic.Rational.Impl.Fraction
 
-open Integer (Nonzero)
+open Signed (Positive)
 
 variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
@@ -13,15 +13,17 @@ variable {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
 Addition of fractions.
 
 Uses naive fraction addition, and the proof that naive fraction addition always
-results in a nonzero denominator if the input denominators are nonzero.
+results in a positive denominator if the input denominators are positive.
 -/
 def add (p q : Fraction ℤ) : Fraction ℤ :=
   let sum := p.naive + q.naive
-  have : Nonzero sum.denominator :=
-    Naive.add_preserves_nonzero_denominators
-      p.denominator_nonzero
-      q.denominator_nonzero
-  from_naive sum ‹Nonzero sum.denominator›
+  have : Positive p.denominator := p.denominator_positive.ev
+  have : Positive q.denominator := q.denominator_positive.ev
+  have : Positive sum.denominator :=
+    Naive.add_preserves_positive_denominators
+      ‹Positive p.denominator›
+      ‹Positive q.denominator›
+  from_naive sum ‹Positive sum.denominator›
 
 instance addOp : Add (Fraction ℤ) := {
   add := add

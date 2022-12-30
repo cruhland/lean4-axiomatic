@@ -9,6 +9,7 @@ import Lean4Axiomatic.Sign
 namespace Lean4Axiomatic.Integer
 
 open Coe (coe)
+open Logic (AP)
 open Signed (Negative Positive)
 
 /-!
@@ -475,7 +476,10 @@ class Sign
 
 attribute [instance] Sign.ops
 
-export Sign (negative_iff_sign_neg1 positive_iff_sign_pos1 sgn sign_trichotomy)
+export Sign (
+  negative_iff_sign_neg1 positive_iff_sign_pos1 sgn sgn_negative sgn_positive
+  sgn_zero sign_trichotomy
+)
 
 /-!
 ## Derived properties
@@ -537,6 +541,18 @@ def positive_intro_nat
   have : NonzeroWithSign a 1 :=
     NonzeroWithSign.intro m ‹Positive m› ‹a ≃ 1 * coe m›
   exact positive_iff_sign_pos1.mpr ‹NonzeroWithSign a 1›
+
+/--
+The integer `1` is positive.
+
+**Proof intuition**: Carry over the equivalent proof for natural numbers.
+-/
+theorem one_positive : Positive (1 : ℤ) :=
+  have : 1 ≃ coe (1 : ℕ) := Rel.refl
+  positive_intro_nat Natural.one_positive ‹(1 : ℤ) ≃ coe (1 : ℕ)›
+
+/-- Make `one_positive` available for instance search. -/
+instance one_positive_inst : AP (Positive (1 : ℤ)) := AP.mk one_positive
 
 /--
 Extract evidence that a positive integer is equivalent to a positive natural
@@ -677,6 +693,97 @@ theorem sqrt1_cases {a : ℤ} : Sqrt1 a ↔ a ≃ 1 ∨ a ≃ -1 := by
       have : Sqrt1 (-1 : ℤ) := sqrt1_neg_one
       have : Sqrt1 a := AA.substFn (Rel.symm ‹a ≃ -1›) ‹Sqrt1 (-1 : ℤ)›
       exact this
+
+/--
+The product of two square roots of unity is one iff they are the same.
+
+**Property intuition**: It's an often-memorized algebraic fact that like signs
+are the only ones whose product is positive.
+
+**Proof intuition**: In the forward direction, there are two cases, `b ≃ 1` and
+`b ≃ -1`. Show via algebra that `a ≃ b` in each. In the reverse direction,
+substitute `b` for `a` and use the definition of square root of unity.
+-/
+theorem mul_sqrt1_eqv {a b : ℤ} [Sqrt1 b] : a * b ≃ 1 ↔ a ≃ b := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a * b ≃ 1)
+    show a ≃ b
+    have : b ≃ 1 ∨ b ≃ -1 := sqrt1_cases.mp ‹Sqrt1 b›
+    match this with
+    | Or.inl (_ : b ≃ 1) => calc
+      a     ≃ _ := Rel.symm AA.identR
+      a * 1 ≃ _ := AA.substR (Rel.symm ‹b ≃ 1›)
+      a * b ≃ _ := ‹a * b ≃ 1›
+      1     ≃ _ := Rel.symm ‹b ≃ 1›
+      b     ≃ _ := Rel.refl
+    | Or.inr (_ : b ≃ -1) => calc
+      a             ≃ _ := Rel.symm neg_involutive
+      (-(-a))       ≃ _ := AA.subst₁ (AA.subst₁ (Rel.symm AA.identR))
+      (-(-(a * 1))) ≃ _ := AA.subst₁ AA.scompatR
+      (-(a * -1))   ≃ _ := AA.subst₁ (AA.substR (Rel.symm ‹b ≃ -1›))
+      (-(a * b))    ≃ _ := AA.subst₁ ‹a * b ≃ 1›
+      (-1)          ≃ _ := Rel.symm ‹b ≃ -1›
+      b             ≃ _ := Rel.refl
+  case mpr =>
+    intro (_ : a ≃ b)
+    show a * b ≃ 1
+    calc
+      a * b ≃ _ := AA.substL ‹a ≃ b›
+      b * b ≃ _ := ‹Sqrt1 b›.elim
+      1     ≃ _ := Rel.refl
+
+/--
+The product of two square roots of unity is minus one iff they are different.
+
+**Property intuition**: It's an often-memorized algebraic fact that unlike
+signs are the only ones whose product is negative.
+
+**Proof intuition**: In the forward direction, assume the factors are the same
+and use algebra to reach a contradiction. In the reverse direction, look at all
+possible values for the factors. Eliminate the cases where they have the same
+value using the assumption `a ≄ b`; show that the product is `-1` in the rest.
+-/
+theorem mul_sqrt1_neqv {a b : ℤ} [Sqrt1 a] [Sqrt1 b] : a * b ≃ -1 ↔ a ≄ b := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a * b ≃ -1) (_ : a ≃ b)
+    show False
+    have : (-1 : ℤ) ≃ 1 := calc
+      (-1 : ℤ) ≃ _ := Rel.symm ‹a * b ≃ -1›
+      a * b    ≃ _ := AA.substL ‹a ≃ b›
+      b * b    ≃ _ := ‹Sqrt1 b›.elim
+      1        ≃ _ := Rel.refl
+    have : (-1 : ℤ) ≄ 1 := neg_one_neqv_one
+    exact absurd ‹(-1 : ℤ) ≃ 1› ‹(-1 : ℤ) ≄ 1›
+  case mpr =>
+    intro (_ : a ≄ b)
+    show a * b ≃ -1
+    have a_cases : a ≃ 1 ∨ a ≃ -1 := sqrt1_cases.mp ‹Sqrt1 a›
+    have b_cases : b ≃ 1 ∨ b ≃ -1 := sqrt1_cases.mp ‹Sqrt1 b›
+    match a_cases with
+    | Or.inl (_ : a ≃ 1) =>
+      match b_cases with
+      | Or.inl (_ : b ≃ 1) =>
+        have : a ≃ b := Rel.trans ‹a ≃ 1› (Rel.symm ‹b ≃ 1›)
+        exact absurd ‹a ≃ b› ‹a ≄ b›
+      | Or.inr (_ : b ≃ -1) =>
+        calc
+          a * b ≃ _ := AA.substL ‹a ≃ 1›
+          1 * b ≃ _ := AA.identL
+          b     ≃ _ := ‹b ≃ -1›
+          (-1)  ≃ _ := Rel.refl
+    | Or.inr (_ : a ≃ -1) =>
+      match b_cases with
+      | Or.inl (_ : b ≃ 1) =>
+        calc
+          a * b ≃ _ := AA.substR ‹b ≃ 1›
+          a * 1 ≃ _ := AA.identR
+          a     ≃ _ := ‹a ≃ -1›
+          (-1)  ≃ _ := Rel.refl
+      | Or.inr (_ : b ≃ -1) =>
+        have : a ≃ b := Rel.trans ‹a ≃ -1› (Rel.symm ‹b ≃ -1›)
+        exact absurd ‹a ≃ b› ‹a ≄ b›
 
 /--
 Every `NonzeroWithSign` has a sign value that's either `1` or `-1`.
@@ -854,6 +961,23 @@ instance signed : Signed ℤ := {
   nonzero_iff_pos_or_neg :=
     Relation.iff_trans Sign.nonzero_iff_nonzero_impl nonzero_iff_pos_or_neg
 }
+
+/--
+A positive integer is a nonzero integer.
+
+**Property and proof intuition**: This follows immediately from the theorem
+that an integer is nonzero iff it is positive or negative.
+-/
+theorem nonzero_from_positive {a : ℤ} : Positive a → Nonzero a := by
+  intro (_ : Positive a)
+  show Nonzero a
+  have : Positive a ∨ Negative a := Or.inl ‹Positive a›
+  have : Nonzero a := nonzero_iff_pos_or_neg.mpr this
+  exact this
+
+/-- Instance version of `nonzero_from_positive`. -/
+instance nonzero_from_positive_inst {a : ℤ} [AP (Positive a)] : Nonzero a :=
+  nonzero_from_positive ‹AP (Positive a)›.ev
 
 /--
 Provide evidence that an integer is equivalent, or not equivalent, to zero.
@@ -1103,6 +1227,15 @@ theorem mul_preserves_positive
   have : Positive (a * b) := positive_mul_iff_same_sign.mpr ‹SameSign a b›
   exact this
 
+/-- Instance version of `mul_preserves_positive`. -/
+instance mul_preserves_positive_inst
+    {a b : ℤ} [AP (Positive a)] [AP (Positive b)] : AP (Positive (a * b))
+    := by
+  have : Positive a := ‹AP (Positive a)›.ev
+  have : Positive b := ‹AP (Positive b)›.ev
+  have : Positive (a * b) := mul_preserves_positive ‹Positive a› ‹Positive b›
+  exact AP.mk this
+
 /--
 The negations of positive values are negative.
 
@@ -1160,5 +1293,336 @@ theorem negative_iff_negated_positive
       nonzeroWithSign_swap_neg.mp ‹NonzeroWithSign (-a) 1›
     have : Negative a := negative_iff_sign_neg1.mpr ‹NonzeroWithSign a (-1)›
     exact this
+
+/--
+Nonzero integers are exactly those whose sign values are square roots of unity.
+
+**Property intuition**: Only zero has a sign value of zero, so all other
+integers must have `1` or `-1`.
+
+**Proof intuition**: Both directions split into positive and negative cases and
+show that the property holds in either. It follows directly from the
+definitions of square roots of unity and from the `sgn` of positive and
+negative integers.
+-/
+theorem sgn_nonzero {a : ℤ} : Nonzero a ↔ Sqrt1 (sgn a) := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : Nonzero a)
+    show Sqrt1 (sgn a)
+    have : Positive a ∨ Negative a := nonzero_iff_pos_or_neg.mp ‹Nonzero a›
+    match this with
+    | Or.inl (_ : Positive a) =>
+      have : 1 ≃ sgn a := Rel.symm (sgn_positive.mp ‹Positive a›)
+      have : Sqrt1 1 := sqrt1_one (ℤ := ℤ)
+      have : Sqrt1 (sgn a) := sqrt1_subst ‹1 ≃ sgn a› ‹Sqrt1 (1 : ℤ)›
+      exact this
+    | Or.inr (_ : Negative a) =>
+      have : -1 ≃ sgn a := Rel.symm (sgn_negative.mp ‹Negative a›)
+      have : Sqrt1 (-1) := sqrt1_neg_one (ℤ := ℤ)
+      have : Sqrt1 (sgn a) := sqrt1_subst ‹-1 ≃ sgn a› ‹Sqrt1 (-1 : ℤ)›
+      exact this
+  case mpr =>
+    intro (_ : Sqrt1 (sgn a))
+    show Nonzero a
+    have : sgn a ≃ 1 ∨ sgn a ≃ -1 := sqrt1_cases.mp ‹Sqrt1 (sgn a)›
+    have : Positive a ∨ Negative a := match this with
+    | Or.inl (_ : sgn a ≃ 1) =>
+      have : Positive a := sgn_positive.mpr ‹sgn a ≃ 1›
+      Or.inl this
+    | Or.inr (_ : sgn a ≃ -1) =>
+      have : Negative a := sgn_negative.mpr ‹sgn a ≃ -1›
+      Or.inr this
+    have : Nonzero a := nonzero_iff_pos_or_neg.mpr ‹Positive a ∨ Negative a›
+    exact this
+
+/--
+A nonzero integer `a` can be written as the product of `sgn a` and a positive
+natural number.
+
+**Property intuition**: `NonzeroWithSign`'s sign parameter is exactly what the
+`sgn` function was designed to find.
+
+**Proof intuition**: A positive integer `a` has both `sgn a ≃ 1` and
+`NonzeroWithSign a 1`. The result follows from substitution, and the same
+applies for negative integers.
+-/
+theorem sgn_nonzeroWithSign
+    {a : ℤ} [Sqrt1 (sgn a)] : NonzeroWithSign a (sgn a)
+    := by
+  have : sgn a ≃ 1 ∨ sgn a ≃ -1 := sqrt1_cases.mp ‹Sqrt1 (sgn a)›
+  match this with
+  | Or.inl (_ : sgn a ≃ 1) =>
+    have : Positive a := sgn_positive.mpr ‹sgn a ≃ 1›
+    have : NonzeroWithSign a 1 := positive_iff_sign_pos1.mp this
+    have : NonzeroWithSign a (sgn a) :=
+      NonzeroWithSign.subst_sign (Rel.symm ‹sgn a ≃ 1›) this
+    exact this
+  | Or.inr (_ : sgn a ≃ -1) =>
+    have : Negative a := sgn_negative.mpr ‹sgn a ≃ -1›
+    have : NonzeroWithSign a (-1) := negative_iff_sign_neg1.mp this
+    have : NonzeroWithSign a (sgn a) :=
+      NonzeroWithSign.subst_sign (Rel.symm ‹sgn a ≃ -1›) this
+    exact this
+
+/--
+The `sgn` function respects equivalence of integers.
+
+**Property intuition**: This must be the case for `sgn` to be useful.
+
+**Proof intuition**: The value `a₁` is either zero, positive, or negative. In
+each case, `a₂` must have the same property because it's equivalent to `a₁`.
+But the result of `sgn` only depends on those properties, so `sgn a₁` and
+`sgn a₂` must have the same value.
+-/
+theorem sgn_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → sgn a₁ ≃ sgn a₂ := by
+  intro (_ : a₁ ≃ a₂)
+  show sgn a₁ ≃ sgn a₂
+  have : AA.OneOfThree (a₁ ≃ 0) (Positive a₁) (Negative a₁) :=
+    (sign_trichotomy a₁).atLeastOne
+  match this with
+  | AA.OneOfThree.first (_ : a₁ ≃ 0) =>
+    have : a₂ ≃ 0 := AA.substLFn ‹a₁ ≃ a₂› ‹a₁ ≃ 0›
+    calc
+      sgn a₁ ≃ _ := sgn_zero.mp ‹a₁ ≃ 0›
+      0      ≃ _ := Rel.symm (sgn_zero.mp ‹a₂ ≃ 0›)
+      sgn a₂ ≃ _ := Rel.refl
+  | AA.OneOfThree.second (_ : Positive a₁) =>
+    have : Positive a₂ := positive_subst ‹a₁ ≃ a₂› ‹Positive a₁›
+    calc
+      sgn a₁ ≃ _ := sgn_positive.mp ‹Positive a₁›
+      1      ≃ _ := Rel.symm (sgn_positive.mp ‹Positive a₂›)
+      sgn a₂ ≃ _ := Rel.refl
+  | AA.OneOfThree.third (_ : Negative a₁) =>
+    have : Negative a₂ := negative_subst ‹a₁ ≃ a₂› ‹Negative a₁›
+    calc
+      sgn a₁ ≃ _ := sgn_negative.mp ‹Negative a₁›
+      (-1)   ≃ _ := Rel.symm (sgn_negative.mp ‹Negative a₂›)
+      sgn a₂ ≃ _ := Rel.refl
+
+/--
+The `sgn` function is idempotent.
+
+**Property intuition**: The `sgn` function returns a canonical representative
+of the states zero, positive, and negative. The sign value of this
+representative is of course the same number.
+
+**Proof intuition**: Split `a` into zero, positive, and negative states. Use
+the definition of `sgn` and its substitutive property to show that `sgn a` and
+`sgn (sgn a)` give the same result in each case.
+-/
+theorem sgn_idemp {a : ℤ} : sgn (sgn a) ≃ sgn a := by
+  have : AA.OneOfThree (a ≃ 0) (Positive a) (Negative a) :=
+    (sign_trichotomy a).atLeastOne
+  match this with
+  | AA.OneOfThree.first (_ : a ≃ 0) =>
+    have : sgn a ≃ 0 := sgn_zero.mp ‹a ≃ 0›
+    calc
+      sgn (sgn a) ≃ _ := sgn_subst ‹sgn a ≃ 0›
+      sgn 0       ≃ _ := sgn_subst (Rel.symm ‹a ≃ 0›)
+      sgn a       ≃ _ := Rel.refl
+  | AA.OneOfThree.second (_ : Positive a) =>
+    have : sgn a ≃ 1 := sgn_positive.mp ‹Positive a›
+    calc
+      sgn (sgn a) ≃ _ := sgn_subst ‹sgn a ≃ 1›
+      sgn 1       ≃ _ := sgn_positive.mp one_positive
+      1           ≃ _ := Rel.symm ‹sgn a ≃ 1›
+      sgn a       ≃ _ := Rel.refl
+  | AA.OneOfThree.third (_ : Negative a) =>
+    have : sgn a ≃ -1 := sgn_negative.mp ‹Negative a›
+    calc
+      sgn (sgn a) ≃ _ := sgn_subst ‹sgn a ≃ -1›
+      sgn (-1)    ≃ _ := sgn_negative.mp neg_one_negative
+      (-1)        ≃ _ := Rel.symm ‹sgn a ≃ -1›
+      sgn a       ≃ _ := Rel.refl
+
+/--
+Both factors in a nonzero product have sign values that are square roots of
+unity.
+
+This is a useful lemma for the proof of `sgn_compat_mul`.
+
+**Property and proof intuition**: Follows directly from nonzero products having
+nonzero factors, and nonzero integers having square roots of unity as sign
+values.
+-/
+theorem sqrt1_sgn_split_nonzero_mul
+    {a b : ℤ} : Nonzero (a * b) → Sqrt1 (sgn a) ∧ Sqrt1 (sgn b)
+    := by
+  intro (_ : Nonzero (a * b))
+  show Sqrt1 (sgn a) ∧ (Sqrt1 (sgn b))
+  have (And.intro (_ : Nonzero a) (_ : Nonzero b)) :=
+    nonzero_factors_if_nonzero_product ‹Nonzero (a * b)›
+  have : Sqrt1 (sgn a) := sgn_nonzero.mp ‹Nonzero a›
+  have : Sqrt1 (sgn b) := sgn_nonzero.mp ‹Nonzero b›
+  exact And.intro ‹Sqrt1 (sgn a)› ‹Sqrt1 (sgn b)›
+
+/--
+The sign value of the product of two integers that each have square roots of
+unity as sign values, is the product of those sign values.
+
+This is a useful lemma for the proof of `sgn_compat_mul`.
+
+**Property and proof intuition**: Follows directly from the sign value of
+`NonzeroWithSign` being `sgn a`, and `NonzeroWithSign` being preserved under
+multiplication.
+-/
+theorem nonzeroWithSign_mul_from_sqrt1_sgn
+    {a b : ℤ} [Sqrt1 (sgn a)] [Sqrt1 (sgn b)]
+    : NonzeroWithSign (a * b) (sgn a * sgn b)
+    := by
+  have nws_a : NonzeroWithSign a (sgn a) := sgn_nonzeroWithSign
+  have nws_b : NonzeroWithSign b (sgn b) := sgn_nonzeroWithSign
+  have : NonzeroWithSign (a * b) (sgn a * sgn b) :=
+    mul_preserves_nonzeroWithSign nws_a nws_b
+  exact this
+
+/--
+The product of nonzero integers with the same sign is positive, and likewise
+the factors of a positive product must have the same sign.
+
+**Property intuition**: This is one of the essential properties of any signed
+number system; our intuition for it usually comes from having memorized it in
+school.
+
+**Proof intuition**: Follows directly from the property that the product of two
+square roots of unity is one iff they are the same.
+-/
+theorem positive_mul_iff_sgn_eqv
+    {a b : ℤ} [Nonzero (a * b)] : Positive (a * b) ↔ sgn a ≃ sgn b
+    := by
+  have (And.intro (_ : Sqrt1 (sgn a)) (_ : Sqrt1 (sgn b))) :=
+    sqrt1_sgn_split_nonzero_mul ‹Nonzero (a * b)›
+  have nws_ab_sgn : NonzeroWithSign (a * b) (sgn a * sgn b) :=
+    nonzeroWithSign_mul_from_sqrt1_sgn
+  apply Iff.intro
+  case mp =>
+    intro (_ : Positive (a * b))
+    show sgn a ≃ sgn b
+    have nws_ab_one : NonzeroWithSign (a * b) 1 :=
+      positive_iff_sign_pos1.mp ‹Positive (a * b)›
+    have : sgn a * sgn b ≃ 1 :=
+      nonzeroWithSign_sign_inject nws_ab_sgn nws_ab_one
+    have : sgn a ≃ sgn b := mul_sqrt1_eqv.mp this
+    exact this
+  case mpr =>
+    intro (_ : sgn a ≃ sgn b)
+    show Positive (a * b)
+    have : sgn a * sgn b ≃ 1 := mul_sqrt1_eqv.mpr ‹sgn a ≃ sgn b›
+    have : NonzeroWithSign (a * b) 1 :=
+      NonzeroWithSign.subst_sign ‹sgn a * sgn b ≃ 1› nws_ab_sgn
+    have : Positive (a * b) := positive_iff_sign_pos1.mpr this
+    exact this
+
+/--
+The product of nonzero integers with different signs is negative, and likewise
+the factors of a negative product must have different signs.
+
+**Property intuition**: This is one of the essential properties of any signed
+number system; our intuition for it usually comes from having memorized it in
+school.
+
+**Proof intuition**: Follows directly from the property that the product of two
+square roots of unity is negative one iff they are different.
+-/
+theorem negative_mul_iff_sgn_neqv
+    {a b : ℤ} [Nonzero (a * b)] : Negative (a * b) ↔ sgn a ≄ sgn b
+    := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : Negative (a * b)) (_ : sgn a ≃ sgn b)
+    show False
+    have : Positive (a * b) := positive_mul_iff_sgn_eqv.mpr ‹sgn a ≃ sgn b›
+    have both : Positive (a * b) ∧ Negative (a * b) :=
+      And.intro this ‹Negative (a * b)›
+    have not_both : ¬(Positive (a * b) ∧ Negative (a * b)) :=
+      not_positive_and_negative
+    exact absurd both not_both
+  case mpr =>
+    intro (_ : sgn a ≄ sgn b)
+    show Negative (a * b)
+    have (And.intro (_ : Sqrt1 (sgn a)) (_ : Sqrt1 (sgn b))) :=
+      sqrt1_sgn_split_nonzero_mul ‹Nonzero (a * b)›
+    have nws_ab : NonzeroWithSign (a * b) (sgn a * sgn b) :=
+      nonzeroWithSign_mul_from_sqrt1_sgn
+    have : sgn a * sgn b ≃ -1 := mul_sqrt1_neqv.mpr ‹sgn a ≄ sgn b›
+    have : NonzeroWithSign (a * b) (-1) :=
+      NonzeroWithSign.subst_sign this nws_ab
+    have : Negative (a * b) := negative_iff_sign_neg1.mpr this
+    exact this
+
+/--
+The `sgn` of any product of integers is the product of their `sgn`s.
+
+This algebraic fact is very useful for working with `sgn`.
+
+**Property intuition**: This is usually known as a few separate properties: the
+product of like signs is positive, unlike signs negative, and zeros give zero.
+
+**Proof intuition**: Split into zero, positive, and negative cases, and rely on
+previous results to show the property holds in each.
+-/
+theorem sgn_compat_mul {a b : ℤ} : sgn (a * b) ≃ sgn a * sgn b := by
+  have : a * b ≃ 0 ∨ Nonzero (a * b) := (zero? (a * b)).left
+  match this with
+  | Or.inl (_ : a * b ≃ 0) =>
+    have : a ≃ 0 ∨ b ≃ 0 := mul_split_zero.mp ‹a * b ≃ 0›
+    match this with
+    | Or.inl (_ : a ≃ 0) =>
+      calc
+        sgn (a * b)   ≃ _ := sgn_zero.mp ‹a * b ≃ 0›
+        0             ≃ _ := Rel.symm AA.absorbL
+        0 * sgn b     ≃ _ := AA.substL (Rel.symm (sgn_zero.mp ‹a ≃ 0›))
+        sgn a * sgn b ≃ _ := Rel.refl
+    | Or.inr (_ : b ≃ 0) =>
+      calc
+        sgn (a * b)   ≃ _ := sgn_zero.mp ‹a * b ≃ 0›
+        0             ≃ _ := Rel.symm AA.absorbR
+        sgn a * 0     ≃ _ := AA.substR (Rel.symm (sgn_zero.mp ‹b ≃ 0›))
+        sgn a * sgn b ≃ _ := Rel.refl
+  | Or.inr (_ : Nonzero (a * b)) =>
+    have (And.intro (_ : Sqrt1 (sgn a)) (_ : Sqrt1 (sgn b))) :=
+      sqrt1_sgn_split_nonzero_mul ‹Nonzero (a * b)›
+    have : Positive (a * b) ∨ Negative (a * b) :=
+      nonzero_iff_pos_or_neg.mp ‹Nonzero (a * b)›
+    match this with
+    | Or.inl (_ : Positive (a * b)) =>
+      have : sgn a ≃ sgn b := positive_mul_iff_sgn_eqv.mp ‹Positive (a * b)›
+      calc
+        sgn (a * b)   ≃ _ := sgn_positive.mp ‹Positive (a * b)›
+        1             ≃ _ := Rel.symm (mul_sqrt1_eqv.mpr ‹sgn a ≃ sgn b›)
+        sgn a * sgn b ≃ _ := Rel.refl
+    | Or.inr (_ : Negative (a * b)) =>
+      have : sgn a ≄ sgn b := negative_mul_iff_sgn_neqv.mp ‹Negative (a * b)›
+      calc
+        sgn (a * b)   ≃ _ := sgn_negative.mp ‹Negative (a * b)›
+        (-1)          ≃ _ := Rel.symm (mul_sqrt1_neqv.mpr ‹sgn a ≄ sgn b›)
+        sgn a * sgn b ≃ _ := Rel.refl
+
+/--
+The product of a nonzero integer with its sign is always positive.
+
+**Property intuition**: Mulplying a number by its sign does nothing for a
+positive number, but it "cancels out" the negation of a negative number.
+
+**Proof intuition**: Follows directly from algebraic properties of `sgn`.
+-/
+theorem positive_mul_sgn_self {a : ℤ} : Nonzero a → Positive (a * sgn a) := by
+  intro (_ : Nonzero a)
+  have : Sqrt1 (sgn a) := sgn_nonzero.mp ‹Nonzero a›
+  have : sgn a * sgn a ≃ 1 := this.elim
+  have : sgn (a * sgn a) ≃ 1 := calc
+    sgn (a * sgn a)     ≃ _ := sgn_compat_mul
+    sgn a * sgn (sgn a) ≃ _ := AA.substR sgn_idemp
+    sgn a * sgn a       ≃ _ := ‹sgn a * sgn a ≃ 1›
+    1                   ≃ _ := Rel.refl
+  have : Positive (a * sgn a) := sgn_positive.mpr ‹sgn (a * sgn a) ≃ 1›
+  exact this
+
+/-- Instance version of `positive_mul_sgn_self`. -/
+instance positive_mul_sgn_self_inst
+    {a : ℤ} [Nonzero a] : AP (Positive (a * sgn a))
+    :=
+  AP.mk (positive_mul_sgn_self ‹Nonzero a›)
 
 end Lean4Axiomatic.Integer

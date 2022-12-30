@@ -23,7 +23,7 @@ Selects the left-hand or right-hand argument, according to the given `Hand`.
 - `α`: The `Sort` of the items to select.
 -/
 abbrev Hand.pick {α : Sort u} : Hand → α → α → α
-| L, x, y => x
-| R, x, y => y
+| L, x, _ => x
+| R, _, y => y
 
 end Lean4Axiomatic

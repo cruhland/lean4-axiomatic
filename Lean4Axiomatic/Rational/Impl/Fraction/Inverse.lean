@@ -2,6 +2,10 @@ import Lean4Axiomatic.Rational.Impl.Fraction.Multiplication
 
 namespace Lean4Axiomatic.Rational.Impl.Fraction
 
+open Integer (sgn)
+open Logic (AP)
+open Signed (Negative Positive)
+
 variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
 
@@ -99,7 +103,8 @@ denominator.
 def reciprocal (p : Fraction ℤ) [Nonzero p] : Fraction ℤ := by
   revert p; intro (a//b) (_ : Nonzero (a//b))
   have : Integer.Nonzero a := ‹Nonzero (a//b)›.numerator_nonzero
-  exact b//a
+  have : AP (Positive (a * sgn a)) := Integer.positive_mul_sgn_self_inst
+  exact (b * sgn a)//(a * sgn a)
 
 postfix:120 "⁻¹" => reciprocal
 
@@ -121,14 +126,17 @@ theorem recip_subst
   show (a//b)⁻¹ ≃ (c//d)⁻¹
   have : Integer.Nonzero a := ‹Nonzero (a//b)›.numerator_nonzero
   have : Integer.Nonzero c := ‹Nonzero (c//d)›.numerator_nonzero
-  show b//a ≃ d//c
-  show b * c ≃ d * a
+  show (b * sgn a)//(a * sgn a) ≃ (d * sgn c)//(c * sgn c)
+  show (b * sgn a) * (c * sgn c) ≃ (d * sgn c) * (a * sgn a)
   have : a * d ≃ c * b := ‹a//b ≃ c//d›
   calc
-    b * c ≃ _ := AA.comm
-    c * b ≃ _ := Rel.symm ‹a * d ≃ c * b›
-    a * d ≃ _ := AA.comm
-    d * a ≃ _ := Rel.refl
+    (b * sgn a) * (c * sgn c) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
+    (b * c) * (sgn a * sgn c) ≃ _ := AA.substL AA.comm
+    (c * b) * (sgn a * sgn c) ≃ _ := AA.substL (Rel.symm ‹a * d ≃ c * b›)
+    (a * d) * (sgn a * sgn c) ≃ _ := AA.substL AA.comm
+    (d * a) * (sgn a * sgn c) ≃ _ := AA.substR AA.comm
+    (d * a) * (sgn c * sgn a) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
+    (d * sgn c) * (a * sgn a) ≃ _ := Rel.refl
 
 /--
 The reciprocal of a nonzero fraction is its left multiplicative inverse.
@@ -142,11 +150,20 @@ theorem recip_inverseL {p : Fraction ℤ} [Nonzero p] : p⁻¹ * p ≃ 1 := by
   show (pn//pd)⁻¹ * pn//pd ≃ 1
   have : Integer.Nonzero pn := ‹Nonzero (pn//pd)›.numerator_nonzero
   calc
-    (pn//pd)⁻¹ * pn//pd  ≃ _ := eqv_refl
-    pd//pn * pn//pd      ≃ _ := eqv_refl
-    (pd * pn)//(pn * pd) ≃ _ := substN AA.comm
-    (pn * pd)//(pn * pd) ≃ _ := eqv_one_iff_numer_eqv_denom.mpr Rel.refl
-    1                    ≃ _ := eqv_refl
+    (pn//pd)⁻¹ * pn//pd
+      ≃ _ := eqv_refl
+    (pd * sgn pn)//(pn * sgn pn) * pn//pd
+      ≃ _ := eqv_refl
+    ((pd * sgn pn) * pn)//((pn * sgn pn) * pd)
+      ≃ _ := substN AA.assoc
+    (pd * (sgn pn * pn))//((pn * sgn pn) * pd)
+      ≃ _ := substN (AA.substR AA.comm)
+    (pd * (pn * sgn pn))//((pn * sgn pn) * pd)
+      ≃ _ := substN AA.comm
+    ((pn * sgn pn) * pd)//((pn * sgn pn) * pd)
+      ≃ _ := eqv_one_iff_numer_eqv_denom.mpr Rel.refl
+    1
+      ≃ _ := eqv_refl
 
 /--
 The reciprocal of a nonzero fraction is its right multiplicative inverse.

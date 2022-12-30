@@ -67,4 +67,25 @@ theorem not_or_iff_and_not {p q : Prop} : ¬(p ∨ q) ↔ ¬p ∧ ¬q := by
     | Or.inl (_ : p) => exact absurd ‹p› ‹¬p›
     | Or.inr (_ : q) => exact absurd ‹q› ‹¬q›
 
+/--
+Class that enables arbitrary expressions in `Prop` to be used as instance
+arguments.
+
+This is mainly helpful for definitions of operators, e.g. division, which have
+restrictions on their argument values that aren't normally made explicit in
+standard mathematical notation.
+
+It can also greatly reduce clutter in proofs, or allow automatic derivation of
+simple facts that would otherwise be tedious to write by hand.
+
+The name `AP` was chosen to be short, and to stand for "automatic `Prop`" or
+"arbitrary `Prop`".
+
+#### Parameters
+1. `p`: The expression to turn into an instance.
+-/
+class AP (p : Prop) : Prop :=
+  /-- Evidence that `p` is true. -/
+  ev : p
+
 end Lean4Axiomatic.Logic

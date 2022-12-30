@@ -2,7 +2,8 @@ import Lean4Axiomatic.Rational.Impl.Fraction.Addition
 
 namespace Lean4Axiomatic.Rational.Impl.Fraction
 
-open Integer (Nonzero)
+open Logic (AP)
+open Signed (Positive)
 
 variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
@@ -141,7 +142,7 @@ corresponding fraction factor is equivalent to one, and doesn't contribute to
 the result.
 -/
 theorem cancelL
-    {a b c : ℤ} [Nonzero a] [Nonzero c] : (a * b)//(a * c) ≃ b//c
+    {a b c : ℤ} [AP (Positive a)] [AP (Positive c)] : (a * b)//(a * c) ≃ b//c
     := calc
   (a * b)//(a * c) ≃ _ := eqv_refl
   a//a * b//c      ≃ _ := mul_substL (eqv_one_iff_numer_eqv_denom.mpr Rel.refl)
@@ -155,7 +156,7 @@ A common factor on the right of the numerator and denominator can be removed.
 commutativity.
 -/
 theorem cancelR
-    {a b c : ℤ} [Nonzero a] [Nonzero c] : (b * a)//(c * a) ≃ b//c
+    {a b c : ℤ} [AP (Positive a)] [AP (Positive c)] : (b * a)//(c * a) ≃ b//c
     := calc
   (b * a)//(c * a) ≃ _ := substN AA.comm
   (a * b)//(c * a) ≃ _ := substD AA.comm
@@ -175,7 +176,7 @@ numerator and denominator, the fraction is the result of multiplication by
 `d//d`, which is `1`. So the common factor can be removed, achieving the goal.
 -/
 theorem add_eqv_denominators
-    {a b d : ℤ} [Nonzero d] : a//d + b//d ≃ (a + b)//d
+    {a b d : ℤ} [AP (Positive d)] : a//d + b//d ≃ (a + b)//d
     := calc
   a//d + b//d
     ≃ _ := eqv_refl
@@ -203,7 +204,8 @@ input fractions.
 theorem mul_distribL {p q r : Fraction ℤ} : p * (q + r) ≃ p * q + p * r := by
   revert p; intro (pn//pd); revert q; intro (qn//qd); revert r; intro (rn//rd)
   show pn//pd * (qn//qd + rn//rd) ≃ pn//pd * qn//qd + pn//pd * rn//rd
-  have : Nonzero (pd * (rd * qd)) := Integer.mul_preserves_nonzero_inst
+  -- For some unknown reason this is needed to prevent a compile error
+  have pos_mul_denom_prq : AP (Positive (pd * (rd * qd))) := inferInstance
   calc
     pn//pd * (qn//qd + rn//rd)
       ≃ _ := eqv_refl
@@ -222,9 +224,7 @@ theorem mul_distribL {p q r : Fraction ℤ} : p * (q + r) ≃ p * q + p * r := b
     (pn * qn)//(pd * qd) + (pn * (qd * rn))//(pd * (qd * rd))
       ≃ _ := add_substR (substN (AA.substR AA.comm))
     (pn * qn)//(pd * qd) + (pn * (rn * qd))//(pd * (qd * rd))
-      ≃ _ :=
-        add_substR
-          (substD (nz₂ := ‹Nonzero (pd * (rd * qd))›) (AA.substR AA.comm))
+      ≃ _ := add_substR (substD (pb₂ := pos_mul_denom_prq) (AA.substR AA.comm))
     (pn * qn)//(pd * qd) + (pn * (rn * qd))//(pd * (rd * qd))
       ≃ _ := add_substR (substN (Rel.symm AA.assoc))
     (pn * qn)//(pd * qd) + ((pn * rn) * qd)//(pd * (rd * qd))

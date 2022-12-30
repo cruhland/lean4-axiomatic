@@ -5,6 +5,7 @@ namespace Lean4Axiomatic.Rational.Impl.Fraction.Naive
 open Coe (coe)
 open Integer (Nonzero)
 open Natural (step)
+open Signed (Positive)
 
 /-!
 ## Naive fractions
@@ -27,18 +28,18 @@ structure Fraction (α : Type) : Type :=
 
 local infix:90 "//" => Naive.Fraction.mk
 
-variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
-
 /--
-Create an ordered pair of integers from a `Naive.Fraction ℤ`.
+Create an ordered pair of `α` values from a `Naive.Fraction α`.
 
 Sometimes it can be helpful to have a strict form of equivalence between
 naive fractions, one that works component-wise; conversion to ordered pairs
 enables this.
 -/
-def Fraction.to_prod : Naive.Fraction ℤ → ℤ × ℤ
+def Fraction.to_prod {α : Type} : Naive.Fraction α → α × α
 | a//b => (a, b)
+
+variable {ℕ : Type} [Natural ℕ]
+variable {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
 
 /--
 An attempted equivalence relation on naive fractions of integers.
@@ -397,5 +398,30 @@ allow zero-valued denominators with nonzero numerators, addition of fractions
 will inevitably give `0//0` results. Thus there's only one possible option:
 we can allow zero-valued numerators, but denominators must always be nonzero.
 -/
+
+/--
+Adding two naive fractions with positive denominators always gives a result
+with a positive denominator.
+
+This is an alternative to the nonzero-denominators approach above, which is in
+some ways nicer because it restricts negative values to the numerator only. The
+sign of the fraction is then fully determined by the numerator, while the
+denominator's only role is to represent the size of the numerator's units.
+
+**Proof intuition**: The denominator of a sum of fractions is the product of
+the denominators of those fractions. And the product of two positive integers
+is always positive.
+-/
+theorem add_preserves_positive_denominators
+    {p q : Naive.Fraction ℤ}
+    : Positive p.denominator → Positive q.denominator
+    → Positive ((p + q).denominator)
+    := by
+  revert p; intro (pn//pd); revert q; intro (qn//qd)
+  intro (_ : Positive pd) (_ : Positive qd)
+  show Positive (pn//pd + qn//qd).denominator
+  show Positive ((pn * qd + pd * qn)//(pd * qd)).denominator
+  show Positive (pd * qd)
+  exact Integer.mul_preserves_positive ‹Positive pd› ‹Positive qd›
 
 end Lean4Axiomatic.Rational.Impl.Fraction.Naive

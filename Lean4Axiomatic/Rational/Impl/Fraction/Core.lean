@@ -2,7 +2,9 @@ import Lean4Axiomatic.Rational.Impl.Fraction.Naive
 
 namespace Lean4Axiomatic.Rational.Impl
 
-open Integer (Nonzero)
+open Logic (AP)
+open Relation.Equivalence (EqvOp)
+open Signed (Negative Positive)
 
 /-!
 ## (True) Fractions
@@ -13,56 +15,65 @@ numbers.
 -/
 
 /--
-A formal fraction of integer values, where the denominator must be nonzero.
+A formal fraction of signed values, where the denominator must be positive.
 
-Currently the `Nonzero` predicate is only defined on integers, so we cannot
-generalize this fraction to arbitrary types as we did with naive fractions. The
-`denominator_nonzero` field is defined with the `instance` attribute so that it
-can be automatically filled in by Lean. Otherwise it would frequently require
-tedious bookkeeping to manage.
+As explored in `Fraction.Naive`, we must at least constrain the denominator to
+be nonzero if we want to have a useful definition of fractions. We go a bit
+further than that here, and require a positive denominator, because it
+simplifies the definition of positive and negative for fractions: only the sign
+of the numerator matters.
+
+The `denominator_positive` field is defined with square brackets so that it
+becomes an instance parameter in `Fraction`'s constructor, allowing Lean to
+automatically fill it in. Otherwise it would frequently require tedious
+bookkeeping to manage.
 
 One way to think about values of this type is that they represent a "frozen" or
-"unevaluated" division operation between two integers. If we represent a value
+"unevaluated" division operation between two numbers. If we represent a value
 of this type as the expression `n//d`, where `n` is the numerator and `d` is
 the denominator, then informally the division concept says `(n//d) * d ≃ n`.
 
 Another viewpoint, also described in the section on naive fractions, is that a
-fraction is an integer value (the numerator) which is at a certain "size" or
-"scale" given by the denominator. A scale of `1` corresponds with ordinary
-integers; a scale of `2` means that a numerator of `2` is the same size as the
-ordinary integer `1`; and in general we have `n//n ≃ 1`. Integers at the same
-scale can be added directly (`a//n + b//n ≃ (a + b)//n`), and this is what
-motivates the definition of addition for fractions.
+fraction is a numeric value (the numerator) which is at a certain "size" or
+"scale" given by the denominator. Using the simple case of integer fractions, a
+scale of `1` corresponds with ordinary integers; a scale of `2` means that a
+numerator of `2` is the same size as the ordinary integer `1`; and in general
+we have `n//n ≃ 1`. Integers at the same scale can be added directly
+(`a//n + b//n ≃ (a + b)//n`), and this is what motivates the definition of
+addition for fractions.
 -/
-structure Fraction
-    {ℕ : Type} [Natural ℕ] (ℤ : Type) [Integer (ℕ := ℕ) ℤ] : Type
-    :=
-  numerator : ℤ
-  denominator : ℤ
-  [denominator_nonzero : Nonzero denominator]
-
-namespace Fraction
-
-variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
+structure Fraction (α : Type) [EqvOp α] [OfNat α 0] [Signed α] : Type :=
+  numerator : α
+  denominator : α
+  [denominator_positive : AP (Positive denominator)]
 
 infix:90 "//" => Fraction.mk
+
+namespace Fraction
 
 /--
 The naive representation of this fraction.
 
-This simply drops the nonzero requirement for the denominator. Mainly good for
+This simply drops the positive requirement for the denominator. Mainly good for
 reusing naive fraction definitions that still work for true fractions.
 -/
-def naive : Fraction ℤ → Naive.Fraction ℤ
+def naive
+    {α : Type} [EqvOp α] [OfNat α 0] [Signed α] : Fraction α → Naive.Fraction α
 | a//b => Naive.Fraction.mk a b
 
-/-- Lift a naive fraction to a true fraction, if its denominator is nonzero. -/
+/--
+Lift a naive fraction to a true fraction, if its denominator is positive.
+-/
 def from_naive
-    (p : Naive.Fraction ℤ) : Nonzero p.denominator → Fraction ℤ
+    {α : Type} [EqvOp α] [OfNat α 0] [Signed α] (p : Naive.Fraction α)
+    : Positive p.denominator → Fraction α
     := by
-  revert p; intro (Naive.Fraction.mk pn pd) (_ : Nonzero pd)
+  revert p; intro (Naive.Fraction.mk pn pd) (_ : Positive pd)
+  have : AP (Positive pd) := AP.mk ‹Positive pd›
   exact pn//pd
+
+variable {ℕ : Type} [Natural ℕ]
+variable {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
 
 /--
 Equivalence relation on formal fractions of integers.
@@ -84,10 +95,13 @@ theorem eqv_symm {p q : Fraction ℤ} : p ≃ q → q ≃ p :=
 
 /-- Fraction equivalence is transitive. -/
 theorem eqv_trans {p q r : Fraction ℤ} : p ≃ q → q ≃ r → p ≃ r :=
-  have : q.denominator ≄ 0 :=
-    Integer.nonzero_iff_neqv_zero.mp q.denominator_nonzero
+  let qd := q.denominator
+  have : Positive qd := q.denominator_positive.ev
+  have : Positive qd ∨ Negative qd := Or.inl this
+  have : Integer.Nonzero qd := Integer.nonzero_iff_pos_or_neg.mpr this
+  have : qd ≄ 0 := Integer.nonzero_iff_neqv_zero.mp this
   Naive.eqv_trans_nonzero_denom
-    (p := p.naive) (q := q.naive) (r := r.naive) ‹q.denominator ≄ 0›
+    (p := p.naive) (q := q.naive) (r := r.naive) ‹qd ≄ 0›
 
 instance eqvOp : Relation.Equivalence.EqvOp (Fraction ℤ) := {
   refl := eqv_refl
@@ -105,7 +119,7 @@ structure.
 **Proof intuition**: Expand the definition of equivalence; use substitution of
 integer multiplication.
 -/
-theorem substN {a₁ a₂ b : ℤ} [Nonzero b] : a₁ ≃ a₂ → a₁//b ≃ a₂//b := by
+theorem substN {a₁ a₂ b : ℤ} [AP (Positive b)] : a₁ ≃ a₂ → a₁//b ≃ a₂//b := by
   intro (_ : a₁ ≃ a₂)
   show a₁//b ≃ a₂//b
   show a₁ * b ≃ a₂ * b
@@ -122,7 +136,7 @@ structure.
 integer multiplication.
 -/
 theorem substD
-    {a b₁ b₂ : ℤ} [nz₁ : Nonzero b₁] [nz₂ : Nonzero b₂]
+    {a b₁ b₂ : ℤ} [pb₁ : AP (Positive b₁)] [pb₂ : AP (Positive b₂)]
     : b₁ ≃ b₂ → a//b₁ ≃ a//b₂
     := by
   intro (_ : b₁ ≃ b₂)
