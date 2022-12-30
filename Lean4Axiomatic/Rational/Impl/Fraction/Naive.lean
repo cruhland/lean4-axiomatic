@@ -245,7 +245,11 @@ theorem eqv_trans_almost
       exact Or.inl ‹pn * rd ≃ rn * pd›
   | Or.inr (_ : qd ≄ 0) =>
     have : pn * rd ≃ rn * pd :=
-      eqv_trans_nonzero_denom ‹qd ≄ 0› ‹pn//pd ≃ qn//qd› ‹qn//qd ≃ rn//rd›
+      eqv_trans_nonzero_denom
+        (q := qn//qd)
+        ‹qd ≄ 0›
+        ‹pn//pd ≃ qn//qd›
+        ‹qn//qd ≃ rn//rd›
     exact Or.inl ‹pn * rd ≃ rn * pd›
 
 /-!
