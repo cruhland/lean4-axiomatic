@@ -2,7 +2,7 @@ import Lean4Axiomatic.Relation.Equivalence
 
 /-! # Rational numbers -/
 
-namespace Lean4Axiomatic.Rational
+namespace Lean4Axiomatic
 
 /-! ## Axioms -/
 
@@ -14,7 +14,7 @@ rational numbers must have.
 -/
 class Rational (ℚ : Type) :=
   /-- Equivalence of rational numbers. -/
-  eqvOp : Relation.Equivalence.EqvOp ℚ
+  eqv : ℚ → ℚ → Prop
 
   /-- Addition of rational numbers. -/
   addOp : Add ℚ
@@ -25,6 +25,4 @@ class Rational (ℚ : Type) :=
   /-- Negation of rational numbers. -/
   negOp : Neg ℚ
 
-attribute [instance] Rational.eqvOp
-
-end Lean4Axiomatic.Rational
+end Lean4Axiomatic
