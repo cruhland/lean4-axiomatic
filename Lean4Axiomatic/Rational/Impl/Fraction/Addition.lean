@@ -1,3 +1,4 @@
+import Lean4Axiomatic.Rational.Addition
 import Lean4Axiomatic.Rational.Impl.Fraction.Core
 
 namespace Lean4Axiomatic.Rational.Impl.Fraction
@@ -25,7 +26,7 @@ def add (p q : Fraction ℤ) : Fraction ℤ :=
       ‹Positive q.denominator›
   from_naive sum ‹Positive sum.denominator›
 
-instance addOp : Add (Fraction ℤ) := {
+instance addition_ops : Addition.Ops (Fraction ℤ) := {
   add := add
 }
 
@@ -185,5 +186,7 @@ identity elements to carry over.
 -/
 theorem add_identR {p : Fraction ℤ} : p + 0 ≃ p :=
   eqv_trans add_comm add_identL
+
+instance addition : Addition (Fraction ℤ) := {}
 
 end Lean4Axiomatic.Rational.Impl.Fraction
