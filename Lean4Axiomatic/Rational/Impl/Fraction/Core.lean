@@ -1,10 +1,11 @@
+import Lean4Axiomatic.Rational.Core
 import Lean4Axiomatic.Rational.Impl.Fraction.Naive
 
 namespace Lean4Axiomatic.Rational.Impl
 
 open Logic (AP)
 open Relation.Equivalence (EqvOp)
-open Signed (Negative Positive)
+open Signed (Negative Positive Positivity)
 
 /-!
 ## (True) Fractions
@@ -42,7 +43,9 @@ we have `n//n ≃ 1`. Integers at the same scale can be added directly
 (`a//n + b//n ≃ (a + b)//n`), and this is what motivates the definition of
 addition for fractions.
 -/
-structure Fraction (α : Type) [EqvOp α] [OfNat α 0] [Signed α] : Type :=
+structure Fraction
+    (α : Type) [EqvOp α] [OfNat α 0] [Positivity.Ops α]
+    : Type :=
   numerator : α
   denominator : α
   [denominator_positive : AP (Positive denominator)]
@@ -58,14 +61,15 @@ This simply drops the positive requirement for the denominator. Mainly good for
 reusing naive fraction definitions that still work for true fractions.
 -/
 def naive
-    {α : Type} [EqvOp α] [OfNat α 0] [Signed α] : Fraction α → Naive.Fraction α
+    {α : Type} [EqvOp α] [OfNat α 0] [Positivity.Ops α]
+    : Fraction α → Naive.Fraction α
 | a//b => Naive.Fraction.mk a b
 
 /--
 Lift a naive fraction to a true fraction, if its denominator is positive.
 -/
 def from_naive
-    {α : Type} [EqvOp α] [OfNat α 0] [Signed α] (p : Naive.Fraction α)
+    {α : Type} [EqvOp α] [OfNat α 0] [Positivity.Ops α] (p : Naive.Fraction α)
     : Positive p.denominator → Fraction α
     := by
   revert p; intro (Naive.Fraction.mk pn pd) (_ : Positive pd)
@@ -82,8 +86,8 @@ See `Naive.eqv` for more explanation.
 -/
 def eqv (p q : Fraction ℤ) : Prop := Naive.eqv p.naive q.naive
 
-instance tildeDash : Operators.TildeDash (Fraction ℤ) := {
-  tildeDash := eqv
+instance equivalence_ops : Equivalence.Ops (Fraction ℤ) := {
+  eqv := eqv
 }
 
 /-- Fraction equivalence is reflexive. -/
@@ -103,11 +107,13 @@ theorem eqv_trans {p q r : Fraction ℤ} : p ≃ q → q ≃ r → p ≃ r :=
   Naive.eqv_trans_nonzero_denom
     (p := p.naive) (q := q.naive) (r := r.naive) ‹qd ≄ 0›
 
-instance eqvOp : Relation.Equivalence.EqvOp (Fraction ℤ) := {
-  refl := eqv_refl
-  symm := eqv_symm
-  trans := eqv_trans
+instance equivalence_props : Equivalence.Props (Fraction ℤ) := {
+  eqv_refl := eqv_refl
+  eqv_symm := eqv_symm
+  eqv_trans := eqv_trans
 }
+
+instance equivalence : Equivalence (Fraction ℤ) := {}
 
 /--
 Replacing the numerator of a fraction with an equivalent value gives an

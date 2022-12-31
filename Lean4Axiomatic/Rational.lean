@@ -1,4 +1,4 @@
-import Lean4Axiomatic.Relation.Equivalence
+import Lean4Axiomatic.Rational.Core
 
 /-! # Rational numbers -/
 
@@ -12,10 +12,7 @@ The class of [rational numbers](https://en.wikipedia.org/wiki/Rational_number).
 Provides fundamental operations and properties that any type implementing the
 rational numbers must have.
 -/
-class Rational (ℚ : Type) :=
-  /-- Equivalence of rational numbers. -/
-  eqv : ℚ → ℚ → Prop
-
+class Rational (ℚ : Type) extends Rational.Equivalence ℚ :=
   /-- Addition of rational numbers. -/
   addOp : Add ℚ
 
