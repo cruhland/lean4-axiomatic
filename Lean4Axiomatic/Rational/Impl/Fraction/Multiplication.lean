@@ -1,3 +1,4 @@
+import Lean4Axiomatic.Rational.Multiplication
 import Lean4Axiomatic.Rational.Impl.Fraction.Addition
 
 namespace Lean4Axiomatic.Rational.Impl.Fraction
@@ -14,7 +15,7 @@ variable {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
 def mul : Fraction ℤ → Fraction ℤ → Fraction ℤ
 | p//q, r//s => (p * r)//(q * s)
 
-instance mulOp : Mul (Fraction ℤ) := {
+instance multiplication_ops : Multiplication.Ops (Fraction ℤ) := {
   mul := mul
 }
 
@@ -253,5 +254,7 @@ theorem mul_distribR {p q r : Fraction ℤ} : (q + r) * p ≃ q * p + r * p := c
   p * q + p * r ≃ _ := add_substL mul_comm
   q * p + p * r ≃ _ := add_substR mul_comm
   q * p + r * p ≃ _ := eqv_refl
+
+instance multiplication : Multiplication (Fraction ℤ) := {}
 
 end Lean4Axiomatic.Rational.Impl.Fraction

@@ -13,7 +13,7 @@ variable {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
 instance rational : Rational (Fraction ℤ) := {
   toEquivalence := equivalence
   toAddition := addition
-  mulOp := mulOp
+  toMultiplication := multiplication
   negOp := negOp
 }
 

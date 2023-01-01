@@ -1,5 +1,6 @@
 import Lean4Axiomatic.Rational.Addition
 import Lean4Axiomatic.Rational.Core
+import Lean4Axiomatic.Rational.Multiplication
 
 /-! # Rational numbers -/
 
@@ -16,9 +17,7 @@ rational numbers must have.
 class Rational (ℚ : Type) :=
   toEquivalence : Rational.Equivalence ℚ
   toAddition : Rational.Addition ℚ
-
-  /-- Multiplication of rational numbers. -/
-  mulOp : Mul ℚ
+  toMultiplication : Rational.Multiplication ℚ
 
   /-- Negation of rational numbers. -/
   negOp : Neg ℚ
