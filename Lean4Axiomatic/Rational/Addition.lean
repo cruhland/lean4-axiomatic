@@ -1,3 +1,4 @@
+import Lean4Axiomatic.Rational.Core
 
 /-! # Rational numbers: addition -/
 
@@ -15,7 +16,19 @@ instance add_op_inst {ℚ : Type} [Addition.Ops ℚ] : Add ℚ := {
   add := add
 }
 
+/-- Properties of rational number addition. -/
+class Addition.Props (ℚ : Type) [Equivalence.Ops ℚ] [Ops ℚ] :=
+  /-- Addition respects equivalence over its left operand. -/
+  add_substL {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → p₁ + q ≃ p₂ + q
+
+  /-- Addition respects equivalence over its right operand. -/
+  add_substR {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → q + p₁ ≃ q + p₂
+
+export Addition.Props (add_substL add_substR)
+
 /-- All axioms of addition for rational numbers. -/
-class Addition (ℚ : Type) extends Addition.Ops ℚ
+class Addition
+    (ℚ : Type) [Equivalence.Ops ℚ]
+    extends Addition.Ops ℚ, Addition.Props ℚ
 
 end Lean4Axiomatic.Rational

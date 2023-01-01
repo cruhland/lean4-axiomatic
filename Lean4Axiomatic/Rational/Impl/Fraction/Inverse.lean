@@ -87,6 +87,10 @@ integers.
 theorem add_inverseR {p : Fraction ℤ} : p + -p ≃ 0 :=
   eqv_trans add_comm add_inverseL
 
+instance negation_props : Negation.Props (Fraction ℤ) := {
+  neg_subst := neg_subst
+}
+
 instance negation : Negation (Fraction ℤ) := {}
 
 /-- Class providing evidence that a fraction is not zero. -/

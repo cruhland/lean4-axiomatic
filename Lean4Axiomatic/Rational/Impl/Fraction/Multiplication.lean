@@ -255,6 +255,11 @@ theorem mul_distribR {p q r : Fraction ℤ} : (q + r) * p ≃ q * p + r * p := c
   q * p + p * r ≃ _ := add_substR mul_comm
   q * p + r * p ≃ _ := eqv_refl
 
+instance multiplication_props : Multiplication.Props (Fraction ℤ) := {
+  mul_substL := mul_substL
+  mul_substR := mul_substR
+}
+
 instance multiplication : Multiplication (Fraction ℤ) := {}
 
 end Lean4Axiomatic.Rational.Impl.Fraction
