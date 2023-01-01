@@ -14,7 +14,7 @@ instance rational : Rational (Fraction ℤ) := {
   toEquivalence := equivalence
   toAddition := addition
   toMultiplication := multiplication
-  negOp := negOp
+  toNegation := negation
 }
 
 end Lean4Axiomatic.Rational.Impl.Fraction

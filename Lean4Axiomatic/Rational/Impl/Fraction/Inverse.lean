@@ -1,3 +1,4 @@
+import Lean4Axiomatic.Rational.Inverse
 import Lean4Axiomatic.Rational.Impl.Fraction.Multiplication
 
 namespace Lean4Axiomatic.Rational.Impl.Fraction
@@ -15,7 +16,7 @@ variable {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
 def neg : Fraction ℤ → Fraction ℤ
 | p//q => (-p)//q
 
-instance negOp : Neg (Fraction ℤ) := {
+instance negation_ops : Negation.Ops (Fraction ℤ) := {
   neg := neg
 }
 
@@ -85,6 +86,8 @@ integers.
 -/
 theorem add_inverseR {p : Fraction ℤ} : p + -p ≃ 0 :=
   eqv_trans add_comm add_inverseL
+
+instance negation : Negation (Fraction ℤ) := {}
 
 /-- Class providing evidence that a fraction is not zero. -/
 class Nonzero (p : Fraction ℤ) :=
