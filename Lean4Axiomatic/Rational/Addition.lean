@@ -17,18 +17,27 @@ instance add_op_inst {ℚ : Type} [Addition.Ops ℚ] : Add ℚ := {
 }
 
 /-- Properties of rational number addition. -/
-class Addition.Props (ℚ : Type) [Equivalence.Ops ℚ] [Ops ℚ] :=
+class Addition.Props
+    {ℕ : Type} [Natural ℕ] {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
+    (ℚ : Type) [core_ops : Core.Ops (ℤ := ℤ) ℚ] [Ops ℚ]
+    :=
   /-- Addition respects equivalence over its left operand. -/
   add_substL {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → p₁ + q ≃ p₂ + q
 
   /-- Addition respects equivalence over its right operand. -/
   add_substR {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → q + p₁ ≃ q + p₂
 
-export Addition.Props (add_substL add_substR)
+  /-- Addition is consistent with its integer equivalent. -/
+  add_compat_from_integer {a b : ℤ} : ((a + b : ℤ) : ℚ) ≃ (a : ℚ) + (b : ℚ)
+
+export Addition.Props (add_compat_from_integer add_substL add_substR)
 
 /-- All axioms of addition for rational numbers. -/
 class Addition
-    (ℚ : Type) [Equivalence.Ops ℚ]
-    extends Addition.Ops ℚ, Addition.Props ℚ
+    {ℕ : Type} [Natural ℕ] {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
+    (ℚ : Type) [core_ops : Core.Ops (ℤ := ℤ) ℚ]
+    :=
+  toOps : Addition.Ops ℚ
+  toProps : Addition.Props (ℚ := ℚ) (core_ops := core_ops)
 
 end Lean4Axiomatic.Rational

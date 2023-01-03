@@ -1,5 +1,5 @@
-import Lean4Axiomatic.Rational.Multiplication
 import Lean4Axiomatic.Rational.Impl.Fraction.Addition
+import Lean4Axiomatic.Rational.Multiplication
 
 namespace Lean4Axiomatic.Rational.Impl.Fraction
 
@@ -20,23 +20,43 @@ instance multiplication_ops : Multiplication.Ops (Fraction ℤ) := {
 }
 
 /--
-Multiplication of fractions is commutative.
+Multiplication of integer fractions is consistent with its equivalent on
+integers.
+
+**Property intuition**: This must be true if we want integers to be represented
+as integer fractions.
+
+**Proof intuition**: Expand the definition of multiplication and use integer
+algebra on the numerator and denominator.
+-/
+theorem mul_compat_from_integer
+    {a b : ℤ} : from_integer (a * b) ≃ from_integer a * from_integer b
+    := by
+  show (a * b)//1 ≃ a//1 * b//1
+  have : a//1 * b//1 ≃ (a * b)//1 := calc
+    a//1 * b//1      ≃ _ := eqv_refl
+    (a * b)//(1 * 1) ≃ _ := substD AA.identL
+    (a * b)//1       ≃ _ := eqv_refl
+  exact eqv_symm this
+
+/--
+Multiplication of integer fractions is commutative.
 
 **Property intuition**: We'd expect this to be true due to the viewpoint that
 fractions are scaled integers.
 
-**Proof intuition**: Expand all definitions in the goal until an equivalence
-involving only integers is reached. Show this equivalence using algebra.
+**Proof intuition**: Expand the definition of multiplication and use integer
+algebra on the numerator and denominator.
 -/
 theorem mul_comm {p q : Fraction ℤ} : p * q ≃ q * p := by
   revert p; intro (pn//pd); revert q; intro (qn//qd)
   show pn//pd * qn//qd ≃ qn//qd * pn//pd
-  show (pn * qn)//(pd * qd) ≃ (qn * pn)//(qd * pd)
-  show (pn * qn) * (qd * pd) ≃ (qn * pn) * (pd * qd)
   calc
-    (pn * qn) * (qd * pd) ≃ _ := AA.substL AA.comm
-    (qn * pn) * (qd * pd) ≃ _ := AA.substR AA.comm
-    (qn * pn) * (pd * qd) ≃ _ := Rel.refl
+    pn//pd * qn//qd      ≃ _ := eqv_refl
+    (pn * qn)//(pd * qd) ≃ _ := substN AA.comm
+    (qn * pn)//(pd * qd) ≃ _ := substD AA.comm
+    (qn * pn)//(qd * pd) ≃ _ := eqv_refl
+    qn//qd * pn//pd      ≃ _ := eqv_refl
 
 /--
 Replacing the left operand in a product of fractions with an equivalent value
@@ -255,11 +275,19 @@ theorem mul_distribR {p q r : Fraction ℤ} : (q + r) * p ≃ q * p + r * p := c
   q * p + p * r ≃ _ := add_substR mul_comm
   q * p + r * p ≃ _ := eqv_refl
 
-instance multiplication_props : Multiplication.Props (Fraction ℤ) := {
+instance multiplication_props
+    : Multiplication.Props (ℚ := Fraction ℤ) (core_ops := core_ops)
+    := {
   mul_substL := mul_substL
   mul_substR := mul_substR
+  mul_compat_from_integer := mul_compat_from_integer
 }
 
-instance multiplication : Multiplication (Fraction ℤ) := {}
+instance multiplication
+    : Multiplication (ℚ := Fraction ℤ) (core_ops := core_ops)
+    := {
+  toOps := multiplication_ops
+  toProps := multiplication_props
+}
 
 end Lean4Axiomatic.Rational.Impl.Fraction

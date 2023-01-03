@@ -157,13 +157,70 @@ Every integer can be represented as a fraction.
 `1` means that every unit of the numerator is the same "size" as the integer
 `1`.
 -/
-instance from_integer : Coe ℤ (Fraction ℤ) := {
-  coe := (·//1)
+def from_integer : ℤ → (Fraction ℤ) := (·//1)
+
+instance conversion_ops : Conversion.Ops (ℤ := ℤ) (Fraction ℤ) := {
+  from_integer := from_integer
 }
 
-/-- Natural number literals can be converted into fractions. -/
-instance literal {n : Nat} : OfNat (Fraction ℤ) n := {
-  ofNat := Coe.coe (OfNat.ofNat n : ℤ)
+/--
+Equivalent integers are converted to equivalent integer fractions.
+
+**Property intuition**: This must be true if we want integer fractions to be a
+superset of the integers.
+
+**Proof intuition**: The denominators are identical, so the result follows from
+the equivalence of the numerators.
+-/
+theorem from_integer_subst
+    {a₁ a₂ : ℤ} : a₁ ≃ a₂ → from_integer a₁ ≃ from_integer a₂
+    := by
+  intro (_ : a₁ ≃ a₂)
+  show from_integer a₁ ≃ from_integer a₂
+  show a₁//1 ≃ a₂//1
+  exact substN ‹a₁ ≃ a₂›
+
+/--
+Equivalent converted fractions came from the same integer.
+
+**Property intuition**: Every integer must have a unique representation as an
+integer fraction.
+
+**Proof intuition**: Expand the hypothesis into an equivalence on integers.
+Cancel the common factor to obtain the result.
+-/
+theorem from_integer_inject
+    {a₁ a₂ : ℤ} : from_integer a₁ ≃ from_integer a₂ → a₁ ≃ a₂
+    := by
+  intro (_ : from_integer a₁ ≃ from_integer a₂)
+  show a₁ ≃ a₂
+  have : a₁//1 ≃ a₂//1 := ‹from_integer a₁ ≃ from_integer a₂›
+  have : a₁ * 1 ≃ a₂ * 1 := this
+  have : a₁ ≃ a₂ := AA.cancelRC (C := (· ≄ 0)) Integer.one_neqv_zero this
+  exact this
+
+instance conversion_props
+    : Conversion.Props (ℚ := Fraction ℤ) (ops := conversion_ops)
+    := {
+  from_integer_subst := from_integer_subst
+  from_integer_inject := from_integer_inject
+}
+
+instance core_ops : Core.Ops (ℤ := ℤ) (Fraction ℤ) := {
+  toEquivalenceOps := equivalence_ops
+  toConversionOps := conversion_ops
+}
+
+instance core_props
+    : Core.Props (ℚ := Fraction ℤ) (conv_ops := conversion_ops)
+    := {
+  toEquivalenceProps := equivalence_props
+  toConversionProps := conversion_props
+}
+
+instance core : Core (ℤ := ℤ) (Fraction ℤ) := {
+  toOps := core_ops
+  toProps := core_props
 }
 
 /--

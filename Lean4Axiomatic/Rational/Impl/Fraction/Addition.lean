@@ -31,25 +31,46 @@ instance addition_ops : Addition.Ops (Fraction ℤ) := {
 }
 
 /--
-Addition of fractions is commutative.
+Addition of integer fractions is consistent with its equivalent on integers.
+
+**Property intuition**: This must be true if we want integers to be represented
+as integer fractions.
+
+**Proof intuition**: Expand the definition of addition and use integer algebra
+on the numerator and denominator.
+-/
+theorem add_compat_from_integer
+    {a b : ℤ} : from_integer (a + b) ≃ from_integer a + from_integer b
+    := by
+  show (a + b)//1 ≃ a//1 + b//1
+  have : a//1 + b//1 ≃ (a + b)//1 := calc
+    a//1 + b//1              ≃ _ := eqv_refl
+    (a * 1 + 1 * b)//(1 * 1) ≃ _ := substN (AA.substL AA.identR)
+    (a + 1 * b)//(1 * 1)     ≃ _ := substN (AA.substR AA.identL)
+    (a + b)//(1 * 1)         ≃ _ := substD AA.identL
+    (a + b)//1               ≃ _ := eqv_refl
+  exact eqv_symm this
+
+/--
+Addition of integer fractions is commutative.
 
 **Property intuition**: We'd expect this to be true due to the viewpoint that
 fractions are scaled integers.
 
-**Proof intuition**: Expand all definitions in the goal until an equivalence
-involving only integers is reached. Show this equivalence using algebra.
+**Proof intuition**: Expand the definition of addition and use integer algebra
+on the numerator and denominator.
 -/
 theorem add_comm {p q : Fraction ℤ} : p + q ≃ q + p := by
   revert p; intro (pn//pd); revert q; intro (qn//qd)
   show pn//pd + qn//qd ≃ qn//qd + pn//pd
-  show (pn * qd + pd * qn)//(pd * qd) ≃ (qn * pd + qd * pn)//(qd * pd)
-  show (pn * qd + pd * qn) * (qd * pd) ≃ (qn * pd + qd * pn) * (pd * qd)
   calc
-    (pn * qd + pd * qn) * (qd * pd) ≃ _ := AA.substL (AA.substL AA.comm)
-    (qd * pn + pd * qn) * (qd * pd) ≃ _ := AA.substL (AA.substR AA.comm)
-    (qd * pn + qn * pd) * (qd * pd) ≃ _ := AA.substL AA.comm
-    (qn * pd + qd * pn) * (qd * pd) ≃ _ := AA.substR AA.comm
-    (qn * pd + qd * pn) * (pd * qd) ≃ _ := Rel.refl
+    pn//pd + qn//qd                ≃ _ := eqv_refl
+    (pn * qd + pd * qn)//(pd * qd) ≃ _ := substN (AA.substL AA.comm)
+    (qd * pn + pd * qn)//(pd * qd) ≃ _ := substN (AA.substR AA.comm)
+    (qd * pn + qn * pd)//(pd * qd) ≃ _ := substN AA.comm
+    (qn * pd + qd * pn)//(pd * qd) ≃ _ := substD AA.comm
+    (qn * pd + qd * pn)//(qd * pd) ≃ _ := eqv_refl
+    qn//qd + pn//pd                ≃ _ := eqv_refl
 
 /--
 Replacing the left operand in a sum of fractions with an equivalent value gives
@@ -187,11 +208,17 @@ identity elements to carry over.
 theorem add_identR {p : Fraction ℤ} : p + 0 ≃ p :=
   eqv_trans add_comm add_identL
 
-instance addition_props : Addition.Props (Fraction ℤ) := {
+instance addition_props
+    : Addition.Props (ℚ := Fraction ℤ) (core_ops := core_ops)
+    := {
   add_substL := add_substL
   add_substR := add_substR
+  add_compat_from_integer := add_compat_from_integer
 }
 
-instance addition : Addition (Fraction ℤ) := {}
+instance addition : Addition (ℚ := Fraction ℤ) (core_ops := core_ops) := {
+  toOps := addition_ops
+  toProps := addition_props
+}
 
 end Lean4Axiomatic.Rational.Impl.Fraction

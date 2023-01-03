@@ -17,15 +17,23 @@ instance neg_op_inst {ℚ : Type} [Negation.Ops ℚ] : Neg ℚ := {
 }
 
 /-- Properties of rational number negation. -/
-class Negation.Props (ℚ : Type) [Equivalence.Ops ℚ] [Ops ℚ] :=
+class Negation.Props
+    {ℕ : Type} [Natural ℕ] {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
+    (ℚ : Type) [core_ops : Core.Ops (ℤ := ℤ) ℚ] [Ops ℚ] :=
   /-- Negation respects equivalence over its operand. -/
   neg_subst {p₁ p₂ : ℚ} : p₁ ≃ p₂ → -p₁ ≃ -p₂
 
-export Negation.Props (neg_subst)
+  /-- Negation is consistent with its integer equivalent. -/
+  neg_compat_from_integer {a : ℤ} : ((-a : ℤ) : ℚ) ≃ -(a : ℚ)
+
+export Negation.Props (neg_compat_from_integer neg_subst)
 
 /-- All axioms of negation for rational numbers. -/
 class Negation
-    (ℚ : Type) [Equivalence.Ops ℚ]
-    extends Negation.Ops ℚ, Negation.Props ℚ
+    {ℕ : Type} [Natural ℕ] {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
+    (ℚ : Type) [core_ops : Core.Ops (ℤ := ℤ) ℚ]
+    :=
+  toOps : Negation.Ops ℚ
+  toProps : Negation.Props (ℚ := ℚ) (core_ops := core_ops)
 
 end Lean4Axiomatic.Rational

@@ -1,5 +1,5 @@
-import Lean4Axiomatic.Rational.Inverse
 import Lean4Axiomatic.Rational.Impl.Fraction.Multiplication
+import Lean4Axiomatic.Rational.Inverse
 
 namespace Lean4Axiomatic.Rational.Impl.Fraction
 
@@ -19,6 +19,20 @@ def neg : Fraction ℤ → Fraction ℤ
 instance negation_ops : Negation.Ops (Fraction ℤ) := {
   neg := neg
 }
+
+/--
+Negation of integer fractions is consistent with its equivalent on integers.
+
+**Property intuition**: This must be true if we want integers to be represented
+as integer fractions.
+
+**Proof intuition**: Follows directly from the definition of negation.
+-/
+theorem neg_compat_from_integer
+    {a : ℤ} : from_integer (-a) ≃ -(from_integer a)
+    := by
+  show (-a)//1 ≃ -(a//1)
+  exact eqv_refl
 
 /--
 The negations of equivalent fractions are themselves equivalent.
@@ -87,11 +101,17 @@ integers.
 theorem add_inverseR {p : Fraction ℤ} : p + -p ≃ 0 :=
   eqv_trans add_comm add_inverseL
 
-instance negation_props : Negation.Props (Fraction ℤ) := {
+instance negation_props
+    : Negation.Props (ℚ := Fraction ℤ) (core_ops := core_ops)
+    := {
   neg_subst := neg_subst
+  neg_compat_from_integer := neg_compat_from_integer
 }
 
-instance negation : Negation (Fraction ℤ) := {}
+instance negation : Negation (ℚ := Fraction ℤ) (core_ops := core_ops) := {
+  toOps := negation_ops
+  toProps := negation_props
+}
 
 /-- Class providing evidence that a fraction is not zero. -/
 class Nonzero (p : Fraction ℤ) :=
