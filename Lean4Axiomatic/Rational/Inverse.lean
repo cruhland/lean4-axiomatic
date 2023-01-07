@@ -1,8 +1,11 @@
+import Lean4Axiomatic.Logic
 import Lean4Axiomatic.Rational.Core
 
 /-! # Rational numbers: inverse operations -/
 
 namespace Lean4Axiomatic.Rational
+
+open Logic (AP)
 
 /-- Operations pertaining to rational number negation. -/
 class Negation.Ops (ℚ : Type) :=
@@ -28,12 +31,39 @@ class Negation.Props
 
 export Negation.Props (neg_compat_from_integer neg_subst)
 
-/-- All axioms of negation for rational numbers. -/
+/-- All rational number negation axioms. -/
 class Negation
     {ℕ : Type} [Natural ℕ] {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [core_ops : Core.Ops (ℤ := ℤ) ℚ]
     :=
   toOps : Negation.Ops ℚ
   toProps : Negation.Props (ℚ := ℚ) (core_ops := core_ops)
+
+/-- Operations pertaining to rational number reciprocation. -/
+class Reciprocation.Ops
+    {ℕ : outParam Type} [Natural ℕ] {ℤ : outParam Type} [Integer (ℕ := ℕ) ℤ]
+    (ℚ : Type) [core_ops : Core.Ops (ℤ := ℤ) ℚ]
+    :=
+  /-- Reciprocation of rational numbers. -/
+  reciprocal (p : ℚ) [AP (p ≄ 0)] : ℚ
+
+export Reciprocation.Ops (reciprocal)
+
+postfix:120 "⁻¹" => reciprocal
+
+/-- All rational number reciprocation axioms. -/
+class Reciprocation
+    {ℕ : Type} [Natural ℕ] {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
+    (ℚ : Type) [core_ops : Core.Ops (ℤ := ℤ) ℚ]
+    :=
+  toOps : Reciprocation.Ops (ℚ := ℚ) (core_ops := core_ops)
+
+/-- All rational number inverse operation axioms. -/
+class Inverse
+    {ℕ : Type} [Natural ℕ] {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
+    (ℚ : Type) [core_ops : Core.Ops (ℤ := ℤ) ℚ]
+    :=
+  toNegation : Negation (ℚ := ℚ) (core_ops := core_ops)
+  toReciprocation : Reciprocation (ℚ := ℚ) (core_ops := core_ops)
 
 end Lean4Axiomatic.Rational

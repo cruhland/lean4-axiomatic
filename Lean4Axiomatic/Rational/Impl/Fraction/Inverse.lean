@@ -113,27 +113,25 @@ instance negation : Negation (ℚ := Fraction ℤ) (core_ops := core_ops) := {
   toProps := negation_props
 }
 
-/-- Class providing evidence that a fraction is not zero. -/
-class Nonzero (p : Fraction ℤ) :=
-  /-- A fraction is nonzero if and only if its numerator is nonzero. -/
-  [numerator_nonzero : Integer.Nonzero p.numerator]
-
-/- Automatically derive `Fraction.Nonzero` from `Integer.Nonzero`. -/
-attribute [instance] Nonzero.mk
-
 /--
 Reciprocal of a fraction.
 
-Has a `Nonzero` constraint because the numerator must be nonzero to become the
-denominator.
+Requires the fraction to be nonzero because its numerator will become the
+denominator of the reciprocal. The new denominator can be made positive by
+multiplying it by its own `sgn` value. The nonzero requirement is an instance
+argument so that usages of the `·⁻¹` syntax don't need to explicitly pass it.
 -/
-def reciprocal (p : Fraction ℤ) [Nonzero p] : Fraction ℤ := by
-  revert p; intro (a//b) (_ : Nonzero (a//b))
-  have : Integer.Nonzero a := ‹Nonzero (a//b)›.numerator_nonzero
+def reciprocal (p : Fraction ℤ) [AP (p ≄ 0)] : Fraction ℤ := by
+  revert p; intro (a//b) (_ : AP (a//b ≄ 0))
+  have : Integer.Nonzero a := nonzero_numerator (a//b)
   have : AP (Positive (a * sgn a)) := Integer.positive_mul_sgn_self_inst
   exact (b * sgn a)//(a * sgn a)
 
-postfix:120 "⁻¹" => reciprocal
+instance reciprocation_ops
+    : Reciprocation.Ops (ℚ := Fraction ℤ) (core_ops := core_ops)
+    := {
+  reciprocal := reciprocal
+}
 
 /--
 The reciprocal operation preserves equivalence.
@@ -146,13 +144,13 @@ equivalences involving only integers are reached. Combine these with algebra to
 finish the proof.
 -/
 theorem recip_subst
-    {p₁ p₂ : Fraction ℤ} [Nonzero p₁] [Nonzero p₂] : p₁ ≃ p₂ → p₁⁻¹ ≃ p₂⁻¹
+    {p₁ p₂ : Fraction ℤ} [AP (p₁ ≄ 0)] [AP (p₂ ≄ 0)] : p₁ ≃ p₂ → p₁⁻¹ ≃ p₂⁻¹
     := by
   revert p₁; intro (a//b); revert p₂; intro (c//d)
   intro _ _ (_ : a//b ≃ c//d)
   show (a//b)⁻¹ ≃ (c//d)⁻¹
-  have : Integer.Nonzero a := ‹Nonzero (a//b)›.numerator_nonzero
-  have : Integer.Nonzero c := ‹Nonzero (c//d)›.numerator_nonzero
+  have : Integer.Nonzero a := nonzero_numerator (a//b)
+  have : Integer.Nonzero c := nonzero_numerator (c//d)
   show (b * sgn a)//(a * sgn a) ≃ (d * sgn c)//(c * sgn c)
   show (b * sgn a) * (c * sgn c) ≃ (d * sgn c) * (a * sgn a)
   have : a * d ≃ c * b := ‹a//b ≃ c//d›
@@ -172,10 +170,10 @@ The reciprocal of a nonzero fraction is its left multiplicative inverse.
 the same factors in the numerator and denominator. They all cancel, giving the
 result `1`.
 -/
-theorem recip_inverseL {p : Fraction ℤ} [Nonzero p] : p⁻¹ * p ≃ 1 := by
-  revert p; intro (pn//pd) (_ : Nonzero (pn//pd))
+theorem recip_inverseL {p : Fraction ℤ} [AP (p ≄ 0)] : p⁻¹ * p ≃ 1 := by
+  revert p; intro (pn//pd) (_ : AP (pn//pd ≄ 0))
   show (pn//pd)⁻¹ * pn//pd ≃ 1
-  have : Integer.Nonzero pn := ‹Nonzero (pn//pd)›.numerator_nonzero
+  have : Integer.Nonzero pn := nonzero_numerator (pn//pd)
   calc
     (pn//pd)⁻¹ * pn//pd
       ≃ _ := eqv_refl
@@ -198,7 +196,7 @@ The reciprocal of a nonzero fraction is its right multiplicative inverse.
 **Property and proof intuition**: Follows from commutativity of multiplication
 and the reciprocal being the left multiplicative inverse.
 -/
-theorem recip_inverseR {p : Fraction ℤ} [Nonzero p] : p * p⁻¹ ≃ 1 :=
+theorem recip_inverseR {p : Fraction ℤ} [AP (p ≄ 0)] : p * p⁻¹ ≃ 1 :=
   eqv_trans mul_comm recip_inverseL
 
 /--
@@ -207,8 +205,19 @@ Division of fractions.
 **Definition intuition**: Multiplying by the reciprocal is the same as
 division, e.g. `2 / 3` is the same as `2 * (1 / 3)`.
 -/
-def div (p q : Fraction ℤ) [Nonzero q] : Fraction ℤ := p * q⁻¹
+def div (p q : Fraction ℤ) [AP (q ≄ 0)] : Fraction ℤ := p * q⁻¹
 
 infixl:70 " / " => div
+
+instance reciprocation
+    : Reciprocation (ℚ := Fraction ℤ) (core_ops := core_ops)
+    := {
+  toOps := reciprocation_ops
+}
+
+instance inverse : Inverse (ℚ := Fraction ℤ) (core_ops := core_ops) := {
+  toNegation := negation
+  toReciprocation := reciprocation
+}
 
 end Lean4Axiomatic.Rational.Impl.Fraction

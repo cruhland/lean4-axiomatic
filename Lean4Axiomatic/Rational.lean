@@ -22,6 +22,6 @@ class Rational
   toAddition : Rational.Addition (ℚ := ℚ) (core_ops := toCore.toOps)
   toMultiplication
     : Rational.Multiplication (ℚ := ℚ) (core_ops := toCore.toOps)
-  toNegation : Rational.Negation (ℚ := ℚ) (core_ops := toCore.toOps)
+  toInverse : Rational.Inverse (ℚ := ℚ) (core_ops := toCore.toOps)
 
 end Lean4Axiomatic

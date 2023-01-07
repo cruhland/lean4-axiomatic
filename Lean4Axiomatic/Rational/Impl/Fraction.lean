@@ -12,7 +12,7 @@ instance rational : Rational (ℤ := ℤ) (Fraction ℤ) := {
   toCore := core
   toAddition := addition
   toMultiplication := multiplication
-  toNegation := negation
+  toInverse := inverse
 }
 
 end Lean4Axiomatic.Rational.Impl.Fraction

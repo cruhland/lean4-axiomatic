@@ -260,6 +260,49 @@ theorem eqv_zero_iff_numerator_eqv_zero
       0 * pd ≃ _ := Rel.refl
 
 /--
+An integer fraction that's not equivalent to zero has a nonzero numerator.
+
+This lemma is helpful for saving a few steps in proofs.
+
+**Property and proof intuition**: Follows directly from integer fractions being
+zero iff their numerators are.
+-/
+theorem nonzero_numerator
+    (p : Fraction ℤ) [AP (p ≄ 0)] : Integer.Nonzero p.numerator
+    := by
+  revert p; intro (a//b) (_ : AP (a//b ≄ 0))
+  have : a ≃ 0 → a//b ≃ 0 := (eqv_zero_iff_numerator_eqv_zero (p := a//b)).mpr
+  have : a ≄ 0 := mt this ‹AP (a//b ≄ 0)›.ev
+  have : Integer.Nonzero a := Integer.nonzero_iff_neqv_zero.mpr this
+  exact this
+
+/--
+Nonzero integers convert into nonzero fractions.
+
+This lemma is helpful for saving a few steps in proofs.
+
+**Property and proof intuition**: Follows directly from integer fractions being
+zero iff their numerators are.
+-/
+theorem nonzero_fraction
+    (a : ℤ) [Integer.Nonzero a] : AP ((a : Fraction ℤ) ≄ 0)
+    := by
+  have : (a : Fraction ℤ) ≄ 0 := by
+    intro (_ : (a : Fraction ℤ) ≃ 0)
+    show False
+    have : a//1 ≃ 0 := ‹(a : Fraction ℤ) ≃ 0›
+    have : a//1 ≃ 0//1 := this
+    have : a * 1 ≃ 0 * 1 := this
+    have : a ≃ 0 := calc
+      a     ≃ _ := Rel.symm AA.identR
+      a * 1 ≃ _ := ‹a * 1 ≃ 0 * 1›
+      0 * 1 ≃ _ := AA.absorbL
+      0     ≃ _ := Rel.refl
+    have : a ≄ 0 := Integer.nonzero_iff_neqv_zero.mp ‹Integer.Nonzero a›
+    exact absurd ‹a ≃ 0› ‹a ≄ 0›
+  exact AP.mk this
+
+/--
 Fractions are equivalent to one exactly when their numerators and denominators
 are equivalent.
 
