@@ -78,6 +78,17 @@ theorem add_inverseL {p : Fraction ℤ} : -p + p ≃ 0 := by
     0                  ≃ _ := eqv_refl
 
 /--
+The negation of a fraction is its right additive inverse.
+
+**Property intuition**: Fractions should obey all the algebraic properties of
+integers.
+
+**Proof intuition**: Follows from the left additive inverse and commutativity.
+-/
+theorem add_inverseR {p : Fraction ℤ} : p + -p ≃ 0 :=
+  eqv_trans add_comm add_inverseL
+
+/--
 Subtraction of fractions.
 
 **Definition intuition**: Adding the negation is the same as subtraction, e.g.
@@ -90,25 +101,14 @@ instance sub_inst : Sub (Fraction ℤ) := {
   sub := sub
 }
 
-/--
-The negation of a fraction is its right additive inverse.
-
-**Property intuition**: Fractions should obey all the algebraic properties of
-integers.
-
-**Proof intuition**: Follows from the left additive inverse and commutativity.
--/
-theorem add_inverseR {p : Fraction ℤ} : p + -p ≃ 0 :=
-  eqv_trans add_comm add_inverseL
-
-instance negation_props
-    : Negation.Props (ℚ := Fraction ℤ) (core_ops := core_ops)
-    := {
+instance negation_props : Negation.Props (Fraction ℤ) := {
   neg_subst := neg_subst
   neg_compat_from_integer := neg_compat_from_integer
+  add_inverseL := add_inverseL
+  add_inverseR := add_inverseR
 }
 
-instance negation : Negation (ℚ := Fraction ℤ) (core_ops := core_ops) := {
+instance negation : Negation (Fraction ℤ) := {
   toOps := negation_ops
   toProps := negation_props
 }
@@ -127,9 +127,7 @@ def reciprocal (p : Fraction ℤ) [AP (p ≄ 0)] : Fraction ℤ := by
   have : AP (Positive (a * sgn a)) := Integer.positive_mul_sgn_self_inst
   exact (b * sgn a)//(a * sgn a)
 
-instance reciprocation_ops
-    : Reciprocation.Ops (ℚ := Fraction ℤ) (core_ops := core_ops)
-    := {
+instance reciprocation_ops : Reciprocation.Ops (Fraction ℤ) := {
   reciprocal := reciprocal
 }
 
@@ -209,13 +207,18 @@ def div (p q : Fraction ℤ) [AP (q ≄ 0)] : Fraction ℤ := p * q⁻¹
 
 infixl:70 " / " => div
 
-instance reciprocation
-    : Reciprocation (ℚ := Fraction ℤ) (core_ops := core_ops)
-    := {
-  toOps := reciprocation_ops
+instance reciprocation_props : Reciprocation.Props (Fraction ℤ) := {
+  recip_subst := recip_subst
+  recip_inverseL := recip_inverseL
+  recip_inverseR := recip_inverseR
 }
 
-instance inverse : Inverse (ℚ := Fraction ℤ) (core_ops := core_ops) := {
+instance reciprocation : Reciprocation (Fraction ℤ) := {
+  toOps := reciprocation_ops
+  toProps := reciprocation_props
+}
+
+instance inverse : Inverse (Fraction ℤ) := {
   toNegation := negation
   toReciprocation := reciprocation
 }

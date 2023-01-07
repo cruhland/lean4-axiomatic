@@ -99,7 +99,8 @@ class Conversion
 
 /-- All fundamental operations on rational numbers. -/
 class Core.Ops
-    {ℕ : Type} [Natural ℕ] {ℤ : Type} [Integer (ℕ := ℕ) ℤ] (ℚ : Type)
+    {ℕ : outParam Type} [Natural ℕ] {ℤ : outParam Type} [Integer (ℕ := ℕ) ℤ]
+    (ℚ : Type)
     :=
   toEquivalenceOps : Equivalence.Ops ℚ
   toConversionOps : Conversion.Ops (ℤ := ℤ) ℚ
@@ -119,5 +120,7 @@ class Core.Props
 class Core {ℕ : Type} [Natural ℕ] {ℤ : Type} [Integer (ℕ := ℕ) ℤ] (ℚ : Type) :=
   toOps : Core.Ops (ℤ := ℤ) ℚ
   toProps : Core.Props (ℚ := ℚ) (conv_ops := toOps.toConversionOps)
+
+attribute [instance] Core.toOps
 
 end Lean4Axiomatic.Rational

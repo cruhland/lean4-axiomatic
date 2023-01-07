@@ -275,17 +275,19 @@ theorem mul_distribR {p q r : Fraction ℤ} : (q + r) * p ≃ q * p + r * p := c
   q * p + p * r ≃ _ := add_substR mul_comm
   q * p + r * p ≃ _ := eqv_refl
 
-instance multiplication_props
-    : Multiplication.Props (ℚ := Fraction ℤ) (core_ops := core_ops)
-    := {
+instance multiplication_props : Multiplication.Props (Fraction ℤ) := {
   mul_substL := mul_substL
   mul_substR := mul_substR
   mul_compat_from_integer := mul_compat_from_integer
+  mul_comm := mul_comm
+  mul_assoc := mul_assoc
+  mul_identL := mul_identL
+  mul_identR := mul_identR
+  mul_distribL := mul_distribL
+  mul_distribR := mul_distribR
 }
 
-instance multiplication
-    : Multiplication (ℚ := Fraction ℤ) (core_ops := core_ops)
-    := {
+instance multiplication : Multiplication (Fraction ℤ) := {
   toOps := multiplication_ops
   toProps := multiplication_props
 }

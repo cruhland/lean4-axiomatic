@@ -208,15 +208,17 @@ identity elements to carry over.
 theorem add_identR {p : Fraction ℤ} : p + 0 ≃ p :=
   eqv_trans add_comm add_identL
 
-instance addition_props
-    : Addition.Props (ℚ := Fraction ℤ) (core_ops := core_ops)
-    := {
+instance addition_props : Addition.Props (Fraction ℤ) := {
   add_substL := add_substL
   add_substR := add_substR
   add_compat_from_integer := add_compat_from_integer
+  add_comm := add_comm
+  add_assoc := add_assoc
+  add_identL := add_identL
+  add_identR := add_identR
 }
 
-instance addition : Addition (ℚ := Fraction ℤ) (core_ops := core_ops) := {
+instance addition : Addition (Fraction ℤ) := {
   toOps := addition_ops
   toProps := addition_props
 }
