@@ -548,7 +548,7 @@ The integer `1` is positive.
 **Proof intuition**: Carry over the equivalent proof for natural numbers.
 -/
 theorem one_positive : Positive (1 : ℤ) :=
-  have : 1 ≃ coe (1 : ℕ) := Rel.refl
+  have : (1 : ℤ) ≃ coe (1 : ℕ) := Rel.refl
   positive_intro_nat Natural.one_positive ‹(1 : ℤ) ≃ coe (1 : ℕ)›
 
 /-- Make `one_positive` available for instance search. -/
