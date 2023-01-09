@@ -88,19 +88,6 @@ integers.
 theorem add_inverseR {p : Fraction ℤ} : p + -p ≃ 0 :=
   eqv_trans add_comm add_inverseL
 
-/--
-Subtraction of fractions.
-
-**Definition intuition**: Adding the negation is the same as subtraction, e.g.
-`5 - 3` is the same as `5 + (-3)`.
--/
-def sub (p q : Fraction ℤ) : Fraction ℤ := p + (-q)
-
-/-- Provides the `· - ·` notation for subtraction. -/
-instance sub_inst : Sub (Fraction ℤ) := {
-  sub := sub
-}
-
 instance negation_props : Negation.Props (Fraction ℤ) := {
   neg_subst := neg_subst
   neg_compat_from_integer := neg_compat_from_integer
@@ -111,6 +98,27 @@ instance negation_props : Negation.Props (Fraction ℤ) := {
 instance negation : Negation (Fraction ℤ) := {
   toOps := negation_ops
   toProps := negation_props
+}
+
+/--
+Subtraction of fractions.
+
+**Definition intuition**: Adding the negation is the same as subtraction, e.g.
+`5 - 3` is the same as `5 + (-3)`.
+-/
+def sub (p q : Fraction ℤ) : Fraction ℤ := p + (-q)
+
+instance subtraction_ops : Subtraction.Ops (Fraction ℤ) := {
+  sub := sub
+}
+
+instance subtraction_props : Subtraction.Props (Fraction ℤ) := {
+  sub_add_neg := eqv_refl
+}
+
+instance subtraction : Subtraction (Fraction ℤ) := {
+  toOps := subtraction_ops
+  toProps := subtraction_props
 }
 
 /--
@@ -197,16 +205,6 @@ and the reciprocal being the left multiplicative inverse.
 theorem recip_inverseR {p : Fraction ℤ} [AP (p ≄ 0)] : p * p⁻¹ ≃ 1 :=
   eqv_trans mul_comm recip_inverseL
 
-/--
-Division of fractions.
-
-**Definition intuition**: Multiplying by the reciprocal is the same as
-division, e.g. `2 / 3` is the same as `2 * (1 / 3)`.
--/
-def div (p q : Fraction ℤ) [AP (q ≄ 0)] : Fraction ℤ := p * q⁻¹
-
-infixl:70 " / " => div
-
 instance reciprocation_props : Reciprocation.Props (Fraction ℤ) := {
   recip_subst := recip_subst
   recip_inverseL := recip_inverseL
@@ -218,9 +216,32 @@ instance reciprocation : Reciprocation (Fraction ℤ) := {
   toProps := reciprocation_props
 }
 
+/--
+Division of fractions.
+
+**Definition intuition**: Multiplying by the reciprocal is the same as
+division, e.g. `2 / 3` is the same as `2 * (1 / 3)`.
+-/
+def div (p q : Fraction ℤ) [AP (q ≄ 0)] : Fraction ℤ := p * q⁻¹
+
+instance division_ops : Division.Ops (Fraction ℤ) := {
+  div := div
+}
+
+instance division_props : Division.Props (Fraction ℤ) := {
+  div_mul_recip := eqv_refl
+}
+
+instance division : Division (Fraction ℤ) := {
+  toOps := division_ops
+  toProps := division_props
+}
+
 instance inverse : Inverse (Fraction ℤ) := {
   toNegation := negation
+  toSubtraction := subtraction
   toReciprocation := reciprocation
+  toDivision := division
 }
 
 end Lean4Axiomatic.Rational.Impl.Fraction
