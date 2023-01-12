@@ -434,16 +434,13 @@ end prelim
 ## Axioms
 -/
 
-/-- Class defining integer signedness, and properties that it must satisfy. -/
-class Sign
-    {ℕ : outParam Type} [outParam (Natural ℕ)]
+/-- Integer signedness properties. -/
+class Sign.Props
+    {ℕ : Type} [Natural ℕ]
     (ℤ : Type)
-      [outParam (Core ℤ)] [outParam (Addition ℤ)]
-      [outParam (Multiplication ℤ)] [outParam (Negation (ℕ := ℕ) ℤ)]
+      [Core ℤ] [Addition ℤ] [Multiplication ℤ] [Negation (ℕ := ℕ) ℤ]
+      [Signed.Ops ℤ]
     :=
-  /-- Definitions of signedness predicates. -/
-  ops : Signed.Ops ℤ
-
   /-- An integer is positive iff it has sign `1`. -/
   positive_iff_sign_pos1 {a : ℤ} : Signed.Positive a ↔ NonzeroWithSign a 1
 
@@ -457,16 +454,31 @@ class Sign
   sign_trichotomy
     (a : ℤ) : AA.ExactlyOneOfThree (a ≃ 0) (Positive a) (Negative a)
 
+export Sign.Props (
+  negative_iff_sign_neg1 nonzero_iff_nonzero_impl positive_iff_sign_pos1
+  sign_trichotomy
+)
+
+/-- Operations pertaining to the _signum_ function on integers. -/
+class Sgn.Ops {ℤ : outParam Type} (α : Type) :=
   /--
   The [signum function](https://en.wikipedia.org/wiki/Sign_function).
 
   Returns `1`, `0`, or `-1` if the input integer is positive, zero, or
   negative, respectively.
   -/
-  sgn : ℤ → ℤ
+  sgn : α → ℤ
 
+export Sgn.Ops (sgn)
+
+/-- Properties of the _signum_ function on integers. -/
+class Sgn.Props
+    {ℕ : Type} [Natural ℕ]
+    (ℤ : Type)
+      [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Signed.Ops ℤ] [Ops ℤ]
+    :=
   /-- Zero is the only integer with sign value zero. -/
-  sgn_zero {a : ℤ} : a ≃ 0 ↔ sgn a ≃ 0
+  sgn_zero {a : ℤ} : a ≃ 0 ↔ sgn a ≃ (0 : ℤ)
 
   /-- Only positive integers have sign value one. -/
   sgn_positive {a : ℤ} : Positive a ↔ sgn a ≃ 1
@@ -474,12 +486,22 @@ class Sign
   /-- Only negative integers have sign value negative one. -/
   sgn_negative {a : ℤ} : Negative a ↔ sgn a ≃ -1
 
-attribute [instance] Sign.ops
+export Sgn.Props (sgn_negative sgn_positive sgn_zero)
 
-export Sign (
-  negative_iff_sign_neg1 positive_iff_sign_pos1 sgn sgn_negative sgn_positive
-  sgn_zero sign_trichotomy
-)
+/-- All integer signedness axioms. -/
+class Sign
+    {ℕ : outParam Type} [Natural ℕ]
+    (ℤ : Type) [Core ℤ] [Addition ℤ] [Multiplication ℤ] [Negation (ℕ := ℕ) ℤ]
+    :=
+  toSignedOps : Signed.Ops ℤ
+  toSignProps : Sign.Props ℤ
+  toSgnOps : Sgn.Ops ℤ
+  toSgnProps : Sgn.Props ℤ
+
+attribute [instance] Sign.toSignedOps
+attribute [instance] Sign.toSignProps
+attribute [instance] Sign.toSgnOps
+attribute [instance] Sign.toSgnProps
 
 /-!
 ## Derived properties
@@ -959,7 +981,7 @@ instance signed : Signed ℤ := {
   negative_substitutive := { subst₁ := negative_subst }
   trichotomy := sign_trichotomy
   nonzero_iff_pos_or_neg :=
-    Relation.iff_trans Sign.nonzero_iff_nonzero_impl nonzero_iff_pos_or_neg
+    Relation.iff_trans nonzero_iff_nonzero_impl nonzero_iff_pos_or_neg
 }
 
 /--
@@ -1419,22 +1441,22 @@ theorem sgn_idemp {a : ℤ} : sgn (sgn a) ≃ sgn a := by
     have : sgn a ≃ 0 := sgn_zero.mp ‹a ≃ 0›
     calc
       sgn (sgn a) ≃ _ := sgn_subst ‹sgn a ≃ 0›
-      sgn 0       ≃ _ := sgn_subst (Rel.symm ‹a ≃ 0›)
+      sgn (0 : ℤ) ≃ _ := sgn_subst (Rel.symm ‹a ≃ 0›)
       sgn a       ≃ _ := Rel.refl
   | AA.OneOfThree.second (_ : Positive a) =>
     have : sgn a ≃ 1 := sgn_positive.mp ‹Positive a›
     calc
       sgn (sgn a) ≃ _ := sgn_subst ‹sgn a ≃ 1›
-      sgn 1       ≃ _ := sgn_positive.mp one_positive
+      sgn (1 : ℤ) ≃ _ := sgn_positive.mp one_positive
       1           ≃ _ := Rel.symm ‹sgn a ≃ 1›
       sgn a       ≃ _ := Rel.refl
   | AA.OneOfThree.third (_ : Negative a) =>
     have : sgn a ≃ -1 := sgn_negative.mp ‹Negative a›
     calc
-      sgn (sgn a) ≃ _ := sgn_subst ‹sgn a ≃ -1›
-      sgn (-1)    ≃ _ := sgn_negative.mp neg_one_negative
-      (-1)        ≃ _ := Rel.symm ‹sgn a ≃ -1›
-      sgn a       ≃ _ := Rel.refl
+      sgn (sgn a)  ≃ _ := sgn_subst ‹sgn a ≃ -1›
+      sgn (-1 : ℤ) ≃ _ := sgn_negative.mp neg_one_negative
+      (-1)         ≃ _ := Rel.symm ‹sgn a ≃ -1›
+      sgn a        ≃ _ := Rel.refl
 
 /--
 Both factors in a nonzero product have sign values that are square roots of

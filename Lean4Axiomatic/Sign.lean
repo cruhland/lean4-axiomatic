@@ -37,6 +37,8 @@ class Positivity
   /-- All values other than zero are positive. -/
   positive_defn {a : α} : Positive a ↔ a ≄ 0
 
+export Positivity (positive_defn)
+
 /--
 Class that provides canonical signedness predicates over a type `α`.
 
@@ -88,9 +90,5 @@ class Signed
 
 attribute [instance] Signed.positive_substitutive
 attribute [instance] Signed.negative_substitutive
-
-namespace Signed
-export Positivity (positive_defn)
-end Signed
 
 end Lean4Axiomatic

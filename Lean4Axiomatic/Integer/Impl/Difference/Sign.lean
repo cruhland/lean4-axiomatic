@@ -300,15 +300,28 @@ theorem sgn_negative {a : Difference ℕ} : Negative a ↔ sgn a ≃ -1 := by
     have : Negative (n——m) := neg_diff_lt.mpr this
     exact this
 
-instance sign : Sign (Difference ℕ) := {
+instance sign_props : Sign.Props (Difference ℕ) := {
   positive_iff_sign_pos1 := Generic.positive_iff_sign_pos1
   negative_iff_sign_neg1 := Generic.negative_iff_sign_neg1
   nonzero_iff_nonzero_impl := Generic.nonzero_iff_nonzero_impl
   sign_trichotomy := sign_trichotomy
+}
+
+instance sgn_ops : Sgn.Ops (ℤ := Difference ℕ) (Difference ℕ) := {
   sgn := sgn
+}
+
+instance sgn_props : Sgn.Props (Difference ℕ) := {
   sgn_zero := sgn_zero
   sgn_positive := sgn_positive
   sgn_negative := sgn_negative
+}
+
+instance sign : Sign (Difference ℕ) := {
+  toSignedOps := Generic.signed_ops
+  toSignProps := sign_props
+  toSgnOps := sgn_ops
+  toSgnProps := sgn_props
 }
 
 end Lean4Axiomatic.Integer.Impl.Difference
