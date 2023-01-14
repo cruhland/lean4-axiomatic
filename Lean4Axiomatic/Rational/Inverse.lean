@@ -167,4 +167,9 @@ class Inverse
   toReciprocation : Reciprocation ℚ
   toDivision : Division ℚ
 
+attribute [instance] Inverse.toDivision
+attribute [instance] Inverse.toNegation
+attribute [instance] Inverse.toReciprocation
+attribute [instance] Inverse.toSubtraction
+
 end Lean4Axiomatic.Rational

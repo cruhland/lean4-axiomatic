@@ -1,6 +1,4 @@
-import Lean4Axiomatic.Rational.Addition
-import Lean4Axiomatic.Rational.Inverse
-import Lean4Axiomatic.Rational.Multiplication
+import Lean4Axiomatic.Rational.Sign
 
 /-! # Rational numbers -/
 
@@ -22,5 +20,6 @@ class Rational
   toAddition : Rational.Addition ℚ
   toMultiplication : Rational.Multiplication ℚ
   toInverse : Rational.Inverse ℚ
+  toSign : Rational.Sign ℚ
 
 end Lean4Axiomatic

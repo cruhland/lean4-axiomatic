@@ -46,4 +46,18 @@ attribute [instance] Integer.toOrder
 attribute [instance] Integer.toSign
 attribute [instance] Integer.toSubtraction
 
+namespace Signed
+
+/--
+Class providing the canonical name for the
+[_signum_ function](https://en.wikipedia.org/wiki/Sign_function) on any type.
+-/
+class Sgn.Ops
+    {ℕ : Type} [Natural ℕ] {ℤ : Type} [Integer (ℕ := ℕ) ℤ] (α : Type)
+    extends Integer.Sgn.Ops (ℤ := ℤ) α
+
+export Integer.Sgn.Ops (sgn)
+
+end Signed
+
 end Lean4Axiomatic

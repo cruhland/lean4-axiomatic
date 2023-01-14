@@ -459,13 +459,13 @@ export Sign.Props (
   sign_trichotomy
 )
 
-/-- Operations pertaining to the _signum_ function on integers. -/
+/-- Operations pertaining to the _signum_ function. -/
 class Sgn.Ops {ℤ : outParam Type} (α : Type) :=
   /--
   The [signum function](https://en.wikipedia.org/wiki/Sign_function).
 
-  Returns `1`, `0`, or `-1` if the input integer is positive, zero, or
-  negative, respectively.
+  Returns `1`, `0`, or `-1` if the input is positive, zero, or negative,
+  respectively.
   -/
   sgn : α → ℤ
 
