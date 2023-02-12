@@ -29,7 +29,7 @@ construct an instance.
 **Class parameters**
 - `Natural ℕ`: Evidence that `ℕ` implements the natural numbers.
 -/
-class Integer {ℕ : outParam Type} [outParam (Natural ℕ)] (ℤ : Type) :=
+class Integer {ℕ : outParam Type} [Natural ℕ] (ℤ : Type) :=
   toCore : Core (ℕ := ℕ) ℤ
   toAddition : Addition ℤ
   toMultiplication : Multiplication ℤ
@@ -53,7 +53,8 @@ Class providing the canonical name for the
 [_signum_ function](https://en.wikipedia.org/wiki/Sign_function) on any type.
 -/
 class Sgn.Ops
-    {ℕ : Type} [Natural ℕ] {ℤ : Type} [Integer (ℕ := ℕ) ℤ] (α : Type)
+    {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
+    (α : Type)
     extends Integer.Sgn.Ops (ℤ := ℤ) α
 
 export Integer.Sgn.Ops (sgn)

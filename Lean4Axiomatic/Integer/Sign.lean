@@ -30,7 +30,8 @@ when an integer is a "pure sign"; that is, a positive or negative integer of
 unit magnitude. Pure signs can be multiplied by positive integers to produce
 any nonzero integer.
 
-This property is easy work with algebraically because it uses multiplication.
+This property is easy to work with algebraically because it uses
+multiplication.
 
 **Named parameters**
 - `a`: The integer satisfying the property.
@@ -436,9 +437,9 @@ end prelim
 
 /-- Integer signedness properties. -/
 class Sign.Props
-    {ℕ : Type} [Natural ℕ]
+    {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type)
-      [Core ℤ] [Addition ℤ] [Multiplication ℤ] [Negation (ℕ := ℕ) ℤ]
+      [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ] [Negation ℤ]
       [Signed.Ops ℤ]
     :=
   /-- An integer is positive iff it has sign `1`. -/
@@ -473,7 +474,7 @@ export Sgn.Ops (sgn)
 
 /-- Properties of the _signum_ function on integers. -/
 class Sgn.Props
-    {ℕ : Type} [Natural ℕ]
+    {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type)
       [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Signed.Ops ℤ] [Ops ℤ]
     :=
@@ -1620,6 +1621,23 @@ theorem sgn_compat_mul {a b : ℤ} : sgn (a * b) ≃ sgn a * sgn b := by
         sgn (a * b)   ≃ _ := sgn_negative.mp ‹Negative (a * b)›
         (-1)          ≃ _ := Rel.symm (mul_sqrt1_neqv.mpr ‹sgn a ≄ sgn b›)
         sgn a * sgn b ≃ _ := Rel.refl
+
+/--
+Taking both the `sgn` and negation of an integer can be done in either order.
+
+**Property intuition**: The two functions do independent things to their input
+integers. The `sgn` function normalizes any integer into a sign value; the
+negation function inverts the sign.
+
+**Proof intuition**: Convert negation into multiplication by negative one, then
+use compatibility of multiplication and `sgn`.
+-/
+theorem sgn_compat_neg {a : ℤ} : sgn (-a) ≃ -(sgn a) := calc
+  sgn (-a)             ≃ _ := sgn_subst (Rel.symm mul_neg_one)
+  sgn (-1 * a)         ≃ _ := sgn_compat_mul
+  sgn (-1 : ℤ) * sgn a ≃ _ := AA.substL (sgn_negative.mp neg_one_negative)
+  (-1) * sgn a         ≃ _ := mul_neg_one
+  (-(sgn a))           ≃ _ := Rel.refl
 
 /--
 The product of a nonzero integer with its sign is always positive.

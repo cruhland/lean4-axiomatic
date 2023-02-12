@@ -12,8 +12,8 @@ open Signed (Negative Positive)
 
 /-- Class defining the basic ordering relations on integers. -/
 class Order
-    {ℕ : outParam Type} [outParam (Natural ℕ)]
-    (ℤ : Type) [outParam (Core ℤ)] [outParam (Addition (ℕ := ℕ) ℤ)]
+    {ℕ : outParam Type} [Natural ℕ]
+    (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ]
     :=
   /-- Definition of and syntax for the _less than or equal to_ relation. -/
   leOp : LE ℤ

@@ -72,6 +72,21 @@ theorem sgn_subst {p₁ p₂ : Fraction ℤ} : p₁ ≃ p₂ → sgn p₁ ≃ sg
     sgn (c//d)    ≃ _ := Rel.refl
 
 /--
+Fractions that are equivalent to zero are the only ones with sign zero.
+
+**Property and proof intuition**: The sign of a fraction is the sign of its
+numerator; this property also holds for integers; fractions with zero-valued
+numerators are equivalent to zero.
+-/
+theorem sgn_zero_only_for_zero {p : Fraction ℤ} : sgn p ≃ 0 → p ≃ 0 := by
+  intro (_ : sgn p ≃ 0)
+  show p ≃ 0
+  have : sgn p.numerator ≃ 0 := ‹sgn p ≃ 0›
+  have : p.numerator ≃ 0 := Integer.sgn_zero.mpr this
+  have : p ≃ 0 := eqv_zero_iff_numerator_eqv_zero.mpr this
+  exact this
+
+/--
 The fraction equivalent of an integer has the same sign.
 
 **Property intuition**: This must be true for the fraction to be a faithful
@@ -104,33 +119,41 @@ theorem sgn_compat_mul {p q : Fraction ℤ} : sgn (p * q) ≃ sgn p * sgn q := b
     sgn (a//b) * sgn (c//d) ≃ _ := Rel.refl
 
 /--
-An integer fraction and its reciprocal have the same sign.
+The sign of a fraction is `0`, `1`, or `-1`.
 
-**Property intuition**: Informally, taking the reciprocal of a fraction simply
-swaps its numerator and denominator, but doesn't change the sign of either.
-Thus the sign should be preserved. Things are slightly more complicated with
-our formal fractions due to their specific representation, but the intuition is
-still valid.
+**Property intuition**: This is a fundamental fact about signs.
 
-**Proof intuition**: Expand definitions, obtaining an integer expression. Then
-use integer `sgn` properties and algebra.
+**Proof intuition**: Find the numerator's sign using the integer equivalent of
+this property. The sign of the numerator is the sign of the entire fraction.
 -/
-theorem sgn_recip {p : Fraction ℤ} [AP (p ≄ 0)] : sgn (p⁻¹) ≃ sgn p := by
-  revert p; intro (a//b) (_ : AP (a//b ≄ 0))
-  show sgn ((a//b)⁻¹) ≃ sgn (a//b)
-  have : Positive b := ‹AP (Positive b)›.ev
-  have : sgn b ≃ 1 := Integer.sgn_positive.mp this
-  have : Integer.Nonzero a := nonzero_numerator (a//b)
-  have : AP (Positive (a * sgn a)) := Integer.positive_mul_sgn_self_inst
-  calc
-    sgn ((a//b)⁻¹)                 ≃ _ := Rel.refl
-    sgn ((b * sgn a)//(a * sgn a)) ≃ _ := Rel.refl
-    sgn (b * sgn a)                ≃ _ := Integer.sgn_compat_mul
-    sgn b * sgn (sgn a)            ≃ _ := AA.substL ‹Integer.sgn b ≃ 1›
-    1 * sgn (sgn a)                ≃ _ := AA.identL
-    sgn (sgn a)                    ≃ _ := Integer.sgn_idemp
-    sgn a                          ≃ _ := Rel.refl
-    sgn (a//b)                     ≃ _ := Rel.refl
+theorem sgn_trichotomy
+    {p : Fraction ℤ} : AA.OneOfThree (sgn p ≃ 0) (sgn p ≃ 1) (sgn p ≃ -1)
+    := by
+  have
+    : AA.OneOfThree
+      (p.numerator ≃ 0)
+      (Positive p.numerator)
+      (Negative p.numerator)
+    := (Integer.sign_trichotomy p.numerator).atLeastOne
+  match this with
+  | AA.OneOfThree.first (_ : p.numerator ≃ 0) =>
+    have : sgn p ≃ 0 := calc
+      sgn p           ≃ _ := Rel.refl
+      sgn p.numerator ≃ _ := Integer.sgn_zero.mp ‹p.numerator ≃ 0›
+      0               ≃ _ := Rel.refl
+    exact AA.OneOfThree.first this
+  | AA.OneOfThree.second (_ : Positive p.numerator) =>
+    have : sgn p ≃ 1 := calc
+      sgn p           ≃ _ := Rel.refl
+      sgn p.numerator ≃ _ := Integer.sgn_positive.mp ‹Positive p.numerator›
+      1               ≃ _ := Rel.refl
+    exact AA.OneOfThree.second this
+  | AA.OneOfThree.third (_ : Negative p.numerator) =>
+    have : sgn p ≃ -1 := calc
+      sgn p           ≃ _ := Rel.refl
+      sgn p.numerator ≃ _ := Integer.sgn_negative.mp ‹Negative p.numerator›
+      (-1)            ≃ _ := Rel.refl
+    exact AA.OneOfThree.third this
 
 /--
 Integer fractions are positive iff their sign is `1`.
@@ -150,9 +173,10 @@ theorem sgn_negative {p : Fraction ℤ} : Negative p ↔ sgn p ≃ -1 :=
 
 instance sign_props : Sign.Props (Fraction ℤ) := {
   sgn_subst := sgn_subst
+  sgn_zero_only_for_zero := sgn_zero_only_for_zero
   sgn_from_integer := sgn_from_integer
   sgn_compat_mul := sgn_compat_mul
-  sgn_recip := sgn_recip
+  sgn_trichotomy := sgn_trichotomy
   sgn_positive := sgn_positive
   sgn_negative := sgn_negative
 }

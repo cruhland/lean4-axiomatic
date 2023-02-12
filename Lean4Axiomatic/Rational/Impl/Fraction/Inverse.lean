@@ -217,6 +217,56 @@ instance reciprocation : Reciprocation (Fraction ℤ) := {
 }
 
 /--
+A fraction with a positive numerator is not equivalent to zero.
+
+This is a trivial lemma to enable the instance version below.
+
+**Property and proof intuition**: We already know that fractions with nonzero
+numerators are not equivalent to zero; a positive numerator is nonzero.
+-/
+theorem nonzero_from_positive_numer
+    {a b : ℤ} [AP (Positive a)] [AP (Positive b)] : a//b ≄ 0
+    := by
+  have : Integer.Nonzero a := Integer.nonzero_from_positive_inst
+  have : a ≄ 0 := Integer.nonzero_iff_neqv_zero.mp this
+  have : a//b ≄ 0 := mt eqv_zero_iff_numerator_eqv_zero.mp this
+  exact this
+
+/--
+This instance exists to allow a clean syntax for the reciprocal in
+`recip_positive`.
+-/
+instance nonzero_from_positive_numer_inst
+    {a b : ℤ} [AP (Positive a)] [AP (Positive b)] : AP (a//b ≄ 0)
+    :=
+  AP.mk nonzero_from_positive_numer
+
+/--
+The reciprocal of a fraction with a positive numerator simply swaps the
+numerator and denominator.
+
+**Property intuition**: The denominator of our fractions must be positive, so
+if the numerator is already positive then no sign correction is needed for it
+to become the denominator.
+
+**Proof intuition**: Expand the definition of reciprocal. The `sgn a` terms are
+equivalent to `1` and drop out, because `a` is positive.
+-/
+theorem recip_positive
+    {a b : ℤ} [AP (Positive a)] [AP (Positive b)] : (a//b)⁻¹ ≃ b//a
+    := by
+  have : sgn a ≃ 1 := Integer.sgn_positive.mp ‹AP (Positive a)›.ev
+  have x_sgn_a {x : ℤ} : x * sgn a ≃ x := calc
+    x * sgn a ≃ _ := AA.substR ‹sgn a ≃ 1›
+    x * 1     ≃ _ := AA.identR
+    x         ≃ _ := Rel.refl
+  calc
+    (a//b)⁻¹                 ≃ _ := eqv_refl
+    (b * sgn a)//(a * sgn a) ≃ _ := substN x_sgn_a
+    b//(a * sgn a)           ≃ _ := substD x_sgn_a
+    b//a                     ≃ _ := eqv_refl
+
+/--
 Division of fractions.
 
 **Definition intuition**: Multiplying by the reciprocal is the same as
@@ -228,8 +278,50 @@ instance division_ops : Division.Ops (Fraction ℤ) := {
   div := div
 }
 
+/--
+Converting two integers to fractions and then dividing them is equivalent to
+forming a fraction directly from the integers.
+
+**Property intuition**: Making this property true is one of the reasons for
+introducing formal fractions to begin with: to have a consistent inverse of
+multiplication for integers.
+
+**Proof intuition**: Expanding the defintions of fractions and division, and
+then simplifying via algebraic identities, gives the result.
+-/
+theorem div_eqv_fraction
+    {a b : ℤ} [AP (Positive b)] : (a : Fraction ℤ) / b ≃ a//b
+    := calc
+  (a : Fraction ℤ) / b ≃ _ := eqv_refl
+  (a//1) / (b//1)      ≃ _ := eqv_refl
+  (a//1) * (b//1)⁻¹    ≃ _ := mul_substR recip_positive
+  (a//1) * (1//b)      ≃ _ := eqv_refl
+  (a * 1)//(1 * b)     ≃ _ := substN AA.identR
+  a//(1 * b)           ≃ _ := substD AA.identL
+  a//b                 ≃ _ := eqv_refl
+
+/--
+Every fraction can be expressed as a ratio of integers.
+
+This is a trivial theorem for fractions, but there may be other rational number
+representations for which the proof is much more difficult.
+
+**Property intuition**: Formal fractions satisfy this by definition.
+
+**Proof intuition**: Use the previous result that formal fractions are
+equivalent to division of integers, and that the denominator is nonzero because
+it's positive.
+-/
+def as_ratio (p : Fraction ℤ) : AsRatio p := by
+  revert p; intro (a//b)
+  show AsRatio (a//b)
+  have : Integer.Nonzero b := Integer.nonzero_from_positive_inst
+  have : a//b ≃ a / b := eqv_symm div_eqv_fraction
+  exact AsRatio.intro a b ‹Integer.Nonzero b› this
+
 instance division_props : Division.Props (Fraction ℤ) := {
   div_mul_recip := eqv_refl
+  as_ratio := as_ratio
 }
 
 instance division : Division (Fraction ℤ) := {

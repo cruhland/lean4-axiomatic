@@ -157,7 +157,7 @@ Every integer can be represented as a fraction.
 `1` means that every unit of the numerator is the same "size" as the integer
 `1`.
 -/
-def from_integer : ℤ → (Fraction ℤ) := (·//1)
+def from_integer : ℤ → Fraction ℤ := (·//1)
 
 instance conversion_ops : Conversion.Ops (ℤ := ℤ) (Fraction ℤ) := {
   from_integer := from_integer
@@ -199,28 +199,19 @@ theorem from_integer_inject
   have : a₁ ≃ a₂ := AA.cancelRC (C := (· ≄ 0)) Integer.one_neqv_zero this
   exact this
 
-instance conversion_props
-    : Conversion.Props (ℚ := Fraction ℤ) (ops := conversion_ops)
-    := {
+instance conversion_props : Conversion.Props (Fraction ℤ) := {
   from_integer_subst := from_integer_subst
   from_integer_inject := from_integer_inject
 }
 
-instance core_ops : Core.Ops (ℤ := ℤ) (Fraction ℤ) := {
-  toEquivalenceOps := equivalence_ops
-  toConversionOps := conversion_ops
-}
-
-instance core_props
-    : Core.Props (ℚ := Fraction ℤ) (conv_ops := conversion_ops)
-    := {
-  toEquivalenceProps := equivalence_props
-  toConversionProps := conversion_props
+instance conversion : Conversion (ℤ := ℤ) (Fraction ℤ) := {
+  toOps := conversion_ops
+  toProps := conversion_props
 }
 
 instance core : Core (ℤ := ℤ) (Fraction ℤ) := {
-  toOps := core_ops
-  toProps := core_props
+  toEquivalence := equivalence
+  toConversion := conversion
 }
 
 /--
@@ -275,32 +266,6 @@ theorem nonzero_numerator
   have : a ≄ 0 := mt this ‹AP (a//b ≄ 0)›.ev
   have : Integer.Nonzero a := Integer.nonzero_iff_neqv_zero.mpr this
   exact this
-
-/--
-Nonzero integers convert into nonzero fractions.
-
-This lemma is helpful for saving a few steps in proofs.
-
-**Property and proof intuition**: Follows directly from integer fractions being
-zero iff their numerators are.
--/
-theorem nonzero_fraction
-    (a : ℤ) [Integer.Nonzero a] : AP ((a : Fraction ℤ) ≄ 0)
-    := by
-  have : (a : Fraction ℤ) ≄ 0 := by
-    intro (_ : (a : Fraction ℤ) ≃ 0)
-    show False
-    have : a//1 ≃ 0 := ‹(a : Fraction ℤ) ≃ 0›
-    have : a//1 ≃ 0//1 := this
-    have : a * 1 ≃ 0 * 1 := this
-    have : a ≃ 0 := calc
-      a     ≃ _ := Rel.symm AA.identR
-      a * 1 ≃ _ := ‹a * 1 ≃ 0 * 1›
-      0 * 1 ≃ _ := AA.absorbL
-      0     ≃ _ := Rel.refl
-    have : a ≄ 0 := Integer.nonzero_iff_neqv_zero.mp ‹Integer.Nonzero a›
-    exact absurd ‹a ≃ 0› ‹a ≄ 0›
-  exact AP.mk this
 
 /--
 Fractions are equivalent to one exactly when their numerators and denominators

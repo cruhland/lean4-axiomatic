@@ -38,10 +38,7 @@ Definitions pertaining to conversion of other types into or out of integers.
 - All other class parameters provide the subset of integer properties necessary
   to define the fields of this class.
 -/
-class Conversion
-    {ℕ : outParam Type} [outParam (Natural ℕ)]
-    (ℤ : Type) [outParam (Equivalence ℤ)]
-    :=
+class Conversion {ℕ : Type} [Natural ℕ] (ℤ : Type) [Equivalence ℤ] :=
   /-- Every natural number has an integer representation. -/
   from_natural : Coe ℕ ℤ
 
@@ -67,7 +64,7 @@ dependencies needed by other integer classes.
 **Class parameters**
 - `Natural ℕ`: Evidence that `ℕ` implements the natural numbers.
 -/
-class Core {ℕ : outParam Type} [outParam (Natural ℕ)] (ℤ : Type)
+class Core {ℕ : outParam Type} [Natural ℕ] (ℤ : Type)
   extends Equivalence ℤ, Conversion (ℕ := ℕ) ℤ
 
 /-! ## Derived properties -/
