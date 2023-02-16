@@ -657,7 +657,7 @@ theorem sqrt1_cases {a : ℤ} : Sqrt1 a ↔ a ≃ 1 ∨ a ≃ -1 := by
     | AA.OneOfThree.first (_ : a ≃ 0) =>
       apply False.elim
       show False
-      have : 1 ≃ 0 := calc
+      have : (1 : ℤ) ≃ 0 := calc
         1     ≃ _ := Rel.symm ‹Sqrt1 a›.elim
         a * a ≃ _ := AA.substL ‹a ≃ 0›
         0 * a ≃ _ := AA.absorbL
@@ -666,43 +666,43 @@ theorem sqrt1_cases {a : ℤ} : Sqrt1 a ↔ a ≃ 1 ∨ a ≃ -1 := by
     | AA.OneOfThree.second (_ : Positive a) =>
       apply Or.inl
       show a ≃ 1
-      have (Exists.intro (n : ℕ) (And.intro _ (_ : a ≃ coe n))) :=
+      have (Exists.intro (n : ℕ) (And.intro _ (_ : a ≃ (n : ℤ)))) :=
         positive_elim_nat ‹Positive a›
-      have : coe (n * n) ≃ coe 1 := calc
-        coe (n * n)   ≃ _ := AA.compat₂
-        coe n * coe n ≃ _ := AA.substL (Rel.symm ‹a ≃ coe n›)
-        a * coe n     ≃ _ := AA.substR (Rel.symm ‹a ≃ coe n›)
-        a * a         ≃ _ := ‹Sqrt1 a›.elim
-        1             ≃ _ := Rel.refl
-      have : n * n ≃ 1 := AA.inject ‹coe (n * n) ≃ coe (1 : ℕ)›
+      have : ((n * n : ℕ) : ℤ) ≃ (1 : ℤ) := calc
+        ((n * n : ℕ) : ℤ) ≃ _ := AA.compat₂
+        (n : ℤ) * (n : ℤ) ≃ _ := AA.substL (Rel.symm ‹a ≃ (n : ℤ)›)
+        a * (n : ℤ)       ≃ _ := AA.substR (Rel.symm ‹a ≃ (n : ℤ)›)
+        a * a             ≃ _ := ‹Sqrt1 a›.elim
+        1                 ≃ _ := Rel.refl
+      have : n * n ≃ 1 := AA.inject ‹((n * n : ℕ) : ℤ) ≃ (1 : ℤ)›
       have : n ≃ 1 := Natural.sqrt1.mp ‹n * n ≃ 1›
       show a ≃ 1
       calc
-        a       ≃ _ := ‹a ≃ coe n›
-        coe n   ≃ _ := AA.subst₁ ‹n ≃ 1›
-        coe 1   ≃ _ := Rel.refl
+        a       ≃ _ := ‹a ≃ (n : ℤ)›
+        (n : ℤ) ≃ _ := AA.subst₁ ‹n ≃ 1›
+        (1 : ℤ) ≃ _ := Rel.refl
         (1 : ℤ) ≃ _ := Rel.refl
     | AA.OneOfThree.third (_ : Negative a) =>
       apply Or.inr
       show a ≃ -1
-      have (Exists.intro (n : ℕ) (And.intro _ (_ : a ≃ -(coe n)))) :=
+      have (Exists.intro (n : ℕ) (And.intro _ (_ : a ≃ -(n : ℤ)))) :=
         negative_elim_nat ‹Negative a›
-      have : coe (n * n) ≃ coe 1 := calc
-        coe (n * n)             ≃ _ := AA.compat₂
-        coe n * coe n           ≃ _ := Rel.symm neg_involutive
-        (-(-(coe n * coe n)))   ≃ _ := AA.subst₁ AA.scompatR
-        (-(coe n * -(coe n)))   ≃ _ := AA.scompatL
-        (-(coe n)) * (-(coe n)) ≃ _ := AA.substL (Rel.symm ‹a ≃ -(coe n)›)
-        a * (-(coe n))          ≃ _ := AA.substR (Rel.symm ‹a ≃ -(coe n)›)
-        a * a                   ≃ _ := ‹Sqrt1 a›.elim
-        1                       ≃ _ := Rel.refl
-      have : n * n ≃ 1 := AA.inject ‹coe (n * n) ≃ coe (1 : ℕ)›
+      have : ((n * n : ℕ) : ℤ) ≃ (1 : ℤ) := calc
+        ((n * n : ℕ) : ℤ)         ≃ _ := AA.compat₂
+        (n : ℤ) * (n : ℤ)         ≃ _ := Rel.symm neg_involutive
+        (-(-((n : ℤ) * (n : ℤ)))) ≃ _ := AA.subst₁ AA.scompatR
+        (-((n : ℤ) * -(n : ℤ)))   ≃ _ := AA.scompatL
+        (-(n : ℤ)) * (-(n : ℤ))   ≃ _ := AA.substL (Rel.symm ‹a ≃ -(n : ℤ)›)
+        a * (-(n : ℤ))            ≃ _ := AA.substR (Rel.symm ‹a ≃ -(n : ℤ)›)
+        a * a                     ≃ _ := ‹Sqrt1 a›.elim
+        1                         ≃ _ := Rel.refl
+      have : n * n ≃ 1 := AA.inject ‹((n * n : ℕ) : ℤ) ≃ (1 : ℤ)›
       have : n ≃ 1 := Natural.sqrt1.mp ‹n * n ≃ 1›
       show a ≃ -1
       calc
-        a          ≃ _ := ‹a ≃ -(coe n)›
-        (-(coe n)) ≃ _ := AA.subst₁ (AA.subst₁ ‹n ≃ 1›)
-        (-(coe 1)) ≃ _ := Rel.refl
+        a          ≃ _ := ‹a ≃ -(n : ℤ)›
+        (-(n : ℤ)) ≃ _ := AA.subst₁ (AA.subst₁ ‹n ≃ 1›)
+        (-(1 : ℤ)) ≃ _ := Rel.refl
         (-1)       ≃ _ := Rel.refl
   case mpr =>
     intro (_ : a ≃ 1 ∨ a ≃ -1)

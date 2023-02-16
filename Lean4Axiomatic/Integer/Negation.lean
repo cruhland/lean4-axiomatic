@@ -58,7 +58,7 @@ The integer negative one (`-1`) is not equivalent to zero.
 theorem neg_one_neqv_zero : -1 ≄ (0 : ℤ) := by
   intro (_ : -1 ≃ (0 : ℤ))
   show False
-  have : 1 ≃ 0 := calc
+  have : 1 ≃ (0 : ℤ) := calc
     1      ≃ _ := Rel.symm AA.identR
     1 + 0  ≃ _ := AA.substR (Rel.symm ‹-1 ≃ (0 : ℤ)›)
     1 + -1 ≃ _ := AA.inverseR
@@ -77,17 +77,15 @@ theorem neg_one_neqv_one : -1 ≄ (1 : ℤ) := by
   intro (_ : -1 ≃ (1 : ℤ))
   show False
   have : step 0 ≃ 1 := Rel.symm Natural.literal_step
-  have : coe (step 1) ≃ coe 0 := calc
-    coe (step 1)       ≃ _ := AA.subst₁ (AA.subst₁ (Rel.symm AA.identR))
-    coe (step (1 + 0)) ≃ _ := AA.subst₁ AA.scompatR
-    coe (1 + step 0)   ≃ _ := AA.subst₁ (AA.substR ‹step 0 ≃ 1›)
-    coe (1 + 1)        ≃ _ := AA.compat₂
-    coe 1 + coe 1      ≃ _ := Rel.refl
-    1 + (1 : ℤ)        ≃ _ := AA.substR (Rel.symm ‹-1 ≃ (1 : ℤ)›)
-    1 + -1             ≃ _ := AA.inverseR
-    0                  ≃ _ := Rel.refl
-    coe 0              ≃ _ := Rel.refl
-  have : step 1 ≃ 0 := AA.inject ‹coe (step 1) ≃ coe (0 : ℕ)›
+  have : (step 1 : ℤ) ≃ (0 : ℤ) := calc
+    (step 1 : ℤ)           ≃ _ := AA.subst₁ (AA.subst₁ (Rel.symm AA.identR))
+    (step (1 + 0) : ℤ)     ≃ _ := AA.subst₁ AA.scompatR
+    ((1 + step 0 : ℕ) : ℤ) ≃ _ := AA.subst₁ (AA.substR ‹step 0 ≃ 1›)
+    ((1 + 1 : ℕ) : ℤ)      ≃ _ := AA.compat₂
+    (1 : ℤ) + (1 : ℤ)      ≃ _ := AA.substR (Rel.symm ‹-1 ≃ (1 : ℤ)›)
+    1 + -1                 ≃ _ := AA.inverseR
+    0                      ≃ _ := Rel.refl
+  have : step 1 ≃ 0 := AA.inject ‹(step 1 : ℤ) ≃ (0 : ℤ)›
   have : step 1 ≄ 0 := Natural.step_neqv_zero
   exact absurd ‹step 1 ≃ 0› ‹step 1 ≄ 0›
 

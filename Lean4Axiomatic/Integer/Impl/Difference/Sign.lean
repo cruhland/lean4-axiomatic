@@ -48,8 +48,8 @@ theorem neg_diff_lt {n m : ℕ} : Negative (n——m) ↔ n < m := by
   have neg_diff {k : ℕ} : 0——k ≃ -1 * coe k := by
     apply Rel.symm
     calc
-      (-1) * coe k ≃ _ := mul_neg_one
-      (-(coe k))   ≃ _ := Rel.refl
+      (-1) * coe k ≃ _ := Rel.refl
+      (-1) * k——0  ≃ _ := mul_neg_one
       (-(k——0))    ≃ _ := Rel.refl
       0——k         ≃ _ := Rel.refl
   apply Iff.intro
