@@ -28,12 +28,12 @@ class Reciprocation.Props
   recip_subst {p₁ p₂ : ℚ} [AP (p₁ ≄ 0)] [AP (p₂ ≄ 0)] : p₁ ≃ p₂ → p₁⁻¹ ≃ p₂⁻¹
 
   /-- The reciprocal of a value is its left multiplicative inverse. -/
-  recip_inverseL {p : ℚ} [AP (p ≄ 0)] : p⁻¹ * p ≃ 1
+  mul_inverseL {p : ℚ} [AP (p ≄ 0)] : p⁻¹ * p ≃ 1
 
   /-- The reciprocal of a value is its right multiplicative inverse. -/
-  recip_inverseR {p : ℚ} [AP (p ≄ 0)] : p * p⁻¹ ≃ 1
+  mul_inverseR {p : ℚ} [AP (p ≄ 0)] : p * p⁻¹ ≃ 1
 
-export Reciprocation.Props (recip_inverseL recip_inverseR recip_subst)
+export Reciprocation.Props (mul_inverseL mul_inverseR recip_subst)
 
 /-- All rational number reciprocation axioms. -/
 class Reciprocation
@@ -151,7 +151,7 @@ theorem recip_sqrt1 {s : ℚ} [Sqrt1 s] : s⁻¹ ≃ s := calc
   s⁻¹           ≃ _ := eqv_symm mul_identL
   1 * s⁻¹       ≃ _ := mul_substL (eqv_symm ‹Sqrt1 s›.elim)
   (s * s) * s⁻¹ ≃ _ := mul_assoc
-  s * (s * s⁻¹) ≃ _ := mul_substR recip_inverseR
+  s * (s * s⁻¹) ≃ _ := mul_substR mul_inverseR
   s * 1         ≃ _ := mul_identR
   s             ≃ _ := eqv_refl
 

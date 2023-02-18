@@ -66,7 +66,7 @@ The reciprocal of a nonzero fraction is its left multiplicative inverse.
 the same factors in the numerator and denominator. They all cancel, giving the
 result `1`.
 -/
-theorem recip_inverseL {p : Fraction ℤ} [AP (p ≄ 0)] : p⁻¹ * p ≃ 1 := by
+theorem mul_inverseL {p : Fraction ℤ} [AP (p ≄ 0)] : p⁻¹ * p ≃ 1 := by
   revert p; intro (pn//pd) (_ : AP (pn//pd ≄ 0))
   show (pn//pd)⁻¹ * pn//pd ≃ 1
   have : Integer.Nonzero pn := nonzero_numerator (pn//pd)
@@ -92,13 +92,13 @@ The reciprocal of a nonzero fraction is its right multiplicative inverse.
 **Property and proof intuition**: Follows from commutativity of multiplication
 and the reciprocal being the left multiplicative inverse.
 -/
-theorem recip_inverseR {p : Fraction ℤ} [AP (p ≄ 0)] : p * p⁻¹ ≃ 1 :=
-  eqv_trans mul_comm recip_inverseL
+theorem mul_inverseR {p : Fraction ℤ} [AP (p ≄ 0)] : p * p⁻¹ ≃ 1 :=
+  eqv_trans mul_comm mul_inverseL
 
 instance reciprocation_props : Reciprocation.Props (Fraction ℤ) := {
   recip_subst := recip_subst
-  recip_inverseL := recip_inverseL
-  recip_inverseR := recip_inverseR
+  mul_inverseL := mul_inverseL
+  mul_inverseR := mul_inverseR
 }
 
 instance reciprocation : Reciprocation (Fraction ℤ) := {

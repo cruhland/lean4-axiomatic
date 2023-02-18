@@ -161,7 +161,7 @@ theorem sgn_recip {p : ℚ} [AP (p ≄ 0)] : sgn (p⁻¹) ≃ sgn p := by
     sgn (p⁻¹) * (sgn p * sgn p) ≃ _ := AA.substR (Rel.symm sgn_compat_mul)
     sgn (p⁻¹) * sgn (p * p)     ≃ _ := Rel.symm sgn_compat_mul
     sgn (p⁻¹ * (p * p))         ≃ _ := sgn_subst (eqv_symm mul_assoc)
-    sgn ((p⁻¹ * p) * p)         ≃ _ := sgn_subst (mul_substL recip_inverseL)
+    sgn ((p⁻¹ * p) * p)         ≃ _ := sgn_subst (mul_substL mul_inverseL)
     sgn (1 * p)                 ≃ _ := sgn_subst mul_identL
     sgn p                       ≃ _ := Rel.refl
 
@@ -260,8 +260,8 @@ and the multiplicative identity and inverse properties.
 theorem recip_compat_mul
     {p q : ℚ} [AP (p ≄ 0)] [AP (q ≄ 0)] : (p * q)⁻¹ ≃ p⁻¹ * q⁻¹
     := by
-  have inv_p : 1 ≃ p * p⁻¹ := eqv_symm recip_inverseR
-  have inv_q : 1 ≃ q * q⁻¹ := eqv_symm recip_inverseR
+  have inv_p : 1 ≃ p * p⁻¹ := eqv_symm mul_inverseR
+  have inv_q : 1 ≃ q * q⁻¹ := eqv_symm mul_inverseR
   have swap_middle : (p * p⁻¹) * (q * q⁻¹) ≃ (p * q) * (p⁻¹ * q⁻¹) :=
     AA.expr_xxfxxff_lr_swap_rl
   calc
@@ -271,7 +271,7 @@ theorem recip_compat_mul
     (p * q)⁻¹ * ((p * p⁻¹) * 1)         ≃ _ := mul_substR (mul_substR inv_q)
     (p * q)⁻¹ * ((p * p⁻¹) * (q * q⁻¹)) ≃ _ := mul_substR swap_middle
     (p * q)⁻¹ * ((p * q) * (p⁻¹ * q⁻¹)) ≃ _ := eqv_symm mul_assoc
-    ((p * q)⁻¹ * (p * q)) * (p⁻¹ * q⁻¹) ≃ _ := mul_substL recip_inverseL
+    ((p * q)⁻¹ * (p * q)) * (p⁻¹ * q⁻¹) ≃ _ := mul_substL mul_inverseL
     1 * (p⁻¹ * q⁻¹)                     ≃ _ := mul_identL
     p⁻¹ * q⁻¹                           ≃ _ := eqv_refl
 
