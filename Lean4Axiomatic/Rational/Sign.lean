@@ -1,4 +1,4 @@
-import Lean4Axiomatic.Rational.Inverse
+import Lean4Axiomatic.Rational.Reciprocation
 
 /-! # Rational numbers: sign -/
 
@@ -52,7 +52,7 @@ instance signed_ops
 class Sign.Props
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type)
-      [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Inverse ℚ]
+      [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ]
       [Ops (ℤ := ℤ) ℚ]
     :=
   /-- `sgn` respects rational number equivalence. -/
@@ -84,20 +84,20 @@ export Sign.Props (
 /-- All rational number sign axioms. -/
 class Sign
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
-    (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Inverse ℚ]
+    (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ]
     :=
   toOps : Sign.Ops (ℤ := ℤ) ℚ
   toProps : Sign.Props ℚ
 
 attribute [instance] Sign.toOps
 attribute [instance] Sign.toProps
-attribute [instance] Inverse.toSubtraction
 
 /-! ## Derived properties -/
 
 variable {ℕ ℤ ℚ : Type}
   [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
-  [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Inverse ℚ] [Sign ℚ]
+  [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
+  [Negation ℚ] [Reciprocation ℚ] [Division ℚ] [Sign ℚ]
 
 /--
 Zero's sign is zero, and it's the only rational number with that sign value.

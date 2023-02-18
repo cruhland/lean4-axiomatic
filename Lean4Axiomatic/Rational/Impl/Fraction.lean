@@ -1,4 +1,5 @@
 import Lean4Axiomatic.Rational
+import Lean4Axiomatic.Rational.Impl.Fraction.Reciprocation
 import Lean4Axiomatic.Rational.Impl.Fraction.Sign
 
 /-! # Formal fraction implementation of rational numbers -/
@@ -12,7 +13,10 @@ instance rational : Rational (ℤ := ℤ) (Fraction ℤ) := {
   toCore := core
   toAddition := addition
   toMultiplication := multiplication
-  toInverse := inverse
+  toNegation := negation
+  toSubtraction := subtraction
+  toReciprocation := reciprocation
+  toDivision := division
   toSign := sign
 }
 

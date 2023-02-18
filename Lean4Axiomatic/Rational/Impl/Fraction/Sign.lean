@@ -1,4 +1,4 @@
-import Lean4Axiomatic.Rational.Impl.Fraction.Inverse
+import Lean4Axiomatic.Rational.Impl.Fraction.Negation
 import Lean4Axiomatic.Rational.Sign
 
 namespace Lean4Axiomatic.Rational.Impl.Fraction
