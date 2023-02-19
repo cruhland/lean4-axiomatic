@@ -121,6 +121,24 @@ theorem sgn_zero {p : ℚ} : p ≃ 0 ↔ sgn p ≃ 0 := by
     exact Sign.Props.sgn_zero_only_for_zero
 
 /--
+Taking both the `sgn` and negation of a rational number can be done in either
+order.
+
+See `Integer.sgn_compat_neg` for intuition.
+-/
+theorem sgn_compat_neg {p : ℚ} : sgn (-p) ≃ -(sgn p) := by
+  have : sgn (-1 : ℤ) ≃ -1 := Integer.sgn_negative.mp Integer.neg_one_negative
+  have neg_coe : (-1 : ℚ) ≃ ((-1 : ℤ) : ℚ) := eqv_symm neg_compat_from_integer
+  calc
+    sgn (-p)                   ≃ _ := sgn_subst (eqv_symm mul_neg_one)
+    sgn (-1 * p)               ≃ _ := sgn_compat_mul
+    sgn (-1 : ℚ) * sgn p       ≃ _ := AA.substL (sgn_subst neg_coe)
+    sgn ((-1 : ℤ) : ℚ) * sgn p ≃ _ := AA.substL sgn_from_integer
+    sgn (-1 : ℤ) * sgn p       ≃ _ := AA.substL ‹sgn (-1 : ℤ) ≃ -1›
+    (-1) * sgn p               ≃ _ := Integer.mul_neg_one
+    (-(sgn p))                 ≃ _ := Rel.refl
+
+/--
 The sign of a nonzero rational number is a square root of unity.
 
 **Property and proof intuition**: The allowed sign values are `1`, `0`, and
