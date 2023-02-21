@@ -1,4 +1,4 @@
-# Contributing guidelines
+# Contribution guidelines
 
 Please check with the repository owner before creating any pull requests. Not
 all changes will be accepted, so it's best to discuss before doing any work.

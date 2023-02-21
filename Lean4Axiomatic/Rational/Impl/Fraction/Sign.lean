@@ -127,7 +127,7 @@ The sign of a fraction is `0`, `1`, or `-1`.
 this property. The sign of the numerator is the sign of the entire fraction.
 -/
 theorem sgn_trichotomy
-    {p : Fraction ℤ} : AA.OneOfThree (sgn p ≃ 0) (sgn p ≃ 1) (sgn p ≃ -1)
+    (p : Fraction ℤ) : AA.OneOfThree (sgn p ≃ 0) (sgn p ≃ 1) (sgn p ≃ -1)
     := by
   have
     : AA.OneOfThree

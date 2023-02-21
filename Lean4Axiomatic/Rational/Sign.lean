@@ -68,7 +68,7 @@ class Sign.Props
   sgn_compat_mul {p q : ℚ} : sgn (p * q) ≃ sgn p * sgn q
 
   /-- There are only three possible values of the `sgn` function. -/
-  sgn_trichotomy {p : ℚ} : AA.OneOfThree (sgn p ≃ 0) (sgn p ≃ 1) (sgn p ≃ -1)
+  sgn_trichotomy (p : ℚ) : AA.OneOfThree (sgn p ≃ 0) (sgn p ≃ 1) (sgn p ≃ -1)
 
   /-- A rational number is positive iff its sign is `1`. -/
   sgn_positive {p : ℚ} : Positive p ↔ sgn p ≃ 1
@@ -146,7 +146,7 @@ The sign of a nonzero rational number is a square root of unity.
 unity.
 -/
 theorem sqrt1_sgn_nonzero {p : ℚ} [AP (p ≄ 0)] : Integer.Sqrt1 (sgn p) := by
-  have : AA.OneOfThree (sgn p ≃ 0) (sgn p ≃ 1) (sgn p ≃ -1) := sgn_trichotomy
+  have : AA.OneOfThree (sgn p ≃ 0) (sgn p ≃ 1) (sgn p ≃ -1) := sgn_trichotomy p
   have : sgn p ≃ 1 ∨ sgn p ≃ -1 :=
     match this with
     | AA.OneOfThree.first (_ : sgn p ≃ 0) =>
