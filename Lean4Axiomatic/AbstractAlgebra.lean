@@ -593,27 +593,164 @@ def distributiveR_from_distributiveL
     g (f y x) (f x z) ≃ _ := AA.substR AA.comm
     g (f y x) (f z x) ≃ _ := Rel.refl
 
-/--
-Expresses that one of two propositions is true, but not both.
-
-**Named parameters**
-- `α`, `β`: The two propositions.
--/
+/-- Expresses that one of two propositions is true, but not both. -/
 def ExactlyOneOfTwo (α β : Prop) : Prop := (α ∨ β) ∧ ¬ (α ∧ β)
 
-inductive OneOfThree (α β γ : Prop) : Prop where
+/--
+Inhabited when at least one of its three propositions is true; a three-way
+logical OR.
+-/
+inductive OneOfThree (α β γ : Prop) : Prop
 | first  (a : α)
 | second (b : β)
 | third  (c : γ)
 
-inductive TwoOfThree (α β γ : Prop) : Prop where
+/--
+Converts each proposition in `OneOfThree` to a different one while preserving
+which one is inhabited.
+
+Intended to be used in contexts where the mapping functions are previously
+defined, to keep the code compact.
+-/
+def OneOfThree.map
+    {α₁ α₂ β₁ β₂ γ₁ γ₂ : Prop}
+    : OneOfThree α₁ β₁ γ₁ → (α₁ → α₂) → (β₁ → β₂) → (γ₁ → γ₂)
+    → OneOfThree α₂ β₂ γ₂
+| first a, f, _, _ => first (f a)
+| second b, _, g, _ => second (g b)
+| third c, _, _, h => third (h c)
+
+/--
+"Rotates" `OneOfThree`'s propositions one place to the left: the leftmost one
+becomes the rightmost.
+
+This merely changes how the type is written; the value is preserved. Useful
+in conjunction with `OneOfThree.map` to translate between arbitrary
+`OneOfThree` types.
+-/
+def OneOfThree.rotL {α β γ : Prop} : OneOfThree α β γ → OneOfThree β γ α
+| first a => third a
+| second b => first b
+| third c => second c
+
+/--
+"Rotates" `OneOfThree`'s propositions one place to the right: the rightmost one
+becomes the leftmost.
+
+This merely changes how the type is written; the value is preserved. Useful
+in conjunction with `OneOfThree.map` to translate between arbitrary
+`OneOfThree` types.
+-/
+def OneOfThree.rotR {α β γ : Prop} : OneOfThree α β γ → OneOfThree γ α β
+| first a => second a
+| second b => third b
+| third c => first c
+
+/-- Inhabited when at least two of its three propositions are true. -/
+inductive TwoOfThree (α β γ : Prop) : Prop
 | oneAndTwo   (a : α) (b : β)
 | oneAndThree (a : α) (c : γ)
 | twoAndThree (b : β) (c : γ)
 
-structure ExactlyOneOfThree (α β γ : Prop) : Prop where
+/--
+Converts each proposition in `TwoOfThree` to a different one while preserving
+which ones are inhabited.
+
+Intended to be used in contexts where the mapping functions are previously
+defined, to keep the code compact.
+-/
+def TwoOfThree.map
+    {α₁ α₂ β₁ β₂ γ₁ γ₂ : Prop} (f : α₁ → α₂) (g : β₁ → β₂) (h : γ₁ → γ₂)
+    : TwoOfThree α₁ β₁ γ₁ → TwoOfThree α₂ β₂ γ₂
+| oneAndTwo a b => oneAndTwo (f a) (g b)
+| oneAndThree a c => oneAndThree (f a) (h c)
+| twoAndThree b c => twoAndThree (g b) (h c)
+
+/--
+"Rotates" `TwoOfThree`'s propositions one place to the left: the leftmost one
+becomes the rightmost.
+
+This merely changes how the type is written; the value is preserved. Useful
+in conjunction with `TwoOfThree.map` to translate between arbitrary
+`TwoOfThree` types.
+-/
+def TwoOfThree.rotL {α β γ : Prop} : TwoOfThree α β γ → TwoOfThree β γ α
+| oneAndTwo a b => oneAndThree b a
+| oneAndThree a c => twoAndThree c a
+| twoAndThree b c => oneAndTwo b c
+
+/--
+"Rotates" `TwoOfThree`'s propositions one place to the right: the rightmost one
+becomes the leftmost.
+
+This merely changes how the type is written; the value is preserved. Useful
+in conjunction with `TwoOfThree.map` to translate between arbitrary
+`TwoOfThree` types.
+-/
+def TwoOfThree.rotR {α β γ : Prop} : TwoOfThree α β γ → TwoOfThree γ α β
+| oneAndTwo a b => twoAndThree a b
+| oneAndThree a c => oneAndTwo c a
+| twoAndThree b c => oneAndThree c b
+
+/--
+Inhabited when exactly one of its three propositions is true.
+
+Can be used to express the various "trichotomy" properties in algebra.
+-/
+structure ExactlyOneOfThree (α β γ : Prop) : Prop :=
   atLeastOne :   OneOfThree α β γ
   atMostOne  : ¬ TwoOfThree α β γ
+
+/--
+Converts all propositions in `ExactlyOneOfThree` to equivalents while
+preserving the one that's inhabited.
+
+Intended to be used in contexts where the mapping functions are previously
+defined, to keep the code compact.
+-/
+def ExactlyOneOfThree.map
+    {α₁ α₂ β₁ β₂ γ₁ γ₂ : Prop}
+    : ExactlyOneOfThree α₁ β₁ γ₁ → (α₁ ↔ α₂) → (β₁ ↔ β₂) → (γ₁ ↔ γ₂)
+    → ExactlyOneOfThree α₂ β₂ γ₂
+    := by
+  intro (x : ExactlyOneOfThree α₁ β₁ γ₁)
+  intro (f : α₁ ↔ α₂) (g : β₁ ↔ β₂) (h : γ₁ ↔ γ₂)
+  have atLeastOne : OneOfThree α₂ β₂ γ₂ := x.atLeastOne.map f.mp g.mp h.mp
+  have atMostOne : ¬TwoOfThree α₂ β₂ γ₂ :=
+    mt (TwoOfThree.map f.mpr g.mpr h.mpr) x.atMostOne
+  exact ExactlyOneOfThree.mk atLeastOne atMostOne
+
+/--
+"Rotates" `ExactlyOneOfThree`'s propositions one place to the left: the
+leftmost one becomes the rightmost.
+
+This merely changes how the type is written; the value is preserved. Useful
+in conjunction with `ExactlyOneOfThree.map` to translate between arbitrary
+`ExactlyOneOfThree` types.
+-/
+def ExactlyOneOfThree.rotL
+    {α β γ : Prop} : ExactlyOneOfThree α β γ → ExactlyOneOfThree β γ α
+    := by
+  intro (x : ExactlyOneOfThree α β γ)
+  have atLeastOne : OneOfThree β γ α := x.atLeastOne.rotL
+  have atMostOne : ¬TwoOfThree β γ α := mt TwoOfThree.rotR x.atMostOne
+  exact ExactlyOneOfThree.mk atLeastOne atMostOne
+
+/--
+"Rotates" `ExactlyOneOfThree`'s propositions one place to the right: the
+rightmost one becomes the leftmost.
+
+This merely changes how the type is written; the value is preserved. Useful
+in conjunction with `ExactlyOneOfThree.map` to translate between arbitrary
+`ExactlyOneOfThree` types.
+-/
+def ExactlyOneOfThree.rotR
+    {α β γ : Prop} : ExactlyOneOfThree α β γ → ExactlyOneOfThree γ α β
+    := by
+  intro (x : ExactlyOneOfThree α β γ)
+  have atLeastOne : OneOfThree γ α β := x.atLeastOne.rotR
+  have atMostOne : ¬TwoOfThree γ α β := mt TwoOfThree.rotL x.atMostOne
+  exact ExactlyOneOfThree.mk atLeastOne atMostOne
 
 /--
 Swaps the middle two elements of a balanced four-element expression involving a

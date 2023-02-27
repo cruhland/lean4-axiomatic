@@ -185,3 +185,5 @@ instance sign : Sign (Fraction ℤ) := {
   toOps := sign_ops
   toProps := sign_props
 }
+
+end Lean4Axiomatic.Rational.Impl.Fraction

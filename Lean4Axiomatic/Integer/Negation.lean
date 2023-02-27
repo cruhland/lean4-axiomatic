@@ -90,6 +90,23 @@ theorem neg_one_neqv_one : -1 ≄ (1 : ℤ) := by
   exact absurd ‹step 1 ≃ 0› ‹step 1 ≄ 0›
 
 /--
+None of the three sign values `0`, `1`, and `-1` are equivalent to each other.
+
+This extremely obvious property is useful as a lemma when proving trichotomy of
+the `sgn` function or of the ordering relations.
+-/
+theorem signs_distinct {a : ℤ} : ¬ AA.TwoOfThree (a ≃ 0) (a ≃ 1) (a ≃ -1) := by
+  intro (two : AA.TwoOfThree (a ≃ 0) (a ≃ 1) (a ≃ -1))
+  show False
+  match two with
+  | AA.TwoOfThree.oneAndTwo (_ : a ≃ 0) (_ : a ≃ 1) =>
+    exact Rel.trans_failR ‹a ≃ 1› one_neqv_zero ‹a ≃ 0›
+  | AA.TwoOfThree.oneAndThree (_ : a ≃ 0) (_ : a ≃ -1) =>
+    exact Rel.trans_failR ‹a ≃ -1› neg_one_neqv_zero ‹a ≃ 0›
+  | AA.TwoOfThree.twoAndThree (_ : a ≃ 1) (_ : a ≃ -1) =>
+    exact Rel.trans_failR ‹a ≃ -1› neg_one_neqv_one ‹a ≃ 1›
+
+/--
 Non-typeclass version of `neg_inverse.inverseL`.
 
 Eventually, this should become the axiom and the typeclass should be derived.

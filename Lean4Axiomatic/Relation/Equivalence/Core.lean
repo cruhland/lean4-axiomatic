@@ -259,6 +259,42 @@ instance iff_transitive : Transitive (· ↔ ·) := {
   trans := iff_trans
 }
 
+/--
+Transitivity fails if the left operand's relation does not hold.
+
+**Property intuition**: This must be the case, otherwise transitivity would not
+be a useful property.
+
+**Proof intuition**: Use transitivity on the right and output relations to
+contradict the failed left relation.
+-/
+theorem trans_failL
+    {α : Sort u} {R : α → α → Prop} [Symmetric R] [Transitive R] {x y z : α}
+    : ¬ R x y → R y z → ¬ R x z
+    := by
+  intro (_ : ¬ R x y) (_ : R y z) (_ : R x z)
+  show False
+  have : R x y := trans ‹R x z› (symm ‹R y z›)
+  exact ‹¬ R x y› ‹R x y›
+
+/--
+Transitivity fails if the right operand's relation does not hold.
+
+**Property intuition**: This must be the case, otherwise transitivity would not
+be a useful property.
+
+**Proof intuition**: Use transitivity on the left and output relations to
+contradict the failed right relation.
+-/
+theorem trans_failR
+    {α : Sort u} {R : α → α → Prop} [Symmetric R] [Transitive R] {x y z : α}
+    : R x y → ¬ R y z → ¬ R x z
+    := by
+  intro (_ : R x y) (_ : ¬ R y z) (_ : R x z)
+  show False
+  have : R y z := trans (symm ‹R x y›) ‹R x z›
+  exact ‹¬ R y z› ‹R y z›
+
 namespace Equivalence
 
 /--
@@ -300,7 +336,7 @@ end Equivalence
 end Relation
 
 namespace Rel
-export Relation (refl symm trans)
+export Relation (refl symm trans trans_failL trans_failR)
 end Rel
 
 end Lean4Axiomatic

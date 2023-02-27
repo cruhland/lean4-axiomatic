@@ -233,4 +233,47 @@ unity in contexts where they need to be nonzero, such as taking reciprocals.
 instance sqrt1_nonzero_inst {p : ℚ} [Sqrt1 p] : AP (p ≄ 0) :=
   AP.mk (sqrt1_nonzero ‹Sqrt1 p›)
 
+/--
+Negating a subtraction operation swaps its operands.
+
+For intuition, see the identical proof for integers, `Integer.sub_neg_flip`.
+-/
+theorem neg_sub {p q : ℚ} : -(p - q) ≃ q - p := calc
+  -(p - q)             ≃ _ := eqv_symm mul_neg_one
+  (-1) * (p - q)       ≃ _ := mul_substR sub_add_neg
+  (-1) * (p + -q)      ≃ _ := mul_distribL
+  (-1) * p + (-1) * -q ≃ _ := add_substL mul_neg_one
+  (-p) + (-1) * -q     ≃ _ := add_substR mul_neg_one
+  (-p) + -(-q)         ≃ _ := add_substR neg_involutive
+  (-p) + q             ≃ _ := add_comm
+  q + -p               ≃ _ := eqv_symm sub_add_neg
+  q - p                ≃ _ := eqv_refl
+
+/--
+Two rational numbers are equal if and only if their difference is zero.
+
+See `Integer.zero_diff_iff_eqv` for intuition.
+-/
+theorem sub_eqv_zero_iff_eqv {p q : ℚ} : p - q ≃ 0 ↔ p ≃ q := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : p - q ≃ 0)
+    show p ≃ q
+    calc
+      p            ≃ _ := eqv_symm add_identR
+      p + 0        ≃ _ := add_substR (eqv_symm add_inverseL)
+      p + (-q + q) ≃ _ := eqv_symm add_assoc
+      (p + -q) + q ≃ _ := add_substL (eqv_symm sub_add_neg)
+      (p - q) + q  ≃ _ := add_substL ‹p - q ≃ 0›
+      0 + q        ≃ _ := add_identL
+      q            ≃ _ := eqv_refl
+  case mpr =>
+    intro (_ : p ≃ q)
+    show p - q ≃ 0
+    calc
+      p - q  ≃ _ := sub_add_neg
+      p + -q ≃ _ := add_substL ‹p ≃ q›
+      q + -q ≃ _ := add_inverseR
+      0      ≃ _ := eqv_refl
+
 end Lean4Axiomatic.Rational

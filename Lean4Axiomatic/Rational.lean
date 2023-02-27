@@ -1,4 +1,4 @@
-import Lean4Axiomatic.Rational.Sign
+import Lean4Axiomatic.Rational.Order
 
 /-! # Rational numbers -/
 
@@ -24,12 +24,14 @@ class Rational
   toReciprocation : Rational.Reciprocation ℚ
   toDivision : Rational.Division ℚ
   toSign : Rational.Sign ℚ
+  toOrder : Rational.Order ℚ
 
 attribute [instance] Rational.toAddition
 attribute [instance] Rational.toCore
 attribute [instance] Rational.toDivision
 attribute [instance] Rational.toMultiplication
 attribute [instance] Rational.toNegation
+attribute [instance] Rational.toOrder
 attribute [instance] Rational.toReciprocation
 attribute [instance] Rational.toSign
 attribute [instance] Rational.toSubtraction
