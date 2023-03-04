@@ -300,6 +300,40 @@ theorem sgn_negative {a : Difference ℕ} : Negative a ↔ sgn a ≃ -1 := by
     have : Negative (n——m) := neg_diff_lt.mpr this
     exact this
 
+/--
+If two differences have the same sign value, their sum will as well.
+
+**Property intuition**: If we visualize differences as arrows on a number line,
+an arrow's length is its magnitude and its direction is its sign. Two positive
+or two negative numbers will have their arrows pointing in the same direction;
+adding them produces a longer arrow, again pointing in the same direction.
+
+**Proof intuition**: Convert statements about signs of differences into
+comparisons of their underlying natural numbers. Use the property that adding
+pairs of natural numbers that are ordered in the same way produces a pair with
+the same ordering.
+-/
+theorem add_preserves_sign
+    {s a b : Difference ℕ} : sgn a ≃ s → sgn b ≃ s → sgn (a + b) ≃ s
+    := by
+  revert a; intro (n——m); revert b; intro (k——j)
+  intro (_ : sgn (n——m) ≃ s) (_ : sgn (k——j) ≃ s)
+  show sgn (n——m + k——j) ≃ s
+  have : ord_sgn (compare n m) ≃ s := ‹sgn (n——m) ≃ s›
+  have : ord_sgn (compare k j) ≃ s := ‹sgn (k——j) ≃ s›
+  have : ord_sgn (compare n m) ≃ ord_sgn (compare k j) :=
+    Rel.trans ‹ord_sgn (compare n m) ≃ s› (Rel.symm this)
+  have : compare n m = compare k j := ord_sgn_inject this
+  have : compare (n + k) (m + j) = compare k j :=
+    Natural.add_preserves_compare this rfl
+  have : sgn (n——m + k——j) ≃ s := calc
+    sgn (n——m + k——j)                 ≃ _ := Rel.refl
+    sgn ((n + k)——(m + j))            ≃ _ := Rel.refl
+    ord_sgn (compare (n + k) (m + j)) ≃ _ := ord_sgn_subst this
+    ord_sgn (compare k j)             ≃ _ := ‹ord_sgn (compare k j) ≃ s›
+    s                                 ≃ _ := Rel.refl
+  exact this
+
 instance sign_props : Sign.Props (Difference ℕ) := {
   positive_iff_sign_pos1 := Generic.positive_iff_sign_pos1
   negative_iff_sign_neg1 := Generic.negative_iff_sign_neg1
@@ -315,6 +349,7 @@ instance sgn_props : Sgn.Props (Difference ℕ) := {
   sgn_zero := sgn_zero
   sgn_positive := sgn_positive
   sgn_negative := sgn_negative
+  add_preserves_sign := add_preserves_sign
 }
 
 instance sign : Sign (Difference ℕ) := {

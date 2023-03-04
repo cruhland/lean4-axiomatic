@@ -354,3 +354,139 @@ theorem div_neg_cancel {p q : ℚ} [AP (q ≄ 0)] : (-p)/(-q) ≃ p / q := calc
   (-(p / -q))   ≃ _ := neg_subst (eqv_symm neg_scompatR_div)
   (-(-(p / q))) ≃ _ := neg_involutive
   p / q         ≃ _ := eqv_refl
+
+/--
+The sum of two fractions (division operations on converted integers) can be
+written as a single fraction.
+
+**Property intuition**: Since rational numbers are equivalent to fractions, we
+know this must be the case.
+
+**Proof intuition**: Expand division into multiplication by the reciprocal (we
+do this only because we haven't proven many algebraic identities for division).
+Introduce multiplicative inverse terms to generate a common reciprocal value
+(i.e., denominator) and factor it out. Move the integer-to-rational conversions
+to the outermost layer, then switch back into a fraction for the result.
+-/
+theorem add_div_integers
+    {a b c d : ℤ} [Integer.Nonzero b] [Integer.Nonzero d]
+    : (a : ℚ)/b + (c : ℚ)/d ≃ ((a * d + b * c : ℤ) : ℚ)/((b * d : ℤ) : ℚ)
+    := by
+  let aQ := (a : ℚ); let bQ := (b : ℚ); let cQ := (c : ℚ); let dQ := (d : ℚ)
+  calc
+    aQ/bQ + cQ/dQ
+      ≃ _ := add_substL div_mul_recip
+    aQ * bQ⁻¹ + cQ/dQ
+      ≃ _ := add_substR div_mul_recip
+    aQ * bQ⁻¹ + cQ * dQ⁻¹
+      ≃ _ := add_substL (eqv_symm mul_identR)
+    aQ * bQ⁻¹ * 1 + cQ * dQ⁻¹
+      ≃ _ := add_substL (mul_substR (eqv_symm mul_inverseR))
+    aQ * bQ⁻¹ * (dQ * dQ⁻¹) + cQ * dQ⁻¹
+      ≃ _ := add_substL AA.expr_xxfxxff_lr_swap_rl
+    aQ * dQ * (bQ⁻¹ * dQ⁻¹) + cQ * dQ⁻¹
+      ≃ _ := add_substL (mul_substR (eqv_symm recip_compat_mul))
+    aQ * dQ * (bQ * dQ)⁻¹ + cQ * dQ⁻¹
+      ≃ _ := add_substR (eqv_symm mul_identR)
+    aQ * dQ * (bQ * dQ)⁻¹ + cQ * dQ⁻¹ * 1
+      ≃ _ := add_substR (mul_substR (eqv_symm mul_inverseL))
+    aQ * dQ * (bQ * dQ)⁻¹ + cQ * dQ⁻¹ * (bQ⁻¹ * bQ)
+      ≃ _ := add_substR AA.expr_xxfxxff_lr_swap_rr
+    aQ * dQ * (bQ * dQ)⁻¹ + cQ * bQ * (bQ⁻¹ * dQ⁻¹)
+      ≃ _ := add_substR (mul_substL mul_comm)
+    aQ * dQ * (bQ * dQ)⁻¹ + bQ * cQ * (bQ⁻¹ * dQ⁻¹)
+      ≃ _ := add_substR (mul_substR (eqv_symm recip_compat_mul))
+    aQ * dQ * (bQ * dQ)⁻¹ + bQ * cQ * (bQ * dQ)⁻¹
+      ≃ _ := eqv_symm mul_distribR
+    (aQ * dQ + bQ * cQ) * (bQ * dQ)⁻¹
+      ≃ _ := mul_substL (add_substL (eqv_symm mul_compat_from_integer))
+    ((a * d : ℤ) + bQ * cQ) * (bQ * dQ)⁻¹
+      ≃ _ := mul_substL (add_substR (eqv_symm mul_compat_from_integer))
+    ((a * d : ℤ) + (b * c : ℤ)) * (bQ * dQ)⁻¹
+      ≃ _ := mul_substL (eqv_symm add_compat_from_integer)
+    (a * d + b * c : ℤ) * (bQ * dQ)⁻¹
+      ≃ _ := mul_substR (recip_subst (eqv_symm mul_compat_from_integer))
+    (a * d + b * c : ℤ) * ((b * d : ℤ) : ℚ)⁻¹
+      ≃ _ := eqv_symm div_mul_recip
+    ((a * d + b * c : ℤ) : ℚ)/((b * d : ℤ) : ℚ)
+      ≃ _ := eqv_refl
+
+/--
+If two rational numbers have the same sign value, their sum will as well.
+
+**Property intuition**: If we visualize rational numbers as arrows on a number
+line, an arrow's length is its magnitude and its direction is its sign. Two
+positive or two negative numbers will have their arrows pointing in the same
+direction; adding them produces a longer arrow, again pointing in the same
+direction.
+
+**Proof intuition**: Convert both rational numbers to their fraction
+representations. Their sum can be written as a single fraction, and its sign is
+just the product of the signs of its numerator and denominator. This can be
+rearranged algebraically into the sign of an integer sum, the operands of which
+happen to share a sign. By the corresponding theorem for integers, the sum must
+have that sign as well.
+-/
+theorem add_preserves_sign
+    {s : ℤ} {p q : ℚ} : sgn p ≃ s → sgn q ≃ s → sgn (p + q) ≃ s
+    := by
+  intro (_ : sgn p ≃ s) (_ : sgn q ≃ s)
+  show sgn (p + q) ≃ s
+  have (AsRatio.intro (a : ℤ) (b : ℤ) (_ : Integer.Nonzero b) p_eqv) :=
+    as_ratio p
+  have (AsRatio.intro (c : ℤ) (d : ℤ) (_ : Integer.Nonzero d) q_eqv) :=
+    as_ratio q
+  have : p ≃ a/b := p_eqv
+  have : q ≃ c/d := q_eqv
+  have : Integer.Sqrt1 (sgn b) := Integer.sgn_nonzero.mp ‹Integer.Nonzero b›
+  have : Integer.Sqrt1 (sgn d) := Integer.sgn_nonzero.mp ‹Integer.Nonzero d›
+  have : sgn (a * b) ≃ s := calc
+    sgn (a * b)     ≃ _ := Integer.sgn_compat_mul
+    sgn a * sgn b   ≃ _ := Rel.symm sgn_div_integers
+    sgn ((a : ℚ)/b) ≃ _ := sgn_subst (eqv_symm ‹p ≃ a/b›)
+    sgn p           ≃ _ := ‹sgn p ≃ s›
+    s               ≃ _ := Rel.refl
+  have : sgn (c * d) ≃ s := calc
+    sgn (c * d)     ≃ _ := Integer.sgn_compat_mul
+    sgn c * sgn d   ≃ _ := Rel.symm sgn_div_integers
+    sgn ((c : ℚ)/d) ≃ _ := sgn_subst (eqv_symm ‹q ≃ c/d›)
+    sgn q           ≃ _ := ‹sgn q ≃ s›
+    s               ≃ _ := Rel.refl
+  have sgn_abdd : sgn (a * b * (d * d)) ≃ s := calc
+    sgn (a * b * (d * d))     ≃ _ := Integer.sgn_compat_mul
+    sgn (a * b) * sgn (d * d) ≃ _ := AA.substL ‹sgn (a * b) ≃ s›
+    s * sgn (d * d)           ≃ _ := AA.substR Integer.sgn_compat_mul
+    s * (sgn d * sgn d)       ≃ _ := AA.substR ‹Integer.Sqrt1 (sgn d)›.elim
+    s * 1                     ≃ _ := AA.identR
+    s                         ≃ _ := Rel.refl
+  have sgn_bbcd : sgn (b * b * (c * d)) ≃ s := calc
+    sgn (b * b * (c * d))     ≃ _ := Integer.sgn_compat_mul
+    sgn (b * b) * sgn (c * d) ≃ _ := AA.substR ‹sgn (c * d) ≃ s›
+    sgn (b * b) * s           ≃ _ := AA.substL Integer.sgn_compat_mul
+    sgn b * sgn b * s         ≃ _ := AA.substL ‹Integer.Sqrt1 (sgn b)›.elim
+    1 * s                     ≃ _ := AA.identL
+    s                         ≃ _ := Rel.refl
+  have : sgn (p + q) ≃ s := calc
+    sgn (p + q)
+      ≃ _ := sgn_subst (add_substL ‹p ≃ a/b›)
+    sgn ((a : ℚ)/b + q)
+      ≃ _ := sgn_subst (add_substR ‹q ≃ c/d›)
+    sgn ((a : ℚ)/b + (c : ℚ)/d)
+      ≃ _ := sgn_subst add_div_integers
+    sgn (((a * d + b * c : ℤ) : ℚ)/((b * d : ℤ) : ℚ))
+      ≃ _ := sgn_div_integers
+    sgn (a * d + b * c) * sgn (b * d)
+      ≃ _ := Rel.symm Integer.sgn_compat_mul
+    sgn ((a * d + b * c) * (b * d))
+      ≃ _ := Integer.sgn_subst AA.distribR
+    sgn (a * d * (b * d) + b * c * (b * d))
+      ≃ _ := Integer.sgn_subst (AA.substL AA.expr_xxfxxff_lr_swap_rl)
+    sgn (a * b * (d * d) + b * c * (b * d))
+      ≃ _ := Integer.sgn_subst (AA.substR AA.expr_xxfxxff_lr_swap_rl)
+    sgn (a * b * (d * d) + b * b * (c * d))
+      ≃ _ := Integer.add_preserves_sign sgn_abdd sgn_bbcd
+    s
+      ≃ _ := Rel.refl
+  exact this
+
+end Lean4Axiomatic.Rational

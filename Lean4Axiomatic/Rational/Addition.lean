@@ -4,6 +4,8 @@ import Lean4Axiomatic.Rational.Core
 
 namespace Lean4Axiomatic.Rational
 
+/-! ## Axioms -/
+
 /-- Operations pertaining to rational number addition. -/
 class Addition.Ops (ℚ : Type) :=
   /-- Addition of rational numbers. -/
@@ -57,5 +59,23 @@ class Addition
 
 attribute [instance] Addition.toOps
 attribute [instance] Addition.toProps
+
+/-! ## Derived properties -/
+
+variable {ℕ ℤ ℚ : Type}
+  [Natural ℕ] [Integer (ℕ := ℕ) ℤ] [Core (ℤ := ℤ) ℚ] [Addition ℚ]
+
+instance add_assoc_inst : AA.Associative (α := ℚ) (· + ·) := {
+  assoc := add_assoc
+}
+
+instance add_comm_inst : AA.Commutative (α := ℚ) (· + ·) := {
+  comm := add_comm
+}
+
+instance add_subst_inst : AA.Substitutive₂ (α := ℚ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·) := {
+  substitutiveL := { subst₂ := λ (_ : True) => add_substL }
+  substitutiveR := { subst₂ := λ (_ : True) => add_substR }
+}
 
 end Lean4Axiomatic.Rational

@@ -771,4 +771,54 @@ theorem compare_add {n m k : ℕ} : compare n m = compare (n + k) (m + k) := by
       compare (n + k) (m + k)
         = _ := rfl
 
+/--
+If two pairs of natural numbers have the same ordering, their component-wise
+sum will as well.
+
+**Property intuition**: Adding the components of the pairs will just increase
+(or in the case of equality, maintain) the degree of difference. For example,
+if the pairs compare as `Ordering.lt`, their first elements are both less than
+their second elements. The first element of the sum will be less than the
+second element by the combined difference of the input pairs.
+
+**Proof intuition**: For each `Ordering` value, convert the statements about
+`compare` into the equivalent statements about ordering relations. Use
+addition substitution properties of those relations to obtain the result.
+-/
+theorem add_preserves_compare
+    {ord : Ordering} {n m k j : ℕ}
+    : compare n m = ord → compare k j = ord → compare (n + k) (m + j) = ord
+    := by
+  match ord with
+  | Ordering.lt =>
+    intro (_ : compare n m = Ordering.lt) (_ : compare k j = Ordering.lt)
+    show compare (n + k) (m + j) = Ordering.lt
+    have : n < m := compare_lt.mp ‹compare n m = Ordering.lt›
+    have : k < j := compare_lt.mp ‹compare k j = Ordering.lt›
+    have : n + k < m + j := calc
+      n + k < m + k := lt_substL_add ‹n < m›
+      m + k < m + j := lt_substR_add ‹k < j›
+    have : compare (n + k) (m + j) = Ordering.lt := compare_lt.mpr this
+    exact this
+  | Ordering.eq =>
+    intro (_ : compare n m = Ordering.eq) (_ : compare k j = Ordering.eq)
+    show compare (n + k) (m + j) = Ordering.eq
+    have : n ≃ m := compare_eq.mp ‹compare n m = Ordering.eq›
+    have : k ≃ j := compare_eq.mp ‹compare k j = Ordering.eq›
+    have : n + k ≃ m + j := calc
+      n + k ≃ m + k := AA.substL ‹n ≃ m›
+      m + k ≃ m + j := AA.substR ‹k ≃ j›
+    have : compare (n + k) (m + j) = Ordering.eq := compare_eq.mpr this
+    exact this
+  | Ordering.gt =>
+    intro (_ : compare n m = Ordering.gt) (_ : compare k j = Ordering.gt)
+    show compare (n + k) (m + j) = Ordering.gt
+    have : n > m := compare_gt.mp ‹compare n m = Ordering.gt›
+    have : k > j := compare_gt.mp ‹compare k j = Ordering.gt›
+    have : m + j < n + k := calc
+      m + j < m + k := lt_substR_add ‹j < k›
+      m + k < n + k := lt_substL_add ‹m < n›
+    have : compare (n + k) (m + j) = Ordering.gt := compare_gt.mpr this
+    exact this
+
 end Lean4Axiomatic.Natural

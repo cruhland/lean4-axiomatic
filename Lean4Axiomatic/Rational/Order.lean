@@ -67,7 +67,7 @@ attribute [instance] Order.toProps
 variable {ℕ ℤ ℚ : Type}
   [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
   [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ]
-  [Sign ℚ] [Subtraction ℚ] [Order ℚ]
+  [Sign ℚ] [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ] [Order ℚ]
 
 /--
 Two rational numbers are equivalent exactly when the sign of their difference
@@ -239,5 +239,29 @@ theorem ge_cases {p q : ℚ} : p ≥ q ↔ p > q ∨ p ≃ q := by
     have : q ≤ p := le_cases.mpr this
     have : p ≥ q := this
     exact this
+
+/--
+The _less than_ relation for rational numbers is transitive.
+
+**Property intuition**: This is a required property for any totally ordered
+type.
+
+**Proof intuition**: Convert the input relations to `sgn`s of differences.
+We know the sum of the differences must have the same `sgn`. The sum
+telescopes, leaving only the first and last value, giving us the result.
+-/
+theorem lt_trans {p q r : ℚ} : p < q → q < r → p < r := by
+  intro (_ : p < q) (_ : q < r)
+  show p < r
+  have : sgn (p - q) ≃ -1 := lt_sgn.mp ‹p < q›
+  have : sgn (q - r) ≃ -1 := lt_sgn.mp ‹q < r›
+  have : sgn ((p - q) + (q - r)) ≃ -1 :=
+    add_preserves_sign ‹sgn (p - q) ≃ -1› ‹sgn (q - r) ≃ -1›
+  have : sgn (p - r) ≃ -1 := calc
+    sgn (p - r)             ≃ _ := sgn_subst (eqv_symm add_sub_telescope)
+    sgn ((p - q) + (q - r)) ≃ _ := ‹sgn ((p - q) + (q - r)) ≃ -1›
+    (-1)                    ≃ _ := Rel.refl
+  have : p < r := lt_sgn.mpr ‹sgn (p - r) ≃ -1›
+  exact this
 
 end Lean4Axiomatic.Rational

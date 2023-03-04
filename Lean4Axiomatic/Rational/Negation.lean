@@ -276,4 +276,21 @@ theorem sub_eqv_zero_iff_eqv {p q : ℚ} : p - q ≃ 0 ↔ p ≃ q := by
       q + -q ≃ _ := add_inverseR
       0      ≃ _ := eqv_refl
 
+/--
+The simplest example of a "telescoping" sum: adding two differences with a
+common middle value results in the difference of the endpoints.
+
+**Property and proof intuition**: The middle value is positive in one of the
+sum's arguments, and negative in the other. Those are additive inverses so they
+sum to zero and disappear from the result.
+-/
+theorem add_sub_telescope {p q r : ℚ} : (p - q) + (q - r) ≃ p - r := calc
+  (p - q) + (q - r)   ≃ _ := add_substL sub_add_neg
+  (p + -q) + (q - r)  ≃ _ := add_substR sub_add_neg
+  (p + -q) + (q + -r) ≃ _ := AA.expr_xxfxxff_lr_swap_rr
+  (p + -r) + (q + -q) ≃ _ := add_substR add_inverseR
+  (p + -r) + 0        ≃ _ := add_identR
+  p + -r              ≃ _ := eqv_symm sub_add_neg
+  p - r               ≃ _ := eqv_refl
+
 end Lean4Axiomatic.Rational
