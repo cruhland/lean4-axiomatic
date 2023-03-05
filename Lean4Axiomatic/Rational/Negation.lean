@@ -234,6 +234,44 @@ instance sqrt1_nonzero_inst {p : ℚ} [Sqrt1 p] : AP (p ≄ 0) :=
   AP.mk (sqrt1_nonzero ‹Sqrt1 p›)
 
 /--
+Replacing the left operand of subtraction with an equivalent value gives an
+equivalent result.
+
+**Property intuition**: This must be true for subtraction to be a function on
+rational numbers.
+
+**Proof intuition**: Expand subtraction into addition; addition is left
+substitutive.
+-/
+theorem sub_substL {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → p₁ - q ≃ p₂ - q := by
+  intro (_ : p₁ ≃ p₂)
+  show p₁ - q ≃ p₂ - q
+  calc
+    p₁ - q  ≃ _ := sub_add_neg
+    p₁ + -q ≃ _ := add_substL ‹p₁ ≃ p₂›
+    p₂ + -q ≃ _ := eqv_symm sub_add_neg
+    p₂ - q  ≃ _ := eqv_refl
+
+/--
+Replacing the right operand of subtraction with an equivalent value gives an
+equivalent result.
+
+**Property intuition**: This must be true for subtraction to be a function on
+rational numbers.
+
+**Proof intuition**: Expand subtraction into addition of the negation; addition
+and negation obey substitution.
+-/
+theorem sub_substR {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → q - p₁ ≃ q - p₂ := by
+  intro (_ : p₁ ≃ p₂)
+  show q - p₁ ≃ q - p₂
+  calc
+    q - p₁  ≃ _ := sub_add_neg
+    q + -p₁ ≃ _ := add_substR (neg_subst ‹p₁ ≃ p₂›)
+    q + -p₂ ≃ _ := eqv_symm sub_add_neg
+    q - p₂  ≃ _ := eqv_refl
+
+/--
 Negating a subtraction operation swaps its operands.
 
 For intuition, see the identical proof for integers, `Integer.sub_neg_flip`.
@@ -292,5 +330,52 @@ theorem add_sub_telescope {p q r : ℚ} : (p - q) + (q - r) ≃ p - r := calc
   (p + -r) + 0        ≃ _ := add_identR
   p + -r              ≃ _ := eqv_symm sub_add_neg
   p - r               ≃ _ := eqv_refl
+
+/--
+A common right operand can be removed from a subtraction of two sums.
+
+**Property intuition**: Changing two values by the same amount doesn't change
+their difference.
+
+**Proof intuition**: Expand subtraction into addition and rearrange so that the
+common term and its additive inverse add to zero.
+-/
+theorem sub_cancelR_add {p q r : ℚ} : (p + r) - (q + r) ≃ p - q := calc
+  (p + r) - (q + r)           ≃ _ := sub_add_neg
+  (p + r) + -(q + r)          ≃ _ := add_substR (eqv_symm mul_neg_one)
+  (p + r) + -1 * (q + r)      ≃ _ := add_substR mul_distribL
+  (p + r) + (-1 * q + -1 * r) ≃ _ := add_substR (add_substL mul_neg_one)
+  (p + r) + (-q + -1 * r)     ≃ _ := add_substR (add_substR mul_neg_one)
+  (p + r) + (-q + -r)         ≃ _ := AA.expr_xxfxxff_lr_swap_rl
+  (p + -q) + (r + -r)         ≃ _ := add_substR add_inverseR
+  (p + -q) + 0                ≃ _ := add_identR
+  p + -q                      ≃ _ := eqv_symm sub_add_neg
+  p - q                       ≃ _ := eqv_refl
+
+/--
+Multiplication on the left distributes over subtraction.
+
+**Property and proof intuition**: Subtraction is just addition; multiplication
+distributes over addition.
+-/
+theorem mul_distribL_sub {p q r : ℚ} : r * (p - q) ≃ r * p - r * q := calc
+   r * (p - q)      ≃ _ := mul_substR sub_add_neg
+   r * (p + -q)     ≃ _ := mul_distribL
+   r * p + r * -q   ≃ _ := add_substR (eqv_symm neg_scompatR_mul)
+   r * p + -(r * q) ≃ _ := eqv_symm sub_add_neg
+   r * p - r * q    ≃ _ := eqv_refl
+
+/--
+Multiplication on the right distributes over subtraction.
+
+**Property and proof intuition**: Subtraction is just addition; multiplication
+distributes over addition.
+-/
+theorem mul_distribR_sub {p q r : ℚ} : (p - q) * r ≃ p * r - q * r := calc
+   (p - q) * r   ≃ _ := mul_comm
+   r * (p - q)   ≃ _ := mul_distribL_sub
+   r * p - r * q ≃ _ := sub_substL mul_comm
+   p * r - r * q ≃ _ := sub_substR mul_comm
+   p * r - q * r ≃ _ := eqv_refl
 
 end Lean4Axiomatic.Rational
