@@ -1,3 +1,4 @@
+import Lean4Axiomatic.Rational.Metric
 import Lean4Axiomatic.Rational.Order
 
 /-! # Rational numbers -/
@@ -25,10 +26,12 @@ class Rational
   toDivision : Rational.Division ℚ
   toSign : Rational.Sign ℚ
   toOrder : Rational.Order ℚ
+  toMetric : Rational.Metric ℚ
 
 attribute [instance] Rational.toAddition
 attribute [instance] Rational.toCore
 attribute [instance] Rational.toDivision
+attribute [instance] Rational.toMetric
 attribute [instance] Rational.toMultiplication
 attribute [instance] Rational.toNegation
 attribute [instance] Rational.toOrder
