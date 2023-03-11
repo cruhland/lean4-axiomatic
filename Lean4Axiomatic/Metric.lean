@@ -4,14 +4,17 @@
 namespace Lean4Axiomatic.Metric
 
 /--
-Class for types that have a notion of absolute value.
+Class for types that have a notion of distance.
 
-Provides a canonical name for the absolute value function, `abs`.
+Provides canonical names for the distance and absolute value functions.
 -/
-class AbsoluteValue (α : Type u) :=
+class MetricSpace (α : Type u) :=
   /-- The [absolute value](https://w.wiki/6RCp) function. -/
   abs : α → α
 
-export AbsoluteValue (abs)
+  /-- The [distance, or metric](https://w.wiki/6RPu) function. -/
+  dist : α → α → α
+
+export MetricSpace (abs dist)
 
 end Lean4Axiomatic.Metric
