@@ -96,9 +96,39 @@ in `1` when squared.
 
 See `Integer.Sqrt1` for details on why this is a useful predicate.
 -/
-class Sqrt1 (p : ℚ) : Prop :=
-  /-- The defining property of square roots of unity. -/
-  elim : p * p ≃ 1
+class inductive Sqrt1 (p : ℚ) : Prop :=
+| /--
+  Create `Sqrt1` for the rational equivalent of an integer square root of
+  unity.
+  -/
+  from_integer_intro (a : ℤ) (sqrt1 : Integer.Sqrt1 a) (eqv : p ≃ (a : ℚ))
+
+/-- Alternative to `Sqrt1.from_integer_intro` that infers more arguments. -/
+def Sqrt1.from_integer
+    {a : ℤ} {p : ℚ} [Integer.Sqrt1 a] : p ≃ (a : ℚ) → Sqrt1 p
+    :=
+  from_integer_intro a ‹Integer.Sqrt1 a›
+
+/--
+The defining property of square roots of unity.
+
+**Proof intuition**: Expand the definition of `Sqrt1` to obtain the underlying
+integer. Then show the property is preserved by conversion to rational numbers.
+-/
+theorem Sqrt1.elim {p : ℚ} : Sqrt1 p → p * p ≃ 1 := by
+  intro (_ : Sqrt1 p)
+  show p * p ≃ 1
+  have (Sqrt1.from_integer_intro (a : ℤ) (_ : Integer.Sqrt1 a) eqv) :=
+    ‹Sqrt1 p›
+  have : p ≃ (a : ℚ) := eqv
+  have : p * p ≃ 1 := calc
+    p * p             ≃ _ := mul_substL ‹p ≃ (a : ℚ)›
+    (a : ℚ) * p       ≃ _ := mul_substR ‹p ≃ (a : ℚ)›
+    (a : ℚ) * (a : ℚ) ≃ _ := eqv_symm mul_compat_from_integer
+    ((a * a : ℤ) : ℚ) ≃ _ := from_integer_subst ‹Integer.Sqrt1 a›.elim
+    (1 : ℚ)           ≃ _ := eqv_refl
+    1                 ≃ _ := eqv_refl
+  exact this
 
 /--
 The `Sqrt1` predicate respects equivalence of rational numbers.
@@ -106,17 +136,16 @@ The `Sqrt1` predicate respects equivalence of rational numbers.
 **Property intuition**: This must hold for `Sqrt1` to be a valid predicate.
 
 **Proof intuition**: Expand the definition of `Sqrt1`; the result follows by
-substitution on multiplication.
+substitution on the underlying equivalence.
 -/
 theorem sqrt1_subst {p₁ p₂ : ℚ} : p₁ ≃ p₂ → Sqrt1 p₁ → Sqrt1 p₂ := by
   intro (_ : p₁ ≃ p₂) (_ : Sqrt1 p₁)
   show Sqrt1 p₂
-  have : p₂ * p₂ ≃ 1 := calc
-    p₂ * p₂ ≃ _ := mul_substL (eqv_symm ‹p₁ ≃ p₂›)
-    p₁ * p₂ ≃ _ := mul_substR (eqv_symm ‹p₁ ≃ p₂›)
-    p₁ * p₁ ≃ _ := ‹Sqrt1 p₁›.elim
-    1       ≃ _ := eqv_refl
-  have : Sqrt1 p₂ := Sqrt1.mk this
+  have (Sqrt1.from_integer_intro (a : ℤ) (_ : Integer.Sqrt1 a) eqv) :=
+    ‹Sqrt1 p₁›
+  have : p₁ ≃ (a : ℚ) := eqv
+  have : p₂ ≃ (a : ℚ) := AA.substLFn ‹p₁ ≃ p₂› this
+  have : Sqrt1 p₂ := Sqrt1.from_integer_intro a ‹Integer.Sqrt1 a› this
   exact this
 
 /--
@@ -127,9 +156,8 @@ rational number.
 the square root of unity property is defined in terms of multiplication, so we
 expect it to be preserved as well.
 
-**Proof intuition**: Use integer conversion's substitutive, injective, and
-multiplicative compatibility properties to show that the underlying algebraic
-representations of square roots of unity are equivalent.
+**Proof intuition**: `Sqrt1` for rationals already delegates to the definition
+for integers; expand it and use that connection.
 -/
 theorem from_integer_preserves_sqrt1
     {a : ℤ} : Sqrt1 (a : ℚ) ↔ Integer.Sqrt1 a := by
@@ -137,22 +165,16 @@ theorem from_integer_preserves_sqrt1
   case mp =>
     intro (_ : Sqrt1 (a : ℚ))
     show Integer.Sqrt1 a
-    have : ((a * a : ℤ) : ℚ) ≃ ((1 : ℤ) : ℚ) := calc
-      ((a * a : ℤ) : ℚ) ≃ _ := mul_compat_from_integer
-      (a : ℚ) * (a : ℚ) ≃ _ := ‹Sqrt1 (a : ℚ)›.elim
-      ((1 : ℤ) : ℚ)     ≃ _ := eqv_refl
-    have : a * a ≃ 1 := from_integer_inject this
-    have : Integer.Sqrt1 a := Integer.Sqrt1.mk this
+    have (Sqrt1.from_integer_intro (b : ℤ) (_ : Integer.Sqrt1 b) eqv) :=
+      ‹Sqrt1 (a : ℚ)›
+    have : (b : ℚ) ≃ (a : ℚ) := eqv_symm eqv
+    have : b ≃ a := from_integer_inject this
+    have : Integer.Sqrt1 a := Integer.sqrt1_subst this ‹Integer.Sqrt1 b›
     exact this
   case mpr =>
     intro (_ : Integer.Sqrt1 a)
     show Sqrt1 (a : ℚ)
-    have : (a : ℚ) * (a : ℚ) ≃ 1 := calc
-      (a : ℚ) * (a : ℚ) ≃ _ := eqv_symm mul_compat_from_integer
-      ((a * a : ℤ) : ℚ) ≃ _ := from_integer_subst ‹Integer.Sqrt1 a›.elim
-      (1 : ℚ)           ≃ _ := eqv_refl
-    have : Sqrt1 (a : ℚ) := Sqrt1.mk this
-    exact this
+    exact Sqrt1.from_integer eqv_refl
 
 /--
 The rational number `1` is a square root of unity.

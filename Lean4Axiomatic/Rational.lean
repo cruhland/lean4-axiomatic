@@ -1,5 +1,4 @@
 import Lean4Axiomatic.Rational.Metric
-import Lean4Axiomatic.Rational.Order
 
 /-! # Rational numbers -/
 

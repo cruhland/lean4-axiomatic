@@ -1,5 +1,5 @@
 import Lean4Axiomatic.Metric
-import Lean4Axiomatic.Rational.Sign
+import Lean4Axiomatic.Rational.Order
 
 /-! # Rational numbers: metric functions -/
 
@@ -62,8 +62,9 @@ attribute [instance] Metric.toProps
 
 variable {ℕ ℤ ℚ : Type}
   [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
-  [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
-  [Negation ℚ] [Sign ℚ] [Subtraction ℚ] [Metric ℚ]
+  [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Negation ℚ] [Subtraction ℚ]
+  [Multiplication ℚ] [Reciprocation ℚ] [Division ℚ]
+  [Sign ℚ] [Order ℚ] [Metric ℚ]
 
 /--
 The absolute value function preserves equivalence over its argument.
@@ -82,5 +83,71 @@ theorem abs_subst {p₁ p₂ : ℚ} : p₁ ≃ p₂ → abs p₁ ≃ abs p₂ :=
     p₂ * sgn p₁ ≃ _ := mul_substR (from_integer_subst (sgn_subst ‹p₁ ≃ p₂›))
     p₂ * sgn p₂ ≃ _ := eqv_symm abs_sgn
     abs p₂      ≃ _ := eqv_refl
+
+/--
+The sign of a rational number's absolute value is the squared sign of the
+rational number.
+
+**Property and proof intuition**: The absolute value of a number is that number
+times its sign; taking the `sgn` of that gives the result.
+-/
+theorem sgn_abs {p : ℚ} : sgn (abs p) ≃ sgn p * sgn p := calc
+  sgn (abs p)             ≃ _ := sgn_subst abs_sgn
+  sgn (p * sgn p)         ≃ _ := sgn_compat_mul
+  sgn p * sgn (sgn p : ℚ) ≃ _ := AA.substR sgn_from_integer
+  sgn p * sgn (sgn p)     ≃ _ := AA.substR sgn_idemp
+  sgn p * sgn p           ≃ _ := Rel.refl
+
+/--
+The absolute value of a rational number is greater than or equivalent to zero.
+
+**Property intuition**: The absolute value discards the sign of a number and
+returns the magnitude, so we'd expect it to be nonnegative.
+
+**Proof intuition**: The sign of a rational number's absolute value is that
+number's sign squared. A square can never be negative, thus the absolute value
+must be positive or zero.
+-/
+theorem abs_ge_zero {p : ℚ} : abs p ≥ 0 := by
+  have : sgn (p * p) ≃ sgn (abs p) := calc
+    sgn (p * p)     ≃ _ := sgn_compat_mul
+    sgn p * sgn p   ≃ _ := Rel.symm sgn_abs
+    sgn (abs p)     ≃ _ := Rel.refl
+  have : sgn (abs p) ≄ -1 := AA.neqv_substL this nonneg_square
+  have : abs p ≥ 0 := ge_zero_sgn.mpr this
+  exact this
+
+/--
+Zero is the only rational number that has an absolute value of zero.
+
+**Property intuition**: This fits the description of absolute value as
+"distance from zero".
+
+**Proof intuition**: In the forward direction, `abs p` expands to `p * sgn p`;
+both factors imply that `p ≃ 0`. In the reverse direction, `p * sgn p` is
+trivially zero when `p` is.
+-/
+theorem abs_zero {p : ℚ} : abs p ≃ 0 ↔ p ≃ 0 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : abs p ≃ 0)
+    show p ≃ 0
+    have : p * sgn p ≃ 0 := AA.eqv_substL abs_sgn ‹abs p ≃ 0›
+    have : p ≃ 0 ∨ (sgn p : ℚ) ≃ 0 := mul_split_zero.mp this
+    match this with
+    | Or.inl (_ : p ≃ 0) =>
+      exact ‹p ≃ 0›
+    | Or.inr (_ : (sgn p : ℚ) ≃ 0) =>
+      have : sgn p ≃ 0 := from_integer_inject ‹(sgn p : ℚ) ≃ 0›
+      have : p ≃ 0 := sgn_zero.mpr this
+      exact this
+  case mpr =>
+    intro (_ : p ≃ 0)
+    show abs p ≃ 0
+    calc
+      abs p           ≃ _ := abs_sgn
+      p * sgn p       ≃ _ := mul_substL ‹p ≃ 0›
+      (0 : ℚ) * sgn p ≃ _ := mul_absorbL
+      0               ≃ _ := eqv_refl
 
 end Lean4Axiomatic.Rational

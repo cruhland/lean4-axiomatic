@@ -557,39 +557,36 @@ def substR_from_substL_swap
 /--
 The left-hand side of an equivalence can be replaced by an equivalent value.
 
-**Intuition**: this is a somewhat trivial case of binary substitution,
+**Intuition**: This is a somewhat trivial case of binary substitution,
 essentially just transivity expressed in a slightly different way.
-
-**Named parameters**
-- `α`: the type of values involved in the equivalence.
-
-**Class parameters**
-- `EqvOp α`: needed for equivalence to be expressed between terms of type `α`.
 -/
-def eqv_substL
-    {α : Sort u} [EqvOp α]
-    : SubstitutiveOn Hand.L (α := α) (· ≃ ·) tc (· ≃ ·) (· → ·) := by
-  constructor
-  intro x₁ x₂ y _ (_ : x₁ ≃ x₂) (_ : x₁ ≃ y)
+theorem eqv_substL
+    {α : Sort u} [EqvOp α] {x₁ x₂ y : α} : x₁ ≃ x₂ → x₁ ≃ y → x₂ ≃ y
+    := by
+  intro (_ : x₁ ≃ x₂) (_ : x₁ ≃ y)
   show x₂ ≃ y
   exact Rel.trans (Rel.symm ‹x₁ ≃ x₂›) ‹x₁ ≃ y›
 
 /--
-Equivalence respects the binary generalized substitution property.
+The right-hand side of an equivalence can be replaced by an equivalent value.
 
-**Intuition**: see `eqv_substL` for the left-handed property. The right-handed
-property follows from the symmetry of equivalence.
-
-**Named parameters**
-- `α`: the type of values involved in the equivalence.
-
-**Class parameters**
-- `EqvOp α`: needed for equivalence to be expressed between terms of type `α`.
+**Intuition**: This is a somewhat trivial case of binary substitution,
+essentially just transivity expressed in a slightly different way.
 -/
-instance eqv_substitutive {α : Sort u} [EqvOp α]
-    : Substitutive₂ (α := α) (· ≃ ·) tc (· ≃ ·) (· → ·) where
-  substitutiveL := eqv_substL
-  substitutiveR := substR_from_substL_swap (rS := (· ↔ ·)) eqv_substL
+theorem eqv_substR
+    {α : Sort u} [EqvOp α] {x₁ x₂ y : α} : x₁ ≃ x₂ → y ≃ x₁ → y ≃ x₂
+    := by
+  intro (_ : x₁ ≃ x₂) (_ : y ≃ x₁)
+  show y ≃ x₂
+  exact Rel.trans ‹y ≃ x₁› ‹x₁ ≃ x₂›
+
+instance eqv_substitutive
+    {α : Sort u} [EqvOp α]
+    : Substitutive₂ (α := α) (· ≃ ·) tc (· ≃ ·) (· → ·)
+    := {
+  substitutiveL := { subst₂ := λ (_ : True) => eqv_substL }
+  substitutiveR := { subst₂ := λ (_ : True) => eqv_substR }
+}
 
 /--
 The left-hand side of a negated equivalence can be replaced by an equivalent
@@ -604,29 +601,8 @@ theorem neqv_substL
     := by
   intro (_ : x₁ ≃ x₂) (_ : x₁ ≄ y) (_ : x₂ ≃ y)
   show False
-  apply ‹x₁ ≄ y›
-  show x₁ ≃ y
-  exact Rel.trans ‹x₁ ≃ x₂› ‹x₂ ≃ y›
-
-def neqv_substitutiveL
-    {α : Sort u} [EqvOp α]
-    : SubstitutiveOn Hand.L (α := α) (· ≄ ·) tc (· ≃ ·) (· → ·) := {
-  subst₂ := λ (_ : True) => neqv_substL
-}
-
-/--
-Negated equivalence respects the binary generalized substitution property.
-
-**Intuition**: see `neqv_substL` for the left-handed property. The right-handed
-property follows from the symmetry of negated equivalence.
--/
-instance neqv_substitutive
-    {α : Sort u} [EqvOp α]
-    : Substitutive₂ (α := α) (· ≄ ·) tc (· ≃ ·) (· → ·)
-    := {
-  substitutiveL := neqv_substitutiveL
-  substitutiveR := substR_from_substL_swap (rS := (· ↔ ·)) neqv_substitutiveL
-}
+  have : x₁ ≃ y := Rel.trans ‹x₁ ≃ x₂› ‹x₂ ≃ y›
+  exact absurd ‹x₁ ≃ y› ‹x₁ ≄ y›
 
 /--
 The right-hand side of a negated equivalence can be replaced by an equivalent
@@ -638,8 +614,19 @@ term.
 -/
 theorem neqv_substR
     {α : Sort u} [EqvOp α] {x₁ x₂ y : α} : x₁ ≃ x₂ → y ≄ x₁ → y ≄ x₂
-    :=
-  AA.substRFn (f := (· ≄ ·))
+    := by
+  intro (_ : x₁ ≃ x₂) (_ : y ≄ x₁) (_ : y ≃ x₂)
+  show False
+  have : y ≃ x₁ := Rel.trans ‹y ≃ x₂› (Rel.symm ‹x₁ ≃ x₂›)
+  exact absurd ‹y ≃ x₁› ‹y ≄ x₁›
+
+instance neqv_substitutive
+    {α : Sort u} [EqvOp α]
+    : Substitutive₂ (α := α) (· ≄ ·) tc (· ≃ ·) (· → ·)
+    := {
+  substitutiveL := { subst₂ := λ (_ : True) => neqv_substL }
+  substitutiveR := { subst₂ := λ (_ : True) => neqv_substR }
+}
 
 namespace Prod
 

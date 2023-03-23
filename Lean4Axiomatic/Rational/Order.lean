@@ -129,6 +129,71 @@ theorem gt_sgn {p q : ℚ} : p > q ↔ sgn (p - q) ≃ 1 := by
     exact this
 
 /--
+A rational number is greater than or equivalent to another when subtracting the
+latter from the former gives a non-negative result, i.e. its sign is not minus
+one.
+
+**Property and proof intuition**: This is equivalent to the `le_sgn` axiom, but
+with the operands swapped. Swapping a subtraction negates its result, thus the
+sign value is `-1` instead of `1`.
+-/
+theorem ge_sgn {p q : ℚ} : p ≥ q ↔ sgn (p - q) ≄ -1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : p ≥ q) (_ : sgn (p - q) ≃ -1)
+    show False
+    have : q ≤ p := ‹p ≥ q›
+    have : sgn (q - p) ≄ 1 := le_sgn.mp this
+    have : sgn (q - p) ≃ 1 := calc
+      sgn (q - p)    ≃ _ := sgn_subst (eqv_symm neg_sub)
+      sgn (-(p - q)) ≃ _ := sgn_compat_neg
+      (-sgn (p - q)) ≃ _ := AA.subst₁ ‹sgn (p - q) ≃ -1›
+      (-(-1))        ≃ _ := Integer.neg_involutive
+      1              ≃ _ := Rel.refl
+    exact absurd ‹sgn (q - p) ≃ 1› ‹sgn (q - p) ≄ 1›
+  case mpr =>
+    intro (_ : sgn (p - q) ≄ -1)
+    show p ≥ q
+    have : sgn (q - p) ≄ 1 := by
+      intro (_ : sgn (q - p) ≃ 1)
+      show False
+      have : sgn (p - q) ≃ -1 := calc
+        sgn (p - q)    ≃ _ := sgn_subst (eqv_symm neg_sub)
+        sgn (-(q - p)) ≃ _ := sgn_compat_neg
+        (-sgn (q - p)) ≃ _ := AA.subst₁ ‹sgn (q - p) ≃ 1›
+        (-1)           ≃ _ := Rel.refl
+      exact absurd ‹sgn (p - q) ≃ -1› ‹sgn (p - q) ≄ -1›
+    have : q ≤ p := le_sgn.mpr this
+    have : p ≥ q := this
+    exact this
+
+/--
+A rational number is greater than or equivalent to zero exactly when its sign
+is nonnegative.
+
+**Property intuition**: This shows two equivalent ways of saying that the sign
+of a number is positive or zero.
+
+**Proof intuition**: This is a corollary of `ge_sgn`.
+-/
+theorem ge_zero_sgn {p : ℚ} : p ≥ 0 ↔ sgn p ≄ -1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : p ≥ 0)
+    show sgn p ≄ -1
+    have : sgn (p - 0) ≄ -1 := ge_sgn.mp ‹p ≥ 0›
+    have : sgn (p - 0) ≃ sgn p := sgn_subst sub_zero
+    have : sgn p ≄ -1 := AA.neqv_substL this ‹sgn (p - 0) ≄ -1›
+    exact this
+  case mpr =>
+    intro (_ : sgn p ≄ -1)
+    show p ≥ 0
+    have : sgn p ≃ sgn (p - 0) := sgn_subst (eqv_symm sub_zero)
+    have : sgn (p - 0) ≄ -1 := AA.neqv_substL this ‹sgn p ≄ -1›
+    have : p ≥ 0 := ge_sgn.mpr this
+    exact this
+
+/--
 The ordering of any two rational numbers must be in exactly one of three
 states: less than, equivalent to, or greater than.
 

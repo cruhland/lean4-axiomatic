@@ -201,6 +201,60 @@ theorem sgn_div_integers
   sgn a * sgn b                 ≃ _ := Rel.refl
 
 /--
+The _signum_ function is idempotent: applying it twice is the same as applying
+it once.
+
+**Property intuition**: The `sgn` function has only three possible results, and
+each of them is a fixed point.
+
+**Proof intuition**: Instead of using trichotomy to do tedious case analysis,
+convert the rational into its fraction form and reduce it to an expression with
+integer `sgn`, which we already know is idempotent.
+-/
+theorem sgn_idemp {p : ℚ} : sgn (sgn p) ≃ sgn p := by
+  have (AsRatio.intro (a : ℤ) (b : ℤ) (_ : Integer.Nonzero b) eqv) :=
+    as_ratio p
+  have : p ≃ a/b := eqv
+  calc
+    sgn (sgn p)               ≃ _ := Integer.sgn_subst (sgn_subst ‹p ≃ a/b›)
+    sgn (sgn ((a : ℚ)/b))     ≃ _ := Integer.sgn_subst sgn_div_integers
+    sgn (sgn a * sgn b)       ≃ _ := Integer.sgn_compat_mul
+    sgn (sgn a) * sgn (sgn b) ≃ _ := AA.substL Integer.sgn_idemp
+    sgn a * sgn (sgn b)       ≃ _ := AA.substR Integer.sgn_idemp
+    sgn a * sgn b             ≃ _ := Rel.symm sgn_div_integers
+    sgn ((a : ℚ)/b)           ≃ _ := sgn_subst (eqv_symm ‹p ≃ a/b›)
+    sgn p                     ≃ _ := Rel.refl
+
+/--
+The square of a rational number is nonnegative.
+
+**Property intuition**: The product of two negative numbers is positive, and
+zero times anything is zero, so this must be true.
+
+**Proof intuition**: Assume that the square is negative and reach a
+contradiction. The sign of the number being squared must be nonzero, otherwise
+its square would have a sign of zero. We also know that the square of the sign
+is `-1`. If two nonzero signs have a negative product, then they must be
+distinct -- but in this case that means the sign is distinct from itself.
+Contradiction.
+-/
+theorem nonneg_square {p : ℚ} : sgn (p * p) ≄ -1 := by
+  intro (_ : sgn (p * p) ≃ -1)
+  show False
+  have : sgn p * sgn p ≃ -1 :=
+    Rel.trans (Rel.symm sgn_compat_mul) ‹sgn (p * p) ≃ -1›
+  have : Integer.Nonzero (-1 : ℤ) := Integer.nonzero_sqrt1
+  have : Integer.Nonzero (sgn p * sgn p) :=
+    Integer.nonzero_subst (Rel.symm ‹sgn p * sgn p ≃ -1›) this
+  have (And.intro (_ : Integer.Nonzero (sgn p)) _) :=
+    Integer.nonzero_factors_if_nonzero_product this
+  have : Integer.Sqrt1 (sgn (sgn p)) :=
+    Integer.sgn_nonzero.mp ‹Integer.Nonzero (sgn p)›
+  have : Integer.Sqrt1 (sgn p) := Integer.sqrt1_subst sgn_idemp this
+  have : sgn p ≄ sgn p := Integer.mul_sqrt1_neqv.mp ‹sgn p * sgn p ≃ -1›
+  exact absurd Rel.refl this
+
+/--
 For a product of rational numbers to be zero, at least one of its factors must
 be zero.
 

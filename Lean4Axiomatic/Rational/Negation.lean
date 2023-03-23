@@ -117,6 +117,34 @@ theorem mul_absorbR {p : ℚ} : p * 0 ≃ 0 := calc
   0     ≃ _ := eqv_refl
 
 /--
+Adding or removing a negation from zero leaves it unchanged.
+
+**Property intuition**: Zero doesn't have a sign (alternatively, it has a sign
+of zero), so it can't be negated.
+
+**Proof intuition**: Introduce the additive inverse of the variable on the left
+by adding zero and turning it into the variable from the hypothesis.
+-/
+theorem neg_preserves_zero {p : ℚ} : -p ≃ 0 ↔ p ≃ 0 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : -p ≃ 0)
+    show p ≃ 0
+    calc
+      p      ≃ _ := eqv_symm add_identR
+      p + 0  ≃ _ := add_substR (eqv_symm ‹-p ≃ 0›)
+      p + -p ≃ _ := add_inverseR
+      0      ≃ _ := eqv_refl
+  case mpr =>
+    intro (_ : p ≃ 0)
+    show -p ≃ 0
+    calc
+      -p     ≃ _ := eqv_symm add_identL
+      0 + -p ≃ _ := add_substL (eqv_symm ‹p ≃ 0›)
+      p + -p ≃ _ := add_inverseR
+      0      ≃ _ := eqv_refl
+
+/--
 The negation of a nonzero rational is also nonzero.
 
 **Property intuition**: Negation produces the "mirror image" of a rational
@@ -126,15 +154,8 @@ away from zero, and so will its negation.
 **Proof intuition**: Show that `-p ≃ 0` implies `p ≃ 0`, and take the
 contrapositive.
 -/
-theorem neg_preserves_nonzero {p : ℚ} : p ≄ 0 → -p ≄ 0 := by
-  intro (_ : p ≄ 0) (_ : -p ≃ 0)
-  show False
-  have : p ≃ 0 := calc
-    p      ≃ _ := eqv_symm add_identR
-    p + 0  ≃ _ := add_substR (eqv_symm ‹-p ≃ 0›)
-    p + -p ≃ _ := add_inverseR
-    0      ≃ _ := eqv_refl
-  exact absurd ‹p ≃ 0› ‹p ≄ 0›
+theorem neg_preserves_nonzero {p : ℚ} : p ≄ 0 → -p ≄ 0 :=
+  mt neg_preserves_zero.mp
 
 /-- Useful for having negated expressions under the division sign. -/
 instance neg_preserves_nonzero_inst {p : ℚ} [AP (p ≄ 0)] : AP (-p ≄ 0) :=
@@ -313,6 +334,17 @@ theorem sub_eqv_zero_iff_eqv {p q : ℚ} : p - q ≃ 0 ↔ p ≃ q := by
       p + -q ≃ _ := add_substL ‹p ≃ q›
       q + -q ≃ _ := add_inverseR
       0      ≃ _ := eqv_refl
+
+/--
+Subtracting zero from any rational number leaves it unchanged.
+
+**Property and proof intuition**: It's the reverse situation of adding zero.
+-/
+theorem sub_zero {p : ℚ} : p - 0 ≃ p := calc
+  p - 0  ≃ _ := sub_add_neg
+  p + -0 ≃ _ := add_substR (neg_preserves_zero.mpr eqv_refl)
+  p + 0  ≃ _ := add_identR
+  p      ≃ _ := eqv_refl
 
 /--
 The simplest example of a "telescoping" sum: adding two differences with a
