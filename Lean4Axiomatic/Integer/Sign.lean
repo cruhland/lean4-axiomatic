@@ -721,45 +721,6 @@ theorem sqrt1_cases {a : ℤ} : Sqrt1 a ↔ a ≃ 1 ∨ a ≃ -1 := by
       exact this
 
 /--
-The product of two square roots of unity is one iff they are the same.
-
-**Property intuition**: It's an often-memorized algebraic fact that like signs
-are the only ones whose product is positive.
-
-**Proof intuition**: In the forward direction, there are two cases, `b ≃ 1` and
-`b ≃ -1`. Show via algebra that `a ≃ b` in each. In the reverse direction,
-substitute `b` for `a` and use the definition of square root of unity.
--/
-theorem mul_sqrt1_eqv {a b : ℤ} [Sqrt1 b] : a * b ≃ 1 ↔ a ≃ b := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : a * b ≃ 1)
-    show a ≃ b
-    have : b ≃ 1 ∨ b ≃ -1 := sqrt1_cases.mp ‹Sqrt1 b›
-    match this with
-    | Or.inl (_ : b ≃ 1) => calc
-      a     ≃ _ := Rel.symm AA.identR
-      a * 1 ≃ _ := AA.substR (Rel.symm ‹b ≃ 1›)
-      a * b ≃ _ := ‹a * b ≃ 1›
-      1     ≃ _ := Rel.symm ‹b ≃ 1›
-      b     ≃ _ := Rel.refl
-    | Or.inr (_ : b ≃ -1) => calc
-      a             ≃ _ := Rel.symm neg_involutive
-      (-(-a))       ≃ _ := AA.subst₁ (AA.subst₁ (Rel.symm AA.identR))
-      (-(-(a * 1))) ≃ _ := AA.subst₁ AA.scompatR
-      (-(a * -1))   ≃ _ := AA.subst₁ (AA.substR (Rel.symm ‹b ≃ -1›))
-      (-(a * b))    ≃ _ := AA.subst₁ ‹a * b ≃ 1›
-      (-1)          ≃ _ := Rel.symm ‹b ≃ -1›
-      b             ≃ _ := Rel.refl
-  case mpr =>
-    intro (_ : a ≃ b)
-    show a * b ≃ 1
-    calc
-      a * b ≃ _ := AA.substL ‹a ≃ b›
-      b * b ≃ _ := ‹Sqrt1 b›.elim
-      1     ≃ _ := Rel.refl
-
-/--
 The product of two square roots of unity is minus one iff they are different.
 
 **Property intuition**: It's an often-memorized algebraic fact that unlike
@@ -1128,6 +1089,143 @@ theorem nonzero_factors_if_nonzero_product
   have : Nonzero a := nonzero_iff_neqv_zero.mpr ‹a ≄ 0›
   have : Nonzero b := nonzero_iff_neqv_zero.mpr ‹b ≄ 0›
   exact And.intro ‹Nonzero a› ‹Nonzero b›
+
+/--
+Every nonzero integer's square is equivalent to some positive natural number's
+square.
+
+**Property intuition**: Every square integer has two square roots: one positive
+and one negative, but with the same magnitude. The positive root is the natural
+number whose square is the same as the square integer.
+
+**Proof intuition**: Expand the definition of `Nonzero` until the
+"signed-magnitude" form is reached. Show that squaring the signed-magnitude
+form causes the sign to disappear, leaving the square of the natural number
+magnitude.
+-/
+theorem nonzero_squared_eqv_positive_nat_squared
+    {a : ℤ} : Nonzero a → ∃ (n : ℕ), Positive n ∧ a * a ≃ (n * n : ℕ)
+    := by
+  intro (_ : Nonzero a)
+  show ∃ (n : ℕ), Positive n ∧ a * a ≃ (n * n : ℕ)
+  have (Nonzero.intro (sa : ℤ) (_ : Sqrt1 sa) nws) := ‹Nonzero a›
+  have (NonzeroWithSign.intro (n : ℕ) (_ : Positive n) (_ : a ≃ sa * n)) := nws
+  have : a * a ≃ (n * n : ℕ) := calc
+    a * a               ≃ _ := AA.substL ‹a ≃ sa * n›
+    (sa * n) * a        ≃ _ := AA.substR ‹a ≃ sa * n›
+    (sa * n) * (sa * n) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
+    (sa * sa) * (n * n) ≃ _ := AA.substL ‹Sqrt1 sa›.elim
+    (1 : ℤ) * (n * n)   ≃ _ := AA.identL
+    (n : ℤ) * n         ≃ _ := Rel.symm AA.compat₂
+    ((n * n : ℕ) : ℤ)   ≃ _ := Rel.refl
+  exact Exists.intro n (And.intro ‹Positive n› ‹a * a ≃ (n * n : ℕ)›)
+
+/--
+If a product of integers is a square root of unity, then both factors must also
+be square roots of unity.
+
+**Property intuition**: The square roots of unity are `1` and `-1`. The only
+integer factors that can form those numbers are `1` and `-1`, again.
+
+**Proof intuition**: For a product to be a square root of unity, both factors
+must be nonzero. And each factor's square is equivalent to a positive natural
+number's square. Therefore, the product of the two natural number squares is
+`1`. This means that each square must be equal to one, and thus the original
+factors are square roots of unity.
+-/
+theorem sqrt1_factors_if_sqrt1_product
+    {a b : ℤ} : Sqrt1 (a * b) → Sqrt1 a ∧ Sqrt1 b
+    := by
+  intro (_ : Sqrt1 (a * b))
+  show Sqrt1 a ∧ Sqrt1 b
+  have : Nonzero (a * b) := nonzero_sqrt1
+  have (And.intro (_ : Nonzero a) (_ : Nonzero b)) :=
+    nonzero_factors_if_nonzero_product this
+  have (Exists.intro (n : ℕ) (And.intro (_ : Positive n) a_eqv)) :=
+    nonzero_squared_eqv_positive_nat_squared ‹Nonzero a›
+  have : a * a ≃ (n * n : ℕ) := a_eqv
+  have (Exists.intro (m : ℕ) (And.intro (_ : Positive m) b_eqv)) :=
+    nonzero_squared_eqv_positive_nat_squared ‹Nonzero b›
+  have : b * b ≃ (m * m : ℕ) := b_eqv
+  have : (((n * n) * (m * m) : ℕ) : ℤ) ≃ 1 := calc
+    (((n * n) * (m * m) : ℕ) : ℤ)
+      ≃ _ := AA.compat₂
+    ((n * n : ℕ) : ℤ) * ((m * m : ℕ) : ℤ)
+      ≃ _ := AA.substL (Rel.symm ‹a * a ≃ (n * n : ℕ)›)
+    (a * a) * ((m * m : ℕ) : ℤ)
+      ≃ _ := AA.substR (Rel.symm ‹b * b ≃ (m * m : ℕ)›)
+    (a * a) * (b * b)
+      ≃ _ := AA.expr_xxfxxff_lr_swap_rl
+    (a * b) * (a * b)
+      ≃ _ := ‹Sqrt1 (a * b)›.elim
+    1
+      ≃ _ := Rel.refl
+  have : (n * n) * (m * m) ≃ 1 := AA.inject this
+  have (And.intro (_ : n * n ≃ 1) (_ : m * m ≃ 1)) :=
+    Natural.factors_eqv_1.mp this
+  have : a * a ≃ 1 := calc
+    a * a             ≃ _ := ‹a * a ≃ (n * n : ℕ)›
+    ((n * n : ℕ) : ℤ) ≃ _ := AA.subst₁ ‹n * n ≃ 1›
+    (1 : ℤ)           ≃ _ := Rel.refl
+  have : b * b ≃ 1 := calc
+    b * b             ≃ _ := ‹b * b ≃ (m * m : ℕ)›
+    ((m * m : ℕ) : ℤ) ≃ _ := AA.subst₁ ‹m * m ≃ 1›
+    (1 : ℤ)           ≃ _ := Rel.refl
+  have : Sqrt1 a := Sqrt1.mk ‹a * a ≃ 1›
+  have : Sqrt1 b := Sqrt1.mk ‹b * b ≃ 1›
+  exact And.intro ‹Sqrt1 a› ‹Sqrt1 b›
+
+/--
+The product of two integers is one if and only if they are equivalent square
+roots of unity (i.e., either both `1` or both `-1`).
+
+**Property intuition**: The magnitudes of the factors have to both be one;
+otherwise their product would be zero, or greater than one. And the signs have
+to be the same, otherwise the product would be negative.
+
+**Proof intuition**: For the forward direction, first show that the product is
+a square root of unity, which means each of its factors must be as well. Then
+case-split on one of the factors and show that in both cases the other factor
+must be the same. The reverse direction is trivial.
+-/
+theorem mul_sqrt1_eqv {a b : ℤ} : a * b ≃ 1 ↔ Sqrt1 b ∧ a ≃ b := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a * b ≃ 1)
+    show Sqrt1 b ∧ a ≃ b
+    have : (a * b) * (a * b) ≃ 1 := calc
+      (a * b) * (a * b) ≃ _ := AA.substL ‹a * b ≃ 1›
+      1 * (a * b)       ≃ _ := AA.identL
+      a * b             ≃ _ := ‹a * b ≃ 1›
+      1                 ≃ _ := Rel.refl
+    have : Sqrt1 (a * b) := Sqrt1.mk this
+    have (And.intro (_ : Sqrt1 a) (_ : Sqrt1 b)) :=
+      sqrt1_factors_if_sqrt1_product this
+    have : b ≃ 1 ∨ b ≃ -1 := sqrt1_cases.mp ‹Sqrt1 b›
+    have : a ≃ b :=
+      match this with
+      | Or.inl (_ : b ≃ 1) => calc
+        a     ≃ _ := Rel.symm AA.identR
+        a * 1 ≃ _ := AA.substR (Rel.symm ‹b ≃ 1›)
+        a * b ≃ _ := ‹a * b ≃ 1›
+        1     ≃ _ := Rel.symm ‹b ≃ 1›
+        b     ≃ _ := Rel.refl
+      | Or.inr (_ : b ≃ -1) => calc
+        a             ≃ _ := Rel.symm neg_involutive
+        (-(-a))       ≃ _ := AA.subst₁ (AA.subst₁ (Rel.symm AA.identR))
+        (-(-(a * 1))) ≃ _ := AA.subst₁ AA.scompatR
+        (-(a * -1))   ≃ _ := AA.subst₁ (AA.substR (Rel.symm ‹b ≃ -1›))
+        (-(a * b))    ≃ _ := AA.subst₁ ‹a * b ≃ 1›
+        (-1)          ≃ _ := Rel.symm ‹b ≃ -1›
+        b             ≃ _ := Rel.refl
+    exact And.intro ‹Sqrt1 b› ‹a ≃ b›
+  case mpr =>
+    intro (And.intro (_ : Sqrt1 b) (_ : a ≃ b))
+    show a * b ≃ 1
+    calc
+      a * b ≃ _ := AA.substL ‹a ≃ b›
+      b * b ≃ _ := ‹Sqrt1 b›.elim
+      1     ≃ _ := Rel.refl
 
 /--
 The product of two integers is positive if and only if they have the same sign.
@@ -1520,12 +1618,14 @@ theorem positive_mul_iff_sgn_eqv
       positive_iff_sign_pos1.mp ‹Positive (a * b)›
     have : sgn a * sgn b ≃ 1 :=
       nonzeroWithSign_sign_inject nws_ab_sgn nws_ab_one
-    have : sgn a ≃ sgn b := mul_sqrt1_eqv.mp this
-    exact this
+    have (And.intro _ (_ : sgn a ≃ sgn b)) := mul_sqrt1_eqv.mp this
+    exact ‹sgn a ≃ sgn b›
   case mpr =>
     intro (_ : sgn a ≃ sgn b)
     show Positive (a * b)
-    have : sgn a * sgn b ≃ 1 := mul_sqrt1_eqv.mpr ‹sgn a ≃ sgn b›
+    have : Sqrt1 (sgn b) ∧ sgn a ≃ sgn b :=
+      And.intro ‹Sqrt1 (sgn b)› ‹sgn a ≃ sgn b›
+    have : sgn a * sgn b ≃ 1 := mul_sqrt1_eqv.mpr this
     have : NonzeroWithSign (a * b) 1 :=
       NonzeroWithSign.subst_sign ‹sgn a * sgn b ≃ 1› nws_ab_sgn
     have : Positive (a * b) := positive_iff_sign_pos1.mpr this
@@ -1605,9 +1705,10 @@ theorem sgn_compat_mul {a b : ℤ} : sgn (a * b) ≃ sgn a * sgn b := by
     match this with
     | Or.inl (_ : Positive (a * b)) =>
       have : sgn a ≃ sgn b := positive_mul_iff_sgn_eqv.mp ‹Positive (a * b)›
+      have : Sqrt1 (sgn b) ∧ sgn a ≃ sgn b := And.intro ‹Sqrt1 (sgn b)› this
       calc
         sgn (a * b)   ≃ _ := sgn_positive.mp ‹Positive (a * b)›
-        1             ≃ _ := Rel.symm (mul_sqrt1_eqv.mpr ‹sgn a ≃ sgn b›)
+        1             ≃ _ := Rel.symm (mul_sqrt1_eqv.mpr this)
         sgn a * sgn b ≃ _ := Rel.refl
     | Or.inr (_ : Negative (a * b)) =>
       have : sgn a ≄ sgn b := negative_mul_iff_sgn_neqv.mp ‹Negative (a * b)›

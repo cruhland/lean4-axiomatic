@@ -1,3 +1,4 @@
+import Lean4Axiomatic.Logic
 import Lean4Axiomatic.Natural.Order
 
 /-!
@@ -6,7 +7,7 @@ import Lean4Axiomatic.Natural.Order
 
 namespace Lean4Axiomatic.Natural
 
-open Signed (Positive)
+open Signed (Positive positive_defn)
 
 /-!
 ## Axioms
@@ -227,29 +228,47 @@ theorem mul_split_zero {n m : ℕ} : n * m ≃ 0 ↔ n ≃ 0 ∨ m ≃ 0 := by
         0     ≃ _ := Rel.refl
 
 /--
+A product is positive iff both of its factors are positive.
+
+**Property and proof intuition**: If either factor was zero, the product would
+have to be zero as well, due to `mul_split_zero`.
+-/
+theorem mul_preserves_positive
+    {n m : ℕ} : Positive (n * m) ↔ Positive n ∧ Positive m
+    := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : Positive (n * m))
+    show Positive n ∧ Positive m
+    have : n * m ≄ 0 := positive_defn.mp ‹Positive (n * m)›
+    have : ¬(n ≃ 0 ∨ m ≃ 0) := mt mul_split_zero.mpr this
+    have (And.intro (_ : n ≄ 0) (_ : m ≄ 0)) :=
+      Logic.not_or_iff_and_not.mp this
+    have : Positive n := positive_defn.mpr ‹n ≄ 0›
+    have : Positive m := positive_defn.mpr ‹m ≄ 0›
+    exact And.intro ‹Positive n› ‹Positive m›
+  case mpr =>
+    intro (And.intro (_ : Positive n) (_ : Positive m))
+    show Positive (n * m)
+    have : n ≄ 0 := positive_defn.mp ‹Positive n›
+    have : m ≄ 0 := positive_defn.mp ‹Positive m›
+    have : n ≄ 0 ∧ m ≄ 0 := And.intro ‹n ≄ 0› ‹m ≄ 0›
+    have : ¬(n ≃ 0 ∨ m ≃ 0) := Logic.not_or_iff_and_not.mpr this
+    have : n * m ≄ 0 := mt mul_split_zero.mp this
+    have : Positive (n * m) := positive_defn.mpr this
+    exact this
+
+/--
 The product of positive natural numbers is positive.
 
-Intuition: reframe positive as nonzero, then contradict with
-`Derived.mul_split_zero`.
+Corollary of `mul_preserves_positive` that curries the hypotheses for
+convenience.
 -/
 theorem mul_positive {n m : ℕ}
     : Positive n → Positive m → Positive (n * m) := by
   intro (_ : Positive n) (_ : Positive m)
   show Positive (n * m)
-  have : n ≄ 0 := Signed.positive_defn.mp ‹Positive n›
-  have : m ≄ 0 := Signed.positive_defn.mp ‹Positive m›
-  apply Signed.positive_defn.mpr
-  show n * m ≄ 0
-  intro (_ : n * m ≃ 0)
-  show False
-  have : n ≃ 0 ∨ m ≃ 0 := mul_split_zero.mp ‹n * m ≃ 0›
-  apply Or.elim ‹n ≃ 0 ∨ m ≃ 0›
-  · intro (_ : n ≃ 0)
-    show False
-    exact absurd ‹n ≃ 0› ‹n ≄ 0›
-  · intro (_ : m ≃ 0)
-    show False
-    exact absurd ‹m ≃ 0› ‹m ≄ 0›
+  exact mul_preserves_positive.mpr (And.intro ‹Positive n› ‹Positive m›)
 
 /--
 Multiplication on the left distributes over addition.
@@ -423,74 +442,67 @@ instance mul_identity : AA.Identity (α := ℕ) 1 (· * ·) := {
 }
 
 /--
-Zero is the only natural number less than one.
+The only way that two natural numbers can multiply to one is if they are both
+one as well.
 
-This is a lemma to help with the proof of `sqrt1` below.
+**Property and proof intuition**: If a factor was zero, the product would be
+zero; if a factor was greater than one, the product would be greater than one.
 -/
-theorem zero_lt_one {n : ℕ} : n < 1 ↔ n ≃ 0 := by
+theorem factors_eqv_1 {n m : ℕ} : n * m ≃ 1 ↔ n ≃ 1 ∧ m ≃ 1 := by
   apply Iff.intro
   case mp =>
-    intro (_ : n < 1)
-    show n ≃ 0
-    have : n < step 0 := AA.substRFn literal_step ‹n < 1›
-    have : n < 0 ∨ n ≃ 0 := lt_split ‹n < step 0›
-    match ‹n < 0 ∨ n ≃ 0› with
-    | Or.inl (_ : n < 0) => exact absurd ‹n < 0› lt_zero
-    | Or.inr (_ : n ≃ 0) => exact ‹n ≃ 0›
+    intro (_ : n * m ≃ 1)
+    show n ≃ 1 ∧ m ≃ 1
+    have : Positive (n * m) :=
+      positive_subst (Rel.symm ‹n * m ≃ 1›) one_positive
+    have (And.intro (_ : Positive n) (_ : Positive m)) :=
+      mul_preserves_positive.mp this
+    have : n ≥ 1 := positive_ge.mp ‹Positive n›
+    have : n > 1 ∨ n ≃ 1 := ge_split this
+    match this with
+    | Or.inl (_ : n > 1) =>
+      have : 1 < n * m := calc
+        1     ≤ _ := positive_ge.mp ‹Positive m›
+        m     ≃ _ := Rel.symm AA.identL
+        1 * m < _ := subst_mul_lt ‹Positive m› ‹1 < n›
+        n * m ≃ _ := Rel.refl
+      have two : AA.TwoOfThree (n * m < 1) (n * m ≃ 1) (n * m > 1) :=
+        AA.TwoOfThree.twoAndThree ‹n * m ≃ 1› ‹n * m > 1›
+      have notTwo : ¬AA.TwoOfThree (n * m < 1) (n * m ≃ 1) (n * m > 1) :=
+        (trichotomy (n * m) 1).atMostOne
+      exact absurd two notTwo
+    | Or.inr (_ : n ≃ 1) =>
+      have : m ≃ 1 := calc
+        m     ≃ _ := Rel.symm AA.identL
+        1 * m ≃ _ := AA.substL (Rel.symm ‹n ≃ 1›)
+        n * m ≃ _ := ‹n * m ≃ 1›
+        1     ≃ _ := Rel.refl
+      exact And.intro ‹n ≃ 1› ‹m ≃ 1›
   case mpr =>
-    intro (_ : n ≃ 0)
-    show n < 1
-    have : (0 : ℕ) < step 0 := lt_step
-    have : n < step 0 := AA.substLFn (Rel.symm ‹n ≃ 0›) ‹(0 : ℕ) < step 0›
-    have : n < 1 := AA.substRFn (Rel.symm literal_step) ‹n < step 0›
-    exact ‹n < 1›
+    intro (And.intro (_ : n ≃ 1) (_ : m ≃ 1))
+    show n * m ≃ 1
+    calc
+      n * m ≃ _ := AA.substL ‹n ≃ 1›
+      1 * m ≃ _ := AA.identL
+      m     ≃ _ := ‹m ≃ 1›
+      1     ≃ _ := Rel.refl
 
 /--
 The only square root of unity in the natural numbers is `1`.
 
-**Property and proof intuition**: It can only be one, because zero squared is
-zero, and squaring any natural number greater than one always produces a larger
-result.
+This is a corollary of `factors_eqv_1`.
 -/
 theorem sqrt1 {n : ℕ} : n * n ≃ 1 ↔ n ≃ 1 := by
   apply Iff.intro
   case mp =>
     intro (_ : n * n ≃ 1)
     show n ≃ 1
-    have tri : AA.ExactlyOneOfThree (n < 1) (n ≃ 1) (n > 1) := trichotomy n 1
-    match tri.atLeastOne with
-    | AA.OneOfThree.first (_ : n < 1) =>
-      apply False.elim
-      show False
-      have : n ≃ 0 := zero_lt_one.mp ‹n < 1›
-      have : step 0 ≃ 0 := calc
-        step 0  ≃ _ := Rel.symm literal_step
-        1       ≃ _ := Rel.symm ‹n * n ≃ 1›
-        n * n   ≃ _ := AA.substL ‹n ≃ 0›
-        0 * n   ≃ _ := AA.absorbL
-        0       ≃ _ := Rel.refl
-      exact absurd ‹step (0 : ℕ) ≃ 0› step_neqv_zero
-    | AA.OneOfThree.second (_ : n ≃ 1) =>
-      exact ‹n ≃ 1›
-    | AA.OneOfThree.third (_ : n > 1) =>
-      apply False.elim
-      show False
-      apply tri.atMostOne
-      show AA.TwoOfThree (n < 1) (n ≃ 1) (n > 1)
-      have : step 0 < n := AA.substLFn literal_step ‹1 < n›
-      have : 0 < n := Rel.trans lt_step ‹step 0 < n›
-      have : Positive n := lt_zero_pos.mpr ‹0 < n›
-      have : 1 * n < n * n := AA.substLC ‹Positive n› ‹1 < n›
-      have : n < n * n := AA.substLFn AA.identL ‹1 * n < n * n›
-      have : n < 1 := AA.substRFn ‹n * n ≃ 1› ‹n < n * n›
-      exact AA.TwoOfThree.oneAndThree ‹n < 1› ‹n > 1›
+    have (And.intro (_ : n ≃ 1) _) := factors_eqv_1.mp ‹n * n ≃ 1›
+    exact ‹n ≃ 1›
   case mpr =>
     intro (_ : n ≃ 1)
     show n * n ≃ 1
-    calc
-      n * n ≃ _ := AA.substL ‹n ≃ 1›
-      1 * n ≃ _ := AA.identL
-      n     ≃ _ := ‹n ≃ 1›
-      1     ≃ _ := Rel.refl
+    have : n * n ≃ 1 := factors_eqv_1.mpr (And.intro ‹n ≃ 1› ‹n ≃ 1›)
+    exact this
 
 end Lean4Axiomatic.Natural

@@ -347,6 +347,24 @@ theorem sub_zero {p : ℚ} : p - 0 ≃ p := calc
   p      ≃ _ := eqv_refl
 
 /--
+Subtraction of rational numbers is consistent with its integer equivalent.
+
+**Property intuition**: The integers are embedded in the rationals, so
+subtraction had better continue to work.
+
+**Proof intuition**: Expand subtraction into addition and negation, and use
+the `from_integer` compatibility properties for those operations.
+-/
+theorem sub_compat_from_integer
+    {a b : ℤ} : ((a - b : ℤ) : ℚ) ≃ (a : ℚ) - (b : ℚ)
+    := calc
+  ((a - b : ℤ) : ℚ)        ≃ _ := from_integer_subst Integer.sub_defn
+  ((a + -b : ℤ) : ℚ)       ≃ _ := add_compat_from_integer
+  (a : ℚ) + ((-b : ℤ) : ℚ) ≃ _ := add_substR neg_compat_from_integer
+  (a : ℚ) + -(b : ℚ)       ≃ _ := eqv_symm sub_add_neg
+  (a : ℚ) - (b : ℚ)        ≃ _ := eqv_refl
+
+/--
 The simplest example of a "telescoping" sum: adding two differences with a
 common middle value results in the difference of the endpoints.
 

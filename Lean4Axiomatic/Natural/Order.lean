@@ -1,4 +1,3 @@
-import Lean4Axiomatic.Natural.Addition
 import Lean4Axiomatic.Natural.Sign
 
 /-!
@@ -115,6 +114,19 @@ theorem le_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ ≤ m → n₂
     n₁ + d ≃ _ := ‹n₁ + d ≃ m›
     m      ≃ _ := Rel.refl
 
+/--
+Corollary of `le_subst_eqv` to support transitivity of equivalence and
+_less than or equivalent to_.
+-/
+theorem trans_eqv_le_le {n m k : ℕ} : n ≃ m → m ≤ k → n ≤ k := by
+  intro (_ : n ≃ m) (_ : m ≤ k)
+  show n ≤ k
+  exact le_subst_eqv (Rel.symm ‹n ≃ m›) ‹m ≤ k›
+
+instance trans_eqv_le_le_inst : Trans (α := ℕ) (· ≃ ·) (· ≤ ·) (· ≤ ·) := {
+  trans := trans_eqv_le_le
+}
+
 def le_substL_eqv
     : AA.SubstitutiveOn Hand.L (α := ℕ) (· ≤ ·) AA.tc (· ≃ ·) (· → ·)
     := {
@@ -133,6 +145,19 @@ theorem le_eqv_subst {n m₁ m₂ : ℕ} : m₁ ≃ m₂ → n ≤ m₁ → n �
   exists d
   show n + d ≃ m₂
   exact Rel.trans ‹n + d ≃ m₁› ‹m₁ ≃ m₂›
+
+/--
+Corollary of `le_eqv_subst` to support transitivity of _less than or equivalent
+to_ and equivalence.
+-/
+theorem trans_le_eqv_le {n m k : ℕ} : n ≤ m → m ≃ k → n ≤ k := by
+  intro (_ : n ≤ m) (_ : m ≃ k)
+  show n ≤ k
+  exact le_eqv_subst ‹m ≃ k› ‹n ≤ m›
+
+instance trans_le_eqv_le_inst : Trans (α := ℕ) (· ≤ ·) (· ≃ ·) (· ≤ ·) := {
+  trans := trans_le_eqv_le
+}
 
 def le_substR_eqv
     : AA.SubstitutiveOn Hand.R (α := ℕ) (· ≤ ·) AA.tc (· ≃ ·) (· → ·)
@@ -227,7 +252,7 @@ theorem le_trans {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k := by
     | Or.inr (_ : m ≃ step k) =>
       exact AA.substRFn ‹m ≃ step k› ‹n ≤ m›
 
-instance le_transitive : Relation.Transitive (α := ℕ) (· ≤ ·) := {
+instance trans_le_le_le : Trans (α := ℕ) (· ≤ ·) (· ≤ ·) (· ≤ ·) := {
   trans := le_trans
 }
 
@@ -323,6 +348,19 @@ theorem lt_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ < m → n₂ <
   apply lt_defn.mpr
   exact ⟨‹n₂ ≤ m›, ‹n₂ ≄ m›⟩
 
+/--
+Corollary of `lt_subst_eqv` to support transitivity of equivalence and _less
+than_.
+-/
+theorem trans_eqv_lt_lt {n m k : ℕ} : n ≃ m → m < k → n < k := by
+  intro (_ : n ≃ m) (_ : m < k)
+  show n < k
+  exact lt_subst_eqv (Rel.symm ‹n ≃ m›) ‹m < k›
+
+instance trans_eqv_lt_lt_inst : Trans (α := ℕ) (· ≃ ·) (· < ·) (· < ·) := {
+  trans := trans_eqv_lt_lt
+}
+
 def lt_substL_eqv
     : AA.SubstitutiveOn Hand.L (α := ℕ) (· < ·) AA.tc (· ≃ ·) (· → ·)
     := {
@@ -340,6 +378,19 @@ theorem lt_eqv_subst {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m < n₁ → m < n�
   have : m ≄ n₂ := AA.neqv_substR ‹n₁ ≃ n₂› ‹m ≄ n₁›
   apply lt_defn.mpr
   exact ⟨‹m ≤ n₂›, ‹m ≄ n₂›⟩
+
+/--
+Corollary of `lt_eqv_subst` to support transitivity of _less than_ and
+equivalence.
+-/
+theorem trans_lt_eqv_lt {n m k : ℕ} : n < m → m ≃ k → n < k := by
+  intro (_ : n < m) (_ : m ≃ k)
+  show n < k
+  exact lt_eqv_subst ‹m ≃ k› ‹n < m›
+
+instance trans_lt_eqv_lt_inst : Trans (α := ℕ) (· < ·) (· ≃ ·) (· < ·) := {
+  trans := trans_lt_eqv_lt
+}
 
 def lt_substR_eqv
     : AA.SubstitutiveOn Hand.R (α := ℕ) (· < ·) AA.tc (· ≃ ·) (· → ·)
@@ -551,6 +602,48 @@ theorem le_split {n m : ℕ} : n ≤ m → n < m ∨ n ≃ m := by
       m            ≃ _ := Rel.refl
 
 /--
+Split _greater than or equivalent to_ into the relations implied by its name.
+
+**Proof intuition**: Flip the relation around and use `le_split`.
+-/
+theorem ge_split {n m : ℕ} : n ≥ m → n > m ∨ n ≃ m := by
+  intro (_ : n ≥ m)
+  show n > m ∨ n ≃ m
+  have : m ≤ n := ‹n ≥ m›
+  have : m < n ∨ m ≃ n := le_split this
+  match this with
+  | Or.inl (_ : m < n) =>
+    have : n > m := ‹m < n›
+    exact Or.inl this
+  | Or.inr (_ : m ≃ n) =>
+    have : n ≃ m := Rel.symm ‹m ≃ n›
+    exact Or.inr this
+
+/--
+Positive natural numbers are exactly those that are greater than or equivalent
+to one.
+
+**Property and proof intuition**: Follows directly from `lt_zero_pos` (positive
+naturals are greater than zero) and ordering properties.
+-/
+theorem positive_ge {n : ℕ} : Positive n ↔ n ≥ 1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : Positive n)
+    show n ≥ 1
+    have : n > 0 := lt_zero_pos.mp ‹Positive n›
+    have : n ≥ step 0 := lt_step_le.mp this
+    have : n ≥ 1 := AA.substLFn (Rel.symm literal_step) this
+    exact this
+  case mpr =>
+    intro (_ : n ≥ 1)
+    show Positive n
+    have : n ≥ step 0 := AA.substLFn literal_step ‹n ≥ 1›
+    have : n > 0 := lt_step_le.mpr this
+    have : Positive n := lt_zero_pos.mpr this
+    exact this
+
+/--
 Useful result when needing to decrement the larger number in a _less than_
 relation.
 -/
@@ -573,8 +666,64 @@ theorem lt_trans {n m k : ℕ} : n < m → m < k → n < k := by
     step m ≤ _ := lt_step_le.mp ‹m < k›
     k      ≤ _ := Rel.refl
 
-instance lt_transitive : Relation.Transitive (α := ℕ) (· < ·) := {
+instance trans_lt_lt_lt : Trans (α := ℕ) (· < ·) (· < ·) (· < ·) := {
   trans := lt_trans
+}
+
+/--
+Join a _less than_ relation and a _less than or equivalent_ relation that share
+an operand into another _less than_ relation.
+
+**Property intuition**: The hypotheses say that `n` and `m` are separated by
+some amount, and that `m` and `k` are separated by another. Thus `n` and `k`
+must be separated by some amount as well, and it must be a nonzero amount
+because `n` and `m` are separated by a nonzero amount.
+
+**Proof intuition**: Split _less than or equivalent_ into cases and use an
+existing transitivity property for each case.
+-/
+theorem trans_lt_le_lt {n m k : ℕ} : n < m → m ≤ k → n < k := by
+  intro (_ : n < m) (_ : m ≤ k)
+  show n < k
+  have : m < k ∨ m ≃ k := le_split ‹m ≤ k›
+  match this with
+  | Or.inl (_ : m < k) =>
+    have : n < k := lt_trans ‹n < m› ‹m < k›
+    exact this
+  | Or.inr (_ : m ≃ k) =>
+    have : n < k := trans_lt_eqv_lt ‹n < m› ‹m ≃ k›
+    exact this
+
+instance trans_lt_le_lt_inst : Trans (α := ℕ) (· < ·) (· ≤ ·) (· < ·) := {
+  trans := trans_lt_le_lt
+}
+
+/--
+Join a _less than or equivalent_ relation and a _less than_ relation that share
+an operand into another _less than_ relation.
+
+**Property intuition**: The hypotheses say that `n` and `m` are separated by
+some amount, and that `m` and `k` are separated by another. Thus `n` and `k`
+must be separated by some amount as well, and it must be a nonzero amount
+because `m` and `k` are separated by a nonzero amount.
+
+**Proof intuition**: Split _less than or equivalent_ into cases and use an
+existing transitivity property for each case.
+-/
+theorem trans_le_lt_lt {n m k : ℕ} : n ≤ m → m < k → n < k := by
+  intro (_ : n ≤ m) (_ : m < k)
+  show n < k
+  have : n < m ∨ n ≃ m := le_split ‹n ≤ m›
+  match this with
+  | Or.inl (_ : n < m) =>
+    have : n < k := lt_trans ‹n < m› ‹m < k›
+    exact this
+  | Or.inr (_ : n ≃ m) =>
+    have : n < k := trans_eqv_lt_lt ‹n ≃ m› ‹m < k›
+    exact this
+
+instance trans_le_lt_lt_inst : Trans (α := ℕ) (· ≤ ·) (· < ·) (· < ·) := {
+  trans := trans_le_lt_lt
 }
 
 /--
@@ -666,7 +815,7 @@ theorem trichotomy (n m : ℕ)
       | AA.OneOfThree.third (_ : n > m) =>
         apply AA.OneOfThree.third
         show m < step n
-        exact Rel.trans ‹m < n› lt_step
+        exact lt_trans ‹m < n› lt_step
   case atMostOne =>
     show ¬ AA.TwoOfThree (n < m) (n ≃ m) (n > m)
     intro

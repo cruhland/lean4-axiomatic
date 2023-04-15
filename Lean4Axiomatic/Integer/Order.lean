@@ -544,6 +544,72 @@ theorem le_iff_lt_or_eqv {a b : ℤ} : a ≤ b ↔ a < b ∨ a ≃ b := by
     exact this
 
 /--
+The _less than or equivalent to_ relation is reversed with negated operands.
+
+**Property and proof intuition**: Equivalence is symmetric and preserved by
+negation, so the order-reversal comes solely from the _less than_ component of
+the relation. And that is already known via `lt_neg_flip`.
+-/
+theorem le_neg_flip {a b : ℤ} : a ≤ b ↔ -b ≤ -a := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a ≤ b)
+    show -b ≤ -a
+    have : a < b ∨ a ≃ b := le_iff_lt_or_eqv.mp ‹a ≤ b›
+    match this with
+    | Or.inl (_ : a < b) =>
+      have : -b < -a := lt_neg_flip.mp ‹a < b›
+      have : -b ≤ -a := le_iff_lt_or_eqv.mpr (Or.inl this)
+      exact this
+    | Or.inr (_ : a ≃ b) =>
+      have : -b ≃ -a := AA.subst₁ (Rel.symm ‹a ≃ b›)
+      have : -b ≤ -a := le_iff_lt_or_eqv.mpr (Or.inr this)
+      exact this
+  case mpr =>
+    intro (_ : -b ≤ -a)
+    show a ≤ b
+    have : -b < -a ∨ -b ≃ -a := le_iff_lt_or_eqv.mp ‹-b ≤ -a›
+    match this with
+    | Or.inl (_ : -b < -a) =>
+      have : a < b := lt_neg_flip.mpr ‹-b < -a›
+      have : a ≤ b := le_iff_lt_or_eqv.mpr (Or.inl this)
+      exact this
+    | Or.inr (_ : -b ≃ -a) =>
+      have : a ≃ b := AA.inject (Rel.symm ‹-b ≃ -a›)
+      have : a ≤ b := le_iff_lt_or_eqv.mpr (Or.inr this)
+      exact this
+
+/--
+Two integers cannot be both _less than or equivalent to_ and _greater than_
+each other.
+
+**Property and proof intuition**: A direct consequence of trichotomy.
+-/
+theorem le_gt_false {a b : ℤ} : a ≤ b → a > b → False := by
+  intro (_ : a ≤ b) (_ : a > b)
+  show False
+  have : a < b ∨ a ≃ b := le_iff_lt_or_eqv.mp ‹a ≤ b›
+  have notTwo : ¬AA.TwoOfThree (a < b) (a ≃ b) (a > b) :=
+    (order_trichotomy a b).atMostOne
+  have two : AA.TwoOfThree (a < b) (a ≃ b) (a > b) :=
+    match ‹a < b ∨ a ≃ b› with
+    | Or.inl (_ : a < b) => AA.TwoOfThree.oneAndThree ‹a < b› ‹a > b›
+    | Or.inr (_ : a ≃ b) => AA.TwoOfThree.twoAndThree ‹a ≃ b› ‹a > b›
+  exact absurd two notTwo
+
+/--
+Two integers cannot be both _less than_ and _greater than or equivalent to_
+each other.
+
+**Property and proof intuition**: A direct consequence of trichotomy, via
+`le_gt_false`.
+-/
+theorem lt_ge_false {a b : ℤ} : a < b → a ≥ b → False := by
+  intro (_ : b > a) (_ : b ≤ a)
+  show False
+  exact le_gt_false ‹b ≤ a› ‹b > a›
+
+/--
 Incrementing an integer always increases it.
 
 **Proof intuition**: For the _less than_ relation to hold, the difference of
@@ -565,6 +631,26 @@ theorem lt_inc {a : ℤ} : a < a + 1 := by
   exact neg_one_negative
 
 /--
+Zero is less than one (in the integers).
+
+**Property and proof definition**: A direct consequence of `lt_inc`.
+-/
+theorem zero_lt_one : (0 : ℤ) < 1 := by
+  have : (0 : ℤ) < 0 + 1 := lt_inc
+  have : (0 : ℤ) < 1 := lt_substR_eqv AA.identL this
+  exact this
+
+/--
+Negative one is less than zero (in the integers).
+
+**Property and proof definition**: A direct consequence of `lt_inc`.
+-/
+theorem neg_one_lt_zero : (-1 : ℤ) < 0 := by
+  have : (-1 : ℤ) < -1 + 1 := lt_inc
+  have : (-1 : ℤ) < 0 := lt_substR_eqv AA.inverseL this
+  exact this
+
+/--
 One way of converting _less than or equivalent to_ into _less than_ requires
 incrementing the right operand.
 
@@ -579,5 +665,53 @@ theorem le_widen_lt {a b : ℤ} : a ≤ b → a < b + 1 := by
   | Or.inl (_ : a < b) => Rel.trans ‹a < b› ‹b < b + 1›
   | Or.inr (_ : a ≃ b) => AA.substLFn (Rel.symm ‹a ≃ b›) ‹b < b + 1›
   exact this
+
+/--
+Convert the _less than_ relation to and from its representation as the sign
+value of the difference of its operands.
+
+**Property intuition**: If a subtraction's result is negative, then its first
+operand must be less than its second.
+
+**Proof intuition**: Use `Negative` as an intermediate step in the conversion.
+-/
+theorem lt_sgn {a b : ℤ} : a < b ↔ sgn (a - b) ≃ -1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a < b)
+    show sgn (a - b) ≃ -1
+    have : Negative (a - b) := lt_iff_neg_diff.mp ‹a < b›
+    have : sgn (a - b) ≃ -1 := sgn_negative.mp this
+    exact this
+  case mpr =>
+    intro (_ : sgn (a - b) ≃ -1)
+    show a < b
+    have : Negative (a - b) := sgn_negative.mpr ‹sgn (a - b) ≃ -1›
+    have : a < b := lt_iff_neg_diff.mpr this
+    exact this
+
+/--
+Convert the _greater than_ relation to and from its representation as the sign
+value of the difference of its operands.
+
+**Property intuition**: If a subtraction's result is positive, then its first
+operand must be greater than its second.
+
+**Proof intuition**: Use `Positive` as an intermediate step in the conversion.
+-/
+theorem gt_sgn {a b : ℤ} : a > b ↔ sgn (a - b) ≃ 1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a > b)
+    show sgn (a - b) ≃ 1
+    have : Positive (a - b) := gt_iff_pos_diff.mp ‹a > b›
+    have : sgn (a - b) ≃ 1 := sgn_positive.mp this
+    exact this
+  case mpr =>
+    intro (_ : sgn (a - b) ≃ 1)
+    show a > b
+    have : Positive (a - b) := sgn_positive.mpr ‹sgn (a - b) ≃ 1›
+    have : a > b := gt_iff_pos_diff.mpr this
+    exact this
 
 end Lean4Axiomatic.Integer

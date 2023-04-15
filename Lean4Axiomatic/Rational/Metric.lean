@@ -150,4 +150,25 @@ theorem abs_zero {p : ℚ} : abs p ≃ 0 ↔ p ≃ 0 := by
       (0 : ℚ) * sgn p ≃ _ := mul_absorbL
       0               ≃ _ := eqv_refl
 
+/--
+The [triangle inequality](https://w.wiki/6VUr); i.e. how absolute value behaves
+over addition.
+
+**Property intuition**: The sum of two absolute values will always be
+non-negative, while the sum of any two rationals can have smaller magnitude due
+to negative values.
+
+**Proof intuition**: Expand `abs` in terms of `sgn`. The key substitution is
+that a rational number times an arbitrary sign value will never be greater than
+that rational number times its own sign, i.e. the number's absolute value.
+-/
+theorem abs_compat_add {p q : ℚ} : abs (p + q) ≤ abs p + abs q := calc
+  abs (p + q)                       ≃ _ := abs_sgn
+  (p + q) * sgn (p + q)             ≃ _ := mul_distribR
+  p * sgn (p + q) + q * sgn (p + q) ≤ _ := add_substL_le mul_sgn_self_max
+  p * sgn p + q * sgn (p + q)       ≤ _ := add_substR_le mul_sgn_self_max
+  p * sgn p + q * sgn q             ≃ _ := add_substL (eqv_symm abs_sgn)
+  abs p + q * sgn q                 ≃ _ := add_substR (eqv_symm abs_sgn)
+  abs p + abs q                     ≃ _ := eqv_refl
+
 end Lean4Axiomatic.Rational
