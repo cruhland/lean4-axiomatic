@@ -51,7 +51,7 @@ attribute [instance] Equality.eqvOp?
 export Equality (eqvOp?)
 
 /-- Definitions pertaining to numeric literal support for natural numbers. -/
-class Literals (ℕ : outParam Type) [outParam (Constructors ℕ)] [outParam (Equality ℕ)] :=
+class Literals (ℕ : outParam Type) [Constructors ℕ] [Equality ℕ] :=
   /--
   Enables representation of natural numbers by numeric literals.
 
@@ -85,7 +85,9 @@ export Literals (literal literal_step literal_zero)
 Packages together the basic properties of natural numbers, to reduce the amount
 of class references needed for more advanced properties.
 -/
-class Core (ℕ : Type) extends Constructors ℕ, Equality ℕ, Literals ℕ :=
+class Core
+    (ℕ : semiOutParam Type) extends Constructors ℕ, Equality ℕ, Literals ℕ
+    :=
   /--
   The `step` function preserves equality of natural numbers; if two natural
   numbers are equal, they are still equal after `step` is applied to both.
@@ -100,7 +102,7 @@ export Core (step_substitutive)
 Provides the remaining Peano axioms for natural numbers (see `Constructors`
 for the first two).
 -/
-class Axioms (ℕ : outParam Type) [outParam (Core ℕ)] :=
+class Axioms (ℕ : outParam Type) [Core ℕ] :=
   /-- **Peano axiom 3**: zero is not the successor of any natural number. -/
   step_neqv_zero {n : ℕ} : step n ≄ 0
 

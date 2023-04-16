@@ -16,7 +16,7 @@ required to construct an instance.
 **Named parameters**
 - `ℕ`: a type that obeys all of the properties provided by this class.
 -/
-class Natural (ℕ : Type) :=
+class Natural (ℕ : semiOutParam Type) :=
   toCore : Core ℕ
   toAxioms : Axioms ℕ
   toAddition : Addition ℕ

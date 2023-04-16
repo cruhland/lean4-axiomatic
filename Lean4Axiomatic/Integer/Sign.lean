@@ -677,7 +677,7 @@ theorem sqrt1_cases {a : ℤ} : Sqrt1 a ↔ a ≃ 1 ∨ a ≃ -1 := by
         a * (n : ℤ)       ≃ _ := AA.substR (Rel.symm ‹a ≃ (n : ℤ)›)
         a * a             ≃ _ := ‹Sqrt1 a›.elim
         1                 ≃ _ := Rel.refl
-      have : n * n ≃ 1 := AA.inject ‹((n * n : ℕ) : ℤ) ≃ (1 : ℤ)›
+      have : n * n ≃ 1 := AA.inject ‹((n * n : ℕ) : ℤ) ≃ ((1 : ℕ) : ℤ)›
       have : n ≃ 1 := Natural.sqrt1.mp ‹n * n ≃ 1›
       show a ≃ 1
       calc
@@ -699,7 +699,7 @@ theorem sqrt1_cases {a : ℤ} : Sqrt1 a ↔ a ≃ 1 ∨ a ≃ -1 := by
         a * (-(n : ℤ))            ≃ _ := AA.substR (Rel.symm ‹a ≃ -(n : ℤ)›)
         a * a                     ≃ _ := ‹Sqrt1 a›.elim
         1                         ≃ _ := Rel.refl
-      have : n * n ≃ 1 := AA.inject ‹((n * n : ℕ) : ℤ) ≃ (1 : ℤ)›
+      have : n * n ≃ 1 := AA.inject ‹((n * n : ℕ) : ℤ) ≃ ((1 : ℕ) : ℤ)›
       have : n ≃ 1 := Natural.sqrt1.mp ‹n * n ≃ 1›
       show a ≃ -1
       calc
@@ -1147,7 +1147,7 @@ theorem sqrt1_factors_if_sqrt1_product
   have (Exists.intro (m : ℕ) (And.intro (_ : Positive m) b_eqv)) :=
     nonzero_squared_eqv_positive_nat_squared ‹Nonzero b›
   have : b * b ≃ (m * m : ℕ) := b_eqv
-  have : (((n * n) * (m * m) : ℕ) : ℤ) ≃ 1 := calc
+  have : (((n * n) * (m * m) : ℕ) : ℤ) ≃ ((1 : ℕ) : ℤ) := calc
     (((n * n) * (m * m) : ℕ) : ℤ)
       ≃ _ := AA.compat₂
     ((n * n : ℕ) : ℤ) * ((m * m : ℕ) : ℤ)

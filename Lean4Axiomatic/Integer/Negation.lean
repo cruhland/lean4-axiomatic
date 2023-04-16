@@ -85,7 +85,7 @@ theorem neg_one_neqv_one : -1 ≄ (1 : ℤ) := by
     (1 : ℤ) + (1 : ℤ)      ≃ _ := AA.substR (Rel.symm ‹-1 ≃ (1 : ℤ)›)
     1 + -1                 ≃ _ := AA.inverseR
     0                      ≃ _ := Rel.refl
-  have : step 1 ≃ 0 := AA.inject ‹(step 1 : ℤ) ≃ (0 : ℤ)›
+  have : step 1 ≃ 0 := AA.inject ‹((step 1 : ℕ) : ℤ) ≃ ((0 : ℕ) : ℤ)›
   have : step 1 ≄ 0 := Natural.step_neqv_zero
   exact absurd ‹step 1 ≃ 0› ‹step 1 ≄ 0›
 

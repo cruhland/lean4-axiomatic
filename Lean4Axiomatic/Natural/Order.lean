@@ -203,7 +203,7 @@ theorem le_step_split {n m : ℕ} : n ≤ step m → n ≤ m ∨ n ≃ step m :=
     apply le_defn.mpr
     exists e
     show n + e ≃ m
-    apply AA.inject (β := ℕ) (rβ := (· ≃ ·))
+    apply AA.inject (f := step) (rβ := (· ≃ ·))
     show step (n + e) ≃ step m
     calc
       step (n + e) ≃ _ := Rel.symm add_step

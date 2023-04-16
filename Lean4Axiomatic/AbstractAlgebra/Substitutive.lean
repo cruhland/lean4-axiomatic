@@ -30,8 +30,8 @@ For more information see `Substitutive₁.subst₁`.
 - `rβ`: a binary relation over `f`'s result type `β`.
 -/
 class Substitutive₁
-    {α : Sort u} {β : Sort v}
-    (f : α → β) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
+    {α : Sort u} {β : Sort v} (f : semiOutParam (α → β))
+    (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
     :=
   /--
   The generalized substitution property of an unary operation `f`.
@@ -84,8 +84,8 @@ For more information see `Injective.inject`.
 - `rβ`: a binary relation over `f`'s result type `β`.
 -/
 class Injective
-    {α : Sort u} {β : Sort v}
-    (f : outParam (α → β)) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
+    {α : Sort u} {β : Sort v} (f : semiOutParam (α → β))
+    (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
     :=
   /--
   The generalized injective property of an unary operation `f`.
@@ -385,8 +385,9 @@ See `SubstitutiveOn` for detailed documentation.
     A binary relation on values of `γ`.
 -/
 class HSubstitutive₂
-    {α β : Sort u} {γ : Sort v} (f : α → β → γ) (CL : β → Prop) (CR : α → Prop)
-    (inputRelL : α → α → Prop) (inputRelR : β → β → Prop)
+    {α β : Sort u} {γ : Sort v} (f : α → β → γ)
+    (CL : outParam (β → Prop)) (CR : outParam (α → Prop))
+    (inputRelL : outParam (α → α → Prop)) (inputRelR : outParam (β → β → Prop))
     (outputRel : γ → γ → Prop)
     :=
   substitutiveL : SubstitutiveOn Hand.L f CL inputRelL outputRel
