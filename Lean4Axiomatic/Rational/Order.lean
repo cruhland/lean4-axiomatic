@@ -270,6 +270,19 @@ theorem le_cases {p q : ℚ} : p ≤ q ↔ p < q ∨ p ≃ q := by
     exact this
 
 /--
+A rational number is always less than or equivalent to itself.
+
+In other words, _less than or equivalent to_ is a reflexive relation.
+
+**Property and proof intuition**: Every rational number is equivalent to
+itself, and thus is less than _or_ equivalent to itself as well.
+-/
+theorem le_refl {p : ℚ} : p ≤ p := by
+  have : p ≃ p := eqv_refl
+  have : p ≤ p := le_cases.mpr (Or.inr this)
+  exact this
+
+/--
 Make the "or" explicit in "greater than or equivalent to".
 
 **Proof intuition**: Use `le_cases` with some adjustments to swap operands.
@@ -549,19 +562,20 @@ theorem sgn_min {p : ℚ} : sgn p ≥ -1 := by
 Add the same value on the right to both operands of
 _less than or equivalent to_.
 
-**Property intuition**: Increasing two values by the same amount doesn't change
+**Property intuition**: Shifting two values by the same amount doesn't change
 their relative ordering.
 
-**Proof intuition**: Convert relations into their `sgn`-form; the result is
-obtained from arithmetic.
+**Proof intuition**: Express the order relations in the hypothesis and the goal
+via their `sgn`-based definitions. Show that they are equivalent using algebra
+and substitution.
 -/
-theorem add_substL_le {p₁ p₂ q : ℚ} : p₁ ≤ p₂ → p₁ + q ≤ p₂ + q := by
+theorem le_substL_add {p₁ p₂ q : ℚ} : p₁ ≤ p₂ → p₁ + q ≤ p₂ + q := by
   intro (_ : p₁ ≤ p₂)
   show p₁ + q ≤ p₂ + q
   have : sgn (p₁ - p₂) ≄ 1 := le_sgn.mp ‹p₁ ≤ p₂›
-  have : p₁ - p₂ ≃ (p₁ + q) - (p₂ + q) := eqv_symm sub_cancelR_add
+  have : sgn ((p₁ + q) - (p₂ + q)) ≃ sgn (p₁ - p₂) := sgn_subst sub_cancelR_add
   have : sgn ((p₁ + q) - (p₂ + q)) ≄ 1 :=
-    AA.neqv_substL (sgn_subst this) ‹sgn (p₁ - p₂) ≄ 1›
+    AA.neqv_substL (Rel.symm this) ‹sgn (p₁ - p₂) ≄ 1›
   have : p₁ + q ≤ p₂ + q := le_sgn.mpr this
   exact this
 
@@ -569,20 +583,258 @@ theorem add_substL_le {p₁ p₂ q : ℚ} : p₁ ≤ p₂ → p₁ + q ≤ p₂ 
 Add the same value on the left to both operands of
 _less than or equivalent to_.
 
-**Property intuition**: Increasing two values by the same amount doesn't change
+**Property intuition**: Shifting two values by the same amount doesn't change
 their relative ordering.
 
-**Proof intuition**: Follows from `add_substL_le` via commutativity of
-addition.
+**Proof intuition**: Follows from the opposite-handed version because addition
+is commutative.
 -/
-theorem add_substR_le {p₁ p₂ q : ℚ} : p₁ ≤ p₂ → q + p₁ ≤ q + p₂ := by
+theorem le_substR_add {p₁ p₂ q : ℚ} : p₁ ≤ p₂ → q + p₁ ≤ q + p₂ := by
   intro (_ : p₁ ≤ p₂)
   show q + p₁ ≤ q + p₂
   calc
-    q + p₁ ≃ _ := add_comm
-    p₁ + q ≤ _ := add_substL_le ‹p₁ ≤ p₂›
-    p₂ + q ≃ _ := add_comm
-    q + p₂ ≃ _ := eqv_refl
+    _ ≃ q + p₁ := eqv_refl
+    _ ≃ p₁ + q := add_comm
+    _ ≤ p₂ + q := le_substL_add ‹p₁ ≤ p₂›
+    _ ≃ q + p₂ := add_comm
+
+/--
+Add the same value on the right to both operands of _less than_.
+
+**Property intuition**: Shifting two values by the same amount doesn't change
+their relative ordering.
+
+**Proof intuition**: Express the order relations in the hypothesis and the goal
+via their `sgn`-based definitions. Show that they are equivalent using algebra
+and substitution.
+-/
+theorem lt_substL_add {p₁ p₂ q : ℚ} : p₁ < p₂ → p₁ + q < p₂ + q := by
+  intro (_ : p₁ < p₂)
+  show p₁ + q < p₂ + q
+  have : sgn (p₁ - p₂) ≃ -1 := lt_sgn.mp ‹p₁ < p₂›
+  have : sgn ((p₁ + q) - (p₂ + q)) ≃ sgn (p₁ - p₂) := sgn_subst sub_cancelR_add
+  have : sgn ((p₁ + q) - (p₂ + q)) ≃ -1 :=
+    AA.eqv_substL (Rel.symm this) ‹sgn (p₁ - p₂) ≃ -1›
+  have : p₁ + q < p₂ + q := lt_sgn.mpr this
+  exact this
+
+/--
+Add the same value on the left to both operands of _less than_.
+
+**Property intuition**: Shifting two values by the same amount doesn't change
+their relative ordering.
+
+**Proof intuition**: Follows from the opposite-handed version because addition
+is commutative.
+-/
+theorem lt_substR_add {p₁ p₂ q : ℚ} : p₁ < p₂ → q + p₁ < q + p₂ := by
+  intro (_ : p₁ < p₂)
+  show q + p₁ < q + p₂
+  calc
+    _ ≃ q + p₁ := eqv_refl
+    _ ≃ p₁ + q := add_comm
+    _ < p₂ + q := lt_substL_add ‹p₁ < p₂›
+    _ ≃ q + p₂ := add_comm
+
+/--
+Multiply both operands of _less than_ by the same positive value on the right.
+
+**Property intuition**: Scaling two values by the same positive factor doesn't
+change their relative ordering.
+
+**Proof intuition**: Express the order relations in the hypothesis and the goal
+via their `sgn`-based definitions. Show that they are equivalent using algebra
+and substitution.
+-/
+theorem lt_substL_mul_pos {p q r : ℚ} : sgn r ≃ 1 → p < q → p * r < q * r := by
+  intro (_ : sgn r ≃ 1) (_ : p < q)
+  show p * r < q * r
+  have : sgn (p - q) ≃ -1 := lt_sgn.mp ‹p < q›
+  have : sgn (p * r - q * r) ≃ sgn (p - q) :=
+    sgn_sub_cancelR_mul_pos ‹sgn r ≃ 1›
+  have : sgn (p * r - q * r) ≃ -1 :=
+    AA.eqv_substL (Rel.symm this) ‹sgn (p - q) ≃ -1›
+  have : p * r < q * r := lt_sgn.mpr this
+  exact this
+
+/--
+Multiply both operands of _less than_ by the same positive value on the left.
+
+**Property intuition**: Scaling two values by the same positive factor doesn't
+change their relative ordering.
+
+**Proof intuition**: Follows from the opposite-handed version because
+multiplication is commutative.
+-/
+theorem lt_substR_mul_pos {p q r : ℚ} : sgn r ≃ 1 → p < q → r * p < r * q := by
+  intro (_ : sgn r ≃ 1) (_ : p < q)
+  show r * p < r * q
+  calc
+    _ ≃ r * p := eqv_refl
+    _ ≃ p * r := mul_comm
+    _ < q * r := lt_substL_mul_pos ‹sgn r ≃ 1› ‹p < q›
+    _ ≃ r * q := mul_comm
+
+/--
+Multiply both operands of _less than_ by the same negative value on the right,
+reversing their ordering.
+
+**Property intuition**: Scaling two values by the same negative factor reflects
+them across zero.
+
+**Proof intuition**: Express the order relations in the hypothesis and the goal
+via their `sgn`-based definitions. Show that they are equivalent using algebra
+and substitution.
+-/
+theorem lt_substL_mul_neg
+    {p q r : ℚ} : sgn r ≃ -1 → p < q → q * r < p * r
+    := by
+  intro (_ : sgn r ≃ -1) (_ : p < q)
+  show q * r < p * r
+  have : sgn (p - q) ≃ -1 := lt_sgn.mp ‹p < q›
+  have : sgn (q * r - p * r) ≃ sgn (p - q) :=
+    sgn_sub_cancelR_mul_neg ‹sgn r ≃ -1›
+  have : sgn (q * r - p * r) ≃ -1 :=
+    AA.eqv_substL (Rel.symm this) ‹sgn (p - q) ≃ -1›
+  have : q * r < p * r := lt_sgn.mpr this
+  exact this
+
+/--
+Multiply both operands of _less than_ by the same negative value on the left,
+reversing their ordering.
+
+**Property intuition**: Scaling two values by the same negative factor reflects
+them across zero.
+
+**Proof intuition**: Follows from the opposite-handed version because
+multiplication is commutative.
+-/
+theorem lt_substR_mul_neg
+    {p q r : ℚ} : sgn r ≃ -1 → p < q → r * q < r * p
+    := by
+  intro (_ : sgn r ≃ -1) (_ : p < q)
+  show r * q < r * p
+  calc
+    _ ≃ r * q := eqv_refl
+    _ ≃ q * r := mul_comm
+    _ < p * r := lt_substL_mul_neg ‹sgn r ≃ -1› ‹p < q›
+    _ ≃ r * p := mul_comm
+
+/--
+Multiply both operands of _less than or equivalent to_ by the same positive
+value on the right.
+
+**Property intuition**: Scaling two values by the same positive factor doesn't
+change their relative ordering.
+
+**Proof intuition**: Express the order relations in the hypothesis and the goal
+via their `sgn`-based definitions. Show that they are equivalent using algebra
+and substitution.
+-/
+theorem le_substL_mul_pos {p q r : ℚ} : sgn r ≃ 1 → p ≤ q → p * r ≤ q * r := by
+  intro (_ : sgn r ≃ 1) (_ : p ≤ q)
+  show p * r ≤ q * r
+  have : sgn (p - q) ≄ 1 := le_sgn.mp ‹p ≤ q›
+  have : sgn (p * r - q * r) ≃ sgn (p - q) :=
+    sgn_sub_cancelR_mul_pos ‹sgn r ≃ 1›
+  have : sgn (p * r - q * r) ≄ 1 :=
+    AA.neqv_substL (Rel.symm this) ‹sgn (p - q) ≄ 1›
+  have : p * r ≤ q * r := le_sgn.mpr this
+  exact this
+
+/--
+Multiply both operands of _less than or equivalent to_ by the same positive
+value on the left.
+
+**Property intuition**: Scaling two values by the same positive factor doesn't
+change their relative ordering.
+
+**Proof intuition**: Follows from the opposite-handed version because
+multiplication is commutative.
+-/
+theorem le_substR_mul_pos {p q r : ℚ} : sgn r ≃ 1 → p ≤ q → r * p ≤ r * q := by
+  intro (_ : sgn r ≃ 1) (_ : p ≤ q)
+  show r * p ≤ r * q
+  calc
+    _ ≃ r * p := eqv_refl
+    _ ≃ p * r := mul_comm
+    _ ≤ q * r := le_substL_mul_pos ‹sgn r ≃ 1› ‹p ≤ q›
+    _ ≃ r * q := mul_comm
+
+/--
+Multiply both operands of _less than or equivalent to_ by the same negative
+value on the right, reversing their ordering.
+
+**Property intuition**: Scaling two values by the same negative factor reflects
+them across zero.
+
+**Proof intuition**: Express the order relations in the hypothesis and the goal
+via their `sgn`-based definitions. Show that they are equivalent using algebra
+and substitution.
+-/
+theorem le_substL_mul_neg
+    {p q r : ℚ} : sgn r ≃ -1 → p ≤ q → q * r ≤ p * r
+    := by
+  intro (_ : sgn r ≃ -1) (_ : p ≤ q)
+  show q * r ≤ p * r
+  have : sgn (p - q) ≄ 1 := le_sgn.mp ‹p ≤ q›
+  have : sgn (q * r - p * r) ≃ sgn (p - q) :=
+    sgn_sub_cancelR_mul_neg ‹sgn r ≃ -1›
+  have : sgn (q * r - p * r) ≄ 1 :=
+    AA.neqv_substL (Rel.symm this) ‹sgn (p - q) ≄ 1›
+  have : q * r ≤ p * r := le_sgn.mpr this
+  exact this
+
+/--
+Multiply both operands of _less than or equivalent to_ by the same negative
+value on the left, reversing their ordering.
+
+**Property intuition**: Scaling two values by the same negative factor reflects
+them across zero.
+
+**Proof intuition**: Follows from the opposite-handed version because
+multiplication is commutative.
+-/
+theorem le_substR_mul_neg
+    {p q r : ℚ} : sgn r ≃ -1 → p ≤ q → r * q ≤ r * p
+    := by
+  intro (_ : sgn r ≃ -1) (_ : p ≤ q)
+  show r * q ≤ r * p
+  calc
+    _ ≃ r * q := eqv_refl
+    _ ≃ q * r := mul_comm
+    _ ≤ p * r := le_substL_mul_neg ‹sgn r ≃ -1› ‹p ≤ q›
+    _ ≃ r * p := mul_comm
+
+/--
+Negate both operands of _less than_, reversing their ordering.
+
+**Property and proof intuition**: Follows directly from the substitution
+property on _less than_ for multiplication by negative one.
+-/
+theorem lt_subst_neg {p₁ p₂ : ℚ} : p₁ < p₂ → -p₂ < -p₁ := by
+  intro (_ : p₁ < p₂)
+  show -p₂ < -p₁
+  calc
+    _ ≃ -p₂     := eqv_refl
+    _ ≃ -1 * p₂ := eqv_symm mul_neg_one
+    _ < -1 * p₁ := lt_substR_mul_neg sgn_neg_one ‹p₁ < p₂›
+    _ ≃ -p₁     := mul_neg_one
+
+/--
+Negate both operands of _less than or equivalent to_, reversing their ordering.
+
+**Property and proof intuition**: Follows directly from the substitution
+property on _less than or equivalent to_ for multiplication by negative one.
+-/
+theorem le_subst_neg {p₁ p₂ : ℚ} : p₁ ≤ p₂ → -p₂ ≤ -p₁ := by
+  intro (_ : p₁ ≤ p₂)
+  show -p₂ ≤ -p₁
+  calc
+    _ ≃ -p₂     := eqv_refl
+    _ ≃ -1 * p₂ := eqv_symm mul_neg_one
+    _ ≤ -1 * p₁ := le_substR_mul_neg sgn_neg_one ‹p₁ ≤ p₂›
+    _ ≃ -p₁     := mul_neg_one
 
 /--
 The maximum of a rational number times a sign value is reached when the sign is

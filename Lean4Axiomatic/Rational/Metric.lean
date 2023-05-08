@@ -99,25 +99,6 @@ theorem sgn_abs {p : ℚ} : sgn (abs p) ≃ sgn p * sgn p := calc
   sgn p * sgn p           ≃ _ := Rel.refl
 
 /--
-The absolute value of a rational number is greater than or equivalent to zero.
-
-**Property intuition**: The absolute value discards the sign of a number and
-returns the magnitude, so we'd expect it to be nonnegative.
-
-**Proof intuition**: The sign of a rational number's absolute value is that
-number's sign squared. A square can never be negative, thus the absolute value
-must be positive or zero.
--/
-theorem abs_ge_zero {p : ℚ} : abs p ≥ 0 := by
-  have : sgn (p * p) ≃ sgn (abs p) := calc
-    sgn (p * p)     ≃ _ := sgn_compat_mul
-    sgn p * sgn p   ≃ _ := Rel.symm sgn_abs
-    sgn (abs p)     ≃ _ := Rel.refl
-  have : sgn (abs p) ≄ -1 := AA.neqv_substL this nonneg_square
-  have : abs p ≥ 0 := ge_zero_sgn.mpr this
-  exact this
-
-/--
 Zero is the only rational number that has an absolute value of zero.
 
 **Property intuition**: This fits the description of absolute value as
@@ -151,6 +132,189 @@ theorem abs_zero {p : ℚ} : abs p ≃ 0 ↔ p ≃ 0 := by
       0               ≃ _ := eqv_refl
 
 /--
+A positive rational number's absolute value is itself.
+
+**Property intuition**: Absolute value measures "distance from zero" using
+positive numbers, so a positive input is already in the right form.
+
+**Proof intuition**: Follows from the `sgn` representation of `abs` because a
+positive number's sign is one.
+-/
+theorem abs_positive {p : ℚ} : sgn p ≃ 1 → abs p ≃ p := by
+  intro (_ : sgn p ≃ 1)
+  show abs p ≃ p
+  calc
+    _ ≃ abs p     := eqv_refl
+    _ ≃ p * sgn p := abs_sgn
+    _ ≃ p * 1     := mul_substR (from_integer_subst ‹sgn p ≃ 1›)
+    _ ≃ p         := mul_identR
+
+/--
+A negative rational number's absolute value is its negation.
+
+**Property intuition**: Absolute value measures "distance from zero" using
+positive numbers, so a negative input just needs to be negated to put it into
+the right form.
+
+**Proof intuition**: Follows from the `sgn` representation of `abs` because a
+negative number's sign is negative one.
+-/
+theorem abs_negative {p : ℚ} : sgn p ≃ -1 → abs p ≃ -p := by
+  intro (_ : sgn p ≃ -1)
+  show abs p ≃ -p
+  have : (sgn p : ℚ) ≃ -1 := calc
+    _ ≃ (sgn p : ℚ)    := eqv_refl
+    _ ≃ ((-1 : ℤ) : ℚ) := from_integer_subst ‹sgn p ≃ -1›
+    _ ≃ -((1 : ℤ) : ℚ) := neg_compat_from_integer
+    _ ≃ -1             := eqv_refl
+  have : abs p ≃ -p := calc
+    _ ≃ abs p     := eqv_refl
+    _ ≃ p * sgn p := abs_sgn
+    _ ≃ p * -1    := mul_substR ‹(sgn p : ℚ) ≃ -1›
+    _ ≃ -1 * p    := mul_comm
+    _ ≃ -p        := mul_neg_one
+  exact this
+
+/--
+Every rational number's absolute value is either itself, or its negation.
+
+**Property and proof intuition**: Every rational number is either zero,
+positive, or negative. The positive and negative cases are clear. Zero fits
+both categories, so the result holds either way.
+-/
+theorem abs_cases {p : ℚ} : abs p ≃ p ∨ abs p ≃ -p := by
+  have : AA.OneOfThree (sgn p ≃ 0) (sgn p ≃ 1) (sgn p ≃ -1) := sgn_trichotomy p
+  match this with
+  | AA.OneOfThree.first (_ : sgn p ≃ 0) =>
+    have : p ≃ 0 := sgn_zero.mpr ‹sgn p ≃ 0›
+    have : abs p ≃ p := calc
+      _ ≃ abs p := eqv_refl
+      _ ≃ 0     := abs_zero.mpr ‹p ≃ 0›
+      _ ≃ p     := eqv_symm ‹p ≃ 0›
+    exact (Or.inl this)
+  | AA.OneOfThree.second (_ : sgn p ≃ 1) =>
+    have : abs p ≃ p := abs_positive ‹sgn p ≃ 1›
+    exact (Or.inl this)
+  | AA.OneOfThree.third (_ : sgn p ≃ -1) =>
+    have : abs p ≃ -p := abs_negative ‹sgn p ≃ -1›
+    exact (Or.inr this)
+
+/--
+The absolute value of a rational number is greater than or equivalent to zero.
+
+**Property intuition**: The absolute value discards the sign of a number and
+returns the magnitude, so we'd expect it to be nonnegative.
+
+**Proof intuition**: The sign of a rational number's absolute value is that
+number's sign squared. A square can never be negative, thus the absolute value
+must be positive or zero.
+-/
+theorem abs_ge_zero {p : ℚ} : abs p ≥ 0 := by
+  have : sgn (p * p) ≃ sgn (abs p) := calc
+    _ ≃ sgn (p * p)   := Rel.refl
+    _ ≃ sgn p * sgn p := sgn_compat_mul
+    _ ≃ sgn (abs p)   := Rel.symm sgn_abs
+  have : sgn (abs p) ≄ -1 := AA.neqv_substL this nonneg_square
+  have : abs p ≥ 0 := ge_zero_sgn.mpr this
+  exact this
+
+/--
+A rational number is always less than or equivalent to its absolute value.
+
+This lemma is useful for the proof of `abs_upper_bound`.
+
+**Property intuition**: All absolute values are nonnegative, so negative
+numbers are definitely less than their absolute values. Nonnegative numbers are
+equivalent to theirs.
+
+**Proof intuition**: Every rational number `p` can be represented as
+`p * sgn 1`. This is always less than or equivalent to `p * sgn p ≃ abs p`.
+-/
+theorem abs_ge_self {p : ℚ} : abs p ≥ p := by
+  show p ≤ abs p
+  calc
+    _ ≃ p               := eqv_refl
+    _ ≃ p * 1           := eqv_symm mul_identR
+    _ ≃ p * sgn (1 : ℚ) := mul_substR (from_integer_subst (Rel.symm sgn_one))
+    _ ≤ p * sgn p       := mul_sgn_self_max
+    _ ≃ abs p           := eqv_symm abs_sgn
+
+/--
+A rational number is always greater than or equivalent to the negation of its
+absolute value.
+
+This lemma is useful for the proof of `abs_upper_bound`.
+
+**Property intuition**: All absolute values are nonnegative, so their negations
+are nonpositive. Thus all positive numbers are definitely greater than their
+negated absolute values. Nonpositive numbers are equivalent to theirs.
+
+**Proof intuition**: Every negated rational number `-p` can be represented as
+`p * sgn (-1)`. This is always less than or equivalent to `p * sgn p ≃ abs p`.
+Negating both sides of that ordering gives us the result.
+-/
+theorem neg_abs_le_self {p : ℚ} : -abs p ≤ p := by
+  have : (sgn (-1 : ℚ) : ℚ) ≃ -1 := calc
+    _ ≃ (sgn (-1 : ℚ) : ℚ) := eqv_refl
+    _ ≃ ((-1 : ℤ) : ℚ)     := from_integer_subst sgn_neg_one
+    _ ≃ (-1)               := neg_compat_from_integer
+  have : -p ≤ abs p := calc
+    _ ≃ -p               := eqv_refl
+    _ ≃ (-1) * p         := eqv_symm mul_neg_one
+    _ ≃ p * (-1)         := mul_comm
+    _ ≃ p * sgn (-1 : ℚ) := mul_substR (eqv_symm this)
+    _ ≤ p * sgn p        := mul_sgn_self_max
+    _ ≃ abs p            := eqv_symm abs_sgn
+  have : -abs p ≤ p := calc
+    _ ≃ -abs p := eqv_refl
+    _ ≤ -(-p)  := le_subst_neg ‹-p ≤ abs p›
+    _ ≃ p      := neg_involutive
+  exact this
+
+/--
+Convert between an inequality on the absolute value of a rational number and
+inequalities on the rational number itself.
+
+**Property intuition**: Viewing the absolute value as the "distance from zero",
+if a rational number's absolute value is below some quantity, that's equivalent
+to the underlying rational number being within that quantity of zero, in either
+the positive or negative direction.
+
+**Proof intuition**: Not much to provide aside from just reading the proof; it
+seems to require handling "positive" and "negative" cases separately.
+-/
+theorem abs_upper_bound {p q : ℚ} : abs p ≤ q ↔ -q ≤ p ∧ p ≤ q := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : abs p ≤ q)
+    show -q ≤ p ∧ p ≤ q
+    have : -q ≤ p := calc
+      _ ≃ -q       := eqv_refl
+      _ ≤ (-abs p) := le_subst_neg ‹abs p ≤ q›
+      _ ≤ p        := neg_abs_le_self
+    have : p ≤ q := calc
+      _ ≃ p     := eqv_refl
+      _ ≤ abs p := abs_ge_self
+      _ ≤ q     := ‹abs p ≤ q›
+    exact And.intro ‹-q ≤ p› ‹p ≤ q›
+  case mpr =>
+    intro (And.intro (_ : -q ≤ p) (_ : p ≤ q))
+    show abs p ≤ q
+    have : abs p ≃ p ∨ abs p ≃ -p := abs_cases
+    match this with
+    | Or.inl (_ : abs p ≃ p) =>
+      calc
+        _ ≃ abs p := eqv_refl
+        _ ≃ p     := ‹abs p ≃ p›
+        _ ≤ q     := ‹p ≤ q›
+    | Or.inr (_ : abs p ≃ -p) =>
+      calc
+        _ ≃ abs p   := eqv_refl
+        _ ≃ (-p)    := ‹abs p ≃ -p›
+        _ ≤ (-(-q)) := le_subst_neg ‹-q ≤ p›
+        _ ≃ q       := neg_involutive
+
+/--
 The [triangle inequality](https://w.wiki/6VUr); i.e. how absolute value behaves
 over addition.
 
@@ -163,12 +327,12 @@ that a rational number times an arbitrary sign value will never be greater than
 that rational number times its own sign, i.e. the number's absolute value.
 -/
 theorem abs_compat_add {p q : ℚ} : abs (p + q) ≤ abs p + abs q := calc
-  abs (p + q)                       ≃ _ := abs_sgn
-  (p + q) * sgn (p + q)             ≃ _ := mul_distribR
-  p * sgn (p + q) + q * sgn (p + q) ≤ _ := add_substL_le mul_sgn_self_max
-  p * sgn p + q * sgn (p + q)       ≤ _ := add_substR_le mul_sgn_self_max
-  p * sgn p + q * sgn q             ≃ _ := add_substL (eqv_symm abs_sgn)
-  abs p + q * sgn q                 ≃ _ := add_substR (eqv_symm abs_sgn)
-  abs p + abs q                     ≃ _ := eqv_refl
+  _ ≃ abs (p + q)                       := eqv_refl
+  _ ≃ (p + q) * sgn (p + q)             := abs_sgn
+  _ ≃ p * sgn (p + q) + q * sgn (p + q) := mul_distribR
+  _ ≤ p * sgn p + q * sgn (p + q)       := le_substL_add mul_sgn_self_max
+  _ ≤ p * sgn p + q * sgn q             := le_substR_add mul_sgn_self_max
+  _ ≃ abs p + q * sgn q                 := add_substL (eqv_symm abs_sgn)
+  _ ≃ abs p + abs q                     := add_substR (eqv_symm abs_sgn)
 
 end Lean4Axiomatic.Rational

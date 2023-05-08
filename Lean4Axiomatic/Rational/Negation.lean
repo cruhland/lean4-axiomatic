@@ -201,6 +201,23 @@ theorem mul_neg_one {p : ℚ} : -1 * p ≃ -p := calc
   (-p)       ≃ _ := eqv_refl
 
 /--
+Negation is compatible with addition; i.e., it distributes over addition.
+
+**Property intuition**: Visualizing rational numbers as vectors, the theorem
+says that adding vectors and then reflecting the result across zero is the same
+as reflecting the vectors before adding them.
+
+**Proof intuition**: Negation is the same as multiplication by `-1`. The result
+follows from the distributive property.
+-/
+theorem neg_compat_add {p q : ℚ} : -(p + q) ≃ -p + -q := calc
+  _ ≃ -(p + q)        := eqv_refl
+  _ ≃ -1 * (p + q)    := eqv_symm mul_neg_one
+  _ ≃ -1 * p + -1 * q := mul_distribL
+  _ ≃ -p + -1 * q     := add_substL mul_neg_one
+  _ ≃ -p + -q         := add_substR mul_neg_one
+
+/--
 Negating twice is the same as not negating at all.
 
 The proof is identical to `Integer.neg_involutive`; see its comment for
@@ -382,25 +399,37 @@ theorem add_sub_telescope {p q r : ℚ} : (p - q) + (q - r) ≃ p - r := calc
   p - r               ≃ _ := eqv_refl
 
 /--
-A common right operand can be removed from a subtraction of two sums.
+A common left operand can be removed from a subtraction of two sums.
 
 **Property intuition**: Changing two values by the same amount doesn't change
 their difference.
 
 **Proof intuition**: Expand subtraction into addition and rearrange so that the
-common term and its additive inverse add to zero.
+common term and its additive inverse sum to zero.
+-/
+theorem sub_cancelL_add {p q r : ℚ} : (r + p) - (r + q) ≃ p - q := calc
+  _ ≃ (r + p) - (r + q)   := eqv_refl
+  _ ≃ (r + p) + -(r + q)  := sub_add_neg
+  _ ≃ (r + p) + (-r + -q) := add_substR neg_compat_add
+  _ ≃ (r + -r) + (p + -q) := AA.expr_xxfxxff_lr_swap_rl
+  _ ≃ 0 + (p + -q)        := add_substL add_inverseR
+  _ ≃ p + -q              := add_identL
+  _ ≃ p - q               := eqv_symm sub_add_neg
+
+/--
+A common right operand can be removed from a subtraction of two sums.
+
+**Property intuition**: Changing two values by the same amount doesn't change
+their difference.
+
+**Proof intuition**: Follows from left cancellation because addition is
+commutative.
 -/
 theorem sub_cancelR_add {p q r : ℚ} : (p + r) - (q + r) ≃ p - q := calc
-  (p + r) - (q + r)           ≃ _ := sub_add_neg
-  (p + r) + -(q + r)          ≃ _ := add_substR (eqv_symm mul_neg_one)
-  (p + r) + -1 * (q + r)      ≃ _ := add_substR mul_distribL
-  (p + r) + (-1 * q + -1 * r) ≃ _ := add_substR (add_substL mul_neg_one)
-  (p + r) + (-q + -1 * r)     ≃ _ := add_substR (add_substR mul_neg_one)
-  (p + r) + (-q + -r)         ≃ _ := AA.expr_xxfxxff_lr_swap_rl
-  (p + -q) + (r + -r)         ≃ _ := add_substR add_inverseR
-  (p + -q) + 0                ≃ _ := add_identR
-  p + -q                      ≃ _ := eqv_symm sub_add_neg
-  p - q                       ≃ _ := eqv_refl
+  _ ≃ (p + r) - (q + r) := eqv_refl
+  _ ≃ (r + p) - (q + r) := sub_substL add_comm
+  _ ≃ (r + p) - (r + q) := sub_substR add_comm
+  _ ≃ p - q             := sub_cancelL_add
 
 /--
 Multiplication on the left distributes over subtraction.

@@ -97,7 +97,7 @@ attribute [instance] Sign.toProps
 variable {ℕ ℤ ℚ : Type}
   [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
   [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
-  [Negation ℚ] [Reciprocation ℚ] [Division ℚ] [Sign ℚ]
+  [Negation ℚ] [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ] [Sign ℚ]
 
 /--
 Zero's sign is zero, and it's the only rational number with that sign value.
@@ -121,22 +121,155 @@ theorem sgn_zero {p : ℚ} : p ≃ 0 ↔ sgn p ≃ 0 := by
     exact Sign.Props.sgn_zero_only_for_zero
 
 /--
+The sign of (the rational number) one, is one.
+
+**Property and proof intuition**: It's the same in the integers, and signs of
+integers are consistent with their equivalent rational numbers.
+-/
+theorem sgn_one : sgn (1 : ℚ) ≃ 1 := calc
+  _ ≃ sgn (1 : ℚ) := Rel.refl
+  _ ≃ sgn (1 : ℤ) := sgn_from_integer
+  _ ≃ 1           := Integer.sgn_positive.mp Integer.one_positive
+
+/--
+The sign of (the rational number) negative one, is negative one.
+
+**Property and proof intuition**: It's the same in the integers, and signs of
+integers are consistent with their equivalent rational numbers.
+-/
+theorem sgn_neg_one : sgn (-1 : ℚ) ≃ -1 := calc
+  _ ≃ sgn (-1 : ℚ)       := Rel.refl
+  _ ≃ sgn ((-1 : ℤ) : ℚ) := sgn_subst (eqv_symm neg_compat_from_integer)
+  _ ≃ sgn (-1 : ℤ)       := sgn_from_integer
+  _ ≃ -1                 := Integer.sgn_negative.mp Integer.neg_one_negative
+
+/--
 Taking both the `sgn` and negation of a rational number can be done in either
 order.
 
-See `Integer.sgn_compat_neg` for intuition.
+**Property intuition**: The two functions do independent things to their input
+numbers. The `sgn` function normalizes any rational into a sign value; the
+negation function inverts the sign.
+
+**Proof intuition**: Convert negation into multiplication by negative one, then
+use compatibility of multiplication and `sgn`.
 -/
-theorem sgn_compat_neg {p : ℚ} : sgn (-p) ≃ -(sgn p) := by
-  have : sgn (-1 : ℤ) ≃ -1 := Integer.sgn_negative.mp Integer.neg_one_negative
-  have neg_coe : (-1 : ℚ) ≃ ((-1 : ℤ) : ℚ) := eqv_symm neg_compat_from_integer
+theorem sgn_compat_neg {p : ℚ} : sgn (-p) ≃ -(sgn p) := calc
+  _ ≃ sgn (-p)             := Rel.refl
+  _ ≃ sgn (-1 * p)         := sgn_subst (eqv_symm mul_neg_one)
+  _ ≃ sgn (-1 : ℚ) * sgn p := sgn_compat_mul
+  _ ≃ -1 * sgn p           := AA.substL sgn_neg_one
+  _ ≃ -(sgn p)             := Integer.mul_neg_one
+
+/--
+Removing a common positive left factor from a difference of two rational
+numbers will leave the difference's sign value unchanged.
+
+This is a useful lemma for proving properties of ordering relations, which are
+defined using signs of differences.
+
+**Property intuition**: The positive factor doesn't change the signs of the
+difference's operands, and it can only scale their magnitudes, not change their
+relative ordering.
+
+**Proof intuition**: Pull out the sign of the common factor using
+distributivity and `sgn`'s compatibility with multiplication; it disappears
+from the result because it has value `1`.
+-/
+theorem sgn_sub_cancelL_mul_pos
+    {p q r : ℚ} : sgn r ≃ 1 → sgn (r * p - r * q) ≃ sgn (p - q)
+    := by
+  intro (_ : sgn r ≃ 1)
+  show sgn (r * p - r * q) ≃ sgn (p - q)
   calc
-    sgn (-p)                   ≃ _ := sgn_subst (eqv_symm mul_neg_one)
-    sgn (-1 * p)               ≃ _ := sgn_compat_mul
-    sgn (-1 : ℚ) * sgn p       ≃ _ := AA.substL (sgn_subst neg_coe)
-    sgn ((-1 : ℤ) : ℚ) * sgn p ≃ _ := AA.substL sgn_from_integer
-    sgn (-1 : ℤ) * sgn p       ≃ _ := AA.substL ‹sgn (-1 : ℤ) ≃ -1›
-    (-1) * sgn p               ≃ _ := Integer.mul_neg_one
-    (-(sgn p))                 ≃ _ := Rel.refl
+    _ ≃ sgn (r * p - r * q) := Rel.refl
+    _ ≃ sgn (r * (p - q))   := sgn_subst (eqv_symm mul_distribL_sub)
+    _ ≃ sgn r * sgn (p - q) := sgn_compat_mul
+    _ ≃ 1 * sgn (p - q)     := AA.substL ‹sgn r ≃ 1›
+    _ ≃ sgn (p - q)         := AA.identL
+
+/--
+Removing a common positive right factor from a difference of two rational
+numbers will leave the difference's sign value unchanged.
+
+This is a useful lemma for proving properties of ordering relations, which are
+defined using signs of differences.
+
+**Property intuition**: The positive factor doesn't change the signs of the
+difference's operands, and it can only scale their magnitudes, not change their
+relative ordering.
+
+**Proof intuition**: Follows from the left-factor version of the property, due
+to multiplication's commutativity.
+-/
+theorem sgn_sub_cancelR_mul_pos
+    {p q r : ℚ} : sgn r ≃ 1 → sgn (p * r - q * r) ≃ sgn (p - q)
+    := by
+  intro (_ : sgn r ≃ 1)
+  show sgn (p * r - q * r) ≃ sgn (p - q)
+  calc
+    _ ≃ sgn (p * r - q * r) := Rel.refl
+    _ ≃ sgn (r * p - q * r) := sgn_subst (sub_substL mul_comm)
+    _ ≃ sgn (r * p - r * q) := sgn_subst (sub_substR mul_comm)
+    _ ≃ sgn (p - q)         := sgn_sub_cancelL_mul_pos ‹sgn r ≃ 1›
+
+/--
+Removing a common negative left factor from a difference of two rational
+numbers will leave the difference's sign value unchanged only if its remaining
+operands are swapped.
+
+This is a useful lemma for proving properties of ordering relations, which are
+defined using signs of differences.
+
+**Property intuition**: The negative factor reflects the two numbers across
+zero, reversing their relative ordering. (Their magnitudes may also be scaled,
+but that doesn't affect order.) That inverts the sign of their difference; swap
+the operands to compensate.
+
+**Proof intuition**: Pull out the sign of the common factor using
+distributivity and `sgn`'s compatibility with multiplication. Convert it into
+negation, and send it back under the `sgn` to reverse the remaining difference.
+-/
+theorem sgn_sub_cancelL_mul_neg
+    {p q r : ℚ} : sgn r ≃ -1 → sgn (r * p - r * q) ≃ sgn (q - p)
+    := by
+  intro (_ : sgn r ≃ -1)
+  show sgn (r * p - r * q) ≃ sgn (q - p)
+  calc
+    _ ≃ sgn (r * p - r * q) := Rel.refl
+    _ ≃ sgn (r * (p - q))   := sgn_subst (eqv_symm mul_distribL_sub)
+    _ ≃ sgn r * sgn (p - q) := sgn_compat_mul
+    _ ≃ -1 * sgn (p - q)    := AA.substL ‹sgn r ≃ -1›
+    _ ≃ -sgn (p - q)        := Integer.mul_neg_one
+    _ ≃ sgn (-(p - q))      := Rel.symm sgn_compat_neg
+    _ ≃ sgn (q - p)         := sgn_subst neg_sub
+
+/--
+Removing a common negative right factor from a difference of two rational
+numbers will leave the difference's sign value unchanged only if its remaining
+operands are swapped.
+
+This is a useful lemma for proving properties of ordering relations, which are
+defined using signs of differences.
+
+**Property intuition**: The negative factor reflects the two numbers across
+zero, reversing their relative ordering. (Their magnitudes may also be scaled,
+but that doesn't affect order.) That inverts the sign of their difference; swap
+the operands to compensate.
+
+**Proof intuition**: Follows from the left-factor version of the property, due
+to multiplication's commutativity.
+-/
+theorem sgn_sub_cancelR_mul_neg
+    {p q r : ℚ} : sgn r ≃ -1 → sgn (p * r - q * r) ≃ sgn (q - p)
+    := by
+  intro (_ : sgn r ≃ -1)
+  show sgn (p * r - q * r) ≃ sgn (q - p)
+  calc
+    _ ≃ sgn (p * r - q * r) := Rel.refl
+    _ ≃ sgn (r * p - q * r) := sgn_subst (sub_substL mul_comm)
+    _ ≃ sgn (r * p - r * q) := sgn_subst (sub_substR mul_comm)
+    _ ≃ sgn (q - p)         := sgn_sub_cancelL_mul_neg ‹sgn r ≃ -1›
 
 /--
 The sign of a nonzero rational number is a square root of unity.
