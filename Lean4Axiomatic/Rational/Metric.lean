@@ -335,4 +335,44 @@ theorem abs_compat_add {p q : ℚ} : abs (p + q) ≤ abs p + abs q := calc
   _ ≃ abs p + q * sgn q                 := add_substL (eqv_symm abs_sgn)
   _ ≃ abs p + abs q                     := add_substR (eqv_symm abs_sgn)
 
+/--
+A rational number product's absolute value is the product of the absolute
+values of its factors.
+
+**Property intuition**: The magnitude of a product is the same regardless of
+the signs of its factors.
+
+**Proof intuition**: Expand `abs (p * q)` into its `sgn` representation.
+Regroup the factors so that `abs p` and `abs q` are separate.
+-/
+theorem abs_compat_mul {p q : ℚ} : abs (p * q) ≃ abs p * abs q := by
+  have : (sgn (p * q) : ℚ) ≃ (sgn p : ℚ) * (sgn q : ℚ) := calc
+    _ ≃ (sgn (p * q) : ℚ)         := eqv_refl
+    _ ≃ ((sgn p * sgn q : ℤ) : ℚ) := from_integer_subst sgn_compat_mul
+    _ ≃ (sgn p : ℚ) * (sgn q : ℚ) := mul_compat_from_integer
+  have : abs (p * q) ≃ abs p * abs q := calc
+    _ ≃ abs (p * q)                           := eqv_refl
+    _ ≃ (p * q) * (sgn (p * q) : ℚ)           := abs_sgn
+    _ ≃ (p * q) * ((sgn p : ℚ) * (sgn q : ℚ)) := mul_substR this
+    _ ≃ (p * sgn p) * (q * sgn q)             := AA.expr_xxfxxff_lr_swap_rl
+    _ ≃ abs p * (q * sgn q)                   := mul_substL (eqv_symm abs_sgn)
+    _ ≃ abs p * abs q                         := mul_substR (eqv_symm abs_sgn)
+  exact this
+
+/--
+The absolute values of a rational number and its negation are the same.
+
+**Property intuition**: Absolute value discards the sign of a number.
+
+**Proof intuition**: Expand negation into multiplication by `-1`, then use
+`abs_compat_mul` to split into a product of absolute values and simplify.
+-/
+theorem abs_absorb_neg {p : ℚ} : abs (-p) ≃ abs p := calc
+  _ ≃ abs (-p)         := eqv_refl
+  _ ≃ abs (-1 * p)     := abs_subst (eqv_symm mul_neg_one)
+  _ ≃ abs (-1) * abs p := abs_compat_mul
+  _ ≃ -(-1) * abs p    := mul_substL (abs_negative sgn_neg_one)
+  _ ≃ 1 * abs p        := mul_substL neg_involutive
+  _ ≃ abs p            := mul_identL
+
 end Lean4Axiomatic.Rational
