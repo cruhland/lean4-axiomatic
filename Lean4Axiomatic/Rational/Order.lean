@@ -347,6 +347,24 @@ instance trans_lt_lt_lt_inst : Trans (α := ℚ) (· < ·) (· < ·) (· < ·) :
 }
 
 /--
+The _greater than_ relation for rational numbers is transitive.
+
+**Property intuition**: This is a required property for any totally ordered
+type.
+
+**Proof intuition**: Interpret _greater than_ as _less than_ and use
+`lt_trans`.
+-/
+theorem gt_trans {p q r : ℚ} : p > q → q > r → p > r := by
+  intro (_ : q < p) (_ : r < q)
+  show r < p
+  exact lt_trans ‹r < q› ‹q < p›
+
+instance trans_gt_gt_gt_inst : Trans (α := ℚ) (· > ·) (· > ·) (· > ·) := {
+  trans := gt_trans
+}
+
+/--
 Replace _less than_'s left-hand operand with an equivalent value.
 
 **Property intuition**: This must hold for _less than_ to be a valid relation
@@ -410,6 +428,32 @@ theorem trans_lt_eqv_lt {p₁ p₂ q : ℚ} : q < p₁ → p₁ ≃ p₂ → q <
 
 instance trans_lt_eqv_lt_inst : Trans (α := ℚ) (· < ·) (· ≃ ·) (· < ·) := {
   trans := trans_lt_eqv_lt
+}
+
+/--
+Corollary of `trans_lt_eqv_lt` to support transitivity of equivalence and
+_greater than_.
+-/
+theorem trans_eqv_gt_gt {p₁ p₂ q : ℚ} : p₂ ≃ p₁ → p₁ > q → p₂ > q := by
+  intro (_ : p₂ ≃ p₁) (_ : q < p₁)
+  show q < p₂
+  exact trans_lt_eqv_lt ‹q < p₁› (eqv_symm ‹p₂ ≃ p₁›)
+
+instance trans_eqv_gt_gt_inst : Trans (α := ℚ) (· ≃ ·) (· > ·) (· > ·) := {
+  trans := trans_eqv_gt_gt
+}
+
+/--
+Corollary of `trans_eqv_lt_lt` to support transitivity of _greater than_ and
+equivalence.
+-/
+theorem trans_gt_eqv_gt {p₁ p₂ q : ℚ} : q > p₁ → p₁ ≃ p₂ → q > p₂ := by
+  intro (_ : p₁ < q) (_ : p₁ ≃ p₂)
+  show p₂ < q
+  exact trans_eqv_lt_lt (eqv_symm ‹p₁ ≃ p₂›) ‹p₁ < q›
+
+instance trans_gt_eqv_gt_inst : Trans (α := ℚ) (· > ·) (· ≃ ·) (· > ·) := {
+  trans := trans_gt_eqv_gt
 }
 
 /--
@@ -479,6 +523,32 @@ instance trans_le_eqv_le_inst : Trans (α := ℚ) (· ≤ ·) (· ≃ ·) (· �
 }
 
 /--
+Corollary of `trans_le_eqv_le` to support transitivity of equivalence and
+_greater than or equivalent to_.
+-/
+theorem trans_eqv_ge_ge {p₁ p₂ q : ℚ} : p₂ ≃ p₁ → p₁ ≥ q → p₂ ≥ q := by
+  intro (_ : p₂ ≃ p₁) (_ : q ≤ p₁)
+  show q ≤ p₂
+  exact trans_le_eqv_le ‹q ≤ p₁› (eqv_symm ‹p₂ ≃ p₁›)
+
+instance trans_eqv_ge_ge_inst : Trans (α := ℚ) (· ≃ ·) (· ≥ ·) (· ≥ ·) := {
+  trans := trans_eqv_ge_ge
+}
+
+/--
+Corollary of `trans_eqv_le_le` to support transitivity of _greater than or
+equivalent to_ and equivalence.
+-/
+theorem trans_ge_eqv_ge {p₁ p₂ q : ℚ} : q ≥ p₁ → p₁ ≃ p₂ → q ≥ p₂ := by
+  intro (_ : p₁ ≤ q) (_ : p₁ ≃ p₂)
+  show p₂ ≤ q
+  exact trans_eqv_le_le (eqv_symm ‹p₁ ≃ p₂›) ‹p₁ ≤ q›
+
+instance trans_ge_eqv_ge_inst : Trans (α := ℚ) (· ≥ ·) (· ≃ ·) (· ≥ ·) := {
+  trans := trans_ge_eqv_ge
+}
+
+/--
 Merge two _less than or equivalent to_ relations on a common "midpoint" (i.e.,
 _less than or equivalent to_ is transitive).
 
@@ -516,6 +586,25 @@ theorem le_trans {p q r : ℚ} : p ≤ q → q ≤ r → p ≤ r := by
 
 instance trans_le_le_le_inst : Trans (α := ℚ) (· ≤ ·) (· ≤ ·) (· ≤ ·) := {
   trans := le_trans
+}
+
+/--
+Merge two _greater than or equivalent to_ relations on a common "midpoint"
+(i.e., _greater than or equivalent to_ is transitive).
+
+**Property intuition**: This allows reasoning about ordering to be extended to
+values that are "further apart". It's fundamental to the meaning of _ordering_.
+
+**Proof intuition**: Interpret _greater than or equivalent to_ as _less than or
+equivalent to_ and use `le_trans`.
+-/
+theorem ge_trans {p q r : ℚ} : p ≥ q → q ≥ r → p ≥ r := by
+  intro (_ : q ≤ p) (_ : r ≤ q)
+  show r ≤ p
+  exact le_trans ‹r ≤ q› ‹q ≤ p›
+
+instance trans_ge_ge_ge_inst : Trans (α := ℚ) (· ≥ ·) (· ≥ ·) (· ≥ ·) := {
+  trans := ge_trans
 }
 
 /--

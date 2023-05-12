@@ -375,4 +375,81 @@ theorem abs_absorb_neg {p : ℚ} : abs (-p) ≃ abs p := calc
   _ ≃ 1 * abs p        := mul_substL neg_involutive
   _ ≃ abs p            := mul_identL
 
+/--
+Distance between rational numbers is preserved if the left argument is replaced
+with an equivalent value.
+
+**Property intuition**: This must be true for `dist` to be a function.
+
+**Proof intuition**: Expand `dist` into its `abs` representation. The left
+argument can be substituted under `abs` and subtraction.
+-/
+theorem dist_substL {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → dist p₁ q ≃ dist p₂ q := by
+  intro (_ : p₁ ≃ p₂)
+  show dist p₁ q ≃ dist p₂ q
+  calc
+    _ ≃ dist p₁ q    := eqv_refl
+    _ ≃ abs (p₁ - q) := dist_abs
+    _ ≃ abs (p₂ - q) := abs_subst (sub_substL ‹p₁ ≃ p₂›)
+    _ ≃ dist p₂ q    := eqv_symm dist_abs
+
+/--
+Distance between rational numbers is preserved if the right argument is
+replaced with an equivalent value.
+
+**Property intuition**: This must be true for `dist` to be a function.
+
+**Proof intuition**: Expand `dist` into its `abs` representation. The right
+argument can be substituted under `abs` and subtraction.
+-/
+theorem dist_substR {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → dist q p₁ ≃ dist q p₂ := by
+  intro (_ : p₁ ≃ p₂)
+  show dist q p₁ ≃ dist q p₂
+  calc
+    _ ≃ dist q p₁    := eqv_refl
+    _ ≃ abs (q - p₁) := dist_abs
+    _ ≃ abs (q - p₂) := abs_subst (sub_substR ‹p₁ ≃ p₂›)
+    _ ≃ dist q p₂    := eqv_symm dist_abs
+
+/--
+The distance between two rational numbers is always zero or greater.
+
+**Property intuition**: Distance measures how "far apart" two numbers are. It's
+not possible for numbers to be closer than zero distance.
+
+**Proof intutition**: Distance is defined as an absolute value, which is also
+guaranteed to be nonnegative.
+-/
+theorem dist_ge_zero {p q : ℚ} : dist p q ≥ 0 := calc
+  _ ≃ dist p q    := eqv_refl
+  _ ≃ abs (p - q) := dist_abs
+  _ ≥ 0           := abs_ge_zero
+
+/--
+Equivalent rational numbers are the only ones that can be a distance of zero
+apart.
+
+**Property intuition**: Distinct numbers have a nonzero separation.
+
+**Proof intuition**: In both directions, use properties of `abs` and
+subtraction when their results are zero.
+-/
+theorem dist_zero {p q : ℚ} : dist p q ≃ 0 ↔ p ≃ q := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : dist p q ≃ 0)
+    show p ≃ q
+    have : abs (p - q) ≃ 0 := AA.eqv_substL dist_abs ‹dist p q ≃ 0›
+    have : p - q ≃ 0 := abs_zero.mp this
+    have : p ≃ q := sub_eqv_zero_iff_eqv.mp this
+    exact this
+  case mpr =>
+    intro (_ : p ≃ q)
+    show dist p q ≃ 0
+    calc
+      _ ≃ dist p q    := eqv_refl
+      _ ≃ abs (p - q) := dist_abs
+      _ ≃ abs 0       := abs_subst (sub_eqv_zero_iff_eqv.mpr ‹p ≃ q›)
+      _ ≃ 0           := abs_zero.mpr eqv_refl
+
 end Lean4Axiomatic.Rational
