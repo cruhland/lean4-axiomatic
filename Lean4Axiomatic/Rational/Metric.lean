@@ -470,4 +470,22 @@ theorem dist_symm {p q : ℚ} : dist p q ≃ dist q p := calc
   _ ≃ abs (q - p)    := abs_absorb_neg
   _ ≃ dist q p       := eqv_symm dist_abs
 
+/--
+The [triangle inequality for distance](https://w.wiki/6hbw).
+
+**Property intuition**: The direct distance between two numbers is never more
+than the distance from one of them, to a third number, then back to the other.
+
+**Proof intuition**: Expand distance into absolute value of a difference; the
+result follows from the triangle inequality for absolute value and the
+telescoping addition of differences.
+-/
+theorem dist_triangle {p q r : ℚ} : dist p r ≤ dist p q + dist q r := calc
+  _ ≃ dist p q + dist q r       := eqv_refl
+  _ ≃ abs (p - q) + dist q r    := add_substL dist_abs
+  _ ≃ abs (p - q) + abs (q - r) := add_substR dist_abs
+  _ ≥ abs ((p - q) + (q - r))   := abs_compat_add
+  _ ≃ abs (p - r)               := abs_subst add_sub_telescope
+  _ ≃ dist p r                  := eqv_symm dist_abs
+
 end Lean4Axiomatic.Rational
