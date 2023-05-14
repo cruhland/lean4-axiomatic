@@ -11,17 +11,20 @@ namespace Lean4Axiomatic.Rational.Impl.Fraction
 variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Integer (ℕ := ℕ) ℤ]
 
-instance rational : Rational (ℤ := ℤ) (Fraction ℤ) := {
-  toCore := core
-  toAddition := addition
-  toMultiplication := multiplication
-  toNegation := negation
-  toSubtraction := subtraction
-  toReciprocation := reciprocation
-  toDivision := division
-  toSign := sign
-  toOrder := Generic.order
-  toMetric := Generic.metric
-}
+instance rational : Rational (ℤ := ℤ) (Fraction ℤ) :=
+  let order := Generic.order
+
+  {
+    toCore := core
+    toAddition := addition
+    toMultiplication := multiplication
+    toNegation := negation
+    toSubtraction := subtraction
+    toReciprocation := reciprocation
+    toDivision := division
+    toSign := sign
+    toOrder := order
+    toMetric := Generic.metric
+  }
 
 end Lean4Axiomatic.Rational.Impl.Fraction

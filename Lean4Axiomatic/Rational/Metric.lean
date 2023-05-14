@@ -18,18 +18,28 @@ class Metric.Ops (ℚ : Type) :=
   /-- Distance. -/
   _dist : ℚ → ℚ → ℚ
 
+  /-- ε-closeness. -/
+  _close : ℚ → ℚ → ℚ → Prop
+
 /-- Enables the use of the standard names for absolute value and distance. -/
 instance metric_space_inst {ℚ : Type} [Metric.Ops ℚ] : MetricSpace ℚ := {
   abs := Metric.Ops._abs
   dist := Metric.Ops._dist
 }
 
+/--
+Mixfix notation for ε-closeness.
+
+Has the same precedence as the equivalence and inequality operators.
+-/
+notation:50 x:51 " ⊢" ε:51 "⊣ " y:51 => Metric.Ops._close ε x y
+
 /-- Properties of rational number metrics. -/
 class Metric.Props
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type)
       [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
-      [Negation ℚ] [Sign ℚ] [Subtraction ℚ] [Ops ℚ]
+      [Negation ℚ] [Sign ℚ] [Subtraction ℚ] [Order ℚ] [Ops ℚ]
     :=
   /--
   The absolute value of a rational number is equivalent to the product of that
@@ -43,14 +53,17 @@ class Metric.Props
    -/
   dist_abs {p q : ℚ} : dist p q ≃ abs (p - q)
 
-export Metric.Props (abs_sgn dist_abs)
+  /-- ε-closeness can be expressed in terms of distance. -/
+  close_dist {ε p q : ℚ} : p ⊢ε⊣ q ↔ dist p q ≤ ε
+
+export Metric.Props (abs_sgn close_dist dist_abs)
 
 /-- All rational number metric axioms. -/
 class Metric
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type)
       [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
-      [Negation ℚ] [Sign ℚ] [Subtraction ℚ]
+      [Negation ℚ] [Sign ℚ] [Subtraction ℚ] [Order ℚ]
     :=
   toOps : Metric.Ops ℚ
   toProps : Metric.Props ℚ
