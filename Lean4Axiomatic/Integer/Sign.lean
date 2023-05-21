@@ -967,6 +967,32 @@ instance nonzero_from_positive_inst {a : ℤ} [AP (Positive a)] : Nonzero a :=
   nonzero_from_positive ‹AP (Positive a)›.ev
 
 /--
+A nonzero natural number is a nonzero integer.
+
+**Property intuition**: The integers contain the natural numbers, preserving
+their values.
+
+**Proof intuition**: All nonzero natural numbers are positive; positive natural
+numbers are positive integers; positive integers are also nonzero.
+-/
+theorem from_natural_preserves_nonzero {n : ℕ} : n ≄ 0 → Nonzero (n : ℤ) := by
+  intro (_ : n ≄ 0)
+  show Nonzero (n : ℤ)
+  have : Positive n := Signed.positive_defn.mpr ‹n ≄ 0›
+  have : Positive (n : ℤ) := positive_intro_nat this Rel.refl
+  have : Nonzero (n : ℤ) := nonzero_from_positive this
+  exact this
+
+/--
+This is useful when working in the rational numbers, and having the need to
+divide by a nonzero natural number literal.
+-/
+instance from_natural_preserves_nonzero_inst
+    {n : ℕ} [AP (n ≄ 0)] : Nonzero (n : ℤ)
+    :=
+  from_natural_preserves_nonzero ‹AP (n ≄ 0)›.ev
+
+/--
 Provide evidence that an integer is equivalent, or not equivalent, to zero.
 
 **Property and proof intuition**: We already know from trichotomy of integers

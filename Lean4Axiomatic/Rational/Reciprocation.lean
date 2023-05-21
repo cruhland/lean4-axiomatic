@@ -19,6 +19,49 @@ export Reciprocation.Ops (reciprocal)
 /-- Enables the use of the `·⁻¹` operator for reciprocation. -/
 postfix:120 "⁻¹" => reciprocal
 
+/--
+Implementation of floating-point notation for rational numbers.
+
+The input parameters are specified by Lean's `OfScientific.ofScientific` class
+and field.
+
+**Intuition**: Let's define a value `expSign := if exponentIsNegative then -1
+else 1`. Then this function computes
+`mantissa * 10 ^ (expSign * decimalExponent)`. Exponentiation isn't defined for
+rational numbers at this point, so we compute `10 ^ decimalExponent` in the
+naturals and take its reciprocal if `exponentIsNegative`. This requires a proof
+that `10 ^ decimalExponent` is never zero.
+-/
+def of_scientific
+    {ℕ ℤ ℚ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
+    [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Reciprocation.Ops ℚ]
+    (mantissa : Nat) (exponentIsNegative : Bool) (decimalExponent : Nat) : ℚ
+    :=
+  let naturalMantissa : ℕ := OfNat.ofNat mantissa
+  let naturalDecimalExponent : ℕ := OfNat.ofNat decimalExponent
+  let powTen := 10 ^ naturalDecimalExponent
+
+  have : Natural.step 9 ≄ 0 := Natural.step_neqv_zero
+  have : 10 ≄ 0 := AA.neqv_substL (Rel.symm Natural.literal_step) this
+  have : AP (powTen ≄ 0) := AP.mk (Natural.pow_preserves_nonzero_base this)
+  let rationalPowTen : ℚ := if exponentIsNegative then powTen⁻¹ else powTen
+
+  naturalMantissa * rationalPowTen
+
+/--
+Enables the use of scientific-notation literals for rational numbers.
+
+It's given a higher default instance priority than the built-in `Float` type.
+-/
+@[default_instance mid+2]
+instance of_scientific_inst
+    {ℕ ℤ ℚ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
+    [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Reciprocation.Ops ℚ]
+    : OfScientific ℚ
+    := {
+  ofScientific := of_scientific
+}
+
 /-- Properties of rational number reciprocation. -/
 class Reciprocation.Props
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
