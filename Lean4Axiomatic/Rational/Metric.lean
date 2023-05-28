@@ -501,4 +501,47 @@ theorem dist_triangle {p q r : ℚ} : dist p r ≤ dist p q + dist q r := calc
   _ ≃ abs (p - r)               := abs_subst add_sub_telescope
   _ ≃ dist p r                  := eqv_symm dist_abs
 
+/--
+Two rational numbers are "at most" a distance of zero apart iff they are
+equivalent.
+
+**Property intuition**: If there's no distance between the numbers, they must
+be the same.
+
+**Proof intuition**: Expand 0-close into its distance definition and use
+properties of order.
+-/
+theorem close_zero {p q : ℚ} : p ⊢0⊣ q ↔ p ≃ q := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : p ⊢0⊣ q)
+    show p ≃ q
+    have : dist p q ≤ 0 := close_dist.mp ‹p ⊢0⊣ q›
+    have : dist p q ≥ 0 := dist_ge_zero
+    have : dist p q ≃ 0 := le_antisymm ‹dist p q ≤ 0› ‹dist p q ≥ 0›
+    have : p ≃ q := dist_zero.mp this
+    exact this
+  case mpr =>
+    intro (_ : p ≃ q)
+    show p ⊢0⊣ q
+    have : dist p q ≃ 0 := dist_zero.mpr ‹p ≃ q›
+    have : dist p q ≤ 0 := le_cases.mpr (Or.inr this)
+    have : p ⊢0⊣ q := close_dist.mpr this
+    exact this
+
+/--
+Rational numbers can never be at most a negative distance apart.
+
+**Property and proof intuition**: Negative distance is impossible.
+-/
+theorem close_negative {ε p q : ℚ} : sgn ε ≃ -1 → ¬(p ⊢ε⊣ q) := by
+  intro (_ : sgn ε ≃ -1) (_ : p ⊢ε⊣ q)
+  show False
+  have : dist p q < dist p q := calc
+    _ ≃ dist p q := eqv_refl
+    _ ≤ ε        := close_dist.mp ‹p ⊢ε⊣ q›
+    _ < 0        := lt_zero_sgn.mpr ‹sgn ε ≃ -1›
+    _ ≤ dist p q := dist_ge_zero
+  exact absurd this lt_irrefl
+
 end Lean4Axiomatic.Rational

@@ -95,6 +95,32 @@ theorem eqv_sgn {p q : ℚ} : p ≃ q ↔ sgn (p - q) ≃ 0 := by
     exact this
 
 /--
+A rational number is less than zero iff it has a sign of `-1`.
+
+**Property intuition**: These are both descriptions of negative numbers.
+
+**Proof intuition**: Special case of `lt_sgn`.
+-/
+theorem lt_zero_sgn {p : ℚ} : p < 0 ↔ sgn p ≃ -1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : p < 0)
+    show sgn p ≃ -1
+    calc
+      _ ≃ sgn p       := Rel.refl
+      _ ≃ sgn (p - 0) := sgn_subst (eqv_symm sub_zero)
+      _ ≃ -1          := lt_sgn.mp ‹p < 0›
+  case mpr =>
+    intro (_ : sgn p ≃ -1)
+    show p < 0
+    have : sgn (p - 0) ≃ -1 := calc
+      _ ≃ sgn (p - 0) := Rel.refl
+      _ ≃ sgn p       := sgn_subst sub_zero
+      _ ≃ -1          := ‹sgn p ≃ -1›
+    have : p < 0 := lt_sgn.mpr this
+    exact this
+
+/--
 A rational number is greater than another exactly when subtracting the latter
 from the former yields a positive number; i.e. a sign of one.
 
@@ -223,6 +249,21 @@ theorem order_trichotomy
     mt AA.TwoOfThree.rotL this
 
   exact AA.ExactlyOneOfThree.mk atLeastOne atMostOne
+
+/--
+The _less than_ relation on rational numbers is irreflexive.
+
+**Property and proof intuition**: We already have `p ≃ p`, so by trichotomy we
+can't also have `p < p`.
+-/
+theorem lt_irrefl {p : ℚ} : p ≮ p := by
+  intro (_ : p < p)
+  show False
+  let TriSame := AA.TwoOfThree (p < p) (p ≃ p) (p > p)
+  have : p ≃ p := eqv_refl
+  have : TriSame := AA.TwoOfThree.oneAndTwo ‹p < p› ‹p ≃ p›
+  have : ¬TriSame := (order_trichotomy p p).atMostOne
+  exact absurd ‹TriSame› ‹¬TriSame›
 
 /--
 Make the "or" explicit in "less than or equivalent to".
@@ -586,6 +627,78 @@ theorem le_trans {p q r : ℚ} : p ≤ q → q ≤ r → p ≤ r := by
 
 instance trans_le_le_le_inst : Trans (α := ℚ) (· ≤ ·) (· ≤ ·) (· ≤ ·) := {
   trans := le_trans
+}
+
+/--
+The _less than or equivalent to_ relation on rational numbers is antisymmetric.
+
+**Property and proof intuition**: Two numbers can't be both less than and
+greater than each other, so the only option is for them to be equivalent.
+-/
+theorem le_antisymm {p q : ℚ} : p ≤ q → q ≤ p → p ≃ q := by
+  intro (_ : p ≤ q) (_ : q ≤ p)
+  show p ≃ q
+  have : p < q ∨ p ≃ q := le_cases.mp ‹p ≤ q›
+  match this with
+  | Or.inl (_ : p < q) =>
+    have : q < p ∨ q ≃ p := le_cases.mp ‹q ≤ p›
+    match this with
+    | Or.inl (_ : q < p) =>
+      let Tri := AA.TwoOfThree (p < q) (p ≃ q) (p > q)
+      have : Tri := AA.TwoOfThree.oneAndThree ‹p < q› ‹p > q›
+      have : ¬Tri := (order_trichotomy p q).atMostOne
+      exact absurd ‹Tri› ‹¬Tri›
+    | Or.inr (_ : q ≃ p) =>
+      exact eqv_symm ‹q ≃ p›
+  | Or.inr (_ : p ≃ q) =>
+    exact ‹p ≃ q›
+
+/--
+A _less than_ relation can be extended on the right by a _less than or
+equivalent to_ relation through a common value.
+
+**Property and proof intuition**: We know that the first value is less than the
+second, so even if the second value is equivalent to the third, the first must
+still be less than the third.
+-/
+theorem trans_lt_le_lt {p q r : ℚ} : p < q → q ≤ r → p < r := by
+  intro (_ : p < q) (_ : q ≤ r)
+  show p < r
+  have : q < r ∨ q ≃ r := le_cases.mp ‹q ≤ r›
+  match this with
+  | Or.inl (_ : q < r) =>
+    have : p < r := lt_trans ‹p < q› ‹q < r›
+    exact this
+  | Or.inr (_ : q ≃ r) =>
+    have : p < r := lt_substR_eqv ‹q ≃ r› ‹p < q›
+    exact this
+
+instance trans_lt_le_lt_inst : Trans (α := ℚ) (· < ·) (· ≤ ·) (· < ·) := {
+  trans := trans_lt_le_lt
+}
+
+/--
+A _less than_ relation can be extended on the left by a _less than or
+equivalent to_ relation through a common value.
+
+**Property and proof intuition**: We know that the second value is less than
+the third, so even if the first value is equivalent to the second, the first
+must still be less than the third.
+-/
+theorem trans_le_lt_lt {p q r : ℚ} : p ≤ q → q < r → p < r := by
+  intro (_ : p ≤ q) (_ : q < r)
+  show p < r
+  have : p < q ∨ p ≃ q := le_cases.mp ‹p ≤ q›
+  match this with
+  | Or.inl (_ : p < q) =>
+    have : p < r := lt_trans ‹p < q› ‹q < r›
+    exact this
+  | Or.inr (_ : p ≃ q) =>
+    have : p < r := lt_substL_eqv (eqv_symm ‹p ≃ q›) ‹q < r›
+    exact this
+
+instance trans_le_lt_lt_inst : Trans (α := ℚ) (· ≤ ·) (· < ·) (· < ·) := {
+  trans := trans_le_lt_lt
 }
 
 /--
