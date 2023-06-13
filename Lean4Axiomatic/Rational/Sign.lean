@@ -144,6 +144,21 @@ theorem sgn_neg_one : sgn (-1 : ℚ) ≃ -1 := calc
   _ ≃ -1                 := Integer.sgn_negative.mp Integer.neg_one_negative
 
 /--
+The rational number two is positive.
+
+Defined as an instance to allow `2 ≄ 0` to be automatically derived, which lets
+us divide by `2` without issue.
+
+**Proof intuition**: Delegates to the equivalent property for integers.
+-/
+instance sgn_two_eqv_one_inst : AP (sgn (2:ℚ) ≃ 1) := by
+  have : sgn (2:ℚ) ≃ 1 := calc
+    _ ≃ sgn (2:ℚ) := Rel.refl
+    _ ≃ sgn (2:ℤ) := sgn_from_integer
+    _ ≃ 1         := Integer.sgn_two_eqv_one
+  exact AP.mk this
+
+/--
 Taking both the `sgn` and negation of a rational number can be done in either
 order.
 
@@ -357,6 +372,103 @@ theorem sgn_idemp {p : ℚ} : sgn (sgn p) ≃ sgn p := by
     sgn a * sgn b             ≃ _ := Rel.symm sgn_div_integers
     sgn ((a : ℚ)/b)           ≃ _ := sgn_subst (eqv_symm ‹p ≃ a/b›)
     sgn p                     ≃ _ := Rel.refl
+
+/--
+Only the nonzero rational numbers have signs that are square roots of unity.
+
+**Property intuition**: The nonzero sign values are `1` and `-1`, which are the
+square roots of unity.
+
+**Proof intuition**: Signs that are square roots of unity are nonzero, which
+implies their originating numbers are also nonzero.
+-/
+theorem sgn_sqrt1_iff_nonzero {p : ℚ} : Integer.Sqrt1 (sgn p) ↔ p ≄ 0 := by
+  have : Integer.Sqrt1 (sgn (sgn p)) ↔ Integer.Sqrt1 (sgn p) :=
+    Rel.iff_subst_eqv Integer.sqrt1_subst sgn_idemp
+  calc
+    _ ↔ Integer.Sqrt1 (sgn p)       := Rel.refl
+    _ ↔ Integer.Sqrt1 (sgn (sgn p)) := this.symm
+    _ ↔ Integer.Nonzero (sgn p)     := Integer.sgn_nonzero.symm
+    _ ↔ sgn p ≄ 0                   := Integer.nonzero_iff_neqv_zero
+    _ ↔ p ≄ 0                       := Logic.iff_subst_not sgn_zero.symm
+
+/--
+Enables positive rational numbers in denominators without an explicit proof.
+
+**Property and proof intuition**: Positive numbers are nonzero.
+-/
+instance sgn_one_implies_nonzero_inst
+    {p : ℚ} [AP (sgn p ≃ 1)] : AP (p ≄ 0)
+    := by
+  have : sgn p ≃ 1 := ‹AP (sgn p ≃ 1)›.ev
+  have : Integer.Sqrt1 (sgn p) := Integer.sqrt1_cases.mpr (Or.inl this)
+  have : p ≄ 0 := sgn_sqrt1_iff_nonzero.mp this
+  exact AP.mk this
+
+/--
+Enables negative rational numbers in denominators without an explicit proof.
+
+**Property and proof intuition**: Negative numbers are nonzero.
+-/
+instance sgn_neg_one_implies_nonzero_inst
+    {p : ℚ} [AP (sgn p ≃ -1)] : AP (p ≄ 0)
+    := by
+  have : sgn p ≃ -1 := ‹AP (sgn p ≃ -1)›.ev
+  have : Integer.Sqrt1 (sgn p) := Integer.sqrt1_cases.mpr (Or.inr this)
+  have : p ≄ 0 := sgn_sqrt1_iff_nonzero.mp this
+  exact AP.mk this
+
+/--
+Removing a common positive denominator from a difference of two fractions will
+leave the difference's sign value unchanged.
+
+This is a useful lemma for proving properties of ordering relations, which are
+defined using signs of differences.
+
+**Property intuition**: The positive divisor doesn't change the signs of the
+difference's operands, and it can only scale their magnitudes, not change their
+relative ordering.
+
+**Proof intuition**: Convert the divisions to multiplication by reciprocals.
+The reciprocals of positive numbers are positive. Delegate to the
+multiplicative version of this property.
+-/
+theorem sgn_sub_cancelR_div_pos
+    {p q r : ℚ} [AP (sgn r ≃ 1)] : sgn (p/r - q/r) ≃ sgn (p - q)
+    := by
+  have : sgn (r⁻¹) ≃ 1 := Rel.trans sgn_recip ‹AP (sgn r ≃ 1)›.ev
+  calc
+    _ ≃ sgn (p/r - q/r)         := Rel.refl
+    _ ≃ sgn (p * r⁻¹ - q/r)     := sgn_subst (sub_substL div_mul_recip)
+    _ ≃ sgn (p * r⁻¹ - q * r⁻¹) := sgn_subst (sub_substR div_mul_recip)
+    _ ≃ sgn (p - q)             := sgn_sub_cancelR_mul_pos this
+
+/--
+Removing a common negative right factor from a difference of two rational
+numbers will leave the difference's sign value unchanged only if its remaining
+operands are swapped.
+
+This is a useful lemma for proving properties of ordering relations, which are
+defined using signs of differences.
+
+**Property intuition**: The negative divisor reflects the two numbers across
+zero, reversing their relative ordering. (Their magnitudes may also be scaled,
+but that doesn't affect order.) That inverts the sign of their difference; swap
+the operands to compensate.
+
+**Proof intuition**: Convert the divisions to multiplication by reciprocals.
+The reciprocals of negative numbers are negative. Delegate to the
+multiplicative version of this property.
+-/
+theorem sgn_sub_cancelR_div_neg
+    {p q r : ℚ} [AP (sgn r ≃ -1)] : sgn (p/r - q/r) ≃ sgn (q - p)
+    := by
+  have : sgn (r⁻¹) ≃ -1 := Rel.trans sgn_recip ‹AP (sgn r ≃ -1)›.ev
+  calc
+    _ ≃ sgn (p/r - q/r)         := Rel.refl
+    _ ≃ sgn (p * r⁻¹ - q/r)     := sgn_subst (sub_substL div_mul_recip)
+    _ ≃ sgn (p * r⁻¹ - q * r⁻¹) := sgn_subst (sub_substR div_mul_recip)
+    _ ≃ sgn (q - p)             := sgn_sub_cancelR_mul_neg this
 
 /--
 The square of a rational number is nonnegative.
@@ -597,6 +709,64 @@ theorem add_div_integers
       ≃ _ := eqv_symm div_mul_recip
     ((a * d + b * c : ℤ) : ℚ)/((b * d : ℤ) : ℚ)
       ≃ _ := eqv_refl
+
+/--
+The product of two fractions is a fraction of the product of the numerators
+and the product of the denominators.
+
+**Property intuition**: Multiplication and division associate with each other,
+so the multiplication of the numerators and denominators can happen before the
+division, or after.
+
+**Proof intuition**: Expand division into multiplication by reciprocal. Group
+the reciprocals together; they become a single reciprocal due to compatibility
+with multiplication. This is equivalent to division of the products.
+-/
+theorem div_mul_swap
+    {p q r s : ℚ} [AP (q ≄ 0)] [AP (s ≄ 0)] : (p/q) * (r/s) ≃ (p * r)/(q * s)
+    := calc
+  _ ≃ (p/q) * (r/s)         := eqv_refl
+  _ ≃ (p * q⁻¹) * (r/s)     := mul_substL div_mul_recip
+  _ ≃ (p * q⁻¹) * (r * s⁻¹) := mul_substR div_mul_recip
+  _ ≃ (p * r) * (q⁻¹ * s⁻¹) := AA.expr_xxfxxff_lr_swap_rl
+  _ ≃ (p * r) * (q * s)⁻¹   := mul_substR (eqv_symm recip_compat_mul)
+  _ ≃ (p * r)/(q * s)       := eqv_symm div_mul_recip
+
+/--
+A rational number can be multiplied (on the left) and divided by another
+rational without changing its value.
+
+Useful when a specific denominator is needed.
+
+**Property intuition**: This is equivalent to multiplying by one.
+
+**Proof intuition**: Use algebraic properties to factor out the common value
+from the numerator and denominator as a separate fraction. This cancels to one,
+leaving only the original number.
+-/
+theorem mulL_div_same {p q : ℚ} [AP (p ≄ 0)] : (p * q)/p ≃ q := calc
+  _ ≃ (p * q)/p       := eqv_refl
+  _ ≃ (p * q)/(p * 1) := div_substR (eqv_symm mul_identR)
+  _ ≃ (p/p) * (q/1)   := eqv_symm div_mul_swap
+  _ ≃ 1 * (q/1)       := mul_substL div_same
+  _ ≃ q/1             := mul_identL
+  _ ≃ q               := div_identR
+
+/--
+A rational number can be multiplied (on the right) and divided by another
+rational without changing its value.
+
+Useful when a specific denominator is needed.
+
+**Property intuition**: This is equivalent to multiplying by one.
+
+**Proof intuition**: Follows from the left-multiplication version and
+commutativity.
+-/
+theorem mulR_div_same {p q : ℚ} [AP (q ≄ 0)] : (p * q)/q ≃ p := calc
+  _ ≃ (p * q)/q := eqv_refl
+  _ ≃ (q * p)/q := div_substL mul_comm
+  _ ≃ p         := mulL_div_same
 
 /--
 If two rational numbers have the same sign value, their sum will as well.

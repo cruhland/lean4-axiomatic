@@ -544,4 +544,43 @@ theorem close_negative {ε p q : ℚ} : sgn ε ≃ -1 → ¬(p ⊢ε⊣ q) := by
     _ ≤ dist p q := dist_ge_zero
   exact absurd this lt_irrefl
 
+/--
+Two rational numbers are equivalent exactly when they are closer together than
+any positive distance.
+
+**Proof intuition**: In the forward direction, suppose that `dist p q` is
+positive (otherwise it's zero, and the claim holds). But then we can supply
+half of that distance, which is still positive, to the hypothesis to show that
+`p` and `q` must be closer than we assumed: contradiction. The reverse
+direction follows immediately from definitions.
+-/
+theorem close_eqv {p q : ℚ} : ({ε : ℚ} → ε > 0 → p ⊢ε⊣ q) ↔ p ≃ q := by
+  apply Iff.intro
+  case mp =>
+    intro (hyp : {ε : ℚ} → ε > 0 → p ⊢ε⊣ q)
+    show p ≃ q
+    have : dist p q ≥ 0 := dist_ge_zero
+    have : dist p q > 0 ∨ dist p q ≃ 0 := ge_cases.mp this
+    match this with
+    | Or.inl (_ : dist p q > 0) =>
+      let ε := dist p q
+      have (And.intro (_ : ε > ε/2) (_ : ε/2 > 0)) := halve ‹ε > 0›
+      have : p ⊢ε/2⊣ q := hyp ‹ε/2 > 0›
+      have : dist p q ≤ ε/2 := close_dist.mp this
+      have : ε ≤ ε/2 := this
+      have : p ≃ q := (le_gt_false ‹ε ≤ ε/2› ‹ε > ε/2›).elim
+      exact this
+    | Or.inr (_ : dist p q ≃ 0) =>
+      have : p ≃ q := dist_zero.mp ‹dist p q ≃ 0›
+      exact this
+  case mpr =>
+    intro (_ : p ≃ q) (ε : ℚ) (_ : ε > 0)
+    show p ⊢ε⊣ q
+    have : dist p q ≤ ε := calc
+      _ ≃ dist p q := eqv_refl
+      _ ≃ 0        := dist_zero.mpr ‹p ≃ q›
+      _ ≤ ε        := le_cases.mpr (Or.inl ‹ε > 0›)
+    have : p ⊢ε⊣ q := close_dist.mpr ‹dist p q ≤ ε›
+    exact this
+
 end Lean4Axiomatic.Rational

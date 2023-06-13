@@ -946,7 +946,7 @@ instance signed : Signed ℤ := {
   negative_substitutive := { subst₁ := negative_subst }
   trichotomy := sign_trichotomy
   nonzero_iff_pos_or_neg :=
-    Relation.iff_trans nonzero_iff_nonzero_impl nonzero_iff_pos_or_neg
+    Iff.trans nonzero_iff_nonzero_impl nonzero_iff_pos_or_neg
 }
 
 /--
@@ -1785,5 +1785,20 @@ instance positive_mul_sgn_self_inst
     {a : ℤ} [Nonzero a] : AP (Positive (a * sgn a))
     :=
   AP.mk (positive_mul_sgn_self ‹Nonzero a›)
+
+/--
+The integer two's sign is one.
+
+**Property intution**: Two is positive.
+
+**Proof intuition**: Adding values having the same sign preserves their sign;
+one is positive; two is one plus one.
+-/
+theorem sgn_two_eqv_one : sgn (2:ℤ) ≃ 1 := by
+  have : sgn (1:ℤ) ≃ 1 := sgn_positive.mp one_positive
+  calc
+    _ ≃ sgn (2:ℤ)       := Rel.refl
+    _ ≃ sgn (1 + 1 : ℤ) := sgn_subst (Rel.symm add_one_one)
+    _ ≃ 1               := add_preserves_sign ‹sgn (1:ℤ) ≃ 1› ‹sgn (1:ℤ) ≃ 1›
 
 end Lean4Axiomatic.Integer

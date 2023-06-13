@@ -61,6 +61,15 @@ instance implication_reflexive : Reflexive (· → ·) := {
 }
 
 /--
+Logical equivalence (i.e. the biconditional or "if and only if") is reflexive.
+
+**Intuition**: All logical propositions are equivalent to themselves.
+-/
+instance iff_reflexive : Reflexive (· ↔ ·) := {
+  refl := Iff.rfl
+}
+
+/--
 Class for
 [symmetric relations](https://en.wikipedia.org/wiki/Symmetric_relation).
 
@@ -240,23 +249,9 @@ Logical equivalence (i.e. the biconditional or "if and only if") is transitive.
 
 **Property intuition**: This relation holds when two propositions have the same
 truth value, so we would expect it to be transitive.
-
-**Proof intuition**: Expand the definitions and use transitivity of implication
-in both directions to show the result.
 -/
-theorem iff_trans {p q r : Prop} : (p ↔ q) → (q ↔ r) → (p ↔ r) := by
-  intro (_ : p ↔ q) (_ : q ↔ r)
-  show p ↔ r
-  apply Iff.intro
-  case mp =>
-    show p → r
-    exact implication_trans ‹p ↔ q›.mp ‹q ↔ r›.mp
-  case mpr =>
-    show r → p
-    exact implication_trans ‹q ↔ r›.mpr ‹p ↔ q›.mpr
-
 instance iff_transitive : Transitive (· ↔ ·) := {
-  trans := iff_trans
+  trans := Iff.trans
 }
 
 /--
@@ -324,6 +319,26 @@ Provides an equivalence relation over `α` with the operator `· ≃ ·`.
 class EqvOp (α : Sort u) extends Operators.TildeDash α, Eqv tildeDash
 
 /--
+Predicates on equivalent values are logically equivalent.
+
+**Property intuition**: If two values are equivalent, then no predicate should
+be able to distinguish them. In practice, this depends on the type of
+equivalence; the `P_subst` hypothesis expresses that this is the case here.
+
+**Proof intuition**: Use the `P_subst` property to show each `Iff` direction.
+-/
+theorem iff_subst_eqv
+    {α : Sort u} [EqvOp α]
+    {P : α → Prop} (P_subst : {y₁ y₂ : α} → y₁ ≃ y₂ → P y₁ → P y₂)
+    {x₁ x₂ : α} : x₁ ≃ x₂ → (P x₁ ↔ P x₂)
+    := by
+  intro (_ : x₁ ≃ x₂)
+  show P x₁ ↔ P x₂
+  have : P x₁ → P x₂ := P_subst ‹x₁ ≃ x₂›
+  have : P x₂ → P x₁ := P_subst (symm ‹x₁ ≃ x₂›)
+  exact Iff.intro ‹P x₁ → P x₂› ‹P x₂ → P x₁›
+
+/--
 Extends `EqvOp` with `· ≃? ·`, a decision procedure for equivalence.
 
 **Named parameters**
@@ -337,6 +352,7 @@ end Relation
 
 namespace Rel
 export Relation (refl symm trans trans_failL trans_failR)
+export Relation.Equivalence (iff_subst_eqv)
 end Rel
 
 end Lean4Axiomatic

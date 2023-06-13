@@ -196,6 +196,17 @@ theorem add_one_step {n : ℕ} : n + 1 ≃ step n := by
     step n       ≃ _ := Rel.refl
 
 /--
+One plus one is two.
+
+**Property and proof intuition**: Two is defined to be the successor of one.
+Adding one is equivalent to the successor function.
+-/
+theorem add_one_one : (1:ℕ) + 1 ≃ 2 := calc
+  _ ≃ (1:ℕ) + 1 := Rel.refl
+  _ ≃ step 1    := add_one_step
+  _ ≃ 2         := Rel.symm literal_step
+
+/--
 The grouping of the terms in a sum doesn't matter.
 
 **Intuition**: the `step_add` and `add_step` properties allow `step`s to be

@@ -91,6 +91,20 @@ instance mul_assoc_inst : AA.Associative (α := ℚ) (· * ·) := {
 }
 
 /--
+Doubling a rational number can be written either as a sum or a product.
+
+**Property intuition**: This is essentially the definition of multiplication.
+
+**Proof intuition**: Split `2` into `1 + 1`; use the distributive property.
+-/
+theorem mul_two_add {p : ℚ} : 2 * p ≃ p + p := calc
+  _ ≃ 2 * p         := eqv_refl
+  _ ≃ (1 + 1) * p   := mul_substL (eqv_symm add_one_one)
+  _ ≃ 1 * p + 1 * p := mul_distribR
+  _ ≃ p + 1 * p     := add_substL mul_identL
+  _ ≃ p + p         := add_substR mul_identL
+
+/--
 Holds for the rational numbers that are square roots of unity, i.e. that result
 in `1` when squared.
 

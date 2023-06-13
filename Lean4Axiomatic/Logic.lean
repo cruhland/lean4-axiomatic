@@ -2,6 +2,22 @@
 namespace Lean4Axiomatic.Logic
 
 /--
+Negate both sides of a logical equivalence.
+
+**Property intuition**: If two propositions have the same truth value, then
+their negations will as well.
+
+**Proof intuition**: Apply _modus tollens_ to each side of the input
+equivalence to obtain contrapositives, then combine them.
+-/
+theorem iff_subst_not {p q : Prop} : (p ↔ q) → (¬p ↔ ¬q) := by
+  intro (Iff.intro (_ : p → q) (_ : q → p))
+  show ¬p ↔ ¬q
+  have : ¬p → ¬q := mt ‹q → p›
+  have : ¬q → ¬p := mt ‹p → q›
+  exact Iff.intro ‹¬p → ¬q› ‹¬q → ¬p›
+
+/--
 Disjunction distributes over conjunction.
 
 **Intuition**: In the forward direction, if we have `p`, then we can provide it

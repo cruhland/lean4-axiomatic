@@ -4,6 +4,7 @@ import Lean4Axiomatic.Rational.Sign
 
 namespace Lean4Axiomatic.Rational
 
+open Logic (AP)
 open Signed (sgn)
 
 /-! ## Axioms -/
@@ -358,6 +359,24 @@ theorem ge_cases {p q : ℚ} : p ≥ q ↔ p > q ∨ p ≃ q := by
     have : q ≤ p := le_cases.mpr this
     have : p ≥ q := this
     exact this
+
+/--
+Two rational numbers cannot be both _less than or equivalent to_ and _greater
+than_ each other.
+
+**Property and proof intuition**: Follows directly from trichotomy.
+-/
+theorem le_gt_false {p q : ℚ} : p ≤ q → p > q → False := by
+  intro (_ : p ≤ q) (_ : p > q)
+  show False
+  let TwoOfThree := AA.TwoOfThree (p < q) (p ≃ q) (p > q)
+  have : ¬TwoOfThree := (order_trichotomy p q).atMostOne
+  have : p < q ∨ p ≃ q := le_cases.mp ‹p ≤ q›
+  have : TwoOfThree :=
+    match this with
+    | Or.inl (_ : p < q) => AA.TwoOfThree.oneAndThree ‹p < q› ‹p > q›
+    | Or.inr (_ : p ≃ q) => AA.TwoOfThree.twoAndThree ‹p ≃ q› ‹p > q›
+  exact absurd ‹TwoOfThree› ‹¬TwoOfThree›
 
 /--
 The _less than_ relation for rational numbers is transitive.
@@ -1101,5 +1120,97 @@ theorem mul_sgn_self_max {p q : ℚ} : p * sgn q ≤ p * sgn p := by
     have : sgn q < -1 := Integer.lt_sgn.mpr this
     have : sgn q ≥ -1 := sgn_min
     exact Integer.lt_ge_false ‹sgn q < -1› this
+
+/--
+Divide both operands of _less than_ by the same positive value.
+
+**Property intuition**: Scaling two values by the same positive factor doesn't
+change their relative ordering.
+
+**Proof intuition**: Express the order relations in the hypothesis and the goal
+via their `sgn`-based definitions. Show that they are equivalent using algebra
+and substitution.
+-/
+theorem lt_substN_div_pos
+    {p q r : ℚ} [AP (sgn r ≃ 1)] : p < q → p/r < q/r
+    := by
+  intro (_ : p < q)
+  show p/r < q/r
+  have : sgn (p - q) ≃ -1 := lt_sgn.mp ‹p < q›
+  have : sgn (p/r - q/r) ≃ sgn (p - q) := sgn_sub_cancelR_div_pos
+  have : sgn (p/r - q/r) ≃ -1 :=
+    AA.eqv_substL (Rel.symm this) ‹sgn (p - q) ≃ -1›
+  have : p/r < q/r := lt_sgn.mpr this
+  exact this
+
+/--
+Divide both operands of _less than_ by the same negative value, reversing their
+ordering.
+
+**Property intuition**: Scaling two values by the same negative factor reflects
+them across zero.
+
+**Proof intuition**: Express the order relations in the hypothesis and the goal
+via their `sgn`-based definitions. Show that they are equivalent using algebra
+and substitution.
+-/
+theorem lt_substD_div_neg
+    {p q r : ℚ} [AP (sgn r ≃ -1)] : p < q → q/r < p/r
+    := by
+  intro (_ : p < q)
+  show q/r < p/r
+  have : sgn (p - q) ≃ -1 := lt_sgn.mp ‹p < q›
+  have : sgn (q/r - p/r) ≃ sgn (p - q) := sgn_sub_cancelR_div_neg
+  have : sgn (q/r - p/r) ≃ -1 :=
+    AA.eqv_substL (Rel.symm this) ‹sgn (p - q) ≃ -1›
+  have : q/r < p/r := lt_sgn.mpr this
+  exact this
+
+/--
+The average of two nonequivalent rational numbers lies strictly between them.
+
+**Property intuition**: Averaging finds the value that both numbers would have
+if they were equal but with the same sum as the original numbers. Thus the
+average must be bigger than the smaller number, and smaller than the bigger
+number.
+
+**Proof intuition**: Represent both numbers in units of one-half. Two halves of
+`p` is less than one half of `p` and one half of `q`, by substitution on
+`p < q`. Similarly, two halves of `q` is greater than the average value.
+-/
+theorem average {p q : ℚ} : p < q → p < (p + q)/2 ∧ (p + q)/2 < q := by
+  intro (_ : p < q)
+  show p < (p + q)/2 ∧ (p + q)/2 < q
+  have : p < (p + q)/2 := calc
+    _ ≃ p         := eqv_refl
+    _ ≃ (2 * p)/2 := eqv_symm mulL_div_same
+    _ ≃ (p + p)/2 := div_substL mul_two_add
+    _ < (p + q)/2 := lt_substN_div_pos (lt_substR_add ‹p < q›)
+  have : (p + q)/2 < q := calc
+    _ ≃ (p + q)/2 := eqv_refl
+    _ < (q + q)/2 := lt_substN_div_pos (lt_substL_add ‹p < q›)
+    _ ≃ (2 * q)/2 := div_substL (eqv_symm mul_two_add)
+    _ ≃ q         := mulL_div_same
+  exact And.intro ‹p < (p + q)/2› ‹(p + q)/2 < q›
+
+/--
+The result of dividing a positive rational number by two lies strictly between
+that number and zero.
+
+**Proof intuition**: Follows directly from taking the average of zero and `p`.
+-/
+theorem halve {p : ℚ} : p > 0 → p > p/2 ∧ p/2 > 0 := by
+  intro (_ : p > 0)
+  show p > p/2 ∧ p/2 > 0
+  have (And.intro (_ : 0 < (0 + p)/2) (_ : (0 + p)/2 < p)) := average ‹0 < p›
+  have : p > p/2 := calc
+    _ ≃ p         := eqv_refl
+    _ > (0 + p)/2 := ‹(0 + p)/2 < p›
+    _ ≃ p/2       := div_substL add_identL
+  have : p/2 > 0 := calc
+    _ ≃ p/2       := eqv_refl
+    _ ≃ (0 + p)/2 := div_substL (eqv_symm add_identL)
+    _ > 0         := ‹0 < (0 + p)/2›
+  exact And.intro ‹p > p/2› ‹p/2 > 0›
 
 end Lean4Axiomatic.Rational

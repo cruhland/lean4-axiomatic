@@ -65,4 +65,16 @@ Eventually, this should become the axiom and the typeclass should be derived.
 -/
 theorem add_assoc {a b c : ℤ} : (a + b) + c ≃ a + (b + c) := AA.assoc
 
+/--
+In the integers, one plus one is two.
+
+**Proof intuition**: Delegate to natural numbers.
+-/
+theorem add_one_one : (1:ℤ) + 1 ≃ 2 := calc
+  _ ≃ (1:ℤ) + 1             := Rel.refl
+  _ ≃ ((1:ℕ):ℤ) + ((1:ℕ):ℤ) := Rel.refl
+  _ ≃ ((1 + 1 : ℕ):ℤ)       := Rel.symm AA.compat₂
+  _ ≃ ((2:ℕ):ℤ)             := AA.subst₁ Natural.add_one_one
+  _ ≃ 2                     := Rel.refl
+
 end Lean4Axiomatic.Integer

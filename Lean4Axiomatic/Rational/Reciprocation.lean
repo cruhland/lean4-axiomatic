@@ -106,8 +106,10 @@ We define the operator syntax directly here, instead of using the `Div` class
 from the standard library. This is because our `div` operation has an extra
 argument, an instance expressing that the divisor must be nonzero. The `Div`
 class only provides a simple binary operation for its `div`.
+
+Defined with high priority to avoid conflicts with `Div`'s syntax.
 -/
-infixl:70 " / " => div
+infixl:70 (priority := high) " / " => div
 
 /--
 An inductive predicate expressing that a rational number can be represented as
@@ -237,5 +239,44 @@ theorem div_substR
     q * p₁⁻¹ ≃ _ := mul_substR (recip_subst ‹p₁ ≃ p₂›)
     q * p₂⁻¹ ≃ _ := eqv_symm div_mul_recip
     q / p₂   ≃ _ := eqv_refl
+
+/--
+Dividing one by a rational number gives that number's reciprocal.
+
+**Property intuition**: Multiplying `p` by `1/p` gives `1`, exactly the same as
+multiplying by `p⁻¹`.
+
+**Proof intuition**: Expand division into multiplication by reciprocal. The
+factor of one disappears, leaving the result.
+-/
+theorem div_identL {p : ℚ} [AP (p ≄ 0)] : 1/p ≃ p⁻¹ := calc
+  _ ≃ 1/p     := eqv_refl
+  _ ≃ 1 * p⁻¹ := div_mul_recip
+  _ ≃ p⁻¹     := mul_identL
+
+/--
+Dividing a rational number by one gives that number back.
+
+**Property intuition**: Dividing a quantity into a single piece has no effect.
+
+**Proof intuition**: Expand division into multiplication by reciprocal. The
+reciprocal of one is one, which disappears, leaving the original number.
+-/
+theorem div_identR {p : ℚ} : p/1 ≃ p := calc
+  _ ≃ p/1     := eqv_refl
+  _ ≃ p * 1⁻¹ := div_mul_recip
+  _ ≃ p * 1   := mul_substR recip_sqrt1
+  _ ≃ p       := mul_identR
+
+/--
+Dividing a rational number by itself gives one.
+
+**Property and proof intuition**: Self-division is equivalent to multiplication
+by the reciprocal, which always gives one.
+-/
+theorem div_same {p : ℚ} [AP (p ≄ 0)] : p/p ≃ 1 := calc
+  _ ≃ p/p     := eqv_refl
+  _ ≃ p * p⁻¹ := div_mul_recip
+  _ ≃ 1       := mul_inverseR
 
 end Lean4Axiomatic.Rational
