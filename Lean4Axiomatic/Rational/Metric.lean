@@ -583,4 +583,18 @@ theorem close_eqv {p q : ℚ} : ({ε : ℚ} → ε > 0 → p ⊢ε⊣ q) ↔ p �
     have : p ⊢ε⊣ q := close_dist.mpr ‹dist p q ≤ ε›
     exact this
 
+/--
+ε-closeness is symmetric.
+
+**Property and proof intuition**: ε-closeness is a constraint on distance, and
+distance is symmetric.
+-/
+theorem close_symm {ε p q : ℚ} : p ⊢ε⊣ q → q ⊢ε⊣ p := by
+  intro (_ : p ⊢ε⊣ q)
+  show q ⊢ε⊣ p
+  have : dist p q ≤ ε := close_dist.mp ‹p ⊢ε⊣ q›
+  have : dist q p ≤ ε := le_substL_eqv dist_symm this
+  have : q ⊢ε⊣ p := close_dist.mpr this
+  exact this
+
 end Lean4Axiomatic.Rational
