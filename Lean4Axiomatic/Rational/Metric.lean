@@ -597,4 +597,25 @@ theorem close_symm {ε p q : ℚ} : p ⊢ε⊣ q → q ⊢ε⊣ p := by
   have : q ⊢ε⊣ p := close_dist.mpr this
   exact this
 
+/--
+ε-closeness obeys a form of transitivity, where the transitive distance is the
+sum of the input distances.
+
+**Property and proof intuition**: By the triangle inequality, we know that in
+the worst case, the distance between the first and last values might be the sum
+of the intermediate distances.
+-/
+theorem close_trans {ε δ p q r : ℚ} : p ⊢ε⊣ q → q ⊢δ⊣ r → p ⊢ε+δ⊣ r := by
+  intro (_ : p ⊢ε⊣ q) (_ : q ⊢δ⊣ r)
+  show p ⊢ε+δ⊣ r
+  have : dist p q ≤ ε := close_dist.mp ‹p ⊢ε⊣ q›
+  have : dist q r ≤ δ := close_dist.mp ‹q ⊢δ⊣ r›
+  have : dist p r ≤ ε + δ := calc
+    _ ≃ dist p r            := eqv_refl
+    _ ≤ dist p q + dist q r := dist_triangle
+    _ ≤ ε + dist q r        := le_substL_add ‹dist p q ≤ ε›
+    _ ≤ ε + δ               := le_substR_add ‹dist q r ≤ δ›
+  have : p ⊢ε+δ⊣ r := close_dist.mpr this
+  exact this
+
 end Lean4Axiomatic.Rational
