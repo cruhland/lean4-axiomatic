@@ -502,6 +502,96 @@ theorem dist_triangle {p q r : ℚ} : dist p r ≤ dist p q + dist q r := calc
   _ ≃ dist p r                  := eqv_symm dist_abs
 
 /--
+The distance between two values is unchanged after removing a common term added
+on their left.
+
+**Property intuition**: The distance between two points is preserved when they
+are translated by the same amount.
+
+**Proof intuition**: Expand distance into its absolute value definition, and
+simplify.
+-/
+theorem dist_cancelL_add {p q r : ℚ} : dist (r + p) (r + q) ≃ dist p q := calc
+  _ ≃ dist (r + p) (r + q)    := eqv_refl
+  _ ≃ abs ((r + p) - (r + q)) := dist_abs
+  _ ≃ abs (p - q)             := abs_subst sub_cancelL_add
+  _ ≃ dist p q                := eqv_symm dist_abs
+
+/--
+The distance between two values is unchanged after removing a common term added
+on their right.
+
+**Property intuition**: The distance between two points is preserved when they
+are translated by the same amount.
+
+**Proof intuition**: Use commutativity to put the common term on the left, then
+invoke the left-handed version of this property.
+-/
+theorem dist_cancelR_add {p q r : ℚ} : dist (p + r) (q + r) ≃ dist p q := calc
+  _ ≃ dist (p + r) (q + r) := eqv_refl
+  _ ≃ dist (r + p) (q + r) := dist_substL add_comm
+  _ ≃ dist (r + p) (r + q) := dist_substR add_comm
+  _ ≃ dist p q             := dist_cancelL_add
+
+/--
+Distribute a left multiplicative factor into the distance function's arguments.
+
+**Property intuition**: Scaling the distance between two points by some amount
+can be accomplished by scaling the locations of the points by that amount, in
+either the positive or negative direction.
+
+**Proof intuition**: Convert distance to absolute value, then transform by
+algebraic properties of absolute value and subtraction.
+-/
+theorem dist_distribL
+    {p q r : ℚ} : abs r * dist p q ≃ dist (r * p) (r * q)
+    := calc
+  _ ≃ abs r * dist p q     := eqv_refl
+  _ ≃ abs r * abs (p - q)  := mul_substR dist_abs
+  _ ≃ abs (r * (p - q))    := eqv_symm abs_compat_mul
+  _ ≃ abs (r * p - r * q)  := abs_subst mul_distribL_sub
+  _ ≃ dist (r * p) (r * q) := eqv_symm dist_abs
+
+/--
+Distribute a right multiplicative factor into the distance function's
+arguments.
+
+**Property intuition**: Scaling the distance between two points by some amount
+can be accomplished by scaling the locations of the points by that amount, in
+either the positive or negative direction.
+
+**Proof intuition**: Transform the left-handed version of this property using
+commutativity of multiplication.
+-/
+theorem dist_distribR
+    {p q r : ℚ} : (dist p q) * abs r ≃ dist (p * r) (q * r)
+    := calc
+  _ ≃ (dist p q) * abs r := eqv_refl
+  _ ≃ abs r * dist p q := mul_comm
+  _ ≃ dist (r * p) (r * q) := dist_distribL
+  _ ≃ dist (p * r) (r * q) := dist_substL mul_comm
+  _ ≃ dist (p * r) (q * r) := dist_substR mul_comm
+
+/--
+Drop negations from both of the distance function's arguments.
+
+**Property intuition**: Distance is not directional, so the distance between
+negated points is the same as the distance between their un-negated
+counterparts.
+
+**Proof intuition**: Special case of distributing a factor (`-1`) into the
+distance function's arguments.
+-/
+theorem dist_cancel_neg {p q : ℚ} : dist (-p) (-q) ≃ dist p q := calc
+  _ ≃ dist (-p) (-q)         := eqv_refl
+  _ ≃ dist (-1 * p) (-q)     := dist_substL (eqv_symm mul_neg_one)
+  _ ≃ dist (-1 * p) (-1 * q) := dist_substR (eqv_symm mul_neg_one)
+  _ ≃ abs (-1) * dist p q    := eqv_symm dist_distribL
+  _ ≃ abs 1 * dist p q       := mul_substL abs_absorb_neg
+  _ ≃ 1 * dist p q           := mul_substL (abs_positive sgn_one)
+  _ ≃ dist p q               := mul_identL
+
+/--
 Two rational numbers are "at most" a distance of zero apart iff they are
 equivalent.
 
@@ -616,6 +706,183 @@ theorem close_trans {ε δ p q r : ℚ} : p ⊢ε⊣ q → q ⊢δ⊣ r → p �
     _ ≤ ε + dist q r        := le_substL_add ‹dist p q ≤ ε›
     _ ≤ ε + δ               := le_substR_add ‹dist q r ≤ δ›
   have : p ⊢ε+δ⊣ r := close_dist.mpr this
+  exact this
+
+/--
+Substitution of an equivalent left argument to ε-closeness.
+
+**Property intuition**: This must be true for any relation that's agnostic to
+the implementation of rational numbers.
+
+**Proof intuition**: Expand the distance definition of ε-closeness, then use
+substitution.
+-/
+theorem close_substL_eqv {ε p₁ p₂ q : ℚ} : p₁ ≃ p₂ → p₁ ⊢ε⊣ q → p₂ ⊢ε⊣ q := by
+  intro (_ : p₁ ≃ p₂) (_ : p₁ ⊢ε⊣ q)
+  show p₂ ⊢ε⊣ q
+  have : dist p₁ q ≤ ε := close_dist.mp ‹p₁ ⊢ε⊣ q›
+  have : dist p₂ q ≤ ε := le_substL_eqv (dist_substL ‹p₁ ≃ p₂›) this
+  have : p₂ ⊢ε⊣ q := close_dist.mpr this
+  exact this
+
+/--
+Substitution of an equivalent middle argument to ε-closeness.
+
+**Property intuition**: This must be true for any relation that's agnostic to
+the implementation of rational numbers.
+
+**Proof intuition**: Expand the distance definition of ε-closeness, then use
+substitution.
+-/
+theorem close_substM_eqv {ε₁ ε₂ p q : ℚ} : ε₁ ≃ ε₂ → p ⊢ε₁⊣ q → p ⊢ε₂⊣ q := by
+  intro (_ : ε₁ ≃ ε₂) (_ : p ⊢ε₁⊣ q)
+  show p ⊢ε₂⊣ q
+  have : dist p q ≤ ε₁ := close_dist.mp ‹p ⊢ε₁⊣ q›
+  have : dist p q ≤ ε₂ := le_substR_eqv ‹ε₁ ≃ ε₂› this
+  have : p ⊢ε₂⊣ q := close_dist.mpr this
+  exact this
+
+/--
+Substitution of an equivalent right argument to ε-closeness.
+
+**Property intuition**: This must be true for any relation that's agnostic to
+the implementation of rational numbers.
+
+**Proof intuition**: Swap the left and right arguments via symmetry, then use
+the left-handed version of this property.
+-/
+theorem close_substR_eqv {ε p q₁ q₂ : ℚ} : q₁ ≃ q₂ → p ⊢ε⊣ q₁ → p ⊢ε⊣ q₂ := by
+  intro (_ : q₁ ≃ q₂) (_ : p ⊢ε⊣ q₁)
+  show p ⊢ε⊣ q₂
+  have : q₁ ⊢ε⊣ p := close_symm ‹p ⊢ε⊣ q₁›
+  have : q₂ ⊢ε⊣ p := close_substL_eqv ‹q₁ ≃ q₂› this
+  have : p ⊢ε⊣ q₂ := close_symm this
+  exact this
+
+/--
+Add a common right term to ε-closeness's outer arguments.
+
+**Property intuition**: Translating two points by the same amount doesn't
+change the distance between them.
+
+**Proof intuition**: Expand ε-closeness into distance and delegate to its
+properties.
+-/
+theorem close_substL_add {ε p q r : ℚ} : p ⊢ε⊣ q → p + r ⊢ε⊣ q + r := by
+  intro (_ : p ⊢ε⊣ q)
+  show p + r ⊢ε⊣ q + r
+  have : dist p q ≤ ε := close_dist.mp ‹p ⊢ε⊣ q›
+  have : dist (p + r) (q + r) ≤ ε := calc
+    _ ≃ dist (p + r) (q + r) := eqv_refl
+    _ ≃ dist p q             := dist_cancelR_add
+    _ ≤ ε                    := ‹dist p q ≤ ε›
+  have : p + r ⊢ε⊣ q + r := close_dist.mpr this
+  exact this
+
+/--
+Add a common left term to ε-closeness's outer arguments.
+
+**Property intuition**: Translating two points by the same amount doesn't
+change the distance between them.
+
+**Proof intuition**: Convert the left-handed version of this property using
+commutativity of addition.
+-/
+theorem close_substR_add {ε p q r : ℚ} : p ⊢ε⊣ q → r + p ⊢ε⊣ r + q := by
+  intro (_ : p ⊢ε⊣ q)
+  show r + p ⊢ε⊣ r + q
+  have : p + r ⊢ε⊣ q + r := close_substL_add ‹p ⊢ε⊣ q›
+  have : r + p ⊢ε⊣ q + r := close_substL_eqv add_comm this
+  have : r + p ⊢ε⊣ r + q := close_substR_eqv add_comm this
+  exact this
+
+/--
+Negate ε-closeness's outer arguments.
+
+**Property intuition**: Reflecting two points through zero doesn't change the
+distance between them.
+
+**Proof intuition**: Expand ε-closeness into distance and delegate to its
+properties.
+-/
+theorem close_subst_neg {ε p q : ℚ} : p ⊢ε⊣ q → -p ⊢ε⊣ -q := by
+  intro (_ : p ⊢ε⊣ q)
+  show -p ⊢ε⊣ -q
+  have : dist p q ≤ ε := close_dist.mp ‹p ⊢ε⊣ q›
+  have : dist (-p) (-q) ≤ ε := le_substL_eqv (eqv_symm dist_cancel_neg) this
+  have : -p ⊢ε⊣ -q := close_dist.mpr this
+  exact this
+
+/--
+Subtract a common term from ε-closeness's outer arguments.
+
+**Property intuition**: Translating two points by the same amount doesn't
+change the distance between them.
+
+**Proof intuition**: Add a negated right term to the outer arguments, then
+convert into subtraction.
+-/
+theorem close_substL_sub {ε p q r : ℚ} : p ⊢ε⊣ q → p - r ⊢ε⊣ q - r := by
+  intro (_ : p ⊢ε⊣ q)
+  show p - r ⊢ε⊣ q - r
+  have : p + (-r) ⊢ε⊣ q + (-r) := close_substL_add ‹p ⊢ε⊣ q›
+  have : p - r ⊢ε⊣ q + (-r) := close_substL_eqv (eqv_symm sub_add_neg) this
+  have : p - r ⊢ε⊣ q - r := close_substR_eqv (eqv_symm sub_add_neg) this
+  exact this
+
+/--
+Subtract ε-closeness's outer arguments from a common term.
+
+**Property intuition**: Translating two points by the same amount doesn't
+change the distance between them.
+
+**Proof intuition**: Negate the outer arguments, add a common left term, and
+then convert into subtraction.
+-/
+theorem close_substR_sub {ε p q r : ℚ} : p ⊢ε⊣ q → r - p ⊢ε⊣ r - q := by
+  intro (_ : p ⊢ε⊣ q)
+  show r - p ⊢ε⊣ r - q
+  have : -p ⊢ε⊣ -q := close_subst_neg ‹p ⊢ε⊣ q›
+  have : r + (-p) ⊢ε⊣ r + (-q) := close_substR_add this
+  have : r - p ⊢ε⊣ r + (-q) := close_substL_eqv (eqv_symm sub_add_neg) this
+  have : r - p ⊢ε⊣ r - q := close_substR_eqv (eqv_symm sub_add_neg) this
+  exact this
+
+/--
+Statements of ε-closeness can be added argument-by-argument.
+
+**Intuition**: The ε in ε-closeness is preserved when adding the same value to
+both endpoints (translation). By carefully picking which value to add to each
+of the ε-closeness inputs, the right endpoint of the first can be made to match
+the left endpoint of the second. Then the distances add by transitivity.
+-/
+theorem close_add_pointwise
+    {ε δ p q r s : ℚ} : p ⊢ε⊣ q → r ⊢δ⊣ s → p + r ⊢ε+δ⊣ q + s
+    := by
+  intro (_ : p ⊢ε⊣ q) (_ : r ⊢δ⊣ s)
+  show p + r ⊢ε+δ⊣ q + s
+  have : p + r ⊢ε⊣ q + r := close_substL_add ‹p ⊢ε⊣ q›
+  have : q + r ⊢δ⊣ q + s := close_substR_add ‹r ⊢δ⊣ s›
+  have : p + r ⊢ε+δ⊣ q + s := close_trans ‹p + r ⊢ε⊣ q + r› ‹q + r ⊢δ⊣ q + s›
+  exact this
+
+/--
+Statements of ε-closeness can be subtracted argument-by-argument.
+
+**Intuition**: The ε in ε-closeness is preserved when subtracting the same
+value from both endpoints, or subtracting both endpoints from the same value
+(translation). By carefully picking the subtraction for each of the ε-closeness
+inputs, the right endpoint of the first can be made to match the left endpoint
+of the second. Then the distances add by transitivity.
+-/
+theorem close_sub_pointwise
+    {ε δ p q r s : ℚ} : p ⊢ε⊣ q → r ⊢δ⊣ s → p - r ⊢ε+δ⊣ q - s
+    := by
+  intro (_ : p ⊢ε⊣ q) (_ : r ⊢δ⊣ s)
+  show p - r ⊢ε+δ⊣ q - s
+  have : p - r ⊢ε⊣ q - r := close_substL_sub ‹p ⊢ε⊣ q›
+  have : q - r ⊢δ⊣ q - s := close_substR_sub ‹r ⊢δ⊣ s›
+  have : p - r ⊢ε+δ⊣ q - s := close_trans ‹p - r ⊢ε⊣ q - r› ‹q - r ⊢δ⊣ q - s›
   exact this
 
 end Lean4Axiomatic.Rational
