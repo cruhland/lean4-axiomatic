@@ -885,4 +885,25 @@ theorem close_sub_pointwise
   have : p - r ⊢ε+δ⊣ q - s := close_trans ‹p - r ⊢ε⊣ q - r› ‹q - r ⊢δ⊣ q - s›
   exact this
 
+/--
+The ε in ε-closeness can always be replaced by a greater value.
+
+**Property intuition**: ε-closeness represents a maximum distance, so a larger
+maximum is trivial because it's less precise.
+
+**Proof intuition**: Convert ε-closeness to a distance inequality; the result
+follows by transitivity of order.
+-/
+theorem close_widen {ε ε' p q : ℚ} : p ⊢ε⊣ q → ε' > ε → p ⊢ε'⊣ q := by
+  intro (_ : p ⊢ε⊣ q) (_ : ε' > ε)
+  show p ⊢ε'⊣ q
+  have : dist p q ≤ ε := close_dist.mp ‹p ⊢ε⊣  q›
+  have : dist p q < ε' := calc
+    _ ≃ dist p q := eqv_refl
+    _ ≤ ε        := ‹dist p q ≤ ε›
+    _ < ε'       := ‹ε < ε'›
+  have : dist p q ≤ ε' := le_cases.mpr (Or.inl ‹dist p q < ε'›)
+  have : p ⊢ε'⊣ q := close_dist.mpr this
+  exact this
+
 end Lean4Axiomatic.Rational
