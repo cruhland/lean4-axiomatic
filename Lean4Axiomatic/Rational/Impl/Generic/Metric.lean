@@ -21,16 +21,21 @@ def _dist (p q : ℚ) : ℚ := _abs (p - q)
 /-- Definition of ε-closeness that matches the axioms. -/
 def _close (ε p q : ℚ) : Prop := _dist p q ≤ ε
 
+/-- Definition of betweenness that matches the axioms. -/
+def _between (p q r : ℚ) : Prop := p ≤ q ∧ q ≤ r ∨ r ≤ q ∧ q ≤ p
+
 local instance metric_ops : Metric.Ops ℚ := {
   _abs := _abs
   _dist := _dist
   _close := _close
+  _between := _between
 }
 
 def metric_props : Metric.Props ℚ := {
   abs_sgn := eqv_refl
   dist_abs := eqv_refl
   close_dist := Iff.intro id id
+  between_order := Iff.intro id id
 }
 
 def metric : Metric ℚ := {

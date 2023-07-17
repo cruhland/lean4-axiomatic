@@ -390,7 +390,7 @@ theorem sgn_sqrt1_iff_nonzero {p : ℚ} : Integer.Sqrt1 (sgn p) ↔ p ≄ 0 := b
     _ ↔ Integer.Sqrt1 (sgn (sgn p)) := this.symm
     _ ↔ Integer.Nonzero (sgn p)     := Integer.sgn_nonzero.symm
     _ ↔ sgn p ≄ 0                   := Integer.nonzero_iff_neqv_zero
-    _ ↔ p ≄ 0                       := Logic.iff_subst_not sgn_zero.symm
+    _ ↔ p ≄ 0                       := Logic.iff_subst_contra mt sgn_zero.symm
 
 /--
 Enables positive rational numbers in denominators without an explicit proof.

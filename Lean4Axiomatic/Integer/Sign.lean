@@ -490,7 +490,12 @@ class Sgn.Props
   /-- The sum of two integers with the same sign also has that sign. -/
   add_preserves_sign {s a b : ℤ} : sgn a ≃ s → sgn b ≃ s → sgn (a + b) ≃ s
 
-export Sgn.Props (add_preserves_sign sgn_negative sgn_positive sgn_zero)
+  /-- The `sgn` function evalutes to only three possible values. -/
+  sgn_trichotomy (a : ℤ) : AA.OneOfThree₁ (sgn a ≃ 0) (sgn a ≃ 1) (sgn a ≃ -1)
+
+export Sgn.Props (
+  add_preserves_sign sgn_negative sgn_positive sgn_trichotomy sgn_zero
+)
 
 /-- All integer signedness axioms. -/
 class Sign

@@ -1,3 +1,4 @@
+import Lean4Axiomatic.Order
 import Lean4Axiomatic.Rational.Sign
 
 /-! # Rational numbers: order -/
@@ -252,6 +253,70 @@ theorem order_trichotomy
   exact AA.ExactlyOneOfThree.mk atLeastOne atMostOne
 
 /--
+Convert bidirectionally between a _not less than or equivalent to_ relation of
+two rational numbers and a fact about their difference's sign value.
+
+**Property intuition**: Another way of saying "not less than or equivalent to"
+is "greater than".
+
+**Proof intuition**: In the forward direction, _less than or equivalent to_ is
+defined as a sign value not equivalent to one, so the logical negation of this
+is a double negation of a sign value equivalent to one. But equivalence on
+rational numbers is decidable, so we can eliminate the double negation. In the
+reverse direction, obtain the sign value of _less than or equivalent to_ and
+reach a contradiction with the other hypothesis.
+-/
+theorem neg_le_sgn {p q : ℚ} : ¬(p ≤ q) ↔ sgn (p - q) ≃ 1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : ¬(p ≤ q))
+    show sgn (p - q) ≃ 1
+    have : ¬(sgn (p - q) ≄ 1) := mt le_sgn.mpr ‹¬(p ≤ q)›
+    have : sgn (p - q) ≃ 1 := Decidable.of_not_not this
+    exact this
+  case mpr =>
+    intro (_ : sgn (p - q) ≃ 1) (_ : p ≤ q)
+    show False
+    have : sgn (p - q) ≄ 1 := le_sgn.mp ‹p ≤ q›
+    exact absurd ‹sgn (p - q) ≃ 1› ‹sgn (p - q) ≄ 1›
+
+/--
+The _less than or equivalent to_ relation is decidable for rational numbers.
+
+**Property and proof intuition**: The relation can be expressed as an
+equivalence of integer sign values, which we already know to be decidable.
+-/
+instance le_decidable {p q : ℚ} : Decidable (p ≤ q) := by
+  have : Decidable (sgn (p - q) ≃ 1) := Integer.eqv? (sgn (p - q)) 1
+  match this with
+  | isTrue (_ : sgn (p - q) ≃ 1) =>
+    have : ¬(p ≤ q) := neg_le_sgn.mpr ‹sgn (p - q) ≃ 1›
+    have : Decidable (p ≤ q) := isFalse this
+    exact this
+  | isFalse (_ : sgn (p - q) ≄ 1) =>
+    have : p ≤ q := le_sgn.mpr ‹sgn (p - q) ≄ 1›
+    have : Decidable (p ≤ q) := isTrue this
+    exact this
+
+/--
+The _less than_ relation is decidable for rational numbers.
+
+**Property and proof intuition**: The relation can be expressed as an
+equivalence of integer sign values, which we already know to be decidable.
+-/
+instance lt_decidable {p q : ℚ} : Decidable (p < q) := by
+  have : Decidable (sgn (p - q) ≃ -1) := Integer.eqv? (sgn (p - q)) (-1)
+  match this with
+  | isTrue (_ : sgn (p - q) ≃ -1) =>
+    have : p < q := lt_sgn.mpr ‹sgn (p - q) ≃ -1›
+    have : Decidable (p < q) := isTrue this
+    exact this
+  | isFalse (_ : sgn (p - q) ≄ -1) =>
+    have : ¬(p < q) := mt lt_sgn.mp ‹sgn (p - q) ≄ -1›
+    have : Decidable (p < q) := isFalse this
+    exact this
+
+/--
 The _less than_ relation on rational numbers is irreflexive.
 
 **Property and proof intuition**: We already have `p ≃ p`, so by trichotomy we
@@ -377,6 +442,36 @@ theorem le_gt_false {p q : ℚ} : p ≤ q → p > q → False := by
     | Or.inl (_ : p < q) => AA.TwoOfThree.oneAndThree ‹p < q› ‹p > q›
     | Or.inr (_ : p ≃ q) => AA.TwoOfThree.twoAndThree ‹p ≃ q› ‹p > q›
   exact absurd ‹TwoOfThree› ‹¬TwoOfThree›
+
+/--
+There are two possibilities for a _less than or equivalent to_ relation between
+rational numbers.
+
+**Property and proof intuition**: From order trichotomy, we know that one
+rational number can be less than, equivalent to, or greater than another. The
+_less than_ case implies the first result possibility, the _greater than_ case
+implies the second result possibility, and the _equivalent to_ case implies
+either one.
+-/
+theorem le_dichotomy {p q : ℚ} : p ≤ q ∨ q ≤ p := by
+  let OneOfThree := AA.OneOfThree (p < q) (p ≃ q) (p > q)
+  have : OneOfThree := (order_trichotomy p q).atLeastOne
+  match this with
+  | AA.OneOfThree.first (_ : p < q) =>
+    have : p < q ∨ p ≃ q := Or.inl ‹p < q›
+    have : p ≤ q := le_cases.mpr this
+    have : p ≤ q ∨ q ≤ p := Or.inl this
+    exact this
+  | AA.OneOfThree.second (_ : p ≃ q) =>
+    have : p < q ∨ p ≃ q := Or.inr ‹p ≃ q›
+    have : p ≤ q := le_cases.mpr this
+    have : p ≤ q ∨ q ≤ p := Or.inl this
+    exact this
+  | AA.OneOfThree.third (_ : p > q) =>
+    have : q < p ∨ q ≃ p := Or.inl ‹q < p›
+    have : q ≤ p := le_cases.mpr this
+    have : p ≤ q ∨ q ≤ p := Or.inr this
+    exact this
 
 /--
 The _less than_ relation for rational numbers is transitive.
@@ -1212,5 +1307,89 @@ theorem halve {p : ℚ} : p > 0 → p > p/2 ∧ p/2 > 0 := by
     _ ≃ (0 + p)/2 := div_substL (eqv_symm add_identL)
     _ > 0         := ‹0 < (0 + p)/2›
   exact And.intro ‹p > p/2› ‹p/2 > 0›
+
+/--
+The ordering of a nonnegative rational number and its negation.
+
+**Property and proof intuition**: A nonnegative rational number is greater than
+or equivalent to zero, so its negation must be less than or equivalent to zero.
+Thus the result follows by transitivity.
+-/
+theorem le_neg_nonneg {p : ℚ} : sgn p ≄ -1 → -p ≤ p := by
+  intro (_ : sgn p ≄ -1)
+  show -p ≤ p
+  have : 0 ≤ p := ge_zero_sgn.mpr ‹sgn p ≄ -1›
+  have : -p ≤ 0 := calc
+    _ ≃ -p := eqv_refl
+    _ ≤ -0 := le_subst_neg ‹0 ≤ p›
+    _ ≃ 0  := neg_preserves_zero.mpr eqv_refl
+  have : -p ≤ p := le_trans ‹-p ≤ 0› ‹0 ≤ p›
+  exact this
+
+/--
+A lemma rewriting a difference's lower bound into a lower bound on its first
+argument.
+
+**Property and proof intuition**: The second argument of the difference can be
+moved to the other side of the ordering relation via algebra.
+-/
+theorem le_diff_lower {ε p q : ℚ} : -ε ≤ q - p ↔ p - ε ≤ q := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : -ε ≤ q - p)
+    show p - ε ≤ q
+    calc
+      _ ≃ p - ε          := eqv_refl
+      _ ≃ p + (-ε)       := sub_add_neg
+      _ ≤ p + (q - p)    := le_substR_add ‹-ε ≤ q - p›
+      _ ≃ p + (q + (-p)) := add_substR sub_add_neg
+      _ ≃ p + ((-p) + q) := add_substR add_comm
+      _ ≃ (p + (-p)) + q := eqv_symm add_assoc
+      _ ≃ 0 + q          := add_substL add_inverseR
+      _ ≃ q              := add_identL
+  case mpr =>
+    intro (_ : p - ε ≤ q)
+    show -ε ≤ q - p
+    calc
+      _ ≃ -ε              := eqv_refl
+      _ ≃ 0 + (-ε)        := eqv_symm add_identL
+      _ ≃ (-p + p) + (-ε) := add_substL (eqv_symm add_inverseL)
+      _ ≃ -p + (p + (-ε)) := add_assoc
+      _ ≃ -p + (p - ε)    := add_substR (eqv_symm sub_add_neg)
+      _ ≤ -p + q          := le_substR_add ‹p-ε ≤ q›
+      _ ≃ q + (-p)        := add_comm
+      _ ≃ q - p           := eqv_symm sub_add_neg
+
+/--
+A lemma rewriting a difference's upper bound into an upper bound on its first
+argument.
+
+**Property and proof intuition**: The second argument of the difference can be
+moved to the other side of the ordering relation via algebra.
+-/
+theorem le_diff_upper {ε p q : ℚ} : q - p ≤ ε ↔ q ≤ p + ε := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : q - p ≤ ε)
+    show q ≤ p + ε
+    calc
+      _ ≃ q              := eqv_refl
+      _ ≃ q + 0          := eqv_symm add_identR
+      _ ≃ q + ((-p) + p) := add_substR (eqv_symm add_inverseL)
+      _ ≃ (q + (-p)) + p := eqv_symm add_assoc
+      _ ≃ (q - p) + p    := add_substL (eqv_symm sub_add_neg)
+      _ ≤ ε + p          := le_substL_add ‹q - p ≤ ε›
+      _ ≃ p + ε          := add_comm
+  case mpr =>
+    intro (_ : q ≤ p + ε)
+    show q - p ≤ ε
+    calc
+      _ ≃ q - p          := eqv_refl
+      _ ≃ q + (-p)       := sub_add_neg
+      _ ≤ (p + ε) + (-p) := le_substL_add ‹q ≤ p+ε›
+      _ ≃ (ε + p) + (-p) := add_substL add_comm
+      _ ≃ ε + (p + (-p)) := add_assoc
+      _ ≃ ε + 0          := add_substR add_inverseR
+      _ ≃ ε              := add_identR
 
 end Lean4Axiomatic.Rational

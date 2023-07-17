@@ -250,19 +250,33 @@ Decidable equivalence for integers.
 **Property intuition**: Every integer has a finite value, so it should be
 possible for an algorithm to decide if two of them are equivalent.
 
-**Proof intuition**: We already know how to decide if an integer is zero. Use
-that on the value `a - b`, then change the result into the desired form.
+**Proof intuition**: The result of `sgn` is already decidable, so compute it
+for `a - b` and rewrite the result into `a ≃ b` or `a ≄ b` depending on whether
+the sign is zero or not.
 -/
-theorem eqv? (a b : ℤ) : a ≃ b ∨ a ≄ b := by
-  have : a - b ≃ 0 ∨ Nonzero (a - b) := (zero? (a - b)).left
-  match ‹a - b ≃ 0 ∨ Nonzero (a - b)› with
-  | Or.inl (_ : a - b ≃ 0) =>
-    have : a ≃ b := zero_diff_iff_eqv.mp ‹a - b ≃ 0›
-    exact Or.inl ‹a ≃ b›
-  | Or.inr (_ : Nonzero (a - b)) =>
-    have : a - b ≄ 0 := nonzero_iff_neqv_zero.mp ‹Nonzero (a - b)›
-    have : a ≄ b := mt zero_diff_iff_eqv.mpr ‹a - b ≄ 0›
-    exact Or.inr ‹a ≄ b›
+instance eqv? (a b : ℤ) : Decidable (a ≃ b) := by
+  let Sgn3 := AA.OneOfThree₁ (sgn (a-b) ≃ 0) (sgn (a-b) ≃ 1) (sgn (a-b) ≃ -1)
+  have : Sgn3 := sgn_trichotomy (a-b)
+  match this with
+  | AA.OneOfThree₁.first (_ : sgn (a-b) ≃ 0) =>
+    have : a-b ≃ 0 := sgn_zero.mpr ‹sgn (a-b) ≃ 0›
+    have : a ≃ b := zero_diff_iff_eqv.mp this
+    have : Decidable (a ≃ b) := isTrue this
+    exact this
+  | AA.OneOfThree₁.second (_ : sgn (a-b) ≃ 1) =>
+    have : (1:ℤ) ≄ 0 := one_neqv_zero
+    have : sgn (a-b) ≄ 0 := AA.neqv_substL (Rel.symm ‹sgn (a-b) ≃ 1›) this
+    have : a-b ≄ 0 := mt sgn_zero.mp this
+    have : a ≄ b := mt zero_diff_iff_eqv.mpr this
+    have : Decidable (a ≃ b) := isFalse this
+    exact this
+  | AA.OneOfThree₁.third (_ : sgn (a-b) ≃ -1) =>
+    have : (-1:ℤ) ≄ 0 := neg_one_neqv_zero
+    have : sgn (a-b) ≄ 0 := AA.neqv_substL (Rel.symm ‹sgn (a-b) ≃ -1›) this
+    have : a-b ≄ 0 := mt sgn_zero.mp this
+    have : a ≄ b := mt zero_diff_iff_eqv.mpr this
+    have : Decidable (a ≃ b) := isFalse this
+    exact this
 
 /--
 Negation of subtraction swaps the operands.

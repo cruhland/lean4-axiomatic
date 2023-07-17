@@ -2,20 +2,54 @@
 namespace Lean4Axiomatic.Logic
 
 /--
-Negate both sides of a logical equivalence.
+Apply a covariant mapping to both sides of a logical equivalence.
 
-**Property intuition**: If two propositions have the same truth value, then
-their negations will as well.
-
-**Proof intuition**: Apply _modus tollens_ to each side of the input
-equivalence to obtain contrapositives, then combine them.
+**Property and proof intuition**: Because the mapping is covariant, each
+direction of the equivalence can be rewritten "in place".
 -/
-theorem iff_subst_not {p q : Prop} : (p ↔ q) → (¬p ↔ ¬q) := by
-  intro (Iff.intro (_ : p → q) (_ : q → p))
-  show ¬p ↔ ¬q
-  have : ¬p → ¬q := mt ‹q → p›
-  have : ¬q → ¬p := mt ‹p → q›
-  exact Iff.intro ‹¬p → ¬q› ‹¬q → ¬p›
+theorem iff_subst_covar
+    {f : Prop → Prop} (f_subst : {a₁ a₂ : Prop} → (a₁ → a₂) → f a₁ → f a₂)
+    {p₁ p₂ : Prop} : (p₁ ↔ p₂) → (f p₁ ↔ f p₂)
+    := by
+  intro (Iff.intro (_ : p₁ → p₂) (_ : p₂ → p₁))
+  show f p₁ ↔ f p₂
+  have : f p₁ → f p₂ := f_subst ‹p₁ → p₂›
+  have : f p₂ → f p₁ := f_subst ‹p₂ → p₁›
+  exact Iff.intro ‹f p₁ → f p₂› ‹f p₂ → f p₁›
+
+/--
+Apply a contravariant mapping to both sides of a logical equivalence.
+
+**Property and proof intuition**: Because the mapping is contravariant, the
+directions of the equivalence need to be swapped after being rewritten.
+-/
+theorem iff_subst_contra
+    {f : Prop → Prop} (f_subst : {a₁ a₂ : Prop} → (a₁ → a₂) → f a₂ → f a₁)
+    {p₁ p₂ : Prop} : (p₁ ↔ p₂) → (f p₁ ↔ f p₂)
+    := by
+  intro (Iff.intro (_ : p₁ → p₂) (_ : p₂ → p₁))
+  show f p₁ ↔ f p₂
+  have : f p₂ → f p₁ := f_subst ‹p₁ → p₂›
+  have : f p₁ → f p₂ := f_subst ‹p₂ → p₁›
+  exact Iff.intro ‹f p₁ → f p₂› ‹f p₂ → f p₁›
+
+/--
+Rewrite the left argument of logical _and_ with the provided mapping function.
+-/
+theorem and_mapL {p₁ p₂ q : Prop} (f : p₁ → p₂) : p₁ ∧ q → p₂ ∧ q := by
+  intro (And.intro (_ : p₁) (_ : q))
+  show p₂ ∧ q
+  have : p₂ := f ‹p₁›
+  exact And.intro ‹p₂› ‹q›
+
+/--
+Rewrite the right argument of logical _and_ with the provided mapping function.
+-/
+theorem and_mapR {p₁ p₂ q : Prop} (f : p₁ → p₂) : q ∧ p₁ → q ∧ p₂ := by
+  intro (And.intro (_ : q) (_ : p₁))
+  show q ∧ p₂
+  have : p₂ := f ‹p₁›
+  exact And.intro ‹q› ‹p₂›
 
 /--
 Disjunction distributes over conjunction.

@@ -522,11 +522,11 @@ theorem le_iff_lt_or_eqv {a b : ℤ} : a ≤ b ↔ a < b ∨ a ≃ b := by
   case mp =>
     intro (_ : a ≤ b)
     show a < b ∨ a ≃ b
-    have : a ≃ b ∨ a ≄ b := eqv? a b
-    have : a < b ∨ a ≃ b := match ‹a ≃ b ∨ a ≄ b› with
-    | Or.inl (_ : a ≃ b) =>
+    have : Decidable (a ≃ b) := eqv? a b
+    have : a < b ∨ a ≃ b := match this with
+    | isTrue (_ : a ≃ b) =>
       Or.inr ‹a ≃ b›
-    | Or.inr (_ : a ≄ b) =>
+    | isFalse (_ : a ≄ b) =>
       have : a < b := lt_iff_le_neqv.mpr (And.intro ‹a ≤ b› ‹a ≄ b›)
       Or.inl ‹a < b›
     exact this

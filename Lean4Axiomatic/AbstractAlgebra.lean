@@ -606,6 +606,18 @@ inductive OneOfThree (α β γ : Prop) : Prop
 | third  (c : γ)
 
 /--
+Inhabited when at least one of its three propositions is true; a three-way
+logical OR.
+
+It's in `Type` rather than `Prop` so it can be used for branching in program
+logic.
+-/
+inductive OneOfThree₁ (α β γ : Prop) : Type
+| first  (a : α)
+| second (b : β)
+| third  (c : γ)
+
+/--
 Converts each proposition in `OneOfThree` to a different one while preserving
 which one is inhabited.
 

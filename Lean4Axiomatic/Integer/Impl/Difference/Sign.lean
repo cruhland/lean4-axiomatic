@@ -203,6 +203,45 @@ def sgn : Difference ℕ → Difference ℕ
 | n——m => ord_sgn (compare n m)
 
 /--
+There are only three possible result values of the `sgn` function.
+
+Defined as a `def` that returns a `Type` so that it can be used for branching
+logic in computable functions.
+
+**Property intuition**: The `sgn` function computes a representation of a
+number's sign; thus it must return dinstinct values for zero, positive, and
+negative; and return _only_ those values.
+
+**Proof intuition**: Case split on the result of `compare`; each case
+corresponds to one of the three values.
+-/
+def sgn_trichotomy
+    (a : Difference ℕ) : AA.OneOfThree₁ (sgn a ≃ 0) (sgn a ≃ 1) (sgn a ≃ -1)
+    := by
+  revert a; intro (n——m)
+  show AA.OneOfThree₁ (sgn (n——m) ≃ 0) (sgn (n——m) ≃ 1) (sgn (n——m) ≃ -1)
+  show AA.OneOfThree₁
+    (ord_sgn (compare n m) ≃ 0)
+    (ord_sgn (compare n m) ≃ 1)
+    (ord_sgn (compare n m) ≃ -1)
+  match compare n m with
+  | Ordering.lt =>
+    apply AA.OneOfThree₁.third
+    show ord_sgn Ordering.lt ≃ -1
+    show -1 ≃ -1
+    exact Rel.refl
+  | Ordering.eq =>
+    apply AA.OneOfThree₁.first
+    show ord_sgn Ordering.eq ≃ 0
+    show 0 ≃ 0
+    exact Rel.refl
+  | Ordering.gt =>
+    apply AA.OneOfThree₁.second
+    show ord_sgn Ordering.gt ≃ 1
+    show 1 ≃ 1
+    exact Rel.refl
+
+/--
 Zero is the only difference with sign value zero.
 
 **Property intuition**: Zero is neither positive nor negative, so it gets its
@@ -350,6 +389,7 @@ instance sgn_props : Sgn.Props (Difference ℕ) := {
   sgn_positive := sgn_positive
   sgn_negative := sgn_negative
   add_preserves_sign := add_preserves_sign
+  sgn_trichotomy := sgn_trichotomy
 }
 
 instance sign : Sign (Difference ℕ) := {

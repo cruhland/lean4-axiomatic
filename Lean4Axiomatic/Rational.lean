@@ -25,12 +25,14 @@ class Rational
   toDivision : Rational.Division ℚ
   toSign : Rational.Sign ℚ
   toOrder : Rational.Order ℚ
+  toMinMax : Rational.MinMax ℚ
   toMetric : Rational.Metric ℚ
 
 attribute [instance] Rational.toAddition
 attribute [instance] Rational.toCore
 attribute [instance] Rational.toDivision
 attribute [instance] Rational.toMetric
+attribute [instance] Rational.toMinMax
 attribute [instance] Rational.toMultiplication
 attribute [instance] Rational.toNegation
 attribute [instance] Rational.toOrder

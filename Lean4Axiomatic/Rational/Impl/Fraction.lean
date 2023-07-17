@@ -2,6 +2,7 @@ import Lean4Axiomatic.Rational
 import Lean4Axiomatic.Rational.Impl.Fraction.Reciprocation
 import Lean4Axiomatic.Rational.Impl.Fraction.Sign
 import Lean4Axiomatic.Rational.Impl.Generic.Metric
+import Lean4Axiomatic.Rational.Impl.Generic.MinMax
 import Lean4Axiomatic.Rational.Impl.Generic.Order
 
 /-! # Formal fraction implementation of rational numbers -/
@@ -24,6 +25,7 @@ instance rational : Rational (ℤ := ℤ) (Fraction ℤ) :=
     toDivision := division
     toSign := sign
     toOrder := order
+    toMinMax := Generic.minmax
     toMetric := Generic.metric
   }
 

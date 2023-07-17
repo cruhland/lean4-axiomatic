@@ -208,9 +208,9 @@ theorem eqv_trans_almost
   intro (_ : pn//pd ≃ qn//qd) (_ : qn//qd ≃ rn//rd)
   show pn//pd ≃ rn//rd ∨ (qn//qd).to_prod ≃ (0//0).to_prod
   show pn * rd ≃ rn * pd ∨ (qn, qd) ≃ (0, 0)
-  have : qd ≃ 0 ∨ qd ≄ 0 := Integer.eqv? qd 0
-  match ‹qd ≃ 0 ∨ qd ≄ 0› with
-  | Or.inl (_ : qd ≃ 0) =>
+  have : Decidable (qd ≃ 0) := Integer.eqv? qd 0
+  match this with
+  | isTrue (_ : qd ≃ 0) =>
     have : pn * qd ≃ qn * pd := ‹pn//pd ≃ qn//qd›
     have : qn * rd ≃ rn * qd := ‹qn//qd ≃ rn//rd›
     have : qn * pd ≃ 0 := calc
@@ -243,7 +243,7 @@ theorem eqv_trans_almost
         rn * 0  ≃ _ := AA.substR (Rel.symm ‹pd ≃ 0›)
         rn * pd ≃ _ := Rel.refl
       exact Or.inl ‹pn * rd ≃ rn * pd›
-  | Or.inr (_ : qd ≄ 0) =>
+  | isFalse (_ : qd ≄ 0) =>
     have : pn * rd ≃ rn * pd :=
       eqv_trans_nonzero_denom
         (q := qn//qd)
