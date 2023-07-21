@@ -1178,4 +1178,51 @@ theorem between_preserves_close
   have : p ⊢ε⊣ r := close_from_between ‹sgn ε ≄ -1› ‹p-ε⊣ r ⊢p+ε›
   exact this
 
+/--
+Scale ε-close values by a factor on the right.
+
+**Property intuition**: Multiplication "expands" or "contracts" distance, so
+we'd expect the scaling factor to be accounted for in the ε part of the
+ε-closeness relation.
+
+**Proof intuition**: Expand ε-closeness into an upper bound on distance, then
+use the distributive property of distance and the fact that multiplication by a
+nonnegative value preserves order.
+-/
+theorem close_substL_mul
+    {ε p q r : ℚ} : p ⊢ε⊣ q → p * r ⊢ε * abs r⊣ q * r
+    := by
+  intro (_ : p ⊢ε⊣ q)
+  show p * r ⊢ε * abs r⊣ q * r
+  have : dist p q ≤ ε := close_dist.mp ‹p ⊢ε⊣ q›
+  have : abs r ≥ 0 := abs_ge_zero
+  have : sgn (abs r) ≄ -1 := ge_zero_sgn.mp this
+  have : dist (p * r) (q * r) ≤ ε * abs r := calc
+    _ ≃ dist (p * r) (q * r) := eqv_refl
+    _ ≃ dist p q * abs r     := eqv_symm dist_distribR
+    _ ≤ ε * abs r            := le_substL_mul_nonneg this ‹dist p q ≤ ε›
+  have : p * r ⊢ε * abs r⊣ q * r := close_dist.mpr this
+  exact this
+
+/--
+Scale ε-close values by a factor on the left.
+
+**Property intuition**: Multiplication "expands" or "contracts" distance, so
+we'd expect the scaling factor to be accounted for in the ε part of the
+ε-closeness relation.
+
+**Proof intuition**: This is equivalent to the opposite-handed theorem, but
+with all multiplications flipped around by commutativity.
+-/
+theorem close_substR_mul
+    {ε p q r : ℚ} : p ⊢ε⊣ q → r * p ⊢(abs r) * ε⊣ r * q
+    := by
+  intro (_ : p ⊢ε⊣ q)
+  show r * p ⊢(abs r) * ε⊣ r * q
+  have : p * r ⊢ε * abs r⊣ q * r := close_substL_mul ‹p ⊢ε⊣ q›
+  have : r * p ⊢ε * abs r⊣ q * r := close_substL_eqv mul_comm this
+  have : r * p ⊢(abs r) * ε⊣ q * r := close_substM_eqv mul_comm this
+  have : r * p ⊢(abs r) * ε⊣ r * q := close_substR_eqv mul_comm this
+  exact this
+
 end Lean4Axiomatic.Rational

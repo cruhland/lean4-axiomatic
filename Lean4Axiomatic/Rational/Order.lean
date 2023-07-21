@@ -157,6 +157,33 @@ theorem gt_sgn {p q : ℚ} : p > q ↔ sgn (p - q) ≃ 1 := by
     exact this
 
 /--
+A rational number is greater than zero iff it has a sign of `1`.
+
+**Property intuition**: These are both descriptions of positive numbers.
+
+**Proof intuition**: Special case of `gt_sgn`.
+-/
+theorem gt_zero_sgn {p : ℚ} : p > 0 ↔ sgn p ≃ 1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : p > 0)
+    show sgn p ≃ 1
+    have : sgn (p - 0) ≃ 1 := gt_sgn.mp ‹p > 0›
+    calc
+      _ ≃ sgn p       := Rel.refl
+      _ ≃ sgn (p - 0) := sgn_subst (eqv_symm sub_zero)
+      _ ≃ 1           := ‹sgn (p - 0) ≃ 1›
+  case mpr =>
+    intro (_ : sgn p ≃ 1)
+    show p > 0
+    have : sgn (p - 0) ≃ 1 := calc
+      _ ≃ sgn (p - 0) := Rel.refl
+      _ ≃ sgn p       := sgn_subst sub_zero
+      _ ≃ 1           := ‹sgn p ≃ 1›
+    have : p > 0 := gt_sgn.mpr ‹sgn (p - 0) ≃ 1›
+    exact this
+
+/--
 A rational number is greater than or equivalent to another when subtracting the
 latter from the former gives a non-negative result, i.e. its sign is not minus
 one.
@@ -1075,6 +1102,54 @@ theorem le_substR_mul_pos {p q r : ℚ} : sgn r ≃ 1 → p ≤ q → r * p ≤ 
     _ ≃ r * p := eqv_refl
     _ ≃ p * r := mul_comm
     _ ≤ q * r := le_substL_mul_pos ‹sgn r ≃ 1› ‹p ≤ q›
+    _ ≃ r * q := mul_comm
+
+/--
+Multiply both operands of _less than or equivalent to_ by the same nonnegative
+factor on the right.
+
+**Property and proof intuition**: If the factor is positive, then we've already
+established the result. If the factor is zero, then the operands are scaled
+down to zero and the result is true because they are equivalent.
+-/
+theorem le_substL_mul_nonneg
+    {p q r : ℚ} : sgn r ≄ -1 → p ≤ q → p * r ≤ q * r
+    := by
+  intro (_ : sgn r ≄ -1) (_ : p ≤ q)
+  show p * r ≤ q * r
+  have : r ≥ 0 := ge_zero_sgn.mpr ‹sgn r ≄ -1›
+  have : r > 0 ∨ r ≃ 0 := ge_cases.mp this
+  match this with
+  | Or.inl (_ : r > 0) =>
+    have : sgn r ≃ 1 := gt_zero_sgn.mp ‹r > 0›
+    have : p * r ≤ q * r := le_substL_mul_pos ‹sgn r ≃ 1› ‹p ≤ q›
+    exact this
+  | Or.inr (_ : r ≃ 0) =>
+    have : p * r ≃ q * r := calc
+      _ ≃ p * r := eqv_refl
+      _ ≃ p * 0 := mul_substR ‹r ≃ 0›
+      _ ≃ 0     := mul_absorbR
+      _ ≃ q * 0 := eqv_symm mul_absorbR
+      _ ≃ q * r := mul_substR (eqv_symm ‹r ≃ 0›)
+    have : p * r ≤ q * r := le_cases.mpr (Or.inr ‹p * r ≃ q * r›)
+    exact this
+
+/--
+Multiply both operands of _less than or equivalent to_ by the same nonnegative
+factor on the left.
+
+**Property and proof intuition**: This is equivalent to the opposite-handed
+version, but with the multiplications flipped around by commutativity.
+-/
+theorem le_substR_mul_nonneg
+    {p q r : ℚ} : sgn r ≄ -1 → p ≤ q → r * p ≤ r * q
+    := by
+  intro (_ : sgn r ≄ -1) (_ : p ≤ q)
+  show r * p ≤ r * q
+  calc
+    _ ≃ r * p := eqv_refl
+    _ ≃ p * r := mul_comm
+    _ ≤ q * r := le_substL_mul_nonneg ‹sgn r ≄ -1› ‹p ≤ q›
     _ ≃ r * q := mul_comm
 
 /--
