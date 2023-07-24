@@ -232,21 +232,31 @@ theorem abs_cases {p : ℚ} : abs p ≃ p ∨ abs p ≃ -p := by
     exact (Or.inr this)
 
 /--
-The absolute value of a rational number is greater than or equivalent to zero.
+The absolute value of a rational number is nonnegative.
 
 **Property intuition**: The absolute value discards the sign of a number and
-returns the magnitude, so we'd expect it to be nonnegative.
+returns its magnitude, so we'd expect it to be nonnegative.
 
 **Proof intuition**: The sign of a rational number's absolute value is that
 number's sign squared. A square can never be negative, thus the absolute value
 must be positive or zero.
 -/
-theorem abs_ge_zero {p : ℚ} : abs p ≥ 0 := by
+theorem abs_nonneg {p : ℚ} : sgn (abs p) ≄ -1 := by
   have : sgn (p * p) ≃ sgn (abs p) := calc
     _ ≃ sgn (p * p)   := Rel.refl
     _ ≃ sgn p * sgn p := sgn_compat_mul
     _ ≃ sgn (abs p)   := Rel.symm sgn_abs
   have : sgn (abs p) ≄ -1 := AA.neqv_substL this nonneg_square
+  exact this
+
+/--
+The absolute value of a rational number is greater than or equivalent to zero.
+
+Corollary to the absolute value being nonnegative, as that's the same as being
+greater than or equivalent to zero.
+-/
+theorem abs_ge_zero {p : ℚ} : abs p ≥ 0 := by
+  have : sgn (abs p) ≄ -1 := abs_nonneg
   have : abs p ≥ 0 := ge_zero_sgn.mpr this
   exact this
 
@@ -1195,8 +1205,7 @@ theorem close_substL_mul
   intro (_ : p ⊢ε⊣ q)
   show p * r ⊢ε * abs r⊣ q * r
   have : dist p q ≤ ε := close_dist.mp ‹p ⊢ε⊣ q›
-  have : abs r ≥ 0 := abs_ge_zero
-  have : sgn (abs r) ≄ -1 := ge_zero_sgn.mp this
+  have : sgn (abs r) ≄ -1 := abs_nonneg
   have : dist (p * r) (q * r) ≤ ε * abs r := calc
     _ ≃ dist (p * r) (q * r) := eqv_refl
     _ ≃ dist p q * abs r     := eqv_symm dist_distribR
@@ -1223,6 +1232,101 @@ theorem close_substR_mul
   have : r * p ⊢ε * abs r⊣ q * r := close_substL_eqv mul_comm this
   have : r * p ⊢(abs r) * ε⊣ q * r := close_substM_eqv mul_comm this
   have : r * p ⊢(abs r) * ε⊣ r * q := close_substR_eqv mul_comm this
+  exact this
+
+/--
+Multiply corresponding values of two ε-closeness relations.
+
+**Property and proof intuition**: The relation `p ⊢ε⊣ q` can be viewed as
+roughly saying that `q ≃ p + ε`. Thus `r ⊢δ⊣ s` means `s ≃ r + δ`. Multiplying,
+we obtain `qs ≃ (p + ε)(r + δ) ≃ pr + (εr + δp + εδ)`, implying the goal.
+-/
+theorem close_mul_pointwise
+    {ε δ p q r s : ℚ}
+    : p ⊢ε⊣ q → r ⊢δ⊣ s → p * r ⊢ε * abs r + δ * abs p + ε * δ⊣ q * s
+    := by
+  intro (_ : p ⊢ε⊣ q) (_ : r ⊢δ⊣ s)
+  show p * r ⊢ε * abs r + δ * abs p + ε * δ⊣ q * s
+
+  have close_diff
+      {x y ζ : ℚ} : x ⊢ζ⊣ y → ∃ (d : ℚ), y ≃ x + d ∧ abs d ≤ ζ
+      := by
+    intro (_ : x ⊢ζ⊣ y)
+    show ∃ (d : ℚ), y ≃ x + d ∧ abs d ≤ ζ
+    let d := y - x
+    have : y ≃ x + d := calc
+      _ ≃ y            := eqv_refl
+      _ ≃ y + 0        := eqv_symm add_identR
+      _ ≃ y + (-x + x) := add_substR (eqv_symm add_inverseL)
+      _ ≃ (y + -x) + x := eqv_symm add_assoc
+      _ ≃ (y - x) + x  := add_substL (eqv_symm sub_add_neg)
+      _ ≃ d + x        := add_substL eqv_refl
+      _ ≃ x + d        := add_comm
+    have : abs d ≤ ζ := calc
+      _ ≃ abs d       := eqv_refl
+      _ ≃ abs (y - x) := eqv_refl
+      _ ≃ dist y x    := eqv_symm dist_abs
+      _ ≃ dist x y    := dist_comm
+      _ ≤ ζ           := close_dist.mp ‹x ⊢ζ⊣ y›
+    exact Exists.intro d (And.intro ‹y ≃ x + d› ‹abs d ≤ ζ›)
+
+  have (Exists.intro (a : ℚ) (And.intro (_ : q ≃ p + a) (_ : abs a ≤ ε))) :=
+    close_diff ‹p ⊢ε⊣ q›
+  have (Exists.intro (b : ℚ) (And.intro (_ : s ≃ r + b) (_ : abs b ≤ δ))) :=
+    close_diff ‹r ⊢δ⊣ s›
+
+  have : sgn ε ≄ -1 := close_nonneg ‹p ⊢ε⊣ q›
+  have : s - r ≃ b := calc
+    _ ≃ s - r        := eqv_refl
+    _ ≃ s + -r       := sub_add_neg
+    _ ≃ -r + s       := add_comm
+    _ ≃ -r + (r + b) := add_substR ‹s ≃ r + b›
+    _ ≃ (-r + r) + b := eqv_symm add_assoc
+    _ ≃ 0 + b        := add_substL add_inverseL
+    _ ≃ b            := add_identL
+  have qs_pr_eqv_pb_ar_ab : q * s - p * r ≃ p * b + a * r + a * b := calc
+    _ ≃ q * s - p * r                := eqv_refl
+    _ ≃ (p + a) * s - p * r          := sub_substL (mul_substL ‹q ≃ p + a›)
+    _ ≃ p * s + a * s - p * r        := sub_substL mul_distribR
+    _ ≃ p * s + a * s + (-(p * r))   := sub_add_neg
+    _ ≃ p * s + (a * s + (-(p * r))) := add_assoc
+    _ ≃ p * s + (-(p * r) + a * s)   := add_substR add_comm
+    _ ≃ p * s + (-(p * r)) + a * s   := eqv_symm add_assoc
+    _ ≃ p * s - p * r + a * s        := add_substL (eqv_symm sub_add_neg)
+    _ ≃ p * (s - r) + a * s          := add_substL (eqv_symm mul_distribL_sub)
+    _ ≃ p * b + a * s                := add_substL (mul_substR ‹s - r ≃ b›)
+    _ ≃ p * b + a * (r + b)          := add_substR (mul_substR ‹s ≃ r + b›)
+    _ ≃ p * b + (a * r + a * b)      := add_substR mul_distribL
+    _ ≃ p * b + a * r + a * b        := eqv_symm add_assoc
+  have : abs (a * r) ≤ ε * abs r := calc
+    _ ≃ abs (a * r)   := eqv_refl
+    _ ≃ abs a * abs r := abs_compat_mul
+    _ ≤ ε * abs r     := le_substL_mul_nonneg abs_nonneg ‹abs a ≤ ε›
+  have : abs (p * b) ≤ δ * abs p := calc
+    _ ≃ abs (p * b)   := eqv_refl
+    _ ≃ abs p * abs b := abs_compat_mul
+    _ ≤ abs p * δ     := le_substR_mul_nonneg abs_nonneg ‹abs b ≤ δ›
+    _ ≃ δ * abs p     := mul_comm
+  have abs_ab : abs (a * b) ≤ ε * δ := calc
+    _ ≃ abs (a * b)   := eqv_refl
+    _ ≃ abs a * abs b := abs_compat_mul
+    _ ≤ ε * abs b     := le_substL_mul_nonneg abs_nonneg ‹abs a ≤ ε›
+    _ ≤ ε * δ         := le_substR_mul_nonneg ‹sgn ε ≄ -1› ‹abs b ≤ δ›
+  have abs_pb_ar : abs (p * b + a * r) ≤ ε * abs r + δ * abs p := calc
+    _ ≃ abs (p * b + a * r)       := eqv_refl
+    _ ≤ abs (p * b) + abs (a * r) := abs_compat_add
+    _ ≤ δ * abs p + abs (a * r)   := le_substL_add ‹abs (p * b) ≤ δ * abs p›
+    _ ≤ δ * abs p + ε * abs r     := le_substR_add ‹abs (a * r) ≤ ε * abs r›
+    _ ≃ ε * abs r + δ * abs p     := add_comm
+  have : dist (p * r) (q * s) ≤ ε * abs r + δ * abs p + ε * δ := calc
+    _ ≃ dist (p * r) (q * s)                := eqv_refl
+    _ ≃ dist (q * s) (p * r)                := dist_comm
+    _ ≃ abs (q * s - p * r)                 := dist_abs
+    _ ≃ abs (p * b + a * r + a * b)         := abs_subst qs_pr_eqv_pb_ar_ab
+    _ ≤ abs (p * b + a * r) + abs (a * b)   := abs_compat_add
+    _ ≤ ε * abs r + δ * abs p + abs (a * b) := le_substL_add abs_pb_ar
+    _ ≤ ε * abs r + δ * abs p + ε * δ       := le_substR_add abs_ab
+  have : p * r ⊢ε * abs r + δ * abs p + ε * δ⊣ q * s := close_dist.mpr this
   exact this
 
 end Lean4Axiomatic.Rational
