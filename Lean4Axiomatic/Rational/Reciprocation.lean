@@ -5,7 +5,6 @@ import Lean4Axiomatic.Rational.Negation
 namespace Lean4Axiomatic.Rational
 
 open Logic (AP)
-open Relation.Equivalence (EqvOp)
 
 /-- Operations pertaining to rational number reciprocation. -/
 class Reciprocation.Ops
@@ -191,7 +190,7 @@ def ind_fraction_on
 
 
 /--
-The predicate AsRatio is satisfies the subst axiom with respect to the
+The predicate AsRatio is satisfies the prop_subst axiom with respect to the
 equivalence relation ≃. 
 I.e. If two rationals p and q are equvalent and p can be expressed as an
 integer ratio (that is, q ≃ a / b), then q can as well.
