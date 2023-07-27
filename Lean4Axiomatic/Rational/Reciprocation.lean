@@ -5,6 +5,7 @@ import Lean4Axiomatic.Rational.Negation
 namespace Lean4Axiomatic.Rational
 
 open Logic (AP)
+open Relation.Equivalence (EqvOp)
 
 /-- Operations pertaining to rational number reciprocation. -/
 class Reciprocation.Ops
@@ -148,21 +149,19 @@ class Division.Props
   div_mul_recip {p q : ℚ} [AP (q ≄ 0)] : p / q ≃ p * q⁻¹
 
   /--
-  Every rational number can be expressed as a ratio of integers.
-
-  Given any two integers, we can easily make a rational number; convert both of
-  them to rationals using `from_integer`, then divide them. This axiom tells us
-  that we can also do the reverse: given any rational, there are two integers
-  that produce it when put into a ratio.
-
-  It's a useful axiom because it provides a way to "deconstruct" a rational
-  number into simpler pieces, which may be easier to work with. Although it's
-  preferable to work with rational numbers directly, and use this only when
-  necessary.
+  An Induction/recursion principle for Rationals.
+  It states that any predicate holding for all rationals of the form a / b
+  (where a and b are integers) will also hold for any rational. In particular,
+  this implies that all rationals can be represented in the form 
+  a / b, which is formalized below in the theorem rational_as_ratio.
+  In other words, it excludes any rationals not of this form.
+  This axiom is inspired by the induction axiom as formulated by Peano:
+    https://en.wikipedia.org/wiki/Mathematical_induction#Axiom_of_induction 
   -/
-  as_ratio (p : ℚ) : AsRatio p
+  ind_fraction {motive : ℚ → Prop} {motive_subst : AA.prop_subst motive}
+    : ({a b : ℤ} → [Integer.Nonzero b] → motive (a / b)) → (p : ℚ) → motive p
 
-export Division.Props (as_ratio div_mul_recip)
+export Division.Props (div_mul_recip ind_fraction)
 
 /-- All rational number division axioms. -/
 class Division
@@ -182,6 +181,55 @@ variable {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
 variable {ℚ : Type}
   [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
   [Negation ℚ] [Reciprocation ℚ] [Division ℚ]
+
+/--
+Equivalent to `Division.Props.ind_fraction` but with a more convenient argument
+order when using the `apply` tactic.
+-/
+def ind_fraction_on
+  {motive : ℚ → Prop} {motive_subst : AA.prop_subst motive} (p : ℚ) 
+    (on_int_frac : ({a b : ℤ} → [Integer.Nonzero b] → motive ( (a : ℚ) / b)))
+    : motive p
+    :=
+    ind_fraction (motive := motive) (motive_subst := motive_subst) on_int_frac p
+
+
+/--
+The predicate AsRatio is satisfies the subst axiom with respect to the
+equivalence relation ≃. 
+I.e. If two rationals p and q are equvalent and p can be expressed as an
+integer ratio (that is, q ≃ a / b), then q can as well.
+-/
+theorem AsRatio_prop_subst_lemma : AA.prop_subst (α := ℚ) AsRatio := by
+  intro p q peq as_ratio_p 
+  exact 
+  match as_ratio_p with
+  | AsRatio.intro a b bnz eqfrac => 
+    have q_as_ratio : q ≃ a / b := calc
+      q      ≃ _ := eqv_symm peq
+      p      ≃ _ := eqfrac
+      from_integer a / from_integer b  ≃ _ := eqv_refl
+    AsRatio.intro a b bnz q_as_ratio
+
+
+  /--
+  Every rational number can be expressed as a ratio of integers.
+
+  Given any two integers, we can easily make a rational number; convert both of
+  them to rationals using `from_integer`, then divide them. This theorem tells us
+  that we can also do the reverse: given any rational, there are two integers
+  that produce it when put into a ratio.
+
+  It's a useful property because it provides a way to "deconstruct" a rational
+  number into simpler pieces, which may be easier to work with. Although, it's
+  preferable to work with rational numbers directly, and use this only when
+  necessary.
+  -/
+theorem rational_as_ratio (p : ℚ) : AsRatio p := by
+  apply ind_fraction_on (motive_subst := AsRatio_prop_subst_lemma) p
+  intro a b b_nonzero
+  show AsRatio (from_integer a / from_integer b)
+  exact (AsRatio.intro a b b_nonzero eqv_refl) 
 
 /--
 Square roots of unity are their own reciprocals.

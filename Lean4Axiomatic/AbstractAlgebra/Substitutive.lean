@@ -16,6 +16,18 @@ property to be replaced by arbitrary binary relations.
 ### Definitions
 -/
 
+
+/--
+A predicate for indicating that an arbitrary predicate is compatible
+with a given equivalence relation ≃.
+Generally when we introduce new types we will we introduce a corresponding
+equivalence relation ≃, which we think of as propositional equality.
+Then, we will want to deal with predicates that are compatible with this
+equivalence relation.
+. -/
+def prop_subst {α : Type} [EqvOp α] (motive : α → Prop) : Prop :=
+  ∀ {a b : α}, a ≃ b → motive a → motive b
+
 /--
 Class for types and operations that satisfy the unary generalized substitution
 property.
