@@ -194,6 +194,13 @@ theorem div_eqv_fraction
 Every fraction satisfies the rational induction axiom, that is
 if a predicate holds for all fractions of the form a / b
 then it holds for all fractions.
+
+**Property intuition**: Reasonable definitions of divison on formal
+fractions should satsify this basic property.
+
+**Proof intuition**: Expand the definitions of formal fractions, division on
+them, and the main previous result div_eqv_fraction
+
 --/
 def ind_fraction {motive : (Fraction ℤ) → Prop} {motive_subst : AA.prop_subst motive} :
     ({a b : ℤ} → [Integer.Nonzero b] → motive (a / b)) → (p : (Fraction ℤ)) →
@@ -202,8 +209,7 @@ def ind_fraction {motive : (Fraction ℤ) → Prop} {motive_subst : AA.prop_subs
   revert p; intro (a//b)
   show motive (a//b)
   have bnz : Integer.Nonzero b := Integer.nonzero_from_positive_inst
-  have ind_division : motive (a / b) :=
-    @ind_on_motive a b bnz 
+  have ind_division : motive (a / b) := @ind_on_motive a b bnz
   have frac_eq_div : (a : Fraction ℤ) / b ≃ a//b := div_eqv_fraction
   exact motive_subst frac_eq_div ind_division
 
