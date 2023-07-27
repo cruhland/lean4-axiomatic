@@ -18,12 +18,14 @@ property to be replaced by arbitrary binary relations.
 
 
 /--
-A predicate for indicating that an arbitrary predicate is compatible
-with a given equivalence relation ≃.
-Generally when we introduce new types we will we introduce a corresponding
-equivalence relation ≃, which we think of as propositional equality.
-Then, we will want to deal with predicates that are compatible with this
-equivalence relation.
+Propositional substitution.
+A predicate for indicating that an arbitrary propositional predicate, a unary 
+function whose co-domain is Prop, is compatible with a given equivalence
+relation ≃. Generally when new types are introduced they will have a
+corresponding equivalence relation ≃, which can be thought of as propositional
+equality.  Then propositional predicates (intuitively, verifiable true/false
+properties) can be defined and will be useful when they are compatible with ≃.
+This function will allow such predicates to be used in proofs.
 . -/
 def prop_subst {α : Type} [EqvOp α] (motive : α → Prop) : Prop :=
   ∀ {a b : α}, a ≃ b → motive a → motive b
