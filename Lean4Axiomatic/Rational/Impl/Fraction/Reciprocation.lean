@@ -191,27 +191,27 @@ theorem div_eqv_fraction
   a//b                 ≃ _ := eqv_refl
 
 /--
-Every fraction can be expressed as a ratio of integers.
-
-This is a trivial theorem for fractions, but there may be other rational number
-representations for which the proof is much more difficult.
-
-**Property intuition**: Formal fractions satisfy this by definition.
-
-**Proof intuition**: Use the previous result that formal fractions are
-equivalent to division of integers, and that the denominator is nonzero because
-it's positive.
--/
-def as_ratio (p : Fraction ℤ) : AsRatio p := by
+Every fraction satisfies the rational induction axiom, that is
+if a predicate holds for all fractions of the form a / b
+then it holds for all fractions.
+--/
+def ind_fraction {motive : (Fraction ℤ) → Prop} {motive_subst : AA.prop_subst motive} :
+    ({a b : ℤ} → [Integer.Nonzero b] → motive (a / b)) → (p : (Fraction ℤ)) →
+    motive p := by
+  intro ind_on_motive p
   revert p; intro (a//b)
-  show AsRatio (a//b)
-  have : Integer.Nonzero b := Integer.nonzero_from_positive_inst
-  have : a//b ≃ a / b := eqv_symm div_eqv_fraction
-  exact AsRatio.intro a b ‹Integer.Nonzero b› this
+  show motive (a//b)
+  have bnz : Integer.Nonzero b := Integer.nonzero_from_positive_inst
+  have ind_division : motive (a / b) :=
+    @ind_on_motive a b bnz 
+  have frac_eq_div : (a : Fraction ℤ) / b ≃ a//b := div_eqv_fraction
+  exact motive_subst frac_eq_div ind_division
 
 instance division_props : Division.Props (Fraction ℤ) := {
   div_mul_recip := eqv_refl
-  as_ratio := as_ratio
+  ind_fraction := λ {motive : Fraction ℤ → Prop} => 
+    λ {motive_subst : AA.prop_subst motive} =>
+    ind_fraction (motive := motive) (motive_subst := motive_subst)
 }
 
 instance division : Division (Fraction ℤ) := {
