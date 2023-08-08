@@ -18,19 +18,19 @@ required to construct an instance.
 -/
 class Natural (ℕ : semiOutParam Type) :=
   toCore : Core ℕ
-  toAxioms : Axioms ℕ
+  toInduction : Induction.{0} ℕ
   toAddition : Addition ℕ
   toSign : Sign ℕ
   toOrder : Order ℕ
   toCompare : Compare ℕ
   toMultiplication : Multiplication ℕ
-  toExponentiation : Exponentiation ℕ
+  toExponentiation : Exponentiation ℕ (α := ℕ) (· * ·)
 
 attribute [instance] Natural.toAddition
-attribute [instance] Natural.toAxioms
 attribute [instance] Natural.toCompare
 attribute [instance] Natural.toCore
 attribute [instance] Natural.toExponentiation
+attribute [instance] Natural.toInduction
 attribute [instance] Natural.toMultiplication
 attribute [instance] Natural.toOrder
 attribute [instance] Natural.toSign

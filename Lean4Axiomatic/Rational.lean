@@ -19,6 +19,7 @@ class Rational
   toCore : Rational.Core (ℤ := ℤ) ℚ
   toAddition : Rational.Addition ℚ
   toMultiplication : Rational.Multiplication ℚ
+  toExponentiation : Natural.Exponentiation ℕ (α := ℚ) (· * ·)
   toNegation : Rational.Negation ℚ
   toSubtraction : Rational.Subtraction ℚ
   toReciprocation : Rational.Reciprocation ℚ
@@ -31,6 +32,7 @@ class Rational
 attribute [instance] Rational.toAddition
 attribute [instance] Rational.toCore
 attribute [instance] Rational.toDivision
+attribute [instance] Rational.toExponentiation
 attribute [instance] Rational.toMetric
 attribute [instance] Rational.toMinMax
 attribute [instance] Rational.toMultiplication

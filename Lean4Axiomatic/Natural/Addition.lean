@@ -33,10 +33,7 @@ export Addition (addOp step_add zero_add)
 ## Derived properties
 -/
 
-variable {ℕ : Type}
-variable [Core ℕ]
-variable [Axioms ℕ]
-variable [Addition ℕ]
+variable {ℕ : Type} [Core ℕ] [Induction.{0} ℕ] [Addition ℕ]
 
 /-- Adding zero to any natural number (on the right) leaves it unchanged. -/
 theorem add_zero {n : ℕ} : n + 0 ≃ n := by

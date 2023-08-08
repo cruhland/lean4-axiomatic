@@ -7,7 +7,9 @@ import Lean4Axiomatic.Natural.Impl.Generic
 
 namespace Lean4Axiomatic.Natural.Impl.Nat
 
-local instance constructors : Constructors Nat := {
+open Relation.Equivalence (EqvOp)
+
+local instance constructor_ops : Constructor.Ops Nat := {
   zero := Nat.zero
   step := Nat.succ
 }
@@ -30,39 +32,47 @@ local instance literals : Literals Nat := {
   literal_step := Rel.refl
 }
 
-local instance step_substitutive
+def step_substitutive
     : AA.Substitutive₁ (step : Nat → Nat) (· ≃ ·) (· ≃ ·)
     := {
   subst₁ := congrArg step
 }
 
-local instance core : Core Nat := {
-  step_substitutive := step_substitutive
-}
-
 theorem succ_injective {n m : Nat} : Nat.succ n = Nat.succ m → n = m
 | Eq.refl _ => Eq.refl _
 
-local instance step_injective
-    : AA.Injective (step : Nat → Nat) (· ≃ ·) (· ≃ ·)
-    := {
+def step_injective : AA.Injective (step : Nat → Nat) (· ≃ ·) (· ≃ ·) := {
   inject := succ_injective
 }
 
+local instance constructor_props : Constructor.Props Nat := {
+  step_neqv_zero := Nat.noConfusion
+  step_substitutive := step_substitutive
+  step_injective := step_injective
+}
+
+local instance core : Core Nat := {}
+
+/--
+Implementation of induction as a recursive function using pattern matching.
+
+It should be possible to use `Nat.rec` directly instead, but Lean gives an
+error in that case (see comment mentioning `Nat.rec` below).
+-/
 def ind
-    {motive : Nat → Sort v}
+    {motive : Nat → Sort u}
     (mz : motive 0) (ms : {n : Nat} → motive n → motive (Nat.succ n))
     : (n : Nat) → motive n
 | Nat.zero => mz
 | Nat.succ n => ms (ind mz ms n)
 
-local instance axioms : Axioms Nat := {
-  step_injective := step_injective
-  step_neqv_zero := Nat.noConfusion
+local instance induction : Induction Nat := {
   -- 2022-01-11: Using `Nat.rec` directly here, gives the following error:
   -- code generator does not support recursor 'Nat.rec' yet, consider using
   -- 'match ... with' and/or structural recursion
   ind := ind
+  ind_zero := rfl
+  ind_step := rfl
 }
 
 local instance addition : Addition Nat := {
@@ -75,12 +85,6 @@ local instance multiplication : Multiplication Nat := {
   mulOp := _root_.instMulNat
   zero_mul := @Nat.zero_mul
   step_mul := @Nat.succ_mul
-}
-
-local instance exponentiation : Exponentiation Nat := {
-  powOp := _root_.instPowNat
-  pow_zero := rfl
-  pow_step := rfl
 }
 
 local instance sign : Sign Nat := Generic.sign
@@ -391,13 +395,13 @@ local instance compare_inst : Compare Nat := {
 
 instance : Natural Nat := {
   toCore := core
-  toAxioms := axioms
+  toInduction := induction
   toAddition := addition
   toSign := sign
   toOrder := order
   toCompare := compare_inst
   toMultiplication := multiplication
-  toExponentiation := exponentiation
+  toExponentiation := Generic.exponentiation
 }
 
 end Lean4Axiomatic.Natural.Impl.Nat

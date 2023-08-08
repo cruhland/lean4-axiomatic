@@ -6,39 +6,71 @@ import Lean4Axiomatic.Natural.Multiplication
 
 namespace Lean4Axiomatic.Natural
 
+open Relation.Equivalence (EqvOp)
 open Signed (Positive)
 
 /-!
 ## Axioms
 -/
 
+/-- Operations for raising numeric values to natural number powers. -/
+class Exponentiation.Ops (α : Type) (ℕ : outParam Type) :=
+  /-- Exponentiation to a natural number power. -/
+  _pow : α → ℕ → α
+
 /--
-Definition of exponentiation, and properties that it must satisfy.
+Enables the use of the `· ^ ·` operator for exponentiation.
 
-All other properties of exponentiation can be derived from these.
+Has an explicit priority so it is chosen before the standard library's
+`Pow Nat Nat` instance.
 -/
-class Exponentiation (ℕ : Type) [Core ℕ] [Addition ℕ] [Multiplication ℕ] :=
-  /-- Definition of and syntax for exponentiation. -/
-  powOp : Pow ℕ ℕ
+instance (priority := default+1) pow_inst
+    {α ℕ : Type} [Exponentiation.Ops α ℕ] : Pow α ℕ
+    := {
+  pow := Exponentiation.Ops._pow
+}
 
-  /-- Raising a natural number to the power zero always gives one. -/
-  pow_zero {n : ℕ} : n ^ 0 ≃ 1
+/-- Properties of exponentiation to a natural number. -/
+class Exponentiation.Props
+    {α : Type} {ℕ : outParam Type} (mul : outParam (α → α → α))
+    [Core ℕ] [Addition ℕ] [Multiplication ℕ] [EqvOp α] [OfNat α 1] [Ops α ℕ]
+    :=
+  /-- Any number raised to the power zero, is one. -/
+  pow_zero {x : α} : x ^ (0:ℕ) ≃ 1
 
-  /--
-  Each increment of the exponent puts another factor of the base on the result.
-  -/
-  pow_step {n m : ℕ} : n ^ step m ≃ n ^ m * n
+  /-- Adding one to the exponent multiplies the result by the base. -/
+  pow_step {x : α} {n : ℕ} : x ^ step n ≃ mul (x ^ n) x
 
-attribute [instance] Exponentiation.powOp
+export Exponentiation.Props (pow_step pow_zero)
 
-export Exponentiation (powOp pow_step pow_zero)
+/-- All exponentiation axioms. -/
+class Exponentiation
+    (ℕ : semiOutParam Type) {α : Type} (mul : semiOutParam (α → α → α))
+    [Core ℕ] [Addition ℕ] [Multiplication ℕ] [EqvOp α] [OfNat α 1]
+    :=
+  toOps : Exponentiation.Ops α ℕ
+  toProps : Exponentiation.Props mul
+
+attribute [instance] Exponentiation.toOps
+attribute [instance] Exponentiation.toProps
 
 /-! ## Derived properties -/
 
 variable
   {ℕ : Type}
-  [Core ℕ] [Axioms ℕ] [Addition ℕ] [Sign ℕ] [Multiplication ℕ]
-  [Exponentiation ℕ]
+    [Core ℕ] [Induction.{0} ℕ] [Addition ℕ] [Sign ℕ] [Multiplication ℕ]
+
+section general
+
+/-! ### General properties for any base type -/
+
+variable
+  {α : Type} {mul : α → α → α} [EqvOp α] [OfNat α 1] [Exponentiation ℕ mul]
+
+/-- Enables the use of `· * ·` syntax for `α`'s multiplication function. -/
+local instance mul_inst [Exponentiation ℕ mul] : Mul α := {
+  mul := mul
+}
 
 /--
 Equivalent values can be substituted for the base (left operand) in an
@@ -51,25 +83,28 @@ function.
 that has `zero` and `step` cases in the axioms. The base case and inductive
 case both follow from expanding definitions and using substitution.
 -/
-theorem pow_substL {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ ^ m ≃ n₂ ^ m := by
-  intro (_ : n₁ ≃ n₂)
-  show n₁ ^ m ≃ n₂ ^ m
-  apply ind_on (motive := λ x => n₁ ^ x ≃ n₂ ^ x) m
+theorem pow_substL
+    {x₁ x₂ : α} [AA.Substitutive₂ (β := α) (· * ·) AA.tc (· ≃ ·) (· ≃ ·)]
+    {m : ℕ} : x₁ ≃ x₂ → x₁ ^ m ≃ x₂ ^ m
+    := by
+  intro (_ : x₁ ≃ x₂)
+  show x₁ ^ m ≃ x₂ ^ m
+  apply ind_on (motive := λ y => x₁ ^ y ≃ x₂ ^ y) m
   case zero =>
-    show n₁ ^ 0 ≃ n₂ ^ 0
+    show x₁ ^ 0 ≃ x₂ ^ 0
     calc
-      _ ≃ n₁ ^ 0 := Rel.refl
+      _ ≃ x₁ ^ 0 := Rel.refl
       _ ≃ 1      := pow_zero
-      _ ≃ n₂ ^ 0 := Rel.symm pow_zero
+      _ ≃ x₂ ^ 0 := Rel.symm pow_zero
   case step =>
-    intro (m' : ℕ) (ih : n₁ ^ m' ≃ n₂ ^ m')
-    show n₁ ^ step m' ≃ n₂ ^ step m'
+    intro (m' : ℕ) (ih : x₁ ^ m' ≃ x₂ ^ m')
+    show x₁ ^ step m' ≃ x₂ ^ step m'
     calc
-      _ ≃ n₁ ^ step m' := Rel.refl
-      _ ≃ n₁ ^ m' * n₁ := pow_step
-      _ ≃ n₂ ^ m' * n₁ := AA.substL ih
-      _ ≃ n₂ ^ m' * n₂ := AA.substR ‹n₁ ≃ n₂›
-      _ ≃ n₂ ^ step m' := Rel.symm pow_step
+      _ ≃ x₁ ^ step m' := Rel.refl
+      _ ≃ x₁ ^ m' * x₁ := pow_step
+      _ ≃ x₂ ^ m' * x₁ := AA.substL ih
+      _ ≃ x₂ ^ m' * x₂ := AA.substR ‹x₁ ≃ x₂›
+      _ ≃ x₂ ^ step m' := Rel.symm pow_step
 
 /--
 Equivalent values can be substituted for the exponent (right operand) in an
@@ -87,37 +122,46 @@ we need to do a case-split on `n₂` within the base case and inductive case for
 case, which expands definitions, then uses substitution and the inductive
 hypothesis.
 -/
-theorem pow_substR {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m ^ n₁ ≃ m ^ n₂ := by
-  apply ind_on (motive := λ x => ∀ {y}, x ≃ y → m ^ x ≃ m ^ y) n₁
+theorem pow_substR
+    {x : α} [AA.Substitutive₂ (β := α) (· * ·) AA.tc (· ≃ ·) (· ≃ ·)]
+    {n₁ n₂ : ℕ} : n₁ ≃ n₂ → x ^ n₁ ≃ x ^ n₂
+    := by
+  apply ind_on (motive := λ k => ∀ {j}, k ≃ j → x ^ k ≃ x ^ j) n₁
   case zero =>
     intro (n₂ : ℕ)
-    show 0 ≃ n₂ → m ^ 0 ≃ m ^ n₂
-    apply cases_on (motive := λ y => 0 ≃ y → m ^ 0 ≃ m ^ y) n₂
+    show 0 ≃ n₂ → x ^ 0 ≃ x ^ n₂
+    apply cases_on (motive := λ j => 0 ≃ j → x ^ 0 ≃ x ^ j) n₂
     case zero =>
       intro (_ : (0 : ℕ) ≃ 0)
-      show m ^ 0 ≃ m ^ 0
+      show x ^ 0 ≃ x ^ 0
       exact Rel.refl
     case step =>
       intro (n₂' : ℕ) (_ : 0 ≃ step n₂')
-      show m ^ 0 ≃ m ^ step n₂'
+      show x ^ 0 ≃ x ^ step n₂'
       exact absurd ‹0 ≃ step n₂'› (Rel.symm step_neqv_zero)
   case step =>
-    intro (n₁' : ℕ) (ih : ∀ {y}, n₁' ≃ y → m ^ n₁' ≃ m ^ y) (n₂ : ℕ)
-    show step n₁' ≃ n₂ → m ^ step n₁' ≃ m ^ n₂
-    apply cases_on (motive := λ y => step n₁' ≃ y → m ^ step n₁' ≃ m ^ y) n₂
+    intro (n₁' : ℕ) (ih : ∀ {j}, n₁' ≃ j → x ^ n₁' ≃ x ^ j) (n₂ : ℕ)
+    show step n₁' ≃ n₂ → x ^ step n₁' ≃ x ^ n₂
+    apply cases_on (motive := λ j => step n₁' ≃ j → x ^ step n₁' ≃ x ^ j) n₂
     case zero =>
       intro (_ : step n₁' ≃ 0)
-      show m ^ step n₁' ≃ m ^ 0
+      show x ^ step n₁' ≃ x ^ 0
       exact absurd ‹step n₁' ≃ 0› step_neqv_zero
     case step =>
       intro (n₂' : ℕ) (_ : step n₁' ≃ step n₂')
-      show m ^ step n₁' ≃ m ^ step n₂'
+      show x ^ step n₁' ≃ x ^ step n₂'
       have : n₁' ≃ n₂' := AA.inject ‹step n₁' ≃ step n₂'›
       calc
-        _ ≃ m ^ step n₁' := Rel.refl
-        _ ≃ m ^ n₁' * m  := pow_step
-        _ ≃ m ^ n₂' * m  := AA.substL (ih ‹n₁' ≃ n₂'›)
-        _ ≃ m ^ step n₂' := Rel.symm pow_step
+        _ ≃ x ^ step n₁' := Rel.refl
+        _ ≃ x ^ n₁' * x  := pow_step
+        _ ≃ x ^ n₂' * x  := AA.substL (ih ‹n₁' ≃ n₂'›)
+        _ ≃ x ^ step n₂' := Rel.symm pow_step
+
+end general
+
+/-! ### Specific properties for a natural number base -/
+
+variable [Exponentiation ℕ (α := ℕ) (· * ·)]
 
 /--
 Exponentiation of natural numbers can give a zero result only when the base is

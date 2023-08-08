@@ -48,12 +48,9 @@ export Order (le_defn leOp lt_defn ltOp)
 ## Derived properties
 -/
 
-variable {ℕ : Type}
-variable [Core ℕ]
-variable [Axioms ℕ]
-variable [Addition ℕ]
-variable [Sign ℕ]
-variable [order_inst : Order ℕ]
+variable
+  {ℕ : Type}
+    [Core ℕ] [Induction.{0} ℕ] [Addition ℕ] [Sign ℕ] [order_inst : Order ℕ]
 
 /--
 The _less than or equal to_ relation is preserved when both sides are

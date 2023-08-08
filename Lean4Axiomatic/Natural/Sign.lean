@@ -34,11 +34,7 @@ These results follow from the generic definitions in `Sign` and don't depend on
 a specific implementation of natural numbers.
 -/
 
-variable {ℕ : Type}
-variable [Core ℕ]
-variable [Axioms ℕ]
-variable [Addition ℕ]
-variable [Sign ℕ]
+variable {ℕ : Type} [Core ℕ] [Induction.{0} ℕ] [Addition ℕ] [Sign ℕ]
 
 /--
 The `Positive` predicate respects equivalence.

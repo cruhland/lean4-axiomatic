@@ -8,16 +8,14 @@ Closely follows the [Peano axioms](https://en.wikipedia.org/wiki/Peano_axioms).
 
 namespace Lean4Axiomatic.Natural
 
+open Relation.Equivalence (EqvOp)
+
 /-!
 ## Axioms
 -/
 
-/--
-Defines the primitive building blocks of all natural numbers.
-
-Provides the first two Peano axioms; see `Axioms.Base` for the rest.
--/
-class Constructors (ℕ : outParam Type) :=
+/-- Defines the primitive building blocks of all natural numbers. -/
+class Constructor.Ops (ℕ : outParam Type) :=
   /--
   **Peano axiom 1**: `zero` is a natural number.
 
@@ -39,7 +37,7 @@ class Constructors (ℕ : outParam Type) :=
   -/
   step : ℕ → ℕ
 
-export Constructors (zero step)
+export Constructor.Ops (zero step)
 
 /-- Definitions pertaining to equality of natural number values. -/
 class Equality (ℕ : Type) :=
@@ -51,7 +49,7 @@ attribute [instance] Equality.eqvOp?
 export Equality (eqvOp?)
 
 /-- Definitions pertaining to numeric literal support for natural numbers. -/
-class Literals (ℕ : outParam Type) [Constructors ℕ] [Equality ℕ] :=
+class Literals (ℕ : outParam Type) [Constructor.Ops ℕ] [Equality ℕ] :=
   /--
   Enables representation of natural numbers by numeric literals.
 
@@ -81,79 +79,149 @@ attribute [instance default+1] Literals.literal
 
 export Literals (literal literal_step literal_zero)
 
-/--
-Packages together the basic properties of natural numbers, to reduce the amount
-of class references needed for more advanced properties.
--/
-class Core
-    (ℕ : semiOutParam Type) extends Constructors ℕ, Equality ℕ, Literals ℕ
+/-- Properties that the natural number constructors must satisfy. -/
+class Constructor.Props
+    (ℕ : outParam Type) [Ops ℕ] [Equality ℕ] [Literals ℕ]
     :=
+  /-- **Peano axiom 3**: zero is not the successor of any natural number. -/
+  step_neqv_zero {n : ℕ} : step n ≄ 0
+
   /--
   The `step` function preserves equality of natural numbers; if two natural
   numbers are equal, they are still equal after `step` is applied to both.
    -/
   step_substitutive : AA.Substitutive₁ (α := ℕ) step (· ≃ ·) (· ≃ ·)
 
-attribute [instance] Core.step_substitutive
-
-export Core (step_substitutive)
-
-/--
-Provides the remaining Peano axioms for natural numbers (see `Constructors`
-for the first two).
--/
-class Axioms (ℕ : outParam Type) [Core ℕ] :=
-  /-- **Peano axiom 3**: zero is not the successor of any natural number. -/
-  step_neqv_zero {n : ℕ} : step n ≄ 0
-
   /--
   **Peano axiom 4**: two natural numbers are equal if their successors are.
   -/
   step_injective : AA.Injective (α := ℕ) step (· ≃ ·) (· ≃ ·)
 
+attribute [instance] Constructor.Props.step_injective
+attribute [instance] Constructor.Props.step_substitutive
+
+export Constructor.Props (step_injective step_neqv_zero step_substitutive)
+
+/--
+Packages together the basic properties of natural numbers, to reduce the amount
+of class references needed for more advanced properties.
+-/
+class Core (ℕ : semiOutParam Type)
+  extends Constructor.Ops ℕ, Equality ℕ, Literals ℕ, Constructor.Props ℕ
+
+/--
+Provides the induction axiom on natural numbers.
+
+This axiom gets its own class because of a technical type theory issue. Most of
+the time, we want the `motive` for induction to be a predicate, `ℕ → Prop`,
+because we're proving a proposition. But sometimes we want to define a
+recursive function, and so we need the `motive` to be `ℕ → Type` so we can
+generate data types. This can be accomplished by having two instances of this
+class, at universe levels `0` and `1` -- but if both of those instances are
+included in the overall `Core` class instance, Lean has trouble determining
+which one to use.
+
+The solution is to include only the level-`0` instance in `Natural` by default,
+since it's used very frequently. Code that needs the level-`1` instance for
+recursion must specificially request it.
+-/
+class Induction (ℕ : outParam Type) [Core ℕ] :=
   /--
   **Peano axiom 5**: the principle of mathematical induction.
 
-  Given a predicate on natural numbers (here named `motive`), assert that it
-  holds of all natural numbers if the following criteria are met:
+  This axiom is parameterized over universe levels. At universe level `0`, it
+  provides the familiar axiom from mathematics: given a predicate on natural
+  numbers (here named `motive`), assert that it holds of all natural numbers if
+  the following criteria are met:
   1. (base case) `motive 0` holds;
   1. (inductive case) `motive (step n)` holds whenever `motive n` holds, for
      all `n : ℕ`.
+
+  At higher universe levels, `motive` generates an indexed family of types, and
+  this axiom can then be used to produce data recursively.
   -/
-  ind {motive : ℕ → Prop}
-    : motive 0 → (∀ n, motive n → motive (step n)) → ∀ n, motive n
+  ind {motive : ℕ → Sort u}
+    : motive 0 → ((m : ℕ) → motive m → motive (step m)) → (n : ℕ) → motive n
 
-attribute [instance] Axioms.step_injective
+  /-- The witness for `motive 0` comes from the base case argument. -/
+  ind_zero
+    {motive : ℕ → Sort u}
+    {z : motive 0} {s : (m : ℕ) → motive m → motive (step m)} : ind z s 0 = z
 
-export Axioms (ind step_injective step_neqv_zero)
+  /--
+  The witness for `motive (step n)` comes from applying the inductive case
+  argument to the `motive n` result obtained from a recursive call to `ind`.
+  -/
+  ind_step
+    {motive : ℕ → Sort u}
+    {z : motive 0} {s : (m : ℕ) → motive m → motive (step m)}
+    {n : ℕ} : ind z s (step n) = s n (ind z s n)
+
+export Induction (ind ind_step ind_zero)
 
 /-!
 ## Derived properties
 -/
 
-variable {ℕ : Type}
-variable [Core ℕ]
-variable [Axioms ℕ]
+variable {ℕ : Type} [Core ℕ] [Induction ℕ]
 
 /--
-Equivalent to `Axioms.ind` but with a more convenient argument order when using
-the `apply` tactic.
+Equivalent to `ind` but with a more convenient argument order when using the
+`apply` tactic.
 -/
 def ind_on
-    {motive : ℕ → Prop} (n : ℕ)
-    (zero : motive 0) (step : ∀ m, motive m → motive (step m)) : motive n
+    {motive : ℕ → Sort u} (n : ℕ)
+    (zero : motive 0) (step : (m : ℕ) → motive m → motive (step m)) : motive n
     :=
-  Axioms.ind zero step n
+  ind zero step n
 
 /--
 Similar to `ind_on`, but doesn't provide an inductive hypothesis. Useful for
 proofs that need a case split but not the full power of induction.
 -/
 def cases_on
-    {motive : ℕ → Prop} (n : ℕ)
-    (zero : motive 0) (step : ∀ n, motive (step n)) : motive n
+    {motive : ℕ → Sort u} (n : ℕ)
+    (zero : motive 0) (step : (m : ℕ) → motive (step m)) : motive n
     :=
   ind_on n zero (λ n _ => step n)
+
+/--
+Similar to `ind_on`, but with a constant function as the `motive`, producing a
+single `Sort` instead of an indexed family of `Sort`s. Useful for defining
+recursive functions on data.
+-/
+def rec_on {α : Sort u} (n : ℕ) (zero : α) (step : α → α) : α :=
+  ind_on n zero (λ _ => step)
+
+/--
+Evaluate `rec_on` at zero.
+
+**Property and proof intuition**: Zero is the base case for induction and
+recursion, so we'd expect `rec_on` to return the corresponding value.
+-/
+theorem rec_on_zero {α : Sort u} {z : α} {s : α → α} : rec_on 0 z s = z := calc
+  _ = rec_on 0 z s          := rfl
+  _ = ind_on 0 z (λ _ => s) := rfl
+  _ = ind z (λ _ => s) 0    := rfl
+  _ = z                     := ind_zero
+
+/--
+Evaluate `rec_on` at `step n` for some natural number `n`.
+
+**Property and proof intuition**: This is the inductive/recursive case, so we'd
+expect to perform some computation on the result of the recursive call for `n`.
+-/
+theorem rec_on_step
+    {α : Sort u} {n : ℕ} {z : α} {s : α → α}
+    : rec_on (step n) z s = s (rec_on n z s)
+    := calc
+  _ = rec_on (step n) z s               := rfl
+  _ = ind_on (step n) z (λ _ => s)      := rfl
+  _ = ind z (λ _ => s) (step n)         := rfl
+  _ = (λ _ => s) n (ind z (λ _ => s) n) := ind_step
+  _ = s (ind z (λ _ => s) n)            := rfl
+  _ = s (ind_on n z (λ _ => s))         := rfl
+  _ = s (rec_on n z s)                  := rfl
 
 /-- A natural number is never equal to its successor. -/
 theorem step_neqv {n : ℕ} : step n ≄ n := by
