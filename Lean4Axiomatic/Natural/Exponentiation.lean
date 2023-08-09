@@ -72,6 +72,8 @@ local instance mul_inst [Exponentiation ℕ mul] : Mul α := {
   mul := mul
 }
 
+variable [AA.Substitutive₂ (β := α) (· * ·) AA.tc (· ≃ ·) (· ≃ ·)]
+
 /--
 Equivalent values can be substituted for the base (left operand) in an
 exponentiation.
@@ -83,10 +85,7 @@ function.
 that has `zero` and `step` cases in the axioms. The base case and inductive
 case both follow from expanding definitions and using substitution.
 -/
-theorem pow_substL
-    {x₁ x₂ : α} [AA.Substitutive₂ (β := α) (· * ·) AA.tc (· ≃ ·) (· ≃ ·)]
-    {m : ℕ} : x₁ ≃ x₂ → x₁ ^ m ≃ x₂ ^ m
-    := by
+theorem pow_substL {x₁ x₂ : α} {m : ℕ} : x₁ ≃ x₂ → x₁ ^ m ≃ x₂ ^ m := by
   intro (_ : x₁ ≃ x₂)
   show x₁ ^ m ≃ x₂ ^ m
   apply ind_on (motive := λ y => x₁ ^ y ≃ x₂ ^ y) m
@@ -122,10 +121,7 @@ we need to do a case-split on `n₂` within the base case and inductive case for
 case, which expands definitions, then uses substitution and the inductive
 hypothesis.
 -/
-theorem pow_substR
-    {x : α} [AA.Substitutive₂ (β := α) (· * ·) AA.tc (· ≃ ·) (· ≃ ·)]
-    {n₁ n₂ : ℕ} : n₁ ≃ n₂ → x ^ n₁ ≃ x ^ n₂
-    := by
+theorem pow_substR {x : α} {n₁ n₂ : ℕ} : n₁ ≃ n₂ → x ^ n₁ ≃ x ^ n₂ := by
   apply ind_on (motive := λ k => ∀ {j}, k ≃ j → x ^ k ≃ x ^ j) n₁
   case zero =>
     intro (n₂ : ℕ)
@@ -156,6 +152,105 @@ theorem pow_substR
         _ ≃ x ^ n₁' * x  := pow_step
         _ ≃ x ^ n₂' * x  := AA.substL (ih ‹n₁' ≃ n₂'›)
         _ ≃ x ^ step n₂' := Rel.symm pow_step
+
+/--
+Exponents add when powers of the same base are multiplied.
+
+**Property intuition**: Exponentiation is repeated multiplication; the exponent
+is the count of repeats; counts are combined by adding.
+
+**Proof intuition**: Induction and algebra.
+-/
+theorem pow_compatL_add
+    [AA.Associative (α := α) (· * ·)] [AA.Commutative (α := α) (· * ·)]
+    [AA.Identity (1:α) (· * ·)]
+    {x : α} {n m : ℕ} : x^(n + m) ≃ x^n * x^m
+    := by
+  apply ind_on n
+  case zero =>
+    show x^(0 + m) ≃ x^(0:ℕ) * x^m
+    calc
+      _ ≃ x^(0 + m)     := Rel.refl
+      _ ≃ x^m           := pow_substR AA.identL
+      _ ≃ 1 * x^m       := Rel.symm AA.identL
+      _ ≃ x^(0:ℕ) * x^m := AA.substL (Rel.symm pow_zero)
+  case step =>
+    intro n' (ih : x^(n' + m) ≃ x^n' * x^m)
+    show x^(step n' + m) ≃ x^(step n') * x^m
+    calc
+      _ ≃ x^(step n' + m)   := Rel.refl
+      _ ≃ x^(step (n' + m)) := pow_substR (Rel.symm AA.scompatL)
+      _ ≃ x^(n' + m) * x    := pow_step
+      _ ≃ (x^n' * x^m) * x  := AA.substL ih
+      _ ≃ x^n' * (x^m * x)  := AA.assoc
+      _ ≃ x^n' * (x * x^m)  := AA.substR AA.comm
+      _ ≃ (x^n' * x) * x^m  := Rel.symm AA.assoc
+      _ ≃ x^(step n') * x^m := AA.substL (Rel.symm pow_step)
+
+/--
+Left-associated powers can be flattened into a single power of the prouct of
+the original exponents.
+
+**Property intuition**: Having an expression with `n` repetitions of `x`, and
+repeating that expression `m` times, gives `n * m` repetitions in total.
+
+**Proof intuition**: Induction and algebra.
+-/
+theorem pow_flatten
+    [AA.Associative (α := α) (· * ·)] [AA.Commutative (α := α) (· * ·)]
+    [AA.Identity (1:α) (· * ·)]
+    {x : α} {n m : ℕ} : (x^n)^m ≃ x^(n * m)
+    := by
+  apply ind_on m
+  case zero =>
+    show (x^n)^0 ≃ x^(n * 0)
+    calc
+      _ ≃ (x^n)^0   := Rel.refl
+      _ ≃ 1         := pow_zero
+      _ ≃ x^0       := Rel.symm pow_zero
+      _ ≃ x^(n * 0) := pow_substR (Rel.symm mul_zero)
+  case step =>
+    intro m' (ih : (x^n)^m' ≃ x^(n * m'))
+    show (x^n)^(step m') ≃ x^(n * step m')
+    calc
+      _ ≃ (x^n)^(step m')  := Rel.refl
+      _ ≃ (x^n)^m' * x^n   := pow_step
+      _ ≃ x^(n * m') * x^n := AA.substL ih
+      _ ≃ x^(n * m' + n)   := Rel.symm pow_compatL_add
+      _ ≃ x^(n * step m')  := pow_substR (Rel.symm mul_step)
+
+/--
+Exponents distribute over multiplication.
+
+**Property intuition**: This is a simple regrouping of factors via the
+associativity and commutativity of multiplication.
+
+**Proof intuition**: Induction and algebra.
+-/
+theorem pow_distribR_mul
+    [AA.Associative (α := α) (· * ·)] [AA.Commutative (α := α) (· * ·)]
+    [AA.Identity (1:α) (· * ·)]
+    {x y : α} {n : ℕ} : (x * y)^n ≃ x^n * y^n
+    := by
+  apply ind_on n
+  case zero =>
+    show (x * y)^0 ≃ x^0 * y^0
+    calc
+      _ ≃ (x * y)^0 := Rel.refl
+      _ ≃ 1         := pow_zero
+      _ ≃ 1 * 1     := Rel.symm AA.identR
+      _ ≃ x^0 * 1   := AA.substL (Rel.symm pow_zero)
+      _ ≃ x^0 * y^0 := AA.substR (Rel.symm pow_zero)
+  case step =>
+    intro n' (ih : (x * y)^n' ≃ x^n' * y^n')
+    show (x * y)^(step n') ≃ x^(step n') * y^(step n')
+    calc
+      _ ≃ (x * y)^(step n')         := Rel.refl
+      _ ≃ (x * y)^n' * (x * y)      := pow_step
+      _ ≃ (x^n' * y^n') * (x * y)   := AA.substL ih
+      _ ≃ (x^n' * x) * (y^n' * y)   := AA.expr_xxfxxff_lr_swap_rl
+      _ ≃ x^(step n') * (y^n' * y)  := AA.substL (Rel.symm pow_step)
+      _ ≃ x^(step n') * y^(step n') := AA.substR (Rel.symm pow_step)
 
 end general
 

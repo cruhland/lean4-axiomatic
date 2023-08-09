@@ -90,6 +90,12 @@ instance mul_assoc_inst : AA.Associative (α := ℚ) (· * ·) := {
   assoc := mul_assoc
 }
 
+/-- Enables the use of `AA.identL` and `AA.identR` for multiplication. -/
+instance mul_ident_inst : AA.Identity (1:ℚ) (· * ·) := {
+  identityL := { ident := mul_identL }
+  identityR := { ident := mul_identR }
+}
+
 /--
 Doubling a rational number can be written either as a sum or a product.
 
