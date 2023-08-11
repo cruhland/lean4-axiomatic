@@ -1,3 +1,4 @@
+import Lean4Axiomatic.AbstractAlgebra
 import Lean4Axiomatic.Logic
 import Lean4Axiomatic.Natural.Order
 
@@ -223,6 +224,11 @@ theorem mul_split_zero {n m : ℕ} : n * m ≃ 0 ↔ n ≃ 0 ∨ m ≃ 0 := by
         n * m ≃ _ := AA.substR ‹m ≃ 0›
         n * 0 ≃ _ := mul_zero
         0     ≃ _ := Rel.refl
+
+/-- Natural numbers satisfy the zero-product property. -/
+instance zero_product_inst : AA.ZeroProduct (α := ℕ) (· * ·) := {
+  zero_prod := mul_split_zero.mp
+}
 
 /--
 A product is positive iff both of its factors are positive.

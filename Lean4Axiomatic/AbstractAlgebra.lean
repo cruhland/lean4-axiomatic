@@ -765,6 +765,34 @@ def ExactlyOneOfThree.rotR
   exact ExactlyOneOfThree.mk atLeastOne atMostOne
 
 /--
+Class for types and operations that satisfy the
+[zero-product property](https://en.wikipedia.org/wiki/Zero-product_property).
+
+**Named parameters**
+- `α`: the type of values in the product.
+- `f`: the product operation.
+
+**Class parameters**
+- `EqvOp α`: necessary because the property expresses an equivalence on `α`.
+- `OfNat α 0`: necessary because the property requires `α` to contain zero.
+-/
+class ZeroProduct {α : Type u} [EqvOp α] [OfNat α 0] (f : α → α → α) :=
+  /--
+  The zero-product property of a product operation `f` defined over a type `α`.
+
+  The canonical example of this is from arithmetic:
+  `a * b ≃ 0 → a ≃ 0 ∨ b ≃ 0`, and it holds in all of the familiar number
+  systems, from the natural numbers `ℕ` through the complex numbers `ℂ`.
+
+  **Named parameters**
+  - `x`: the left argument to `f`.
+  - `y`: the right argument to `f`.
+  -/
+  zero_prod {x y : α} : f x y ≃ 0 → x ≃ 0 ∨ y ≃ 0
+
+export ZeroProduct (zero_prod)
+
+/--
 Swaps the middle two elements of a balanced four-element expression involving a
 single binary operation.
 

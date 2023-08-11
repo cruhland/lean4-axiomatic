@@ -543,6 +543,16 @@ theorem mul_split_zero {p q : ℚ} : p * q ≃ 0 ↔ p ≃ 0 ∨ q ≃ 0 := by
       0     ≃ _ := eqv_refl
 
 /--
+Instance for the zero-product property in the rationals.
+
+This enables the use of abstract algebraic theorems depending on this property,
+in proofs involving rational numbers.
+-/
+instance zero_product_inst : AA.ZeroProduct (α := ℚ) (· * ·) := {
+  zero_prod := mul_split_zero.mp
+}
+
+/--
 The product of nonzero rational numbers is nonzero.
 
 **Property and proof intuition**: This is essentially the contrapositive of

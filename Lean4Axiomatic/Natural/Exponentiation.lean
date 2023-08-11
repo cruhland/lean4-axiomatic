@@ -6,6 +6,7 @@ import Lean4Axiomatic.Natural.Multiplication
 
 namespace Lean4Axiomatic.Natural
 
+open Logic (AP)
 open Relation.Equivalence (EqvOp)
 open Signed (Positive)
 
@@ -252,79 +253,95 @@ theorem pow_distribR_mul
       _ ≃ x^(step n') * (y^n' * y)  := AA.substL (Rel.symm pow_step)
       _ ≃ x^(step n') * y^(step n') := AA.substR (Rel.symm pow_step)
 
-end general
+/--
+If an exponentiation to a natural number evaluates to zero, then the base must
+be zero and the exponent must be nonzero.
 
-/-! ### Specific properties for a natural number base -/
-
-variable [Exponentiation ℕ (α := ℕ) (· * ·)]
+**Property and proof intuition**: The only products that evaluate to zero are
+those that have zero as a factor (if the zero-product property holds); thus the
+base must be zero. By definition, exponentiation gives one if the exponent is
+zero; thus it must be nonzero in this case.
+-/
+theorem pow_inputs_for_output_zero
+    [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) (· * ·)]
+    {x : α} {n : ℕ} : x^n ≃ 0 → x ≃ 0 ∧ n ≄ 0
+    := by
+  apply ind_on (motive := λ m => x^m ≃ 0 → x ≃ 0 ∧ m ≄ 0) n
+  case zero =>
+    intro (_ : x^(0:ℕ) ≃ 0)
+    show x ≃ 0 ∧ 0 ≄ 0
+    have : (1:α) ≃ 0 := calc
+      _ ≃ 1   := Rel.refl
+      _ ≃ x^0 := Rel.symm pow_zero
+      _ ≃ 0   := ‹x^(0:ℕ) ≃ 0›
+    exact absurd ‹(1:α) ≃ 0› ‹AP ((1:α) ≄ 0)›.ev
+  case step =>
+    intro (n' : ℕ) (ih : x^n' ≃ 0 → x ≃ 0 ∧ n' ≄ 0) (_ : x^(step n') ≃ 0)
+    show x ≃ 0 ∧ step n' ≄ 0
+    have : x^n' * x ≃ 0 := AA.eqv_substL pow_step ‹x^(step n') ≃ 0›
+    have : x^n' ≃ 0 ∨ x ≃ 0 := AA.zero_prod this
+    have : x ≃ 0 :=
+      match this with
+      | Or.inl (_ : x^n' ≃ 0) => (ih ‹x^n' ≃ 0›).left
+      | Or.inr (_ : x ≃ 0) => ‹x ≃ 0›
+    have : step n' ≄ 0 := step_neqv_zero
+    exact And.intro ‹x ≃ 0› ‹step n' ≄ 0›
 
 /--
-Exponentiation of natural numbers can give a zero result only when the base is
-zero and the exponent is nonzero.
+Describes the exact conditions on exponentiation's inputs that cause it to
+output the value zero.
 
-**Property intuition**: A product of natural numbers is zero only when at least
-one factor is zero. And the empty product (raising to the zero power) is `1`.
+**Property intuition**: A product is zero only when at least one factor is
+zero. And the empty product (raising to the zero power) is `1`.
 
-**Proof intuition**: By induction on `m` in the forwards direction. The base
-case follows by contradiction; anything to the zero power is one, not zero. In
-the inductive case, `n ^ step m'` expands into `n ^ m' * n`, implying that
-either `n ^ m' ≃ 0` or `n ≃ 0`. The former case becomes the latter case after
-applying the induction hypothesis. In the reverse direction, expand definitions
-until `n ^ m' * n` is reached. Since `n ≃ 0`, the entire expression is zero.
+**Proof intuition**: See `pow_inputs_for_output_zero` for the forward
+direction. In the reverse direction, the resulting product must have at least
+one factor (because the exponent is nonzero), and since that factor is zero,
+the result is zero by absorption.
 -/
-theorem pow_eqv_zero {n m : ℕ} : n ^ m ≃ 0 ↔ n ≃ 0 ∧ m ≄ 0 := by
+theorem pow_eqv_zero
+    [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) (· * ·)]
+    [AA.Absorbing (0:α) (· * ·)]
+    {x : α} {n : ℕ} : x^n ≃ 0 ↔ x ≃ 0 ∧ n ≄ 0
+    := by
   apply Iff.intro
   case mp =>
-    apply ind_on (motive := λ x => n ^ x ≃ 0 → n ≃ 0 ∧ x ≄ 0) m
-    case zero =>
-      intro (_ : n ^ 0 ≃ 0)
-      show n ≃ 0 ∧ 0 ≄ 0
-      have : step 0 ≃ 0 := calc
-        _ ≃ step 0 := Rel.refl
-        _ ≃ 1      := Rel.symm literal_step
-        _ ≃ n ^ 0  := Rel.symm pow_zero
-        _ ≃ 0      := ‹n ^ 0 ≃ 0›
-      exact absurd ‹step 0 ≃ 0› step_neqv_zero
-    case step =>
-      intro (m' : ℕ) (ih : n ^ m' ≃ 0 → n ≃ 0 ∧ m' ≄ 0) (_ : n ^ step m' ≃ 0)
-      show n ≃ 0 ∧ step m' ≄ 0
-      have : n ^ m' * n ≃ 0 := AA.eqv_substL pow_step ‹n ^ step m' ≃ 0›
-      have : n ^ m' ≃ 0 ∨ n ≃ 0 := mul_split_zero.mp this
-      have : n ≃ 0 :=
-        match this with
-        | Or.inl (_ : n ^ m' ≃ 0) => (ih ‹n ^ m' ≃ 0›).left
-        | Or.inr (_ : n ≃ 0) => ‹n ≃ 0›
-      have : step m' ≄ 0 := step_neqv_zero
-      exact And.intro ‹n ≃ 0› ‹step m' ≄ 0›
+    show x^n ≃ 0 → x ≃ 0 ∧ n ≄ 0
+    exact pow_inputs_for_output_zero
   case mpr =>
-    intro (And.intro (_ : n ≃ 0) (_ : m ≄ 0))
-    show n ^ m ≃ 0
-    have : Positive m := Signed.positive_defn.mpr ‹m ≄ 0›
-    have (Exists.intro (m' : ℕ) (_ : step m' ≃ m)) := positive_step this
+    intro (And.intro (_ : x ≃ 0) (_ : n ≄ 0))
+    show x^n ≃ 0
+    have : Positive n := Signed.positive_defn.mpr ‹n ≄ 0›
+    have (Exists.intro (n' : ℕ) (_ : step n' ≃ n)) := positive_step this
     calc
-      _ ≃ n ^ m       := Rel.refl
-      _ ≃ n ^ step m' := pow_substR (Rel.symm ‹step m' ≃ m›)
-      _ ≃ n ^ m' * n  := pow_step
-      _ ≃ n ^ m' * 0  := AA.substR ‹n ≃ 0›
+      _ ≃ x^n         := Rel.refl
+      _ ≃ x^(step n') := pow_substR (Rel.symm ‹step n' ≃ n›)
+      _ ≃ x^n' * x    := pow_step
+      _ ≃ x^n' * 0    := AA.substR ‹x ≃ 0›
       _ ≃ 0           := AA.absorbR
 
 /--
-Raising a nonzero natural number to any natural number power always gives a
-nonzero result.
+Raising a nonzero number to any natural number power always gives a nonzero
+result.
 
 **Property intuition**: The empty product is `1` (raising to the zero power),
 and any product of nonzero numbers is always nonzero (higher powers).
 
-**Proof intuition**: Follows from `pow_eqv_zero` by logic alone.
+**Proof intuition**: Follows from `pow_inputs_for_output_zero` by logic alone.
 -/
-theorem pow_preserves_nonzero_base {n m : ℕ} : n ≄ 0 → n ^ m ≄ 0 := by
-  intro (_ : n ≄ 0)
-  show n ^ m ≄ 0
-  have : ¬(n ≃ 0 ∧ m ≄ 0) := by
-    intro (And.intro (_ : n ≃ 0) (_ : m ≄ 0))
+theorem pow_preserves_nonzero_base
+    [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) (· * ·)]
+    {x : α} {n : ℕ} : x ≄ 0 → x^n ≄ 0
+    := by
+  intro (_ : x ≄ 0)
+  show x^n ≄ 0
+  have : ¬(x ≃ 0 ∧ n ≄ 0) := by
+    intro (And.intro (_ : x ≃ 0) (_ : n ≄ 0))
     show False
-    exact absurd ‹n ≃ 0› ‹n ≄ 0›
-  have : n ^ m ≄ 0 := mt pow_eqv_zero.mp this
+    exact absurd ‹x ≃ 0› ‹x ≄ 0›
+  have : x^n ≄ 0 := mt pow_inputs_for_output_zero this
   exact this
+
+end general
 
 end Lean4Axiomatic.Natural

@@ -117,6 +117,17 @@ theorem mul_absorbR {p : ℚ} : p * 0 ≃ 0 := calc
   0     ≃ _ := eqv_refl
 
 /--
+Instance for the absorption property of zero in the rationals.
+
+This enables the use of abstract algebraic theorems depending on this property,
+in proofs involving rational numbers.
+-/
+instance mul_absorbing_inst : AA.Absorbing (0:ℚ) (· * ·) := {
+  absorbingL := { absorb := mul_absorbL }
+  absorbingR := { absorb := mul_absorbR }
+}
+
+/--
 Adding or removing a negation from zero leaves it unchanged.
 
 **Property intuition**: Zero doesn't have a sign (alternatively, it has a sign

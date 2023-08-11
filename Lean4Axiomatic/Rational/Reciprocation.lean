@@ -41,6 +41,10 @@ def of_scientific
   let naturalDecimalExponent : ℕ := OfNat.ofNat decimalExponent
   let powTen := 10 ^ naturalDecimalExponent
 
+  have : Natural.step 0 ≄ 0 := Natural.step_neqv_zero
+  have : 1 ≄ 0 := AA.neqv_substL (Rel.symm Natural.literal_step) this
+  have : AP (1 ≄ 0) := AP.mk this
+
   have : Natural.step 9 ≄ 0 := Natural.step_neqv_zero
   have : 10 ≄ 0 := AA.neqv_substL (Rel.symm Natural.literal_step) this
   have : AP (powTen ≄ 0) := AP.mk (Natural.pow_preserves_nonzero_base this)
