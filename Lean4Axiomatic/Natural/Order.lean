@@ -651,6 +651,22 @@ theorem lt_split {n m : ℕ} : n < step m → n < m ∨ n ≃ m := by
   have : n ≤ m := AA.inject ‹step n ≤ step m›
   exact le_split ‹n ≤ m›
 
+/--
+Useful result when needing to decrement the larger number in a _greater than_
+relation.
+-/
+theorem gt_split {n m : ℕ} : step m > n → m ≃ n ∨ m > n := by
+  intro (_ : step m > n)
+  show m ≃ n ∨ m > n
+  have : n < m ∨ n ≃ m := lt_split ‹n < step m›
+  match this with
+  | Or.inl (_ : n < m) =>
+    have : m ≃ n ∨ m > n := Or.inr ‹m > n›
+    exact this
+  | Or.inr (_ : n ≃ m) =>
+    have : m ≃ n ∨ m > n := Or.inl (Rel.symm ‹n ≃ m›)
+    exact this
+
 /-- The _less than_ relation can be extended through intermediate values. -/
 theorem lt_trans {n m k : ℕ} : n < m → m < k → n < k := by
   intro (_ : n < m) (_ : m < k)

@@ -78,4 +78,19 @@ def ltNot {α : Type u} [LT α] (x y : α) : Prop := ¬ (x < y)
 
 infix:50 " ≮ " => ltNot
 
+/--
+The `· ≯ ·` operator, the negation of `· > ·`.
+
+**Named parameters**
+- `α`: the `Type` of the operator's arguments.
+- `x`: the left argument of the operator.
+- `y`: the right argument of the operator.
+
+**Class parameters**
+- `LT α`: provides the (flipped) operation that is being negated.
+-/
+def gtNot {α : Type u} [LT α] (x y : α) : Prop := ¬ (x > y)
+
+infix:50 " ≯ " => gtNot
+
 end Operators

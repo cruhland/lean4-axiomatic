@@ -501,6 +501,38 @@ theorem le_dichotomy {p q : ℚ} : p ≤ q ∨ q ≤ p := by
     exact this
 
 /--
+The _less than_ relation on rationals is consistent with its integer
+equivalent.
+
+**Property intuition**: The rationals contain the integers, so we'd expect the
+ordering of the embedded integers to be preserved.
+
+**Proof intuition**: Convert ordering to `sgn` expressions and use properties
+of integer conversion for subtraction and `sgn`.
+-/
+theorem lt_subst_from_integer {a b : ℤ} : a < b → (a:ℚ) < (b:ℚ) := by
+  intro (_ : a < b)
+  show (a:ℚ) < (b:ℚ)
+  have : sgn ((a:ℚ) - (b:ℚ)) ≃ -1 := calc
+    _ ≃ sgn ((a:ℚ) - (b:ℚ)) := Rel.refl
+    _ ≃ sgn (((a - b):ℤ):ℚ) := sgn_subst (eqv_symm sub_compat_from_integer)
+    _ ≃ sgn (a - b)         := sgn_from_integer
+    _ ≃ -1                  := Integer.lt_sgn.mp ‹a < b›
+  have : (a:ℚ) < (b:ℚ) := lt_sgn.mpr this
+  exact this
+
+/--
+One is greater than or equivalent to zero in the rationals.
+
+**Property and proof intuition**: This is consistent with the integers.
+-/
+theorem one_ge_zero : (1:ℚ) ≥ 0 := by
+  have : (1:ℤ) > 0 := Integer.zero_lt_one
+  have : (1:ℚ) > 0 := lt_subst_from_integer this
+  have : (1:ℚ) ≥ 0 := ge_cases.mpr (Or.inl this)
+  exact this
+
+/--
 The _less than_ relation for rational numbers is transitive.
 
 **Property intuition**: This is a required property for any totally ordered
@@ -862,6 +894,54 @@ instance trans_ge_ge_ge_inst : Trans (α := ℚ) (· ≥ ·) (· ≥ ·) (· ≥
 }
 
 /--
+A _greater than_ relation can be extended on the right by a _greater than or
+equivalent to_ relation through a common value.
+
+**Property and proof intuition**: We know that the first value is greater than
+the second, so even if the second value is equivalent to the third, the first
+must still be greater than the third.
+-/
+theorem trans_gt_ge_gt {p q r : ℚ} : p > q → q ≥ r → p > r := by
+  intro (_ : p > q) (_ : q ≥ r)
+  show p > r
+  have : q > r ∨ q ≃ r := ge_cases.mp ‹q ≥ r›
+  match this with
+  | Or.inl (_ : q > r) =>
+    have : p > r := gt_trans ‹p > q› ‹q > r›
+    exact this
+  | Or.inr (_ : q ≃ r) =>
+    have : p > r := lt_substL_eqv ‹q ≃ r› ‹p > q›
+    exact this
+
+instance trans_gt_ge_gt_inst : Trans (α := ℚ) (· > ·) (· ≥ ·) (· > ·) := {
+  trans := trans_gt_ge_gt
+}
+
+/--
+A _greater than_ relation can be extended on the left by a _greater than or
+equivalent to_ relation through a common value.
+
+**Property and proof intuition**: We know that the second value is greater than
+the third, so even if the first value is equivalent to the second, the first
+must still be greater than the third.
+-/
+theorem trans_ge_gt_gt {p q r : ℚ} : p ≥ q → q > r → p > r := by
+  intro (_ : p ≥ q) (_ : q > r)
+  show p > r
+  have : p > q ∨ p ≃ q := ge_cases.mp ‹p ≥ q›
+  match this with
+  | Or.inl (_ : p > q) =>
+    have : p > r := gt_trans ‹p > q› ‹q > r›
+    exact this
+  | Or.inr (_ : p ≃ q) =>
+    have : p > r := lt_substR_eqv (eqv_symm ‹p ≃ q›) ‹q > r›
+    exact this
+
+instance trans_ge_gt_gt_inst : Trans (α := ℚ) (· ≥ ·) (· > ·) (· > ·) := {
+  trans := trans_ge_gt_gt
+}
+
+/--
 The largest sign value is one.
 
 **Property and proof intuition**: The three possible sign values are `-1`, `0`,
@@ -989,9 +1069,10 @@ change their relative ordering.
 via their `sgn`-based definitions. Show that they are equivalent using algebra
 and substitution.
 -/
-theorem lt_substL_mul_pos {p q r : ℚ} : sgn r ≃ 1 → p < q → p * r < q * r := by
-  intro (_ : sgn r ≃ 1) (_ : p < q)
+theorem lt_substL_mul_pos {p q r : ℚ} : r > 0 → p < q → p * r < q * r := by
+  intro (_ : r > 0) (_ : p < q)
   show p * r < q * r
+  have : sgn r ≃ 1 := gt_zero_sgn.mp ‹r > 0›
   have : sgn (p - q) ≃ -1 := lt_sgn.mp ‹p < q›
   have : sgn (p * r - q * r) ≃ sgn (p - q) :=
     sgn_sub_cancelR_mul_pos ‹sgn r ≃ 1›
@@ -1009,13 +1090,13 @@ change their relative ordering.
 **Proof intuition**: Follows from the opposite-handed version because
 multiplication is commutative.
 -/
-theorem lt_substR_mul_pos {p q r : ℚ} : sgn r ≃ 1 → p < q → r * p < r * q := by
-  intro (_ : sgn r ≃ 1) (_ : p < q)
+theorem lt_substR_mul_pos {p q r : ℚ} : r > 0 → p < q → r * p < r * q := by
+  intro (_ : r > 0) (_ : p < q)
   show r * p < r * q
   calc
     _ ≃ r * p := eqv_refl
     _ ≃ p * r := mul_comm
-    _ < q * r := lt_substL_mul_pos ‹sgn r ≃ 1› ‹p < q›
+    _ < q * r := lt_substL_mul_pos ‹r > 0› ‹p < q›
     _ ≃ r * q := mul_comm
 
 /--
@@ -1029,11 +1110,10 @@ them across zero.
 via their `sgn`-based definitions. Show that they are equivalent using algebra
 and substitution.
 -/
-theorem lt_substL_mul_neg
-    {p q r : ℚ} : sgn r ≃ -1 → p < q → q * r < p * r
-    := by
-  intro (_ : sgn r ≃ -1) (_ : p < q)
+theorem lt_substL_mul_neg {p q r : ℚ} : r < 0 → p < q → q * r < p * r := by
+  intro (_ : r < 0) (_ : p < q)
   show q * r < p * r
+  have : sgn r ≃ -1 := lt_zero_sgn.mp ‹r < 0›
   have : sgn (p - q) ≃ -1 := lt_sgn.mp ‹p < q›
   have : sgn (q * r - p * r) ≃ sgn (p - q) :=
     sgn_sub_cancelR_mul_neg ‹sgn r ≃ -1›
@@ -1052,15 +1132,13 @@ them across zero.
 **Proof intuition**: Follows from the opposite-handed version because
 multiplication is commutative.
 -/
-theorem lt_substR_mul_neg
-    {p q r : ℚ} : sgn r ≃ -1 → p < q → r * q < r * p
-    := by
-  intro (_ : sgn r ≃ -1) (_ : p < q)
+theorem lt_substR_mul_neg {p q r : ℚ} : r < 0 → p < q → r * q < r * p := by
+  intro (_ : r < 0) (_ : p < q)
   show r * q < r * p
   calc
     _ ≃ r * q := eqv_refl
     _ ≃ q * r := mul_comm
-    _ < p * r := lt_substL_mul_neg ‹sgn r ≃ -1› ‹p < q›
+    _ < p * r := lt_substL_mul_neg ‹r < 0› ‹p < q›
     _ ≃ r * p := mul_comm
 
 /--
@@ -1074,9 +1152,10 @@ change their relative ordering.
 via their `sgn`-based definitions. Show that they are equivalent using algebra
 and substitution.
 -/
-theorem le_substL_mul_pos {p q r : ℚ} : sgn r ≃ 1 → p ≤ q → p * r ≤ q * r := by
-  intro (_ : sgn r ≃ 1) (_ : p ≤ q)
+theorem le_substL_mul_pos {p q r : ℚ} : r > 0 → p ≤ q → p * r ≤ q * r := by
+  intro (_ : r > 0) (_ : p ≤ q)
   show p * r ≤ q * r
+  have : sgn r ≃ 1 := gt_zero_sgn.mp ‹r > 0›
   have : sgn (p - q) ≄ 1 := le_sgn.mp ‹p ≤ q›
   have : sgn (p * r - q * r) ≃ sgn (p - q) :=
     sgn_sub_cancelR_mul_pos ‹sgn r ≃ 1›
@@ -1095,13 +1174,13 @@ change their relative ordering.
 **Proof intuition**: Follows from the opposite-handed version because
 multiplication is commutative.
 -/
-theorem le_substR_mul_pos {p q r : ℚ} : sgn r ≃ 1 → p ≤ q → r * p ≤ r * q := by
-  intro (_ : sgn r ≃ 1) (_ : p ≤ q)
+theorem le_substR_mul_pos {p q r : ℚ} : r > 0 → p ≤ q → r * p ≤ r * q := by
+  intro (_ : r > 0) (_ : p ≤ q)
   show r * p ≤ r * q
   calc
     _ ≃ r * p := eqv_refl
     _ ≃ p * r := mul_comm
-    _ ≤ q * r := le_substL_mul_pos ‹sgn r ≃ 1› ‹p ≤ q›
+    _ ≤ q * r := le_substL_mul_pos ‹r > 0› ‹p ≤ q›
     _ ≃ r * q := mul_comm
 
 /--
@@ -1112,17 +1191,13 @@ factor on the right.
 established the result. If the factor is zero, then the operands are scaled
 down to zero and the result is true because they are equivalent.
 -/
-theorem le_substL_mul_nonneg
-    {p q r : ℚ} : sgn r ≄ -1 → p ≤ q → p * r ≤ q * r
-    := by
-  intro (_ : sgn r ≄ -1) (_ : p ≤ q)
+theorem le_substL_mul_nonneg {p q r : ℚ} : r ≥ 0 → p ≤ q → p * r ≤ q * r := by
+  intro (_ : r ≥ 0) (_ : p ≤ q)
   show p * r ≤ q * r
-  have : r ≥ 0 := ge_zero_sgn.mpr ‹sgn r ≄ -1›
-  have : r > 0 ∨ r ≃ 0 := ge_cases.mp this
+  have : r > 0 ∨ r ≃ 0 := ge_cases.mp ‹r ≥ 0›
   match this with
   | Or.inl (_ : r > 0) =>
-    have : sgn r ≃ 1 := gt_zero_sgn.mp ‹r > 0›
-    have : p * r ≤ q * r := le_substL_mul_pos ‹sgn r ≃ 1› ‹p ≤ q›
+    have : p * r ≤ q * r := le_substL_mul_pos ‹r > 0› ‹p ≤ q›
     exact this
   | Or.inr (_ : r ≃ 0) =>
     have : p * r ≃ q * r := calc
@@ -1141,15 +1216,13 @@ factor on the left.
 **Property and proof intuition**: This is equivalent to the opposite-handed
 version, but with the multiplications flipped around by commutativity.
 -/
-theorem le_substR_mul_nonneg
-    {p q r : ℚ} : sgn r ≄ -1 → p ≤ q → r * p ≤ r * q
-    := by
-  intro (_ : sgn r ≄ -1) (_ : p ≤ q)
+theorem le_substR_mul_nonneg {p q r : ℚ} : r ≥ 0 → p ≤ q → r * p ≤ r * q := by
+  intro (_ : r ≥ 0) (_ : p ≤ q)
   show r * p ≤ r * q
   calc
     _ ≃ r * p := eqv_refl
     _ ≃ p * r := mul_comm
-    _ ≤ q * r := le_substL_mul_nonneg ‹sgn r ≄ -1› ‹p ≤ q›
+    _ ≤ q * r := le_substL_mul_nonneg ‹r ≥ 0› ‹p ≤ q›
     _ ≃ r * q := mul_comm
 
 /--
@@ -1163,11 +1236,10 @@ them across zero.
 via their `sgn`-based definitions. Show that they are equivalent using algebra
 and substitution.
 -/
-theorem le_substL_mul_neg
-    {p q r : ℚ} : sgn r ≃ -1 → p ≤ q → q * r ≤ p * r
-    := by
-  intro (_ : sgn r ≃ -1) (_ : p ≤ q)
+theorem le_substL_mul_neg {p q r : ℚ} : r < 0 → p ≤ q → q * r ≤ p * r := by
+  intro (_ : r < 0) (_ : p ≤ q)
   show q * r ≤ p * r
+  have : sgn r ≃ -1 := lt_zero_sgn.mp ‹r < 0›
   have : sgn (p - q) ≄ 1 := le_sgn.mp ‹p ≤ q›
   have : sgn (q * r - p * r) ≃ sgn (p - q) :=
     sgn_sub_cancelR_mul_neg ‹sgn r ≃ -1›
@@ -1186,16 +1258,24 @@ them across zero.
 **Proof intuition**: Follows from the opposite-handed version because
 multiplication is commutative.
 -/
-theorem le_substR_mul_neg
-    {p q r : ℚ} : sgn r ≃ -1 → p ≤ q → r * q ≤ r * p
-    := by
-  intro (_ : sgn r ≃ -1) (_ : p ≤ q)
+theorem le_substR_mul_neg {p q r : ℚ} : r < 0 → p ≤ q → r * q ≤ r * p := by
+  intro (_ : r < 0) (_ : p ≤ q)
   show r * q ≤ r * p
   calc
     _ ≃ r * q := eqv_refl
     _ ≃ q * r := mul_comm
-    _ ≤ p * r := le_substL_mul_neg ‹sgn r ≃ -1› ‹p ≤ q›
+    _ ≤ p * r := le_substL_mul_neg ‹r < 0› ‹p ≤ q›
     _ ≃ r * p := mul_comm
+
+/--
+Negative one is less than zero in the rationals.
+
+**Property and proof intuition**: This is consistent with the integers.
+-/
+theorem neg_one_lt_zero : (-1:ℚ) < 0 := calc
+  _ ≃ (-1:ℚ)     := eqv_refl
+  _ ≃ ((-1:ℤ):ℚ) := eqv_symm neg_compat_from_integer
+  _ < 0          := lt_subst_from_integer Integer.neg_one_lt_zero
 
 /--
 Negate both operands of _less than_, reversing their ordering.
@@ -1209,7 +1289,7 @@ theorem lt_subst_neg {p₁ p₂ : ℚ} : p₁ < p₂ → -p₂ < -p₁ := by
   calc
     _ ≃ -p₂     := eqv_refl
     _ ≃ -1 * p₂ := eqv_symm mul_neg_one
-    _ < -1 * p₁ := lt_substR_mul_neg sgn_neg_one ‹p₁ < p₂›
+    _ < -1 * p₁ := lt_substR_mul_neg neg_one_lt_zero ‹p₁ < p₂›
     _ ≃ -p₁     := mul_neg_one
 
 /--
@@ -1224,7 +1304,7 @@ theorem le_subst_neg {p₁ p₂ : ℚ} : p₁ ≤ p₂ → -p₂ ≤ -p₁ := by
   calc
     _ ≃ -p₂     := eqv_refl
     _ ≃ -1 * p₂ := eqv_symm mul_neg_one
-    _ ≤ -1 * p₁ := le_substR_mul_neg sgn_neg_one ‹p₁ ≤ p₂›
+    _ ≤ -1 * p₁ := le_substR_mul_neg neg_one_lt_zero ‹p₁ ≤ p₂›
     _ ≃ -p₁     := mul_neg_one
 
 /--
@@ -1390,10 +1470,9 @@ The ordering of a nonnegative rational number and its negation.
 or equivalent to zero, so its negation must be less than or equivalent to zero.
 Thus the result follows by transitivity.
 -/
-theorem le_neg_nonneg {p : ℚ} : sgn p ≄ -1 → -p ≤ p := by
-  intro (_ : sgn p ≄ -1)
+theorem le_neg_nonneg {p : ℚ} : p ≥ 0 → -p ≤ p := by
+  intro (_ : p ≥ 0)
   show -p ≤ p
-  have : 0 ≤ p := ge_zero_sgn.mpr ‹sgn p ≄ -1›
   have : -p ≤ 0 := calc
     _ ≃ -p := eqv_refl
     _ ≤ -0 := le_subst_neg ‹0 ≤ p›

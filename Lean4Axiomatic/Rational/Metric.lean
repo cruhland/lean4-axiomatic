@@ -241,22 +241,12 @@ returns its magnitude, so we'd expect it to be nonnegative.
 number's sign squared. A square can never be negative, thus the absolute value
 must be positive or zero.
 -/
-theorem abs_nonneg {p : ℚ} : sgn (abs p) ≄ -1 := by
+theorem abs_nonneg {p : ℚ} : abs p ≥ 0 := by
   have : sgn (p * p) ≃ sgn (abs p) := calc
     _ ≃ sgn (p * p)   := Rel.refl
     _ ≃ sgn p * sgn p := sgn_compat_mul
     _ ≃ sgn (abs p)   := Rel.symm sgn_abs
   have : sgn (abs p) ≄ -1 := AA.neqv_substL this nonneg_square
-  exact this
-
-/--
-The absolute value of a rational number is greater than or equivalent to zero.
-
-Corollary to the absolute value being nonnegative, as that's the same as being
-greater than or equivalent to zero.
--/
-theorem abs_ge_zero {p : ℚ} : abs p ≥ 0 := by
-  have : sgn (abs p) ≄ -1 := abs_nonneg
   have : abs p ≥ 0 := ge_zero_sgn.mpr this
   exact this
 
@@ -454,7 +444,7 @@ theorem dist_substR {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → dist q p₁ ≃ dist
     _ ≃ dist q p₂    := eqv_symm dist_abs
 
 /--
-The distance between two rational numbers is always zero or greater.
+The distance between two rational numbers is always nonnegative.
 
 **Property intuition**: Distance measures how "far apart" two numbers are. It's
 not possible for numbers to be closer than zero distance.
@@ -462,10 +452,10 @@ not possible for numbers to be closer than zero distance.
 **Proof intutition**: Distance is defined as an absolute value, which is also
 guaranteed to be nonnegative.
 -/
-theorem dist_ge_zero {p q : ℚ} : dist p q ≥ 0 := calc
+theorem dist_nonneg {p q : ℚ} : dist p q ≥ 0 := calc
   _ ≃ dist p q    := eqv_refl
   _ ≃ abs (p - q) := dist_abs
-  _ ≥ 0           := abs_ge_zero
+  _ ≥ 0           := abs_nonneg
 
 /--
 Equivalent rational numbers are the only ones that can be a distance of zero
@@ -636,7 +626,7 @@ theorem close_zero {p q : ℚ} : p ⊢0⊣ q ↔ p ≃ q := by
     intro (_ : p ⊢0⊣ q)
     show p ≃ q
     have : dist p q ≤ 0 := close_dist.mp ‹p ⊢0⊣ q›
-    have : dist p q ≥ 0 := dist_ge_zero
+    have : dist p q ≥ 0 := dist_nonneg
     have : dist p q ≃ 0 := le_antisymm ‹dist p q ≤ 0› ‹dist p q ≥ 0›
     have : p ≃ q := dist_zero.mp this
     exact this
@@ -649,29 +639,17 @@ theorem close_zero {p q : ℚ} : p ⊢0⊣ q ↔ p ≃ q := by
     exact this
 
 /--
-Rational numbers can never be at most a negative distance apart.
+The `ε` in ε-closeness is nonnegative.
 
-**Property and proof intuition**: Negative distance is impossible.
+**Property and proof intuition**: Distance is nonnegative.
 -/
-theorem close_negative {ε p q : ℚ} : ¬(p ⊢ε⊣ q ∧ sgn ε ≃ -1) := by
-  intro (And.intro (_ : p ⊢ε⊣ q) (_ : sgn ε ≃ -1))
-  show False
-  have : dist p q < dist p q := calc
-    _ ≃ dist p q := eqv_refl
-    _ ≤ ε        := close_dist.mp ‹p ⊢ε⊣ q›
-    _ < 0        := lt_zero_sgn.mpr ‹sgn ε ≃ -1›
-    _ ≤ dist p q := dist_ge_zero
-  exact absurd this lt_irrefl
-
-/--
-The `ε` in ε-closeness cannot be negative.
-
-**Property and proof intuition**: Corollary of `close_negative`.
--/
-theorem close_nonneg {ε p q : ℚ} : p ⊢ε⊣ q → sgn ε ≄ -1 := by
-  intro (_ : p ⊢ε⊣ q) (_ : sgn ε ≃ -1)
-  show False
-  exact absurd (And.intro ‹p ⊢ε⊣ q› ‹sgn ε ≃ -1›) close_negative
+theorem close_nonneg {ε p q : ℚ} : p ⊢ε⊣ q → ε ≥ 0 := by
+  intro (_ : p ⊢ε⊣ q)
+  show ε ≥ 0
+  calc
+    _ ≃ ε        := eqv_refl
+    _ ≥ dist p q := close_dist.mp ‹p ⊢ε⊣ q›
+    _ ≥ 0        := dist_nonneg
 
 /--
 Two rational numbers are equivalent exactly when they are closer together than
@@ -688,7 +666,7 @@ theorem close_eqv {p q : ℚ} : ({ε : ℚ} → ε > 0 → p ⊢ε⊣ q) ↔ p �
   case mp =>
     intro (hyp : {ε : ℚ} → ε > 0 → p ⊢ε⊣ q)
     show p ≃ q
-    have : dist p q ≥ 0 := dist_ge_zero
+    have : dist p q ≥ 0 := dist_nonneg
     have : dist p q > 0 ∨ dist p q ≃ 0 := ge_cases.mp this
     match this with
     | Or.inl (_ : dist p q > 0) =>
@@ -1111,12 +1089,10 @@ to be meaningful.
 know which of `p-ε` and `p+ε` are greater. This can be deduced from `ε`'s
 nonnegativity, which implies `-ε ≤ ε`.
 -/
-theorem close_from_between
-    {ε p q : ℚ} : sgn ε ≄ -1 → p-ε⊣ q ⊢p+ε → p ⊢ε⊣ q
-    := by
-  intro (_ : sgn ε ≄ -1) (_ : p-ε⊣ q ⊢p+ε)
+theorem close_from_between {ε p q : ℚ} : ε ≥ 0 → p-ε⊣ q ⊢p+ε → p ⊢ε⊣ q := by
+  intro (_ : ε ≥ 0) (_ : p-ε⊣ q ⊢p+ε)
   show p ⊢ε⊣ q
-  have : -ε ≤ ε := le_neg_nonneg ‹sgn ε ≄ -1›
+  have : -ε ≤ ε := le_neg_nonneg ‹ε ≥ 0›
   have : p-ε ≤ p+ε := calc
     _ ≃ p - ε    := eqv_refl
     _ ≃ p + (-ε) := sub_add_neg
@@ -1181,11 +1157,11 @@ theorem between_preserves_close
     := by
   intro (_ : p ⊢ε⊣ q) (_ : p ⊢ε⊣ s) (_ : q⊣ r ⊢s)
   show p ⊢ε⊣ r
-  have : sgn ε ≄ -1 := close_nonneg ‹p ⊢ε⊣ q›
+  have : ε ≥ 0 := close_nonneg ‹p ⊢ε⊣ q›
   have : p-ε⊣ q ⊢p+ε := between_from_close ‹p ⊢ε⊣ q›
   have : p-ε⊣ s ⊢p+ε := between_from_close ‹p ⊢ε⊣ s›
   have : p-ε⊣ r ⊢p+ε := between_trans ‹p-ε⊣ q ⊢p+ε› ‹p-ε⊣ s ⊢p+ε› ‹q⊣ r ⊢s›
-  have : p ⊢ε⊣ r := close_from_between ‹sgn ε ≄ -1› ‹p-ε⊣ r ⊢p+ε›
+  have : p ⊢ε⊣ r := close_from_between ‹ε ≥ 0› ‹p-ε⊣ r ⊢p+ε›
   exact this
 
 /--
@@ -1205,7 +1181,7 @@ theorem close_substL_mul
   intro (_ : p ⊢ε⊣ q)
   show p * r ⊢ε * abs r⊣ q * r
   have : dist p q ≤ ε := close_dist.mp ‹p ⊢ε⊣ q›
-  have : sgn (abs r) ≄ -1 := abs_nonneg
+  have : abs r ≥ 0 := abs_nonneg
   have : dist (p * r) (q * r) ≤ ε * abs r := calc
     _ ≃ dist (p * r) (q * r) := eqv_refl
     _ ≃ dist p q * abs r     := eqv_symm dist_distribR
@@ -1275,7 +1251,7 @@ theorem close_mul_pointwise
   have (Exists.intro (b : ℚ) (And.intro (_ : s ≃ r + b) (_ : abs b ≤ δ))) :=
     close_diff ‹r ⊢δ⊣ s›
 
-  have : sgn ε ≄ -1 := close_nonneg ‹p ⊢ε⊣ q›
+  have : ε ≥ 0 := close_nonneg ‹p ⊢ε⊣ q›
   have : s - r ≃ b := calc
     _ ≃ s - r        := eqv_refl
     _ ≃ s + -r       := sub_add_neg
@@ -1311,7 +1287,7 @@ theorem close_mul_pointwise
     _ ≃ abs (a * b)   := eqv_refl
     _ ≃ abs a * abs b := abs_compat_mul
     _ ≤ ε * abs b     := le_substL_mul_nonneg abs_nonneg ‹abs a ≤ ε›
-    _ ≤ ε * δ         := le_substR_mul_nonneg ‹sgn ε ≄ -1› ‹abs b ≤ δ›
+    _ ≤ ε * δ         := le_substR_mul_nonneg ‹ε ≥ 0› ‹abs b ≤ δ›
   have abs_pb_ar : abs (p * b + a * r) ≤ ε * abs r + δ * abs p := calc
     _ ≃ abs (p * b + a * r)       := eqv_refl
     _ ≤ abs (p * b) + abs (a * r) := abs_compat_add
