@@ -1,4 +1,4 @@
-import Lean4Axiomatic.Rational.Order
+import Lean4Axiomatic.Rational.Metric
 
 /-!
 # Rational numbers: exponentiation to natural numbers
@@ -10,6 +10,8 @@ derived properties.
 
 namespace Lean4Axiomatic.Rational
 
+open Lean4Axiomatic.Metric (abs)
+open Lean4Axiomatic.Signed (sgn)
 open Natural (pow_step pow_zero step)
 
 /-! ## Derived properties -/
@@ -19,10 +21,11 @@ variable
   {ℚ : Type}
     [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
     [Negation ℚ] [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ]
-    [Sign ℚ] [Order ℚ] [Natural.Exponentiation ℕ (α := ℚ) (· * ·)]
+    [Sign ℚ] [Order ℚ] [Metric ℚ] [Natural.Exponentiation ℕ (α := ℚ) (· * ·)]
 
 /--
-Raise two ordered, nonnegative values to the same natural number power.
+Raising two ordered, nonnegative values to the same natural number power
+preserves their ordering and nonnegativity.
 
 **Property intuition**: We already know that products of any nonnegative values
 remain nonnegative, and that the greater the inputs, the greater the result. So
@@ -67,8 +70,8 @@ theorem pow_substL_ge_nonneg
     exact And.intro ‹p^(step n') ≥ q^(step n')› ‹q^(step n') ≥ 0›
 
 /--
-Raise two strictly ordered, nonnegative values to the same positive natural
-number power.
+Raising two strictly ordered, nonnegative values to the same positive natural
+number power preserves their strict ordering and nonnegativity.
 
 **Property intuition**: We already know that products of any nonnegative values
 remain nonnegative, and that the greater the inputs, the greater the result. So
@@ -129,5 +132,35 @@ theorem pow_pos_substL_gt_nonneg
         _ ≥ 0 * q       := le_substL_mul_nonneg ‹q ≥ 0› ‹q^n' ≥ 0›
         _ ≃ 0           := mul_absorbL
       exact And.intro ‹p^(step n') > q^(step n')› ‹q^(step n') ≥ 0›
+
+/--
+Absolute value is semicompatible with the base argument of exponentiation.
+
+**Property intuition**: Absolute value is compatible with multiplication, so
+applying it to repeated multiplication means that it gets applied to every
+factor in the expression.
+
+**Proof intuition**: Induction and algebra.
+-/
+theorem pow_scompatL_abs {p : ℚ} {n : ℕ} : abs (p^n) ≃ (abs p)^n := by
+  apply Natural.ind_on n
+  case zero =>
+    show abs (p^0) ≃ (abs p)^0
+    have : sgn (1:ℚ) ≃ 1 := sgn_one
+    have : abs (1:ℚ) ≃ 1 := abs_positive this
+    calc
+      _ ≃ abs (p^0) := eqv_refl
+      _ ≃ abs 1     := abs_subst pow_zero
+      _ ≃ 1         := ‹abs (1:ℚ) ≃ 1›
+      _ ≃ (abs p)^0 := eqv_symm pow_zero
+  case step =>
+    intro (n' : ℕ) (ih : abs (p^n') ≃ (abs p)^n')
+    show abs (p^(step n')) ≃ (abs p)^(step n')
+    calc
+      _ ≃ abs (p^(step n'))  := eqv_refl
+      _ ≃ abs (p^n' * p)     := abs_subst pow_step
+      _ ≃ abs (p^n') * abs p := abs_compat_mul
+      _ ≃ (abs p)^n' * abs p := mul_substL ih
+      _ ≃ (abs p)^(step n')  := eqv_symm pow_step
 
 end Lean4Axiomatic.Rational
