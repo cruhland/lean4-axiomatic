@@ -149,15 +149,16 @@ class Division.Props
 
   /--
   An Induction/recursion principle for Rationals.
-  It states that any predicate holding for all rationals of the form a / b
-  (where a and b are integers) will also hold for any rational. In particular,
-  this implies that all rationals can be represented in the form 
-  a / b, which is formalized below in the theorem rational_as_ratio.
-  In other words, it excludes any rationals not of this form.
-  This axiom is inspired by the induction axiom as formulated by Peano:
+  It states that any predicate (that is substitive wrt ≃ on rationals) that
+  holds for all rationals of the form a / b (where a and b are integers) will
+  also hold for any rational. In particular, this implies that all rationals 
+  can be represented in the form a / b, which is formalized below in the
+  theorem rational_as_ratio. In other words, it excludes any rationals not of
+  this form. This axiom is inspired by the induction axiom of the Peano Axioms:
     https://en.wikipedia.org/wiki/Mathematical_induction#Axiom_of_induction 
   -/
-  ind_fraction {motive : ℚ → Prop} {motive_subst : AA.prop_subst motive}
+  ind_fraction {motive : ℚ → Prop} 
+    [motive_subst : AA.Substitutive₁ (α := ℚ) (motive) (· ≃ ·) (· → ·)]
     : ({a b : ℤ} → [Integer.Nonzero b] → motive (a / b)) → (p : ℚ) → motive p
 
 export Division.Props (div_mul_recip ind_fraction)
@@ -186,12 +187,11 @@ Equivalent to `Division.Props.ind_fraction` but with a more convenient argument
 order when using the `apply` tactic.
 -/
 def ind_fraction_on
-  {motive : ℚ → Prop} {motive_subst : AA.prop_subst motive} (p : ℚ) 
+  {motive : ℚ → Prop}
+  [AA.Substitutive₁ (α := ℚ) (motive) (· ≃ ·) (· → ·)] (p : ℚ) 
     (on_int_frac : ({a b : ℤ} → [Integer.Nonzero b] → motive ( (a : ℚ) / b)))
-    : motive p
-    :=
-    ind_fraction (motive := motive) (motive_subst := motive_subst) on_int_frac p
-
+    : motive p :=
+    ind_fraction on_int_frac p
 
 /--
 The predicate AsRatio is satisfies the prop_subst axiom with respect to the
@@ -199,17 +199,22 @@ equivalence relation ≃.
 I.e. If two rationals p and q are equvalent and p can be expressed as an
 integer ratio (that is, q ≃ a / b), then q can as well.
 -/
-theorem AsRatio_prop_subst_lemma : AA.prop_subst (α := ℚ) AsRatio := by
-  intro p q peq as_ratio_p 
+theorem AsRatio_prop_subst_lemma : ∀ {a b : ℚ}, a ≃ b → AsRatio a → AsRatio b := by
+  intro a b aeb as_ratio_a 
   exact 
-  match as_ratio_p with
-  | AsRatio.intro a b bnz eqfrac => 
-    have q_as_ratio : q ≃ a / b := calc
-      q      ≃ _ := eqv_symm peq
-      p      ≃ _ := eqfrac
-      from_integer a / from_integer b  ≃ _ := eqv_refl
-    AsRatio.intro a b bnz q_as_ratio
+  match as_ratio_a with
+  | AsRatio.intro a' b' bnz eqfrac =>
+    have b_as_ratio : b ≃ a' / b' := calc
+      b      ≃ _ := eqv_symm aeb
+      a      ≃ _ := eqfrac
+      (a' : ℚ) / b'  ≃ _ := eqv_refl
+      -- or  from_integer a / from_integer b  , which is better?
+    AsRatio.intro a' b' bnz b_as_ratio
 
+instance AsRatio_subst : AA.Substitutive₁ (α := ℚ) (AsRatio) (· ≃ ·) (· → ·) := 
+{
+  subst₁ := AsRatio_prop_subst_lemma
+}
 
   /--
   Every rational number can be expressed as a ratio of integers.
@@ -225,7 +230,7 @@ theorem AsRatio_prop_subst_lemma : AA.prop_subst (α := ℚ) AsRatio := by
   necessary.
   -/
 theorem rational_as_ratio (p : ℚ) : AsRatio p := by
-  apply ind_fraction_on (motive_subst := AsRatio_prop_subst_lemma) p
+  apply ind_fraction_on p
   intro a b b_nonzero
   show AsRatio (from_integer a / from_integer b)
   exact (AsRatio.intro a b b_nonzero eqv_refl) 

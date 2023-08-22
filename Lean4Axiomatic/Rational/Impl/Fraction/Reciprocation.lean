@@ -192,32 +192,39 @@ theorem div_eqv_fraction
 
 /--
 Every fraction satisfies the rational induction axiom, that is
-if a predicate holds for all fractions of the form a / b
-then it holds for all fractions.
+if a predicate holds for all formal fractions of the form a / b,
+with a and b being integers, then it holds for all formal fractions.
 
-**Property intuition**: Reasonable definitions of divison on formal
-fractions should satsify this basic property.
+**Property intuition**: When a and b are integers and b ≠ 0, they can be
+converted/coerced to formal fractions f_1 = a // 1 and f_2 = b // 1 
+via function from_integer. Dividing, we have f_1 / f_2 ≃ a // b. Since
+formal fractions are just expressions of this form, it follows that if a
+predicate holds for all such expressions (a / b), it should hold for all
+formal fractions, that is all elements of (Fraction ℤ).  Note (a / b) is the
+same as ((from_integer a) / (from_integer b)), since coercion happens
+implicitly. Technically, this result is guarenteed only for predicates that are
+compatible/substitive with respect to the equivalence relation ≃.
 
 **Proof intuition**: Expand the definitions of formal fractions, division on
-them, and the previous fundamental result div_eqv_fraction.
-
+them, and the previous fundamental result div_eqv_fraction, to show that an 
+arbitrary formal fraction a//b ≃ (a : Fraction ℤ) / b. Now if a predicate
+(called motive below) holds for all expression like (a : Fraction ℤ) / b and
+it is compatible with ≃ (see motive_subst below), then clearly it holds for
+all formal fractions, specifically all elements of (Fraction ℤ).
 --/
 def ind_fraction {motive : (Fraction ℤ) → Prop} 
-    {motive_subst : AA.prop_subst motive} : 
-    ({a b : ℤ} → [Integer.Nonzero b] → motive (a / b)) → (p : (Fraction ℤ)) →
-    motive p := by
-  intro ind_on_motive p
-  revert p; intro (a//b)
-  show motive (a//b)
+  [motive_subst : AA.Substitutive₁ (α := (Fraction ℤ)) motive (· ≃ ·) (· → ·)]
+  : ({a b : ℤ} → [Integer.Nonzero b] → motive (a / b)) → (p : (Fraction ℤ)) →
+  motive p := by
+  intro ind_on_motive p; revert p; intro (a//b)
   have b_not_zero : Integer.Nonzero b := Integer.nonzero_from_positive_inst
   have ind_division : motive (a / b) := @ind_on_motive a b b_not_zero
-  exact motive_subst div_eqv_fraction ind_division
+  have : motive (a//b) := motive_subst.subst₁ div_eqv_fraction ind_division
+  exact this
 
 instance division_props : Division.Props (Fraction ℤ) := {
   div_mul_recip := eqv_refl
-  ind_fraction := λ {motive : Fraction ℤ → Prop} => 
-    λ {motive_subst : AA.prop_subst motive} =>
-    ind_fraction (motive := motive) (motive_subst := motive_subst)
+  ind_fraction := ind_fraction
 }
 
 instance division : Division (Fraction ℤ) := {
