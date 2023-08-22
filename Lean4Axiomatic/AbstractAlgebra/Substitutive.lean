@@ -16,20 +16,6 @@ property to be replaced by arbitrary binary relations.
 ### Definitions
 -/
 
-
-/--
-Propositional substitution.
-A predicate for indicating that an arbitrary propositional predicate, a unary 
-function whose co-domain is Prop, is compatible with a given equivalence
-relation ≃. Generally when new types are introduced they will have a
-corresponding equivalence relation ≃, which can be thought of as propositional
-equality.  Then propositional predicates (intuitively, verifiable true/false
-properties) can be defined and will be useful when they are compatible with ≃.
-This function will allow such predicates to be used in proofs.
-. -/
-def prop_subst {α : Type} [EqvOp α] (motive : α → Prop) : Prop :=
-  ∀ {a b : α}, a ≃ b → motive a → motive b
-
 /--
 Class for types and operations that satisfy the unary generalized substitution
 property.
