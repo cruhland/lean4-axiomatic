@@ -194,21 +194,20 @@ def ind_fraction_on
     ind_fraction on_int_frac p
 
 /--
-The predicate AsRatio is satisfies the prop_subst axiom with respect to the
+The predicate AsRatio satisfies a substitivie property with respect to the
 equivalence relation ≃. 
-I.e. If two rationals p and q are equvalent and p can be expressed as an
-integer ratio (that is, q ≃ a / b), then q can as well.
+I.e. If two rationals a and b are equvalent and a can be expressed as an
+integer ratio, a ≃ a' / b', then b can be expressed in the same way.
 -/
-theorem AsRatio_prop_subst_lemma : ∀ {a b : ℚ}, a ≃ b → AsRatio a → AsRatio b := by
+theorem AsRatio_prop_subst_lemma : ∀ {a b : ℚ}, a ≃ b → AsRatio a → AsRatio b
+    := by
   intro a b aeb as_ratio_a 
-  exact 
-  match as_ratio_a with
+  exact match as_ratio_a with
   | AsRatio.intro a' b' bnz eqfrac =>
     have b_as_ratio : b ≃ a' / b' := calc
       b      ≃ _ := eqv_symm aeb
       a      ≃ _ := eqfrac
-      (a' : ℚ) / b'  ≃ _ := eqv_refl
-      -- or  from_integer a / from_integer b  , which is better?
+      from_integer a' / from_integer b'  ≃ _ := eqv_refl
     AsRatio.intro a' b' bnz b_as_ratio
 
 instance AsRatio_subst : AA.Substitutive₁ (α := ℚ) (AsRatio) (· ≃ ·) (· → ·) := 
