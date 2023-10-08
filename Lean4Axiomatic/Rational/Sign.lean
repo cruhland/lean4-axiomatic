@@ -361,7 +361,7 @@ integer `sgn`, which we already know is idempotent.
 -/
 theorem sgn_idemp {p : ℚ} : sgn (sgn p) ≃ sgn p := by
   have (AsRatio.intro (a : ℤ) (b : ℤ) (_ : Integer.Nonzero b) eqv) :=
-    rational_as_ratio p
+    as_ratio p
   have : p ≃ a/b := eqv
   calc
     sgn (sgn p)               ≃ _ := Integer.sgn_subst (sgn_subst ‹p ≃ a/b›)
@@ -800,9 +800,9 @@ theorem add_preserves_sign
   intro (_ : sgn p ≃ s) (_ : sgn q ≃ s)
   show sgn (p + q) ≃ s
   have (AsRatio.intro (a : ℤ) (b : ℤ) (_ : Integer.Nonzero b) p_eqv) :=
-    rational_as_ratio p
+    as_ratio p
   have (AsRatio.intro (c : ℤ) (d : ℤ) (_ : Integer.Nonzero d) q_eqv) :=
-    rational_as_ratio q
+    as_ratio q
   have : p ≃ a/b := p_eqv
   have : q ≃ c/d := q_eqv
   have : Integer.Sqrt1 (sgn b) := Integer.sgn_nonzero.mp ‹Integer.Nonzero b›
