@@ -191,35 +191,37 @@ theorem div_eqv_fraction
   a//b                 ≃ _ := eqv_refl
 
 /--
-Every fraction satisfies the rational induction axiom, that is
-if a predicate holds for all formal fractions of the form `a / b`,
-with a and b being integers, then it holds for all formal fractions.
+Every fraction satisfies the rational induction axiom, that is if a predicate
+holds for all formal fractions of the form `a / b`, with `a` and `b` being
+integers, then it holds for all formal fractions.
 
-**Property intuition**: When `a` and `b` are integers and `b ≠ 0`, they can be
-converted/coerced to formal fractions `f_1 = a // 1` and `f_2 = b // 1`
-via function from_integer. Dividing, we have `f_1 / f_2 ≃ a // b`. Since
-formal fractions are just expressions of this form, it follows that if a
-predicate holds for all such expressions `(a / b)`, it should hold for all
-formal fractions, that is all elements of `(Fraction ℤ)`.  Note `(a / b)` is
-the same as `((from_integer a) / (from_integer b))`, since coercion happens
-implicitly. Technically, this result is guarenteed only for predicates that are
-compatible/substitive with respect to the equivalence relation `≃`.
+**Property intuition**: When `a` and `b` are integers and `b ≄ 0`, they can be
+converted/coerced to formal fractions `f₁ = a // 1` and `f₂ = b // 1` via
+function `from_integer`. Dividing, we have `f₁ / f₂ ≃ a // b`. Since formal
+fractions are just expressions of this form, it follows that if a predicate
+holds for all such expressions `a / b`, it should hold for all formal
+fractions, that is all elements of `Fraction ℤ`. Note `a / b` is the same as
+`(from_integer a) / (from_integer b)`, since coercion happens implicitly.
+Technically, this result is guaranteed only for predicates that are
+compatible/substitutive with respect to the equivalence relation `≃`.
 
 **Proof intuition**: Expand the definitions of formal fractions, division on
-them, and the previous fundamental result div_eqv_fraction, to show that an 
+them, and the previous fundamental result `div_eqv_fraction`, to show that an
 arbitrary formal fraction `a//b ≃ (a : Fraction ℤ) / b`. Now if a predicate
-(called motive below) holds for all expression like `(a : Fraction ℤ) / b` and
-it is compatible with ≃ (see motive_subst below), then clearly it holds for
-all formal fractions, specifically all elements of `(Fraction ℤ)`.
+(called `motive` below) holds for all expressions like `(a : Fraction ℤ) / b`
+and it is compatible with `≃` (see the `AA.Substitutive₁` argument below), then
+clearly it holds for all formal fractions, specifically all elements of
+`Fraction ℤ`.
 --/
-def ind_fraction {motive : (Fraction ℤ) → Prop} 
-    [motive_subst : AA.Substitutive₁ (α := (Fraction ℤ)) motive (· ≃ ·) (· → ·)]
-    : ((a b : ℤ) → [Integer.Nonzero b] → motive (a / b) ) → (p : (Fraction ℤ)) →
-    motive p := by
-  intro ind_on_motive p; revert p; intro (a//b)
+def ind_fraction
+    {motive : Fraction ℤ → Prop} [AA.Substitutive₁ motive (· ≃ ·) (· → ·)] :
+    ((a b : ℤ) → [Integer.Nonzero b] → motive (a / b)) →
+    (p : Fraction ℤ) → motive p
+    := by
+  intro motive_on_div (a//b)
   have : Integer.Nonzero b := Integer.nonzero_from_positive_inst
-  have : motive (a / b) := ind_on_motive a b
-  have : motive (a//b) := motive_subst.subst₁ div_eqv_fraction ‹motive (a / b)›
+  have : motive (a / b) := motive_on_div a b
+  have : motive (a//b) := AA.substFn div_eqv_fraction this
   exact this
 
 instance division_props : Division.Props (Fraction ℤ) := {

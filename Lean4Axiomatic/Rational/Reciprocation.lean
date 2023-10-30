@@ -152,18 +152,16 @@ class Division.Props
 
   It states that any predicate (that is substitutive wrt `≃` on rationals) that
   holds for all rationals of the form `a / b` (where `a` and `b` are integers)
-  will also hold for any rational. In particular, this implies that all 
+  will also hold for any rational. In particular, this implies that all
   rationals can be represented in the form `a / b`, which is formalized below
   in the theorem `as_ratio`. In other words, it excludes any rationals
-  not of this form. This axiom is inspired by the 
+  not of this form. This axiom is inspired by the
   [induction axiom](https://w.wiki/7hJp) of the Peano axioms.
-     
   -/
   ind_fraction
     {motive : ℚ → Prop} [AA.Substitutive₁ (α := ℚ) motive (· ≃ ·) (· → ·)]
     : ((a b : ℤ) → [Integer.Nonzero b] → motive (a / b)) → (p : ℚ) → motive p
---    : ({a b : ℤ} → [Integer.Nonzero b] → motive (a / b)) → (p : ℚ) → motive p
- 
+
 export Division.Props (div_mul_recip ind_fraction)
 
 /-- All rational number division axioms. -/
@@ -191,7 +189,7 @@ order when using the `apply` tactic.
 -/
 def ind_fraction_on
     {motive : ℚ → Prop}
-    [AA.Substitutive₁ (α := ℚ) motive (· ≃ ·) (· → ·)] (p : ℚ) 
+    [AA.Substitutive₁ (α := ℚ) motive (· ≃ ·) (· → ·)] (p : ℚ)
     (on_int_frac : (a b : ℤ) → [Integer.Nonzero b] → motive ((a:ℚ) / b))
     : motive p
     :=
@@ -199,27 +197,27 @@ def ind_fraction_on
 
 /--
 The predicate AsRatio satisfies a substitutive property with respect to the
-equivalence relation `≃`. 
+equivalence relation `≃`.
 I.e. if two rationals `a` and `b` are equivalent and `a` can be expressed as an
 integer ratio, `a ≃ n / d`, then `b` can be expressed in the same way.
 -/
 theorem AsRatio_subst {a b : ℚ} : a ≃ b → AsRatio a → AsRatio b := by
   intro (_ : a ≃ b) (_ : AsRatio a)
   -- Decompose `a` into a ratio of integers
-  have (AsRatio.intro (n : ℤ) (d : ℤ) (_ : Integer.Nonzero d) eqv) 
-  := ‹AsRatio a› 
+  have (AsRatio.intro (n : ℤ) (d : ℤ) (_ : Integer.Nonzero d) eqv)
+    := ‹AsRatio a›
   have : a ≃ n / d := eqv
   have : b ≃ n / d := calc
-    _ ≃ b := eqv_refl 
-    _ ≃ a := eqv_symm ‹a ≃ b› 
+    _ ≃ b     := eqv_refl
+    _ ≃ a     := eqv_symm ‹a ≃ b›
     _ ≃ n / d := ‹a ≃ n / d›
   exact AsRatio.intro n d ‹Integer.Nonzero d› ‹b ≃ n / d›
 
-instance AsRatio_subst_inst 
-    : AA.Substitutive₁ (α := ℚ) AsRatio (· ≃ ·) (· → ·) 
+instance AsRatio_subst_inst
+    : AA.Substitutive₁ (α := ℚ) AsRatio (· ≃ ·) (· → ·)
     := {
-    subst₁ := AsRatio_subst
-  }
+  subst₁ := AsRatio_subst
+}
 
   /--
   Every rational number can be expressed as a ratio of integers.
@@ -235,7 +233,7 @@ instance AsRatio_subst_inst
   necessary.
   -/
 theorem as_ratio (p : ℚ) : AsRatio p := by
-  apply ind_fraction_on p 
+  apply ind_fraction_on p
   intro (a : ℤ) (b : ℤ) (_ : Integer.Nonzero b)
   show AsRatio ((a:ℚ) / b)
   exact AsRatio.intro a b ‹Integer.Nonzero b› eqv_refl
