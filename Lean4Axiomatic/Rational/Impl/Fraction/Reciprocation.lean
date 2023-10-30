@@ -191,27 +191,42 @@ theorem div_eqv_fraction
   a//b                 ≃ _ := eqv_refl
 
 /--
-Every fraction can be expressed as a ratio of integers.
+Every fraction satisfies the rational induction axiom, that is if a predicate
+holds for all formal fractions of the form `a / b`, with `a` and `b` being
+integers, then it holds for all formal fractions.
 
-This is a trivial theorem for fractions, but there may be other rational number
-representations for which the proof is much more difficult.
+**Property intuition**: When `a` and `b` are integers and `b ≄ 0`, they can be
+converted/coerced to formal fractions `f₁ = a // 1` and `f₂ = b // 1` via
+function `from_integer`. Dividing, we have `f₁ / f₂ ≃ a // b`. Since formal
+fractions are just expressions of this form, it follows that if a predicate
+holds for all such expressions `a / b`, it should hold for all formal
+fractions, that is all elements of `Fraction ℤ`. Note `a / b` is the same as
+`(from_integer a) / (from_integer b)`, since coercion happens implicitly.
+Technically, this result is guaranteed only for predicates that are
+compatible/substitutive with respect to the equivalence relation `≃`.
 
-**Property intuition**: Formal fractions satisfy this by definition.
-
-**Proof intuition**: Use the previous result that formal fractions are
-equivalent to division of integers, and that the denominator is nonzero because
-it's positive.
--/
-def as_ratio (p : Fraction ℤ) : AsRatio p := by
-  revert p; intro (a//b)
-  show AsRatio (a//b)
+**Proof intuition**: Expand the definitions of formal fractions, division on
+them, and the previous fundamental result `div_eqv_fraction`, to show that an
+arbitrary formal fraction `a//b ≃ (a : Fraction ℤ) / b`. Now if a predicate
+(called `motive` below) holds for all expressions like `(a : Fraction ℤ) / b`
+and it is compatible with `≃` (see the `AA.Substitutive₁` argument below), then
+clearly it holds for all formal fractions, specifically all elements of
+`Fraction ℤ`.
+--/
+def ind_fraction
+    {motive : Fraction ℤ → Prop} [AA.Substitutive₁ motive (· ≃ ·) (· → ·)] :
+    ((a b : ℤ) → [Integer.Nonzero b] → motive (a / b)) →
+    (p : Fraction ℤ) → motive p
+    := by
+  intro motive_on_div (a//b)
   have : Integer.Nonzero b := Integer.nonzero_from_positive_inst
-  have : a//b ≃ a / b := eqv_symm div_eqv_fraction
-  exact AsRatio.intro a b ‹Integer.Nonzero b› this
+  have : motive (a / b) := motive_on_div a b
+  have : motive (a//b) := AA.substFn div_eqv_fraction this
+  exact this
 
 instance division_props : Division.Props (Fraction ℤ) := {
   div_mul_recip := eqv_refl
-  as_ratio := as_ratio
+  ind_fraction := ind_fraction
 }
 
 instance division : Division (Fraction ℤ) := {
