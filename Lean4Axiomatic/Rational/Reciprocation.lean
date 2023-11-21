@@ -338,4 +338,54 @@ theorem div_same {p : ℚ} [AP (p ≄ 0)] : p/p ≃ 1 := calc
   _ ≃ p * p⁻¹ := div_mul_recip
   _ ≃ 1       := mul_inverseR
 
+/-- TODO -/
+theorem div_eqv_1 {p q : ℚ} [AP (q ≄ 0)] : p/q ≃ 1 ↔ p ≃ q := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : p/q ≃ 1)
+    show p ≃ q
+    calc
+      _ ≃ p             := eqv_refl
+      _ ≃ p * 1         := eqv_symm mul_identR
+      _ ≃ p * (q⁻¹ * q) := mul_substR (eqv_symm mul_inverseL)
+      _ ≃ (p * q⁻¹) * q := eqv_symm mul_assoc
+      _ ≃ (p/q) * q     := mul_substL (eqv_symm div_mul_recip)
+      _ ≃ 1 * q         := mul_substL ‹p/q ≃ 1›
+      _ ≃ q             := mul_identL
+  case mpr =>
+    intro (_ : p ≃ q)
+    show p/q ≃ 1
+    calc
+      _ ≃ p/q := eqv_refl
+      _ ≃ q/q := div_substL ‹p ≃ q›
+      _ ≃ 1   := div_same
+
+/-- TODO -/
+theorem recip_preserves_nonzero {p : ℚ} [AP (p ≄ 0)] : p⁻¹ ≄ 0 := by
+  intro (_ : p⁻¹ ≃ 0)
+  show False
+  have : p ≃ 0 := calc
+    _ ≃ p             := eqv_refl
+    _ ≃ p * 1         := eqv_symm mul_identR
+    _ ≃ p * (p * p⁻¹) := mul_substR (eqv_symm mul_inverseR)
+    _ ≃ p * (p * 0)   := mul_substR (mul_substR ‹p⁻¹ ≃ 0›)
+    _ ≃ p * 0         := mul_substR mul_absorbR
+    _ ≃ 0             := mul_absorbR
+  exact absurd ‹p ≃ 0› ‹AP (p ≄ 0)›.ev
+
+/-- TODO -/
+instance recip_preserves_nonzero_inst
+    {p : ℚ} [AP (p ≄ 0)] : AP (p⁻¹ ≄ 0)
+    :=
+  AP.mk recip_preserves_nonzero
+
+/-- TODO -/
+theorem recip_idemp {p : ℚ} [AP (p ≄ 0)] : (p⁻¹)⁻¹ ≃ p := calc
+  _ ≃ (p⁻¹)⁻¹             := eqv_refl
+  _ ≃ 1 * (p⁻¹)⁻¹         := eqv_symm mul_identL
+  _ ≃ (p * p⁻¹) * (p⁻¹)⁻¹ := mul_substL (eqv_symm mul_inverseR)
+  _ ≃ p * (p⁻¹ * (p⁻¹)⁻¹) := mul_assoc
+  _ ≃ p * 1               := mul_substR mul_inverseR
+  _ ≃ p                   := mul_identR
+
 end Lean4Axiomatic.Rational

@@ -11,24 +11,74 @@ namespace Lean4Axiomatic.Integer
 ## Axioms
 -/
 
-/--
-Definition of subtraction, and properties that it must satisfy.
+/-- Operations pertaining to integer subtraction. -/
+class Subtraction.Ops (ℤ : Type) :=
+  /-- Subtraction of integers. -/
+  sub : ℤ → ℤ → ℤ
 
-All other properties of subtraction can be derived from these.
--/
+export Subtraction.Ops (sub)
+
+/-- Enables the use of the `· - ·` operator for subtraction. -/
+instance sub_op_inst {ℤ : Type} [Subtraction.Ops ℤ] : Sub ℤ := {
+  sub := sub
+}
+
+/-- Properties of integer subtraction. -/
+class Subtraction.Props
+    {ℕ : outParam Type} [Natural ℕ]
+    (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Ops ℤ]
+    :=
+  /-- Subtraction is equivalent to addition of a negated second argument. -/
+  sub_defn {a b : ℤ} : a - b ≃ a + (-b)
+
+export Subtraction.Props (sub_defn)
+
+/-- All integer subtraction axioms. -/
 class Subtraction
     {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ]
     :=
-  /-- Definition of and syntax for subtraction. -/
-  subOp : Sub ℤ
+  toOps : Subtraction.Ops ℤ
+  toProps : Subtraction.Props ℤ
 
-  /-- Subtraction of a value is equivalent to adding its negation. -/
-  sub_defn {a b : ℤ} : a - b ≃ a + (-b)
+attribute [instance] Subtraction.toOps
+attribute [instance] Subtraction.toProps
 
-attribute [instance] Subtraction.subOp
+/-- Operations pertaining to eliminators on integers. -/
+class Induction.Ops
+    {ℕ : outParam Type} [Natural ℕ]
+    (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ] :=
+  /-- TODO -/
+  ind_diff
+    {motive : ℤ → Sort u} [AA.Substitutive₁ motive (· ≃ ·) (· → ·)]
+    (on_diff : (n m : ℕ) → motive ((n:ℤ) - (m:ℤ))) (a : ℤ) : motive a
 
-export Subtraction (sub_defn subOp)
+export Induction.Ops (ind_diff)
+
+/-- Properties of integer eliminators. -/
+class Induction.Props
+    {ℕ : outParam Type} [Natural ℕ]
+    (ℤ : Type)
+      [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ] [Ops ℤ]
+    :=
+  /-- TODO -/
+  ind_diff_eval
+    {motive : ℤ → Sort u} [AA.Substitutive₁ motive (· ≃ ·) (· → ·)] {n m : ℕ}
+    {on_diff : (k j : ℕ) → motive ((k:ℤ) - (j:ℤ))} :
+    ind_diff on_diff ((n:ℤ) - (m:ℤ)) = on_diff n m
+
+export Induction.Props (ind_diff_eval)
+
+/-- All integer induction/eliminator axioms. -/
+class Induction
+    {ℕ : outParam Type} [Natural ℕ]
+    (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    :=
+  toOps : Induction.Ops ℤ
+  toProps : Induction.Props ℤ
+
+attribute [instance] Induction.toOps
+attribute [instance] Induction.toProps
 
 /-!
 ## Derived properties
@@ -36,7 +86,58 @@ export Subtraction (sub_defn subOp)
 
 variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Core ℤ] [Addition ℤ] [Multiplication (ℕ := ℕ) ℤ]
-variable [Negation ℤ] [Sign ℤ] [Subtraction ℤ]
+variable [Negation ℤ] [Sign ℤ] [Subtraction ℤ] [Induction ℤ]
+
+/-- TODO -/
+def ind_diff_on
+    {motive : ℤ → Sort u} [AA.Substitutive₁ motive (· ≃ ·) (· → ·)] (a : ℤ)
+    (on_diff : (n m : ℕ) → motive ((n:ℤ) - (m:ℤ))) : motive a
+    :=
+  ind_diff on_diff a
+
+/-- TODO -/
+theorem ind_diff_on_eval
+    {motive : ℤ → Sort u} [AA.Substitutive₁ motive (· ≃ ·) (· → ·)] {n m : ℕ}
+    {on_diff : (k j : ℕ) → motive ((k:ℤ) - (j:ℤ))} :
+    ind_diff_on ((n:ℤ) - (m:ℤ)) on_diff = on_diff n m
+    := calc
+  _ = ind_diff_on ((n:ℤ) - (m:ℤ)) on_diff := rfl
+  _ = ind_diff on_diff ((n:ℤ) - (m:ℤ))    := rfl
+  _ = on_diff n m                         := ind_diff_eval
+
+/-- TODO -/
+def rec_diff
+    {X : Type u} [AA.Substitutive₁ (α := ℤ) (λ _ => X) (· ≃ ·) (· → ·)]
+    (on_diff : ℕ → ℕ → X) : ℤ → X
+    :=
+  ind_diff (motive := λ _ => X) on_diff
+
+/-- TODO -/
+theorem rec_diff_eval
+    {X : Type u} [AA.Substitutive₁ (α := ℤ) (λ _ => X) (· ≃ ·) (· → ·)]
+    {n m : ℕ} {on_diff : ℕ → ℕ → X} :
+    rec_diff on_diff ((n:ℤ) - (m:ℤ)) = on_diff n m
+    := calc
+  _ = rec_diff on_diff ((n:ℤ) - (m:ℤ))                      := rfl
+  _ = ind_diff (motive := λ _ => X) on_diff ((n:ℤ) - (m:ℤ)) := rfl
+  _ = on_diff n m                                           := ind_diff_eval
+
+/-- TODO -/
+def rec_diff_on
+    {X : Type u} [AA.Substitutive₁ (α := ℤ) (λ _ => X) (· ≃ ·) (· → ·)]
+    (a : ℤ) (on_diff : (n m : ℕ) → X) : X
+    :=
+  rec_diff on_diff a
+
+/-- TODO -/
+theorem rec_diff_on_eval
+    {X : Type u} [AA.Substitutive₁ (α := ℤ) (λ _ => X) (· ≃ ·) (· → ·)]
+    {n m : ℕ} {on_diff : ℕ → ℕ → X} :
+    rec_diff_on ((n:ℤ) - (m:ℤ)) on_diff = on_diff n m
+    := calc
+  _ = rec_diff_on ((n:ℤ) - (m:ℤ)) on_diff := rfl
+  _ = rec_diff on_diff ((n:ℤ) - (m:ℤ))    := rfl
+  _ = on_diff n m                         := rec_diff_eval
 
 /--
 Subtraction is left-substitutive.
@@ -96,6 +197,20 @@ theorem sub_same {a : ℤ} : a - a ≃ 0 := calc
   a - a  ≃ _ := sub_defn
   a + -a ≃ _ := AA.inverseR
   0      ≃ _ := Rel.refl
+
+/-- TODO -/
+theorem sub_identL {a : ℤ} : 0 - a ≃ -a := calc
+  _ ≃ 0 - a  := Rel.refl
+  _ ≃ 0 + -a := sub_defn
+  _ ≃ -a     := AA.identL
+
+/-- TODO -/
+theorem sub_identR {a : ℤ} : a - 0 ≃ a := calc
+  _ ≃ a - 0        := Rel.refl
+  _ ≃ a + -0       := sub_defn
+  _ ≃ a + (-0 + 0) := AA.substR (Rel.symm AA.identR)
+  _ ≃ a + 0        := AA.substR AA.inverseL
+  _ ≃ a            := AA.identR
 
 /--
 Equivalent integers are the only ones to differ by zero.
@@ -158,6 +273,40 @@ theorem subR_move_addL {a b c : ℤ} : a - b ≃ c ↔ a ≃ b + c := by
       c + (b + -b) ≃ _ := AA.substR AA.inverseR
       c + 0        ≃ _ := AA.identR
       c            ≃ _ := Rel.refl
+
+/-- TODO -/
+theorem sub_swap_add {a b c d : ℤ} : a - b ≃ c - d ↔ a + d ≃ c + b := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a - b ≃ c - d)
+    show a + d ≃ c + b
+    calc
+      _ ≃ a + d              := Rel.refl
+      _ ≃ (a + 0) + d        := AA.substL (Rel.symm AA.identR)
+      _ ≃ (a + (-b + b)) + d := AA.substL (AA.substR (Rel.symm AA.inverseL))
+      _ ≃ ((a + -b) + b) + d := AA.substL (Rel.symm AA.assoc)
+      _ ≃ ((a - b) + b) + d  := AA.substL (AA.substL (Rel.symm sub_defn))
+      _ ≃ ((c - d) + b) + d  := AA.substL (AA.substL ‹a - b ≃ c - d›)
+      _ ≃ (c - d) + (b + d)  := AA.assoc
+      _ ≃ (c + -d) + (b + d) := AA.substL sub_defn
+      _ ≃ (c + b) + (-d + d) := AA.expr_xxfxxff_lr_swap_rl
+      _ ≃ (c + b) + 0        := AA.substR AA.inverseL
+      _ ≃ c + b              := AA.identR
+  case mpr =>
+    intro (_ : a + d ≃ c + b)
+    show a - b ≃ c - d
+    calc
+      _ ≃ a - b               := Rel.refl
+      _ ≃ a + -b              := sub_defn
+      _ ≃ (a + 0) + -b        := AA.substL (Rel.symm AA.identR)
+      _ ≃ (a + (d + -d)) + -b := AA.substL (AA.substR (Rel.symm AA.inverseR))
+      _ ≃ ((a + d) + -d) + -b := AA.substL (Rel.symm AA.assoc)
+      _ ≃ ((c + b) + -d) + -b := AA.substL (AA.substL ‹a + d ≃ c + b›)
+      _ ≃ (c + b) + (-d + -b) := AA.assoc
+      _ ≃ (c + -d) + (b + -b) := AA.expr_xxfxxff_lr_swap_rl
+      _ ≃ (c + -d) + 0        := AA.substR AA.inverseR
+      _ ≃ c + -d              := AA.identR
+      _ ≃ c - d               := Rel.symm sub_defn
 
 /--
 Multiplication distributes over subtraction (on the left).

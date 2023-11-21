@@ -31,7 +31,7 @@ For more information see `Substitutive₁.subst₁`.
 -/
 class Substitutive₁
     {α : Sort u} {β : Sort v} (f : semiOutParam (α → β))
-    (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
+    (rα : outParam (α → α → Prop)) (rβ : β → β → Sort w)
     :=
   /--
   The generalized substitution property of an unary operation `f`.
@@ -54,7 +54,7 @@ export Substitutive₁ (subst₁)
 
 /--
 Convenience function for the unary generalized substitution property, for a
-predicate `f`.
+predicate or type constructor `f`.
 
 Type inference for `subst₁` gets stuck when the output relation is `(· → ·)`;
 this helper works around that issue by hardcoding the argument.
@@ -67,8 +67,8 @@ See `subst₁` for further documentation.
 - `rα`: A binary relation on `f`'s input values.
 - See `subst₁` for documentation on the remaining parameters.
 -/
-abbrev substFn {α : Sort u} {f : α → Prop} {rα : α → α → Prop} :=
-  @subst₁ α (β := Prop) f rα (rβ := (· → ·))
+abbrev substFn {α : Sort u} {f : α → Sort v} {rα : α → α → Prop} :=
+  @subst₁ α (β := Sort v) f rα (rβ := (· → ·))
 
 /--
 Class for types and operations that satisfy the unary generalized injective

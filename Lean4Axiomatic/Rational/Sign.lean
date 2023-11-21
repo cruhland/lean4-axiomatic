@@ -778,6 +778,63 @@ theorem mulR_div_same {p q : ℚ} [AP (q ≄ 0)] : (p * q)/q ≃ p := calc
   _ ≃ (q * p)/q := div_substL mul_comm
   _ ≃ p         := mulL_div_same
 
+/-- TODO -/
+theorem div_eqv_0 {p q : ℚ} [AP (q ≄ 0)] : p/q ≃ 0 ↔ p ≃ 0 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : p/q ≃ 0)
+    show p ≃ 0
+    have : p * q⁻¹ ≃ 0 := eqv_trans (eqv_symm div_mul_recip) ‹p/q ≃ 0›
+    have : p ≃ 0 ∨ q⁻¹ ≃ 0 := mul_split_zero.mp this
+    match this with
+    | Or.inl (_ : p ≃ 0) =>
+      exact ‹p ≃ 0›
+    | Or.inr (_ : q⁻¹ ≃ 0) =>
+      have : q⁻¹ ≄ 0 := recip_preserves_nonzero
+      exact absurd ‹q⁻¹ ≃ 0› ‹q⁻¹ ≄ 0›
+  case mpr =>
+    intro (_ : p ≃ 0)
+    show p/q ≃ 0
+    calc
+      _ ≃ p/q     := eqv_refl
+      _ ≃ p * q⁻¹ := div_mul_recip
+      _ ≃ 0 * q⁻¹ := mul_substL ‹p ≃ 0›
+      _ ≃ 0       := mul_absorbL
+
+/-- TODO -/
+theorem div_preserves_nonzero {p q : ℚ} [AP (q ≄ 0)] : p ≄ 0 → p/q ≄ 0 := by
+  intro (_ : p ≄ 0) (_ : p/q ≃ 0)
+  show False
+  have : p ≃ 0 := div_eqv_0.mp ‹p/q ≃ 0›
+  exact absurd ‹p ≃ 0› ‹p ≄ 0›
+
+/-- TODO -/
+instance div_preserves_nonzero_inst
+    {p q : ℚ} [AP (p ≄ 0)] [AP (q ≄ 0)] : AP (p/q ≄ 0)
+    :=
+  ‹AP (p ≄ 0)›.map div_preserves_nonzero
+
+/-- TODO -/
+theorem recip_flip_div
+    {p q : ℚ} [AP (p ≄ 0)] [AP (q ≄ 0)] : (p/q)⁻¹ ≃ q/p
+    := calc
+  _ ≃ (p/q)⁻¹       := eqv_refl
+  _ ≃ (p * q⁻¹)⁻¹   := recip_subst div_mul_recip
+  _ ≃ p⁻¹ * (q⁻¹)⁻¹ := recip_compat_mul
+  _ ≃ p⁻¹ * q       := mul_substR recip_idemp
+  _ ≃ q * p⁻¹       := mul_comm
+  _ ≃ q/p           := eqv_symm div_mul_recip
+
+/-- TODO -/
+theorem div_div_div
+    {p q r s : ℚ} [AP (q ≄ 0)] [AP (r ≄ 0)] [AP (s ≄ 0)] :
+    (p/q) / (r/s) ≃ (p * s)/(q * r)
+    := calc
+  _ ≃ (p/q) / (r/s)   := eqv_refl
+  _ ≃ (p/q) * (r/s)⁻¹ := div_mul_recip
+  _ ≃ (p/q) * (s/r)   := mul_substR recip_flip_div
+  _ ≃ (p * s)/(q * r) := div_mul_swap
+
 /--
 If two rational numbers have the same sign value, their sum will as well.
 

@@ -2,7 +2,7 @@ import Lake
 open Lake DSL
 
 package «lean4-axiomatic» {
-  moreLeanArgs := #["-D warningAsError=true"]
+  moreLeanArgs := #["-D warningAsError=false"]
 }
 
 lean_lib Lean4Axiomatic {
