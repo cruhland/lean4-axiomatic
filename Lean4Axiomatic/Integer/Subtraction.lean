@@ -7,6 +7,8 @@ import Lean4Axiomatic.Integer.Sign
 
 namespace Lean4Axiomatic.Integer
 
+open Relation.Equivalence (EqvOp)
+
 /-!
 ## Axioms
 -/
@@ -63,9 +65,10 @@ class Induction.Props
     :=
   /-- TODO -/
   ind_diff_eval
-    {motive : ℤ → Sort u} [AA.Substitutive₁ motive (· ≃ ·) (· → ·)] {n m : ℕ}
-    {on_diff : (k j : ℕ) → motive ((k:ℤ) - (j:ℤ))} :
-    ind_diff on_diff ((n:ℤ) - (m:ℤ)) = on_diff n m
+    {motive : ℤ → Sort u} [AA.Substitutive₁ motive (· ≃ ·) (· → ·)]
+    (motive_eqv : {a : ℤ} → EqvOp (motive a))
+    {n m : ℕ} {on_diff : (k j : ℕ) → motive ((k:ℤ) - (j:ℤ))} :
+    ind_diff on_diff ((n:ℤ) - (m:ℤ)) ≃ on_diff n m
 
 export Induction.Props (ind_diff_eval)
 
@@ -97,13 +100,14 @@ def ind_diff_on
 
 /-- TODO -/
 theorem ind_diff_on_eval
-    {motive : ℤ → Sort u} [AA.Substitutive₁ motive (· ≃ ·) (· → ·)] {n m : ℕ}
-    {on_diff : (k j : ℕ) → motive ((k:ℤ) - (j:ℤ))} :
-    ind_diff_on ((n:ℤ) - (m:ℤ)) on_diff = on_diff n m
+    {motive : ℤ → Sort u} [AA.Substitutive₁ motive (· ≃ ·) (· → ·)]
+    (motive_eqv : {a : ℤ} → EqvOp (motive a))
+    {n m : ℕ} {on_diff : (k j : ℕ) → motive ((k:ℤ) - (j:ℤ))} :
+    ind_diff_on ((n:ℤ) - (m:ℤ)) on_diff ≃ on_diff n m
     := calc
   _ = ind_diff_on ((n:ℤ) - (m:ℤ)) on_diff := rfl
   _ = ind_diff on_diff ((n:ℤ) - (m:ℤ))    := rfl
-  _ = on_diff n m                         := ind_diff_eval
+  _ ≃ on_diff n m                         := ind_diff_eval motive_eqv
 
 /-- TODO -/
 def rec_diff
@@ -115,12 +119,14 @@ def rec_diff
 /-- TODO -/
 theorem rec_diff_eval
     {X : Type u} [AA.Substitutive₁ (α := ℤ) (λ _ => X) (· ≃ ·) (· → ·)]
-    {n m : ℕ} {on_diff : ℕ → ℕ → X} :
-    rec_diff on_diff ((n:ℤ) - (m:ℤ)) = on_diff n m
-    := calc
-  _ = rec_diff on_diff ((n:ℤ) - (m:ℤ))                      := rfl
-  _ = ind_diff (motive := λ _ => X) on_diff ((n:ℤ) - (m:ℤ)) := rfl
-  _ = on_diff n m                                           := ind_diff_eval
+    [motive_eqv : EqvOp X] {n m : ℕ} {on_diff : ℕ → ℕ → X} :
+    rec_diff on_diff ((n:ℤ) - (m:ℤ)) ≃ on_diff n m
+    := by
+  let diff := (n:ℤ) - (m:ℤ)
+  calc
+    _ = rec_diff on_diff diff                      := rfl
+    _ = ind_diff (motive := λ _ => X) on_diff diff := rfl
+    _ ≃ on_diff n m                                := ind_diff_eval motive_eqv
 
 /-- TODO -/
 def rec_diff_on
@@ -132,12 +138,12 @@ def rec_diff_on
 /-- TODO -/
 theorem rec_diff_on_eval
     {X : Type u} [AA.Substitutive₁ (α := ℤ) (λ _ => X) (· ≃ ·) (· → ·)]
-    {n m : ℕ} {on_diff : ℕ → ℕ → X} :
-    rec_diff_on ((n:ℤ) - (m:ℤ)) on_diff = on_diff n m
+    [EqvOp X] {n m : ℕ} {on_diff : ℕ → ℕ → X} :
+    rec_diff_on ((n:ℤ) - (m:ℤ)) on_diff ≃ on_diff n m
     := calc
   _ = rec_diff_on ((n:ℤ) - (m:ℤ)) on_diff := rfl
   _ = rec_diff on_diff ((n:ℤ) - (m:ℤ))    := rfl
-  _ = on_diff n m                         := rec_diff_eval
+  _ ≃ on_diff n m                         := rec_diff_eval
 
 /--
 Subtraction is left-substitutive.
