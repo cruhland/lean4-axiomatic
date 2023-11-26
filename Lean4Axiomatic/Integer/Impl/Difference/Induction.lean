@@ -30,8 +30,6 @@ local instance ind_ops : Induction.Ops (Difference ℕ) := {
   ind_diff := ind_diff
 }
 
--- TODO: Signatures for substFn_substL and substFn_substR
-
 /-- TODO -/
 theorem substFn_compose
     {α : Sort u} {f : α → Sort v} [EqvOp α] (f_eqv : {x : α} → EqvOp (f x))
@@ -39,7 +37,34 @@ theorem substFn_compose
     {x y z : α} {eqv₁ : x ≃ y} {eqv₂ : y ≃ z} {fx : f x} :
     AA.substFn eqv₂ (AA.substFn eqv₁ fx) ≃ AA.substFn (Rel.trans eqv₁ eqv₂) fx
     := by
-  admit
+  admit -- Maybe we need a more simplifying assumption: that `fx` is equivalent
+  -- to `fx` with whatever number of `AA.substFn` calls layered on top of it
+  -- (I think this would hold if `f` was a constant function, which is what it
+  -- will be for the case we care about right now: simple recursion).
+  -- If the value is the same, the equivalence should hold regardless of the
+  -- types.
+
+/-- TODO -/
+theorem substFn_substL
+    {α : Sort u} {f : α → Sort v} [EqvOp α]
+    [AA.Substitutive₁ f (· ≃ ·) (· → ·)]
+    {x y : α} {eqv₁ : x ≃ y} {eqv₂ : x ≃ y} {fx : f x}  [EqvOp (f y)] :
+    AA.substFn eqv₁ fx ≃ AA.substFn eqv₂ fx
+    :=
+  Rel.refl
+
+/-- TODO -/
+theorem substFn_substR
+    {α : Sort u} {f : α → Sort v} [EqvOp α] (f_eqv : {x : α} → EqvOp (f x))
+    [AA.Substitutive₁ f (· ≃ ·) (· → ·)]
+    {x y z : α} {eqv₁ : x ≃ y} {eqv₂ : y ≃ z} {fx : f x} {fy : f y}
+    [AA.Substitutive₁ (β := f z) (AA.substFn eqv₂) (· ≃ ·) (· ≃ ·)] :
+    fy ≃ AA.substFn eqv₁ fx →
+    AA.substFn eqv₂ fy ≃ AA.substFn eqv₂ (AA.substFn eqv₁ fx)
+    := by
+  intro (_ : fy ≃ AA.substFn eqv₁ fx)
+  show AA.substFn eqv₂ fy ≃ AA.substFn eqv₂ (AA.substFn eqv₁ fx)
+  exact AA.subst₁ ‹fy ≃ AA.substFn eqv₁ fx›
 
 /-- TODO -/
 theorem ind_diff_subst_diff
@@ -47,15 +72,17 @@ theorem ind_diff_subst_diff
     (motive_eqv : {a : Difference ℕ} → EqvOp (motive a))
     {on_diff : (n m : ℕ) → motive (n - m)}
     (on_diff_subst : {k₁ j₁ k₂ j₂ : ℕ} → (diff_eqv : (k₁:Difference ℕ) - j₁ ≃ k₂ - j₂) → AA.substFn diff_eqv (on_diff k₁ j₁) ≃ on_diff k₂ j₂)
-    {a₁ a₂ : Difference ℕ} (a_eqv : a₁ ≃ a₂) :
+    {a₁ a₂ : Difference ℕ} (a_eqv : a₁ ≃ a₂)
+    [AA.Substitutive₁ (β := motive a₂) (AA.substFn (Rel.trans sub_eqv_diff ‹a₁ ≃ a₂›)) (· ≃ ·) (· ≃ ·)] :
     AA.substFn ‹a₁ ≃ a₂› (ind_diff on_diff a₁) ≃ ind_diff on_diff a₂
     := by
-  revert a₁ a₂; intro (n₁——m₁) (n₂——m₂) (_ : n₁——m₁ ≃ n₂——m₂)
+  revert a₁ a₂; intro (n₁——m₁) (n₂——m₂) (_ : n₁——m₁ ≃ n₂——m₂) inst
   let a₁ := n₁——m₁; let a₂ := n₂——m₂
   let od₁ := on_diff n₁ m₁; let od₂ := on_diff n₂ m₂
   let idod := ind_diff on_diff
   show AA.substFn ‹a₁ ≃ a₂› (idod a₁) ≃ idod a₂
   have : (n₂:Difference ℕ) - m₂ ≃ n₁ - m₁ := sorry
+  have od_eqv : od₁ ≃ AA.substFn ‹(n₂:Difference ℕ) - m₂ ≃ n₁ - m₁› od₂ := sorry
   calc
     _ = AA.substFn ‹a₁ ≃ a₂› (idod a₁)
       := rfl
@@ -64,11 +91,11 @@ theorem ind_diff_subst_diff
     _ ≃ AA.substFn (Rel.trans sub_eqv_diff ‹a₁ ≃ a₂›) od₁
       := substFn_compose motive_eqv
     _ ≃ AA.substFn (Rel.trans sub_eqv_diff ‹a₁ ≃ a₂›) (AA.substFn ‹(n₂:Difference ℕ) - m₂ ≃ n₁ - m₁› od₂)
-      := sorry -- substFn_substR
+      := substFn_substR motive_eqv od_eqv
     _ ≃ AA.substFn (Rel.trans ‹(n₂:Difference ℕ) - m₂ ≃ n₁ - m₁› (Rel.trans sub_eqv_diff ‹a₁ ≃ a₂›)) od₂
-      := sorry -- substFn_compose
+      := substFn_compose motive_eqv
     _ ≃ AA.substFn sub_eqv_diff od₂
-      := sorry -- substFn_substL
+      := substFn_substL
     _ = idod a₂
       := rfl
 
