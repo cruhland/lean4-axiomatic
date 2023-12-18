@@ -338,6 +338,20 @@ theorem iff_subst_eqv
   have : P x₂ → P x₁ := P_subst (symm ‹x₁ ≃ x₂›)
   exact Iff.intro ‹P x₁ → P x₂› ‹P x₂ → P x₁›
 
+instance eqvOp_prop_inst : EqvOp Prop := {
+  tildeDash := (· ↔ ·)
+  refl := Iff.rfl
+  symm := Iff.symm
+  trans := Iff.trans
+}
+
+instance eqvOp_prop_term_inst {p : Prop} : EqvOp p := {
+  tildeDash := (· = ·)
+  refl := rfl
+  symm := Eq.symm
+  trans := Eq.trans
+}
+
 /--
 Extends `EqvOp` with `· ≃? ·`, a decision procedure for equivalence.
 

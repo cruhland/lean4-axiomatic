@@ -1,5 +1,5 @@
+import Lean4Axiomatic.Integer.Exponentiation
 import Lean4Axiomatic.Integer.Order
-import Lean4Axiomatic.Integer.Subtraction
 
 /-!
 # Combined typeclass of all integer definitions and properties

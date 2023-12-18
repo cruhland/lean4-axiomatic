@@ -20,12 +20,14 @@ class Rational
   toCore : Rational.Core (ℤ := ℤ) ℚ
   toAddition : Rational.Addition ℚ
   toMultiplication : Rational.Multiplication ℚ
-  toExponentiation : Natural.Exponentiation ℕ (α := ℚ) (· * ·)
+  toNaturalExponentiation : Natural.Exponentiation ℕ (α := ℚ) (· * ·)
   toNegation : Rational.Negation ℚ
   toSubtraction : Rational.Subtraction ℚ
   toReciprocation : Rational.Reciprocation ℚ
   toDivision : Rational.Division ℚ
   toSign : Rational.Sign ℚ
+  toIntegerExponentiation :
+    Integer.Exponentiation (α := ℚ) (ℤ := ℤ) (· * ·) (· / ·)
   toOrder : Rational.Order ℚ
   toMinMax : Rational.MinMax ℚ
   toMetric : Rational.Metric ℚ
@@ -33,10 +35,11 @@ class Rational
 attribute [instance] Rational.toAddition
 attribute [instance] Rational.toCore
 attribute [instance] Rational.toDivision
-attribute [instance] Rational.toExponentiation
+attribute [instance] Rational.toIntegerExponentiation
 attribute [instance] Rational.toMetric
 attribute [instance] Rational.toMinMax
 attribute [instance] Rational.toMultiplication
+attribute [instance] Rational.toNaturalExponentiation
 attribute [instance] Rational.toNegation
 attribute [instance] Rational.toOrder
 attribute [instance] Rational.toReciprocation

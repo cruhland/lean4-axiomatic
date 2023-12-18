@@ -39,7 +39,7 @@ def of_scientific
     :=
   let naturalMantissa : ℕ := OfNat.ofNat mantissa
   let naturalDecimalExponent : ℕ := OfNat.ofNat decimalExponent
-  let powTen := 10 ^ naturalDecimalExponent
+  let powTen := (10:ℕ) ^ naturalDecimalExponent
 
   have : Natural.step 0 ≄ 0 := Natural.step_neqv_zero
   have : 1 ≄ 0 := AA.neqv_substL (Rel.symm Natural.literal_step) this
