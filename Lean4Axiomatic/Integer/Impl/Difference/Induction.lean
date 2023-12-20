@@ -39,7 +39,7 @@ local instance ind_ops : Induction.Ops (Difference ℕ) := {
 }
 
 /-- TODO -/
-theorem ind_diff_subst_diff
+theorem ind_diff_subst
     {motive : Difference ℕ → Sort u}
     {motive_eqv : {a : Difference ℕ} → EqvOp (motive a)}
     {on_diff : (n m : ℕ) → motive (n - m)}
@@ -84,10 +84,8 @@ theorem ind_diff_eval
   calc
     _ = ind_diff on_diff (n - m)
         := rfl
-    -- We should have `motive_subst` take information about `n` and `m`
-    -- Or have an alternative function that does the same thing with `n` and `m`
     _ ≃ motive_subst on_diff (Rel.symm sub_eqv_diff) (ind_diff on_diff (n——m))
-        := Rel.symm (ind_diff_subst_diff (Rel.symm sub_eqv_diff))
+        := Rel.symm (ind_diff_subst (Rel.symm sub_eqv_diff))
     _ = motive_subst on_diff (Rel.symm sub_eqv_diff) (motive_subst on_diff sub_eqv_diff (on_diff n m))
         := rfl
     _ ≃ motive_subst on_diff (Rel.trans sub_eqv_diff (Rel.symm sub_eqv_diff)) (on_diff n m)
@@ -97,8 +95,19 @@ theorem ind_diff_eval
     _ ≃ on_diff n m
         := motive_subst_refl
 
+-- TODO: This can't be proved here. Must be provided by the motive implementor
+theorem motive_subst_const
+    {X : Type u} [EqvOp X] {on_diff : ℕ → ℕ → X}
+    [Induction.Constraints (ℤ := Difference ℕ) (λ {_} => ‹EqvOp X›) on_diff]
+    {a₁ a₂ : Difference ℕ} (a_eqv : a₁ ≃ a₂) (x : X) :
+    motive_subst (motive := λ _ => X) on_diff ‹a₁ ≃ a₂› x ≃ x
+    := by
+  admit
+
 def ind_props : Induction.Props (Difference ℕ) := {
+  ind_diff_subst := ind_diff_subst
   ind_diff_eval := ind_diff_eval
+  motive_subst_const := motive_subst_const -- TODO: Move to separate typeclass
 }
 
 instance induction : Induction (Difference ℕ) := {

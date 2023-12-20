@@ -141,7 +141,7 @@ class Induction.Props
     ind_diff on_diff (n - m) ≃ on_diff n m
 
   /-- TODO -/
-  motive_subst_const
+  motive_subst_const -- TODO: Move this to its own typeclass
     {X : Type u} [EqvOp X] {on_diff : ℕ → ℕ → X}
     [Constraints (ℤ := ℤ) (λ {_} => ‹EqvOp X›) on_diff]
     {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂) (x : X) :
@@ -173,7 +173,6 @@ attribute [instance] Induction.toProps
 variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Core ℤ] [Addition ℤ] [Multiplication (ℕ := ℕ) ℤ]
 variable [Negation ℤ] [Sign ℤ] [Subtraction ℤ] [Induction ℤ]
--- TODO: Remove Induction from line above and pass explicitly?
 
 /-- TODO -/
 def ind_diff_on
@@ -247,7 +246,7 @@ theorem rec_diff_on_eval
   _ ≃ on_diff n m                         := rec_diff_eval
 
 theorem rec_diff_on_subst
-    {X : Type u} [motive_eqv : EqvOp X] {on_diff : ℕ → ℕ → X} {a₁ a₂ : ℤ}
+    [other_ind : Induction.{u} ℤ] {X : Type u} [motive_eqv : EqvOp X] {on_diff : ℕ → ℕ → X} {a₁ a₂ : ℤ}
     [Induction.Constraints (ℤ := ℤ) (λ {_} => motive_eqv) on_diff] : a₁ ≃ a₂ →
     rec_diff_on a₁ on_diff ≃ rec_diff_on a₂ on_diff
     := by
@@ -256,7 +255,7 @@ theorem rec_diff_on_subst
   calc
     _ = rec_diff_on a₁ on_diff := rfl
     _ = rec_diff on_diff a₁    := rfl
-    _ ≃ rec_diff on_diff a₂    := rec_diff_subst ‹a₁ ≃ a₂› -- Pass correct induction arguments
+    _ ≃ rec_diff on_diff a₂    := rec_diff_subst ‹a₁ ≃ a₂›
     _ = rec_diff_on a₂ on_diff := rfl
 
 /--
