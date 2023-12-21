@@ -1,6 +1,8 @@
+import Lean4Axiomatic.Natural.Impl.Generic
 import Lean4Axiomatic.Rational
-import Lean4Axiomatic.Rational.Impl.Fraction.Exponentiation
+import Lean4Axiomatic.Rational.Impl.Fraction.Reciprocation
 import Lean4Axiomatic.Rational.Impl.Fraction.Sign
+import Lean4Axiomatic.Rational.Impl.Generic.Exponentiation
 import Lean4Axiomatic.Rational.Impl.Generic.Metric
 import Lean4Axiomatic.Rational.Impl.Generic.MinMax
 import Lean4Axiomatic.Rational.Impl.Generic.Order
@@ -15,6 +17,7 @@ variable
 
 instance rational : Rational (ℤ := ℤ) (Fraction ℤ) :=
   let order := Generic.order
+  let natural_exponentiation := Natural.Impl.Generic.exponentiation
 
   {
     toCore := core
@@ -26,7 +29,7 @@ instance rational : Rational (ℤ := ℤ) (Fraction ℤ) :=
     toReciprocation := reciprocation
     toDivision := division
     toSign := sign
-    toIntegerExponentiation := integer_exponentiation
+    toIntegerExponentiation := Generic.integer_exponentiation
     toOrder := order
     toMinMax := Generic.minmax
     toMetric := Generic.metric

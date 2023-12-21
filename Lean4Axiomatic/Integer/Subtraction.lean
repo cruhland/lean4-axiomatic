@@ -84,6 +84,19 @@ export Induction.Constraints (
   motive_subst_substR
 )
 
+/-- TODO -/
+class Induction.ConstConstraints
+    {ℕ : Type} [Natural ℕ]
+    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    {X : Sort u} [EqvOp X] (on_diff : ℕ → ℕ → X)
+    extends Induction.Constraints (ℤ := ℤ) (λ {_} => ‹EqvOp X›) on_diff
+    :=
+  /-- TODO -/
+  motive_subst_const
+    {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂) (x : X) : motive_subst ‹a₁ ≃ a₂› x ≃ x
+
+export Induction.ConstConstraints (motive_subst_const)
+
 def ind_constraints_prop
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
@@ -102,13 +115,14 @@ def ind_constraints_prop
 def ind_constraints_const
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    {X : Sort u} [eqv_x : EqvOp X] {on_diff : ℕ → ℕ → X}
+    {X : Sort u} [EqvOp X] {on_diff : ℕ → ℕ → X}
     (on_diff_subst :
       {n₁ m₁ n₂ m₂ : ℕ} → (n₁:ℤ) - m₁ ≃ n₂ - m₂ →
       on_diff n₁ m₁ ≃ on_diff n₂ m₂) :
-    Induction.Constraints (motive := λ (_ : ℤ) => X) (λ {_} => eqv_x) on_diff
+    Induction.ConstConstraints (ℤ := ℤ) on_diff
     := {
   motive_subst := λ _ => id
+  motive_subst_const := λ _ _ => Rel.refl
   motive_subst_refl := Rel.refl
   motive_subst_compose := Rel.refl
   motive_subst_substR := id
@@ -140,20 +154,13 @@ class Induction.Props
     [Constraints @motive_eqv on_diff] {n m : ℕ} :
     ind_diff on_diff (n - m) ≃ on_diff n m
 
-  /-- TODO -/
-  motive_subst_const -- TODO: Move this to its own typeclass
-    {X : Type u} [EqvOp X] {on_diff : ℕ → ℕ → X}
-    [Constraints (ℤ := ℤ) (λ {_} => ‹EqvOp X›) on_diff]
-    {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂) (x : X) :
-    motive_subst (motive := λ _ => X) on_diff ‹a₁ ≃ a₂› x ≃ x
-
   ind_diff_subst
     {motive : ℤ → Sort u} {motive_eqv : {a : ℤ} → EqvOp (motive a)}
     {on_diff : (n m : ℕ) → motive (n - m)} [Constraints @motive_eqv on_diff]
     {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂) :
     motive_subst on_diff ‹a₁ ≃ a₂› (ind_diff on_diff a₁) ≃ ind_diff on_diff a₂
 
-export Induction.Props (ind_diff_eval ind_diff_subst motive_subst_const)
+export Induction.Props (ind_diff_eval ind_diff_subst)
 
 /-- All integer induction/eliminator axioms. -/
 class Induction
@@ -214,8 +221,8 @@ theorem rec_diff_eval
     _ ≃ on_diff n m                                := ind_diff_eval
 
 theorem rec_diff_subst
-    [other_ind : Induction.{u} ℤ] {X : Type u} [motive_eqv : EqvOp X] {on_diff : ℕ → ℕ → X} {a₁ a₂ : ℤ}
-    [Induction.Constraints (ℤ := ℤ) (λ {_} => motive_eqv) on_diff] : a₁ ≃ a₂ →
+    {X : Type u} [EqvOp X] {on_diff : ℕ → ℕ → X} {a₁ a₂ : ℤ}
+    [Induction.ConstConstraints (ℤ := ℤ) on_diff] : a₁ ≃ a₂ →
     rec_diff on_diff a₁ ≃ rec_diff on_diff a₂
     := by
   intro (_ : a₁ ≃ a₂)
@@ -223,7 +230,7 @@ theorem rec_diff_subst
   calc
     _ = rec_diff on_diff a₁                      := rfl
     _ = ind_diff (motive := λ _ => X) on_diff a₁ := rfl
-    _ ≃ motive_subst (motive := λ _ => X) on_diff ‹a₁ ≃ a₂› (ind_diff (motive := λ _ => X) on_diff a₁) := Rel.symm (motive_subst_const (ops := other_ind.toOps) (X := X) (on_diff := on_diff) ‹a₁ ≃ a₂› (ind_diff (motive := λ _ => X) on_diff a₁))
+    _ ≃ motive_subst (motive := λ _ => X) on_diff ‹a₁ ≃ a₂› (ind_diff (motive := λ _ => X) on_diff a₁) := Rel.symm (motive_subst_const (X := X) (on_diff := on_diff) ‹a₁ ≃ a₂› (ind_diff (motive := λ _ => X) on_diff a₁))
     _ ≃ ind_diff (motive := λ _ => X) on_diff a₂ := ind_diff_subst (motive := λ _ => X) ‹a₁ ≃ a₂›
     _ = rec_diff on_diff a₂                      := rfl
 
@@ -246,8 +253,8 @@ theorem rec_diff_on_eval
   _ ≃ on_diff n m                         := rec_diff_eval
 
 theorem rec_diff_on_subst
-    [other_ind : Induction.{u} ℤ] {X : Type u} [motive_eqv : EqvOp X] {on_diff : ℕ → ℕ → X} {a₁ a₂ : ℤ}
-    [Induction.Constraints (ℤ := ℤ) (λ {_} => motive_eqv) on_diff] : a₁ ≃ a₂ →
+    {X : Type u} [motive_eqv : EqvOp X] {on_diff : ℕ → ℕ → X} {a₁ a₂ : ℤ}
+    [Induction.ConstConstraints (ℤ := ℤ) on_diff] : a₁ ≃ a₂ →
     rec_diff_on a₁ on_diff ≃ rec_diff_on a₂ on_diff
     := by
   intro (_ : a₁ ≃ a₂)

@@ -95,19 +95,9 @@ theorem ind_diff_eval
     _ ≃ on_diff n m
         := motive_subst_refl
 
--- TODO: This can't be proved here. Must be provided by the motive implementor
-theorem motive_subst_const
-    {X : Type u} [EqvOp X] {on_diff : ℕ → ℕ → X}
-    [Induction.Constraints (ℤ := Difference ℕ) (λ {_} => ‹EqvOp X›) on_diff]
-    {a₁ a₂ : Difference ℕ} (a_eqv : a₁ ≃ a₂) (x : X) :
-    motive_subst (motive := λ _ => X) on_diff ‹a₁ ≃ a₂› x ≃ x
-    := by
-  admit
-
 def ind_props : Induction.Props (Difference ℕ) := {
   ind_diff_subst := ind_diff_subst
   ind_diff_eval := ind_diff_eval
-  motive_subst_const := motive_subst_const -- TODO: Move to separate typeclass
 }
 
 instance induction : Induction (Difference ℕ) := {

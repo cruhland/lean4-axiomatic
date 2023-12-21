@@ -55,8 +55,7 @@ theorem _pow_on_diff_subst
 
 instance _pow_ind_diff_constraints
     {p : ℚ} [AP (p ≄ 0)] :
-    Integer.Induction.Constraints
-      (ℤ := ℤ) (motive := λ _ => ℚ) (λ {_} => eqv_op_inst) (_pow_on_diff p)
+    Integer.Induction.ConstConstraints (ℤ := ℤ) (_pow_on_diff p)
     :=
   Integer.ind_constraints_const (X := ℚ) (_pow_on_diff_subst (p := p))
 
@@ -70,7 +69,7 @@ The constraint for `ℤ` to be an integer is needed to ensure that this doesn't
 also generate an `Exponentiation.Ops ℚ ℕ`, hiding the `· ^ ·` operator for
 natural number exponentiation.
 -/
-local instance exponentiation_ops : Exponentiation.Ops ℚ ℤ := {
+local instance exponentiation_ops : Integer.Exponentiation.Ops ℚ ℤ := {
   _pow := _pow
 }
 
@@ -96,5 +95,17 @@ theorem pow_substR
     _ = Integer.rec_diff_on a₁ on_diff := rfl
     _ ≃ Integer.rec_diff_on a₂ on_diff := Integer.rec_diff_on_subst ‹a₁ ≃ a₂›
     _ = p^a₂ := rfl
+
+def exponentiation_props :
+    Integer.Exponentiation.Props (α := ℚ) (ℤ := ℤ) (· * ·) (· / ·) := {
+  pow_diff := pow_diff
+  pow_substR := pow_substR
+}
+
+def integer_exponentiation :
+    Integer.Exponentiation (α := ℚ) (ℤ := ℤ) (· * ·) (· / ·) := {
+  toOps := exponentiation_ops
+  toProps := exponentiation_props
+}
 
 end Lean4Axiomatic.Rational.Impl.Generic
