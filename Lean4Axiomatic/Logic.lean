@@ -138,7 +138,7 @@ class AP (p : Prop) : Prop :=
   /-- Evidence that `p` is true. -/
   ev : p
 
-/-- TODO -/
+/-- Apply `f`, a conversion from one proposition to another, inside `AP`. -/
 def AP.map {p q : Prop} (ap : AP p) (f : p → q) : AP q := AP.mk (f ap.ev)
 
 end Lean4Axiomatic.Logic
