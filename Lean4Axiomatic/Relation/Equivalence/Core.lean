@@ -338,6 +338,12 @@ theorem iff_subst_eqv
   have : P x₂ → P x₁ := P_subst (symm ‹x₁ ≃ x₂›)
   exact Iff.intro ‹P x₁ → P x₂› ‹P x₂ → P x₁›
 
+/--
+Equivalence relation of "if and only if" over propositions.
+
+**Intuition**: Two propositions `p` and `q` have the same truth value if
+`p ↔ q` holds between them.
+-/
 instance eqvOp_prop_inst : EqvOp Prop := {
   tildeDash := (· ↔ ·)
   refl := Iff.rfl
@@ -345,6 +351,14 @@ instance eqvOp_prop_inst : EqvOp Prop := {
   trans := Iff.trans
 }
 
+/--
+Trivial equivalence relation of equality over propositional terms.
+
+**Intuition**: If `p : Prop`, then all terms `t : p` are judgmentally equal to
+each other. This is known as _proof irrelevance_: Lean considers all proofs of
+a proposition to be equal. Most of the time this is what we want, and makes
+working with propositions much easier.
+-/
 instance eqvOp_prop_term_inst {p : Prop} : EqvOp p := {
   tildeDash := (· = ·)
   refl := rfl
