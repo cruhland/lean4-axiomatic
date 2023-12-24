@@ -25,6 +25,7 @@ Enables the use of the `· ^ ·` operator for exponentiation.
 Has an explicit priority so it is chosen before the standard library's
 `Pow Nat Nat` instance.
 -/
+@[default_instance high]
 instance (priority := default+1) pow_inst
     {α ℕ : Type} [Exponentiation.Ops α ℕ] : Pow α ℕ
     := {
