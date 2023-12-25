@@ -5,6 +5,7 @@ namespace Lean4Axiomatic.Integer.Impl.Difference
 
 /-! ## Induction/eliminators on formal differences -/
 
+open scoped Integer.Impl.Generic
 open Relation.Equivalence (EqvOp)
 
 variable {ℕ : Type} [Natural ℕ]

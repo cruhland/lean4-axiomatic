@@ -20,7 +20,7 @@ def sub_props : Subtraction.Props ℤ := {
   sub_defn := sub_defn
 }
 
-instance subtraction : Subtraction ℤ := {
+scoped instance subtraction : Subtraction ℤ := {
   toOps := sub_ops
   toProps := sub_props
 }
