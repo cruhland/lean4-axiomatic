@@ -1,15 +1,10 @@
-import Lean4Axiomatic.AbstractAlgebra
 import Lean4Axiomatic.Integer.Sign
 
-/-!
-# Integer subtraction
--/
+/-! # Integer subtraction -/
 
 namespace Lean4Axiomatic.Integer
 
-/-!
-## Axioms
--/
+/-! ## Axioms -/
 
 /-- Operations pertaining to integer subtraction. -/
 class Subtraction.Ops (ℤ : Type) :=
@@ -44,13 +39,13 @@ class Subtraction
 attribute [instance] Subtraction.toOps
 attribute [instance] Subtraction.toProps
 
-/-!
-## Derived properties
--/
+/-! ## Derived properties -/
 
-variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Core ℤ] [Addition ℤ] [Multiplication (ℕ := ℕ) ℤ]
-variable [Negation ℤ] [Sign ℤ] [Subtraction ℤ]
+variable
+  {ℕ : Type} [Natural ℕ]
+  {ℤ : Type}
+    [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ]
+    [Negation ℤ] [Sign ℤ] [Subtraction ℤ]
 
 /--
 Subtraction is left-substitutive.
@@ -111,15 +106,25 @@ theorem sub_same {a : ℤ} : a - a ≃ 0 := calc
   a + -a ≃ _ := AA.inverseR
   0      ≃ _ := Rel.refl
 
-/-- TODO -/
+/--
+Subtraction with the additive identity on the left negates the right operand.
+
+**Property and proof intuition**: By definition of subtraction and the additive
+identity.
+-/
 theorem sub_identL {a : ℤ} : 0 - a ≃ -a := calc
-  _ ≃ 0 - a  := Rel.refl
+  _ = 0 - a  := rfl
   _ ≃ 0 + -a := sub_defn
   _ ≃ -a     := AA.identL
 
-/-- TODO -/
+/--
+Subtraction with the additive identity on the right gives the left operand.
+
+**Property and proof intuition**: By definition of subtraction and the additive
+identity.
+-/
 theorem sub_identR {a : ℤ} : a - 0 ≃ a := calc
-  _ ≃ a - 0        := Rel.refl
+  _ = a - 0        := rfl
   _ ≃ a + -0       := sub_defn
   _ ≃ a + (-0 + 0) := AA.substR (Rel.symm AA.identR)
   _ ≃ a + 0        := AA.substR AA.inverseL
@@ -188,6 +193,17 @@ theorem subR_move_addL {a b c : ℤ} : a - b ≃ c ↔ a ≃ b + c := by
       c            ≃ _ := Rel.refl
 
 /-- TODO -/
+theorem sub_swap_add_alt {a b c d : ℤ} : a - b ≃ c - d ↔ a + d ≃ c + b := calc
+  _ ↔ a - b ≃ c - d := Iff.rfl
+  _ ↔ a ≃ b + (c - d) := subR_move_addL
+  _ ↔ a ≃ (b + c) - d := sorry
+  _ ↔ (b + c) - d ≃ a := sorry -- something with Rel.symm
+  _ ↔ b + c ≃ d + a := subR_move_addL
+  _ ↔ d + a ≃ b + c := sorry -- something with Rel.symm
+  _ ↔ a + d ≃ b + c := sorry
+  _ ↔ a + d ≃ c + b := sorry
+
+/- TODO: Remove when above theorem is complete -/
 theorem sub_swap_add {a b c d : ℤ} : a - b ≃ c - d ↔ a + d ≃ c + b := by
   apply Iff.intro
   case mp =>
