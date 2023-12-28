@@ -158,6 +158,13 @@ theorem zero_diff_iff_eqv {a b : ℤ} : a - b ≃ 0 ↔ a ≃ b := by
       b - b  ≃ _ := sub_same
       0      ≃ _ := Rel.refl
 
+/-- TODO -/
+theorem sub_assoc_addL {a b c : ℤ} : (a + b) - c ≃ a + (b - c) := calc
+  _ = (a + b) - c  := rfl
+  _ ≃ (a + b) + -c := sub_defn
+  _ ≃ a + (b + -c) := AA.assoc
+  _ ≃ a + (b - c)  := AA.substR (Rel.symm sub_defn)
+
 /--
 The right-hand operand of subtraction can be moved to the left-hand operand of
 addition on the other side of an equivalence.
@@ -193,49 +200,15 @@ theorem subR_move_addL {a b c : ℤ} : a - b ≃ c ↔ a ≃ b + c := by
       c            ≃ _ := Rel.refl
 
 /-- TODO -/
-theorem sub_swap_add_alt {a b c d : ℤ} : a - b ≃ c - d ↔ a + d ≃ c + b := calc
-  _ ↔ a - b ≃ c - d := Iff.rfl
+theorem sub_swap_add {a b c d : ℤ} : a - b ≃ c - d ↔ a + d ≃ c + b := calc
+  _ ↔ a - b ≃ c - d   := Iff.rfl
   _ ↔ a ≃ b + (c - d) := subR_move_addL
-  _ ↔ a ≃ (b + c) - d := sorry
-  _ ↔ (b + c) - d ≃ a := sorry -- something with Rel.symm
-  _ ↔ b + c ≃ d + a := subR_move_addL
-  _ ↔ d + a ≃ b + c := sorry -- something with Rel.symm
-  _ ↔ a + d ≃ b + c := sorry
-  _ ↔ a + d ≃ c + b := sorry
-
-/- TODO: Remove when above theorem is complete -/
-theorem sub_swap_add {a b c d : ℤ} : a - b ≃ c - d ↔ a + d ≃ c + b := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : a - b ≃ c - d)
-    show a + d ≃ c + b
-    calc
-      _ ≃ a + d              := Rel.refl
-      _ ≃ (a + 0) + d        := AA.substL (Rel.symm AA.identR)
-      _ ≃ (a + (-b + b)) + d := AA.substL (AA.substR (Rel.symm AA.inverseL))
-      _ ≃ ((a + -b) + b) + d := AA.substL (Rel.symm AA.assoc)
-      _ ≃ ((a - b) + b) + d  := AA.substL (AA.substL (Rel.symm sub_defn))
-      _ ≃ ((c - d) + b) + d  := AA.substL (AA.substL ‹a - b ≃ c - d›)
-      _ ≃ (c - d) + (b + d)  := AA.assoc
-      _ ≃ (c + -d) + (b + d) := AA.substL sub_defn
-      _ ≃ (c + b) + (-d + d) := AA.expr_xxfxxff_lr_swap_rl
-      _ ≃ (c + b) + 0        := AA.substR AA.inverseL
-      _ ≃ c + b              := AA.identR
-  case mpr =>
-    intro (_ : a + d ≃ c + b)
-    show a - b ≃ c - d
-    calc
-      _ ≃ a - b               := Rel.refl
-      _ ≃ a + -b              := sub_defn
-      _ ≃ (a + 0) + -b        := AA.substL (Rel.symm AA.identR)
-      _ ≃ (a + (d + -d)) + -b := AA.substL (AA.substR (Rel.symm AA.inverseR))
-      _ ≃ ((a + d) + -d) + -b := AA.substL (Rel.symm AA.assoc)
-      _ ≃ ((c + b) + -d) + -b := AA.substL (AA.substL ‹a + d ≃ c + b›)
-      _ ≃ (c + b) + (-d + -b) := AA.assoc
-      _ ≃ (c + -d) + (b + -b) := AA.expr_xxfxxff_lr_swap_rl
-      _ ≃ (c + -d) + 0        := AA.substR AA.inverseR
-      _ ≃ c + -d              := AA.identR
-      _ ≃ c - d               := Rel.symm sub_defn
+  _ ↔ a ≃ (b + c) - d := AA.eqv_substR_iff (Rel.symm sub_assoc_addL)
+  _ ↔ (b + c) - d ≃ a := Fn.swap
+  _ ↔ b + c ≃ d + a   := subR_move_addL
+  _ ↔ d + a ≃ b + c   := Fn.swap
+  _ ↔ a + d ≃ b + c   := AA.eqv_substL_iff AA.comm
+  _ ↔ a + d ≃ c + b   := AA.eqv_substR_iff AA.comm
 
 /--
 Multiplication distributes over subtraction (on the left).
