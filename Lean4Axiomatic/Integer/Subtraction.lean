@@ -165,6 +165,14 @@ theorem sub_assoc_addL {a b c : ℤ} : (a + b) - c ≃ a + (b - c) := calc
   _ ≃ a + (b + -c) := AA.assoc
   _ ≃ a + (b - c)  := AA.substR (Rel.symm sub_defn)
 
+/-- TODO -/
+theorem sub_assoc_addR {a b c : ℤ} : (a - b) + c ≃ a + (c - b) := calc
+  _ = (a - b) + c  := rfl
+  _ ≃ (a + -b) + c := AA.substL sub_defn
+  _ ≃ a + (-b + c) := AA.assoc
+  _ ≃ a + (c + -b) := AA.substR AA.comm
+  _ ≃ a + (c - b)  := AA.substR (Rel.symm sub_defn)
+
 /--
 The right-hand operand of subtraction can be moved to the left-hand operand of
 addition on the other side of an equivalence.
@@ -174,7 +182,7 @@ addition on the other side of an equivalence.
 **Proof intuition**: There's no key idea for this proof, other than using
 algebra on integers to obtain expressions where assumptions can be used.
 -/
-theorem subR_move_addL {a b c : ℤ} : a - b ≃ c ↔ a ≃ b + c := by
+theorem subR_moveR_addL {a b c : ℤ} : a - b ≃ c ↔ a ≃ b + c := by
   apply Iff.intro
   case mp =>
     intro (_ : a - b ≃ c)
@@ -200,15 +208,22 @@ theorem subR_move_addL {a b c : ℤ} : a - b ≃ c ↔ a ≃ b + c := by
       c            ≃ _ := Rel.refl
 
 /-- TODO -/
+theorem subR_moveR_addR {a b c : ℤ} : a - b ≃ c ↔ a ≃ c + b := by
+  admit
+
+theorem subR_moveL_addL {a b c : ℤ} : a ≃ b - c ↔ c + a ≃ b := by
+  admit
+
+theorem subR_moveL_addR {a b c : ℤ} : a ≃ b - c ↔ a + c ≃ b := by
+  admit
+
+/-- TODO -/
 theorem sub_swap_add {a b c d : ℤ} : a - b ≃ c - d ↔ a + d ≃ c + b := calc
   _ ↔ a - b ≃ c - d   := Iff.rfl
-  _ ↔ a ≃ b + (c - d) := subR_move_addL
-  _ ↔ a ≃ (b + c) - d := AA.eqv_substR_iff (Rel.symm sub_assoc_addL)
-  _ ↔ (b + c) - d ≃ a := Fn.swap
-  _ ↔ b + c ≃ d + a   := subR_move_addL
-  _ ↔ d + a ≃ b + c   := Fn.swap
-  _ ↔ a + d ≃ b + c   := AA.eqv_substL_iff AA.comm
-  _ ↔ a + d ≃ c + b   := AA.eqv_substR_iff AA.comm
+  _ ↔ a ≃ (c - d) + b := subR_moveR_addR
+  _ ↔ a ≃ c + (b - d) := AA.eqv_substR_iff sub_assoc_addR
+  _ ↔ a ≃ (c + b) - d := AA.eqv_substR_iff (Rel.symm sub_assoc_addL)
+  _ ↔ a + d ≃ c + b   := subR_moveL_addR
 
 /--
 Multiplication distributes over subtraction (on the left).
