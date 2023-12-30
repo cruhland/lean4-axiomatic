@@ -208,8 +208,12 @@ theorem subR_moveR_addL {a b c : ℤ} : a - b ≃ c ↔ a ≃ b + c := by
       c            ≃ _ := Rel.refl
 
 /-- TODO -/
-theorem subR_moveR_addR {a b c : ℤ} : a - b ≃ c ↔ a ≃ c + b := by
-  admit
+theorem subR_moveR_addR {a b c : ℤ} : a - b ≃ c ↔ a ≃ c + b := calc
+  _ ↔       a - b ≃ c     := Iff.rfl
+  _ ↔ (a - b) + b ≃ c + b := add_bijectR
+  _ ↔ a + (b - b) ≃ c + b := AA.eqv_substL_iff sub_assoc_addR
+  _ ↔       a + 0 ≃ c + b := AA.eqv_substL_iff (AA.substR sub_same)
+  _ ↔           a ≃ c + b := AA.eqv_substL_iff AA.identR
 
 theorem subR_moveL_addL {a b c : ℤ} : a ≃ b - c ↔ c + a ≃ b := by
   admit
@@ -219,11 +223,11 @@ theorem subR_moveL_addR {a b c : ℤ} : a ≃ b - c ↔ a + c ≃ b := by
 
 /-- TODO -/
 theorem sub_swap_add {a b c d : ℤ} : a - b ≃ c - d ↔ a + d ≃ c + b := calc
-  _ ↔ a - b ≃ c - d   := Iff.rfl
-  _ ↔ a ≃ (c - d) + b := subR_moveR_addR
-  _ ↔ a ≃ c + (b - d) := AA.eqv_substR_iff sub_assoc_addR
-  _ ↔ a ≃ (c + b) - d := AA.eqv_substR_iff (Rel.symm sub_assoc_addL)
-  _ ↔ a + d ≃ c + b   := subR_moveL_addR
+  _ ↔ a - b ≃ c - d       := Iff.rfl
+  _ ↔     a ≃ (c - d) + b := subR_moveR_addR
+  _ ↔     a ≃ c + (b - d) := AA.eqv_substR_iff sub_assoc_addR
+  _ ↔     a ≃ (c + b) - d := AA.eqv_substR_iff (Rel.symm sub_assoc_addL)
+  _ ↔ a + d ≃ c + b       := subR_moveL_addR
 
 /--
 Multiplication distributes over subtraction (on the left).
