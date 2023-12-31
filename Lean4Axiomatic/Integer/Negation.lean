@@ -259,31 +259,38 @@ theorem neg_compat_add {a b : ℤ} : -(a + b) ≃ -a + -b := calc
   (-a) + (-1) * b     ≃ _ := AA.substR mul_neg_one
   (-a) + -b           ≃ _ := Rel.refl
 
-/-- TODO -/
-theorem add_bijectL {a b₁ b₂ : ℤ} : b₁ ≃ b₂ ↔ a + b₁ ≃ a + b₂ := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : b₁ ≃ b₂)
-    show a + b₁ ≃ a + b₂
-    exact AA.substR ‹b₁ ≃ b₂›
-  case mpr =>
-    intro (_ : a + b₁ ≃ a + b₂)
-    show b₁ ≃ b₂
-    calc
-      _ = b₁            := rfl
-      _ ≃ 0 + b₁        := Rel.symm AA.identL
-      _ ≃ (-a + a) + b₁ := AA.substL (Rel.symm AA.inverseL)
-      _ ≃ -a + (a + b₁) := AA.assoc
-      _ ≃ -a + (a + b₂) := AA.substR ‹a + b₁ ≃ a + b₂›
-      _ ≃ (-a + a) + b₂ := Rel.symm AA.assoc
-      _ ≃ 0 + b₂        := AA.substL AA.inverseL
-      _ ≃ b₂            := AA.identL
+/-- TODO - don't forget to simplify proof -/
+theorem add_cancelL {a b₁ b₂ : ℤ} : a + b₁ ≃ a + b₂ → b₁ ≃ b₂ := by
+  intro (_ : a + b₁ ≃ a + b₂)
+  show b₁ ≃ b₂
+  calc
+    _ = b₁            := rfl
+    _ ≃ 0 + b₁        := Rel.symm AA.identL
+    _ ≃ (-a + a) + b₁ := AA.substL (Rel.symm AA.inverseL)
+    _ ≃ -a + (a + b₁) := AA.assoc
+    _ ≃ -a + (a + b₂) := AA.substR ‹a + b₁ ≃ a + b₂›
+    _ ≃ (-a + a) + b₂ := Rel.symm AA.assoc
+    _ ≃ 0 + b₂        := AA.substL AA.inverseL
+    _ ≃ b₂            := AA.identL
 
 /-- TODO -/
-theorem add_bijectR {a₁ a₂ b : ℤ} : a₁ ≃ a₂ ↔ a₁ + b ≃ a₂ + b := calc
-  _ ↔ a₁ ≃ a₂ := Iff.rfl
-  _ ↔ b + a₁ ≃ b + a₂ := add_bijectL
-  _ ↔ a₁ + b ≃ b + a₂ := AA.eqv_substL_iff AA.comm
-  _ ↔ a₁ + b ≃ a₂ + b := AA.eqv_substR_iff AA.comm
+theorem add_cancelR {a₁ a₂ b : ℤ} : a₁ + b ≃ a₂ + b → a₁ ≃ a₂ := by
+  intro (_ : a₁ + b ≃ a₂ + b)
+  show a₁ ≃ a₂
+  have : b + a₁ ≃ b + a₂ := calc
+    _ = b + a₁ := rfl
+    _ ≃ a₁ + b := AA.comm
+    _ ≃ a₂ + b := ‹a₁ + b ≃ a₂ + b›
+    _ ≃ b + a₂ := AA.comm
+  have : a₁ ≃ a₂ := add_cancelL ‹b + a₁ ≃ b + a₂›
+  exact this
+
+/-- TODO -/
+theorem add_bijectL {a b₁ b₂ : ℤ} : b₁ ≃ b₂ ↔ a + b₁ ≃ a + b₂ :=
+  Iff.intro AA.substR add_cancelL
+
+/-- TODO -/
+theorem add_bijectR {a₁ a₂ b : ℤ} : a₁ ≃ a₂ ↔ a₁ + b ≃ a₂ + b :=
+  Iff.intro AA.substL add_cancelR
 
 end Lean4Axiomatic.Integer

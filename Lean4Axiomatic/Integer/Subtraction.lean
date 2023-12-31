@@ -173,40 +173,6 @@ theorem sub_assoc_addR {a b c : ℤ} : (a - b) + c ≃ a + (c - b) := calc
   _ ≃ a + (c + -b) := AA.substR AA.comm
   _ ≃ a + (c - b)  := AA.substR (Rel.symm sub_defn)
 
-/--
-The right-hand operand of subtraction can be moved to the left-hand operand of
-addition on the other side of an equivalence.
-
-**Property intuition**: This is a very common technique in algebra.
-
-**Proof intuition**: There's no key idea for this proof, other than using
-algebra on integers to obtain expressions where assumptions can be used.
--/
-theorem subR_moveR_addL {a b c : ℤ} : a - b ≃ c ↔ a ≃ b + c := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : a - b ≃ c)
-    show a ≃ b + c
-    calc
-      a            ≃ _ := Rel.symm AA.identR
-      a + 0        ≃ _ := AA.substR (Rel.symm AA.inverseL)
-      a + (-b + b) ≃ _ := Rel.symm AA.assoc
-      (a + -b) + b ≃ _ := AA.substL (Rel.symm sub_defn)
-      (a - b) + b  ≃ _ := AA.substL ‹a - b ≃ c›
-      c + b        ≃ _ := AA.comm
-      b + c        ≃ _ := Rel.refl
-  case mpr =>
-    intro (_ : a ≃ b + c)
-    show a - b ≃ c
-    calc
-      a - b        ≃ _ := AA.substL ‹a ≃ b + c›
-      b + c - b    ≃ _ := AA.substL AA.comm
-      c + b - b    ≃ _ := sub_defn
-      c + b + -b   ≃ _ := AA.assoc
-      c + (b + -b) ≃ _ := AA.substR AA.inverseR
-      c + 0        ≃ _ := AA.identR
-      c            ≃ _ := Rel.refl
-
 /-- TODO -/
 theorem subR_moveR_addR {a b c : ℤ} : a - b ≃ c ↔ a ≃ c + b := calc
   _ ↔       a - b ≃ c     := Iff.rfl
@@ -215,11 +181,31 @@ theorem subR_moveR_addR {a b c : ℤ} : a - b ≃ c ↔ a ≃ c + b := calc
   _ ↔       a + 0 ≃ c + b := AA.eqv_substL_iff (AA.substR sub_same)
   _ ↔           a ≃ c + b := AA.eqv_substL_iff AA.identR
 
-theorem subR_moveL_addL {a b c : ℤ} : a ≃ b - c ↔ c + a ≃ b := by
-  admit
+/--
+The right-hand operand of subtraction can be moved to the left-hand operand of
+addition on the other side of an equivalence.
 
-theorem subR_moveL_addR {a b c : ℤ} : a ≃ b - c ↔ a + c ≃ b := by
-  admit
+**Property intuition**: This is a very common technique in algebra.
+
+**Proof intuition**: TODO
+-/
+theorem subR_moveR_addL {a b c : ℤ} : a - b ≃ c ↔ a ≃ b + c := calc
+  _ ↔ a - b ≃ c     := Iff.rfl
+  _ ↔     a ≃ c + b := subR_moveR_addR
+  _ ↔     a ≃ b + c := AA.eqv_substR_iff AA.comm
+
+/-- TODO -/
+theorem subR_moveL_addR {a b c : ℤ} : a ≃ b - c ↔ a + c ≃ b := calc
+  _ ↔     a ≃ b - c := Iff.rfl
+  _ ↔ b - c ≃ a     := Fn.swap
+  _ ↔     b ≃ a + c := subR_moveR_addR
+  _ ↔ a + c ≃ b     := Fn.swap
+
+/-- TODO -/
+theorem subR_moveL_addL {a b c : ℤ} : a ≃ b - c ↔ c + a ≃ b := calc
+  _ ↔     a ≃ b - c := Iff.rfl
+  _ ↔ a + c ≃ b     := subR_moveL_addR
+  _ ↔ c + a ≃ b     := AA.eqv_substL_iff AA.comm
 
 /-- TODO -/
 theorem sub_swap_add {a b c d : ℤ} : a - b ≃ c - d ↔ a + d ≃ c + b := calc

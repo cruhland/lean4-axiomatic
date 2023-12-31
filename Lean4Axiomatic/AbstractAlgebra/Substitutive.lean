@@ -568,14 +568,18 @@ theorem eqv_substL
   show x₂ ≃ y
   exact Rel.trans (Rel.symm ‹x₁ ≃ x₂›) ‹x₁ ≃ y›
 
-/-- TODO -/
+/--
+The left-hand side of an equivalence can be replaced by an equivalent value,
+bidirectionally.
+
+**Intuition**: Given `eqv_substL`, symmetry of equivalence means it works in
+the other direction too.
+-/
 theorem eqv_substL_iff
     {α : Sort u} [EqvOp α] {x₁ x₂ y : α} : x₁ ≃ x₂ → (x₁ ≃ y ↔ x₂ ≃ y)
     := by
   intro (_ : x₁ ≃ x₂)
-  apply Iff.intro
-  case mp => exact eqv_substL ‹x₁ ≃ x₂›
-  case mpr => exact eqv_substL (Rel.symm ‹x₁ ≃ x₂›)
+  exact Iff.intro (eqv_substL ‹x₁ ≃ x₂›) (eqv_substL (Rel.symm ‹x₁ ≃ x₂›))
 
 /--
 The right-hand side of an equivalence can be replaced by an equivalent value.
@@ -590,14 +594,18 @@ theorem eqv_substR
   show x ≃ y₂
   exact Rel.trans ‹x ≃ y₁› ‹y₁ ≃ y₂›
 
-/-- TODO -/
+/--
+The right-hand side of an equivalence can be replaced by an equivalent value,
+bidirectionally.
+
+**Intuition**: Given `eqv_substR`, symmetry of equivalence means it works in
+the other direction too.
+-/
 theorem eqv_substR_iff
     {α : Sort u} [EqvOp α] {x y₁ y₂ : α} : y₁ ≃ y₂ → (x ≃ y₁ ↔ x ≃ y₂)
     := by
   intro (_ : y₁ ≃ y₂)
-  apply Iff.intro
-  case mp => exact eqv_substR ‹y₁ ≃ y₂›
-  case mpr => exact eqv_substR (Rel.symm ‹y₁ ≃ y₂›)
+  exact Iff.intro (eqv_substR ‹y₁ ≃ y₂›) (eqv_substR (Rel.symm ‹y₁ ≃ y₂›))
 
 instance eqv_substitutive
     {α : Sort u} [EqvOp α]
