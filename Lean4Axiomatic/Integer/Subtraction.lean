@@ -158,14 +158,32 @@ theorem zero_diff_iff_eqv {a b : ℤ} : a - b ≃ 0 ↔ a ≃ b := by
       b - b  ≃ _ := sub_same
       0      ≃ _ := Rel.refl
 
-/-- TODO -/
+/--
+Subtraction associates with addition to its left.
+
+**Property intuition**: In the integers, these expressions are equivalent
+because there's only a single subtraction happening: no matter what order the
+operations happen, the end result will be the same.
+
+**Proof intuition**: Expand subtraction into addition, then use addition's
+associativity.
+-/
 theorem sub_assoc_addL {a b c : ℤ} : (a + b) - c ≃ a + (b - c) := calc
   _ = (a + b) - c  := rfl
   _ ≃ (a + b) + -c := sub_defn
   _ ≃ a + (b + -c) := AA.assoc
   _ ≃ a + (b - c)  := AA.substR (Rel.symm sub_defn)
 
-/-- TODO -/
+/--
+Subtraction "associates" with addition to its right.
+
+**Property intuition**: This is not true associativity, but resembles it in
+the grouping of terms. What is actually happening is that, because the same
+value `b` is being subtracted on both sides of the equivalence, it doesn't
+matter in what order that occurs.
+
+**Proof intuition**: Expand subtraction into addition; rearrange.
+-/
 theorem sub_assoc_addR {a b c : ℤ} : (a - b) + c ≃ a + (c - b) := calc
   _ = (a - b) + c  := rfl
   _ ≃ (a + -b) + c := AA.substL sub_defn
