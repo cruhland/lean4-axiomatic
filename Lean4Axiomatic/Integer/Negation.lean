@@ -259,21 +259,32 @@ theorem neg_compat_add {a b : ℤ} : -(a + b) ≃ -a + -b := calc
   (-a) + (-1) * b     ≃ _ := AA.substR mul_neg_one
   (-a) + -b           ≃ _ := Rel.refl
 
-/-- TODO - don't forget to simplify proof -/
+/--
+Remove a common left operand of addition from both sides of an equivalence.
+
+**Property and proof intuition**: Add the operand's additive inverse to both
+sides, and simplify.
+-/
 theorem add_cancelL {a b₁ b₂ : ℤ} : a + b₁ ≃ a + b₂ → b₁ ≃ b₂ := by
   intro (_ : a + b₁ ≃ a + b₂)
   show b₁ ≃ b₂
+  have reduce {x y : ℤ} : -x + (x + y) ≃ y := calc
+    _ = -x + (x + y) := rfl
+    _ ≃ (-x + x) + y := Rel.symm AA.assoc
+    _ ≃ 0 + y        := AA.substL AA.inverseL
+    _ ≃ y            := AA.identL
   calc
     _ = b₁            := rfl
-    _ ≃ 0 + b₁        := Rel.symm AA.identL
-    _ ≃ (-a + a) + b₁ := AA.substL (Rel.symm AA.inverseL)
-    _ ≃ -a + (a + b₁) := AA.assoc
+    _ ≃ -a + (a + b₁) := Rel.symm reduce
     _ ≃ -a + (a + b₂) := AA.substR ‹a + b₁ ≃ a + b₂›
-    _ ≃ (-a + a) + b₂ := Rel.symm AA.assoc
-    _ ≃ 0 + b₂        := AA.substL AA.inverseL
-    _ ≃ b₂            := AA.identL
+    _ ≃ b₂            := reduce
 
-/-- TODO -/
+/--
+Remove a common right operand of addition from both sides of an equivalence.
+
+**Property and proof intuition**: Follows from left cancellation due to
+addition's commutativity.
+-/
 theorem add_cancelR {a₁ a₂ b : ℤ} : a₁ + b ≃ a₂ + b → a₁ ≃ a₂ := by
   intro (_ : a₁ + b ≃ a₂ + b)
   show a₁ ≃ a₂
@@ -285,11 +296,25 @@ theorem add_cancelR {a₁ a₂ b : ℤ} : a₁ + b ≃ a₂ + b → a₁ ≃ a�
   have : a₁ ≃ a₂ := add_cancelL ‹b + a₁ ≃ b + a₂›
   exact this
 
-/-- TODO -/
+/--
+Add or remove a left operand to addition on both sides of an equivalence.
+
+Useful when working with chains of `· ↔ ·` relations.
+
+**Property and proof intuition**: Combines left substitution and left
+cancellation of addition.
+-/
 theorem add_bijectL {a b₁ b₂ : ℤ} : b₁ ≃ b₂ ↔ a + b₁ ≃ a + b₂ :=
   Iff.intro AA.substR add_cancelL
 
-/-- TODO -/
+/--
+Add or remove a right operand to addition on both sides of an equivalence.
+
+Useful when working with chains of `· ↔ ·` relations.
+
+**Property and proof intuition**: Combines right substitution and right
+cancellation of addition.
+-/
 theorem add_bijectR {a₁ a₂ b : ℤ} : a₁ ≃ a₂ ↔ a₁ + b ≃ a₂ + b :=
   Iff.intro AA.substL add_cancelR
 
