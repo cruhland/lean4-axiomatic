@@ -191,7 +191,16 @@ theorem sub_assoc_addR {a b c : ℤ} : (a - b) + c ≃ a + (c - b) := calc
   _ ≃ a + (c + -b) := AA.substR AA.comm
   _ ≃ a + (c - b)  := AA.substR (Rel.symm sub_defn)
 
-/-- TODO -/
+/--
+Move a subtraction's right operand to an addition's right operand, from left to
+right across an equivalence (or the reverse).
+
+**Property intuition**: This is a fundamental algebraic operation,
+which follows directly from addition obeying substitution and cancellation.
+
+**Proof intuition**: Add `b` to both sides (substitution/cancellation), then
+simplify.
+-/
 theorem subR_moveR_addR {a b c : ℤ} : a - b ≃ c ↔ a ≃ c + b := calc
   _ ↔       a - b ≃ c     := Iff.rfl
   _ ↔ (a - b) + b ≃ c + b := add_bijectR
@@ -200,32 +209,57 @@ theorem subR_moveR_addR {a b c : ℤ} : a - b ≃ c ↔ a ≃ c + b := calc
   _ ↔           a ≃ c + b := AA.eqv_substL_iff AA.identR
 
 /--
-The right-hand operand of subtraction can be moved to the left-hand operand of
-addition on the other side of an equivalence.
+Move a subtraction's right operand to an addition's left operand, from left to
+right across an equivalence (or the reverse).
 
-**Property intuition**: This is a very common technique in algebra.
+**Property intuition**: This is a fundamental algebraic operation,
+which follows directly from addition obeying substitution and cancellation.
 
-**Proof intuition**: TODO
+**Proof intuition**: Trivial corollary to `subR_moveR_addR`.
 -/
 theorem subR_moveR_addL {a b c : ℤ} : a - b ≃ c ↔ a ≃ b + c := calc
   _ ↔ a - b ≃ c     := Iff.rfl
   _ ↔     a ≃ c + b := subR_moveR_addR
   _ ↔     a ≃ b + c := AA.eqv_substR_iff AA.comm
 
-/-- TODO -/
+/--
+Move a subtraction's right operand to an addition's right operand, from right
+to left across an equivalence (or the reverse).
+
+**Property intuition**: This is a fundamental algebraic operation,
+which follows directly from addition obeying substitution and cancellation.
+
+**Proof intuition**: Trivial corollary to `subR_moveR_addR`.
+-/
 theorem subR_moveL_addR {a b c : ℤ} : a ≃ b - c ↔ a + c ≃ b := calc
   _ ↔     a ≃ b - c := Iff.rfl
   _ ↔ b - c ≃ a     := Fn.swap
   _ ↔     b ≃ a + c := subR_moveR_addR
   _ ↔ a + c ≃ b     := Fn.swap
 
-/-- TODO -/
+/--
+Move a subtraction's right operand to an addition's left operand, from right to
+left across an equivalence (or the reverse).
+
+**Property intuition**: This is a fundamental algebraic operation,
+which follows directly from addition obeying substitution and cancellation.
+
+**Proof intuition**: Trivial corollary to `subR_moveL_addR`.
+-/
 theorem subR_moveL_addL {a b c : ℤ} : a ≃ b - c ↔ c + a ≃ b := calc
   _ ↔     a ≃ b - c := Iff.rfl
   _ ↔ a + c ≃ b     := subR_moveL_addR
   _ ↔ c + a ≃ b     := AA.eqv_substL_iff AA.comm
 
-/-- TODO -/
+/--
+Convert an equivalence of subtractions to one of additions by exchanging
+operands.
+
+**Property intuition**: Add the subtracted operands to both sides and simplify.
+
+**Proof intuition**: Uses lemmas to carry out the strategy from the property
+intuition in fewer steps.
+-/
 theorem sub_swap_add {a b c d : ℤ} : a - b ≃ c - d ↔ a + d ≃ c + b := calc
   _ ↔ a - b ≃ c - d       := Iff.rfl
   _ ↔     a ≃ (c - d) + b := subR_moveR_addR
