@@ -1,6 +1,27 @@
 import Lean4Axiomatic.Integer.Subtraction
 
-/-! # Integer induction -/
+/-!
+# Integer induction
+
+We don't usually think of integers as obeying an induction principle like the
+natural numbers. But if we consider induction from the viewpoint of type
+theory, another definition is what's called the _dependent eliminator_ for a
+type. That's a function which, given a family of types `motive : ℤ → Sort u`,
+and some important assumptions, gives back a function `(a : ℤ) → motive a`,
+showing that there's an inhabitant of the family for every integer. This can be
+used to prove properties which hold for all integers, or define functions that
+take integers as inputs.
+
+The reason why this is useful is the "important assumptions" piece. For
+integers, that means the existence of a function
+`(n m : ℕ) → motive ((n:ℤ) - (m:ℤ))` that behaves in a "reasonable" way.
+Integer induction says that if you can define such a function, showing `motive`
+is inhabited for all inputs of the form `(n:ℤ) - (m:ℤ)`, then you've done all
+the work needed to show `motive` is inhabited for all integers. Put another
+way, it says that all integers can be expressed in the form `n - m` for some
+natural numbers `n` and `m`. This is quite helpful as it's often simpler to
+show a result holds for natural numbers than for integers.
+-/
 
 namespace Lean4Axiomatic.Integer
 
