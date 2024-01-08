@@ -29,13 +29,13 @@ open Relation.Equivalence (EqvOp eqvOp_prop_term_inst)
 
 /-! ## Axioms -/
 
+-- TODO: Operations should maybe be pulled out from properties
+-- Want to avoid the `d.C.motive_subst` ugliness
 class InductionAlt.Constraints
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     (motive : ℤ → Sort u) (motive_eqv : {a : ℤ} → EqvOp (motive a))
     :=
-  on_diff (n m : ℕ) : motive ((n:ℤ) - (m:ℤ))
-
   /-- TODO -/
   motive_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → motive a₁ → motive a₂
 
@@ -54,15 +54,18 @@ class InductionAlt.Constraints
     motive_subst ‹a ≃ b› ma ≃ mb →
     motive_subst ‹b ≃ c› (motive_subst ‹a ≃ b› ma) ≃ motive_subst ‹b ≃ c› mb
 
+  on_diff (n m : ℕ) : motive ((n:ℤ) - (m:ℤ))
+
   /-- TODO -/
   on_diff_subst
     {n₁ m₁ n₂ m₂ : ℕ} (diff_eqv : (n₁:ℤ) - (m₁:ℤ) ≃ (n₂:ℤ) - (m₂:ℤ)) :
     motive_subst diff_eqv (on_diff n₁ m₁) ≃ on_diff n₂ m₂
 
+-- TODO: What type parameters should be made explicit?
 /-- TODO -/
 class InductionAlt.Data
     {ℕ : Type} [Natural ℕ]
-    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     :=
   motive : ℤ → Sort u
 
@@ -70,10 +73,11 @@ class InductionAlt.Data
 
   C : Constraints motive motive_eqv
 
+-- TODO: What type parameters should be made explicit?
 /-- TODO -/
 class InductionAlt.ConstData
     {ℕ : Type} [Natural ℕ]
-    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     :=
   X : Sort u
 
@@ -87,19 +91,26 @@ class InductionAlt.ConstData
 
 export InductionAlt.ConstData (motive_subst_const)
 
+-- TODO: Looks like with a `ℤ → Prop` motive, `on_diff` can be anything,
+-- because substitution for it is trivial. Evidence that the `on_diff` stuff
+-- should be separated out, it would make proofs much cleaner.
 def ind_constraints_prop
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     {motive : ℤ → Prop} {on_diff : (n m : ℕ) → motive (n - m)}
     (motive_subst : {a₁ a₂ : ℤ} → a₁ ≃ a₂ → motive a₁ → motive a₂) :
-    InductionAlt.Data
-      (motive := motive) (λ {_} => eqvOp_prop_term_inst) on_diff
+    InductionAlt.Data ℤ
     := {
-  motive_subst := motive_subst
-  motive_subst_refl := rfl
-  motive_subst_compose := rfl
-  motive_subst_substR := λ _ => rfl
-  on_diff_subst := λ _ => rfl
+  motive := motive
+  motive_eqv := eqvOp_prop_term_inst
+  C := {
+    motive_subst := motive_subst
+    motive_subst_refl := rfl
+    motive_subst_compose := rfl
+    motive_subst_substR := λ _ => rfl
+    on_diff := on_diff
+    on_diff_subst := λ _ => rfl
+  }
 }
 
 def ind_constraints_const
@@ -109,14 +120,19 @@ def ind_constraints_const
     (on_diff_subst :
       {n₁ m₁ n₂ m₂ : ℕ} → (n₁:ℤ) - m₁ ≃ n₂ - m₂ →
       on_diff n₁ m₁ ≃ on_diff n₂ m₂) :
-    InductionAlt.ConstData (ℤ := ℤ) on_diff
+    InductionAlt.ConstData ℤ
     := {
-  motive_subst := λ _ => id
+  X := X
+  eqv := ‹EqvOp X›
+  C := {
+    motive_subst := λ _ => id
+    motive_subst_refl := Rel.refl
+    motive_subst_compose := Rel.refl
+    motive_subst_substR := id
+    on_diff := on_diff
+    on_diff_subst := on_diff_subst
+  }
   motive_subst_const := λ _ _ => Rel.refl
-  motive_subst_refl := Rel.refl
-  motive_subst_compose := Rel.refl
-  motive_subst_substR := id
-  on_diff_subst := on_diff_subst
 }
 
 /-- Operations pertaining to eliminators on integers. -/
@@ -124,10 +140,7 @@ class InductionAlt.Ops
     {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ] :=
   /-- TODO -/
-  ind_diff
-    {motive : ℤ → Sort u} {motive_eqv : {a : ℤ} → EqvOp (motive a)}
-    (on_diff : (n m : ℕ) → motive ((n:ℤ) - (m:ℤ)))
-    [Data @motive_eqv on_diff] (a : ℤ) : motive a
+  ind_diff (d : Data ℤ) (a : ℤ) : d.motive a
 
 export InductionAlt.Ops (ind_diff)
 
@@ -138,17 +151,11 @@ class InductionAlt.Props
       [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ] [ops : Ops ℤ]
     :=
   /-- TODO -/
-  ind_diff_eval
-    {motive : ℤ → Sort u} {motive_eqv : {a : ℤ} → EqvOp (motive a)}
-    {on_diff : (k j : ℕ) → motive (k - j)}
-    [Data @motive_eqv on_diff] {n m : ℕ} :
-    ind_diff on_diff (n - m) ≃ on_diff n m
+  ind_diff_eval (d : Data ℤ) {n m : ℕ} : ind_diff d (n - m) ≃ d.C.on_diff n m
 
   ind_diff_subst
-    {motive : ℤ → Sort u} {motive_eqv : {a : ℤ} → EqvOp (motive a)}
-    {on_diff : (n m : ℕ) → motive (n - m)} [Data @motive_eqv on_diff]
-    {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂) :
-    motive_subst on_diff ‹a₁ ≃ a₂› (ind_diff on_diff a₁) ≃ ind_diff on_diff a₂
+    (d : Data ℤ) {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂) :
+    d.C.motive_subst ‹a₁ ≃ a₂› (ind_diff d a₁) ≃ ind_diff d a₂
 
 export InductionAlt.Props (ind_diff_eval ind_diff_subst)
 
@@ -169,13 +176,10 @@ variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Core ℤ] [Addition ℤ] [Multiplication (ℕ := ℕ) ℤ]
 variable [Negation ℤ] [Sign ℤ] [Subtraction ℤ] [InductionAlt ℤ]
 
+-- TODO: Do we need the ind_on, rec_on functions?
+-- Depends on if we can use `apply` cleanly in proofs
 /-- TODO -/
-def ind_diff_on
-    {motive : ℤ → Sort u} {motive_eqv : {a : ℤ} → EqvOp (motive a)} (a : ℤ)
-    (on_diff : (n m : ℕ) → motive ((n:ℤ) - (m:ℤ)))
-    [InductionAlt.Data @motive_eqv on_diff] : motive a
-    :=
-  ind_diff on_diff a
+def ind_diff_on (d : InductionAlt.Data ℤ) : d.motive a := ind_diff d a
 
 /-- TODO -/
 theorem ind_diff_on_eval
