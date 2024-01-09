@@ -91,6 +91,17 @@ class InductionAlt.ConstData
 
 export InductionAlt.ConstData (motive_subst_const)
 
+/-- TODO -/
+def InductionAlt.ConstData.toData
+    {ℕ : Type} [Natural ℕ]
+    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    (cd : ConstData ℤ) : Data ℤ
+    := {
+  motive := λ _ => cd.X
+  motive_eqv := cd.eqv
+  C := cd.C
+}
+
 -- TODO: Looks like with a `ℤ → Prop` motive, `on_diff` can be anything,
 -- because substitution for it is trivial. Evidence that the `on_diff` stuff
 -- should be separated out, it would make proofs much cleaner.
@@ -179,52 +190,41 @@ variable [Negation ℤ] [Sign ℤ] [Subtraction ℤ] [InductionAlt ℤ]
 -- TODO: Do we need the ind_on, rec_on functions?
 -- Depends on if we can use `apply` cleanly in proofs
 /-- TODO -/
-def ind_diff_on (d : InductionAlt.Data ℤ) : d.motive a := ind_diff d a
+def ind_diff_on (a : ℤ) (d : InductionAlt.Data ℤ) : d.motive a := ind_diff d a
 
 /-- TODO -/
 theorem ind_diff_on_eval
-    {motive : ℤ → Sort u} {motive_eqv : {a : ℤ} → EqvOp (motive a)}
-    {n m : ℕ} {on_diff : (k j : ℕ) → motive ((k:ℤ) - (j:ℤ))}
-    [InductionAlt.Data @motive_eqv on_diff] :
-    ind_diff_on ((n:ℤ) - (m:ℤ)) on_diff ≃ on_diff n m
+    (d : InductionAlt.Data ℤ) {n m : ℕ} :
+    ind_diff_on ((n:ℤ) - (m:ℤ)) d ≃ d.C.on_diff n m
     := calc
-  _ = ind_diff_on ((n:ℤ) - (m:ℤ)) on_diff := rfl
-  _ = ind_diff on_diff ((n:ℤ) - (m:ℤ))    := rfl
-  _ ≃ on_diff n m                         := ind_diff_eval
+  _ = ind_diff_on ((n:ℤ) - (m:ℤ)) d := rfl
+  _ = ind_diff d ((n:ℤ) - (m:ℤ))    := rfl
+  _ ≃ d.C.on_diff n m               := ind_diff_eval d
 
 /-- TODO -/
-def rec_diff
-    {X : Type u} [motive_eqv : EqvOp X]
-    (on_diff : ℕ → ℕ → X)
-    [InductionAlt.Data (ℤ := ℤ) (λ {_} => motive_eqv) on_diff] : ℤ → X
-    :=
-  ind_diff (motive := λ _ => X) on_diff
+def rec_diff (cd : InductionAlt.ConstData ℤ) : ℤ → cd.X := ind_diff cd.toData
 
 /-- TODO -/
 theorem rec_diff_eval
-    {X : Type u} [motive_eqv : EqvOp X] {n m : ℕ} {on_diff : ℕ → ℕ → X}
-    [InductionAlt.Data (ℤ := ℤ) (λ {_} => motive_eqv) on_diff] :
-    rec_diff on_diff ((n:ℤ) - (m:ℤ)) ≃ on_diff n m
-    := by
-  let diff := (n:ℤ) - (m:ℤ)
-  calc
-    _ = rec_diff on_diff diff                      := rfl
-    _ = ind_diff (motive := λ _ => X) on_diff diff := rfl
-    _ ≃ on_diff n m                                := ind_diff_eval
+    (cd : InductionAlt.ConstData ℤ) {n m : ℕ} :
+    rec_diff cd ((n:ℤ) - (m:ℤ)) ≃ cd.C.on_diff n m
+    := calc
+  _ = rec_diff cd ((n:ℤ) - (m:ℤ))        := rfl
+  _ = ind_diff cd.toData ((n:ℤ) - (m:ℤ)) := rfl
+  _ ≃ cd.C.on_diff n m                   := ind_diff_eval cd.toData
 
 theorem rec_diff_subst
-    {X : Type u} [EqvOp X] {on_diff : ℕ → ℕ → X} {a₁ a₂ : ℤ}
-    [InductionAlt.ConstData (ℤ := ℤ) on_diff] : a₁ ≃ a₂ →
-    rec_diff on_diff a₁ ≃ rec_diff on_diff a₂
+    (cd : InductionAlt.ConstData ℤ) {a₁ a₂ : ℤ} :
+    a₁ ≃ a₂ → rec_diff cd a₁ ≃ rec_diff cd a₂
     := by
   intro (_ : a₁ ≃ a₂)
-  show rec_diff on_diff a₁ ≃ rec_diff on_diff a₂
+  show rec_diff cd a₁ ≃ rec_diff cd a₂
   calc
-    _ = rec_diff on_diff a₁                      := rfl
-    _ = ind_diff (motive := λ _ => X) on_diff a₁ := rfl
-    _ ≃ motive_subst (motive := λ _ => X) on_diff ‹a₁ ≃ a₂› (ind_diff (motive := λ _ => X) on_diff a₁) := Rel.symm (motive_subst_const (X := X) (on_diff := on_diff) ‹a₁ ≃ a₂› (ind_diff (motive := λ _ => X) on_diff a₁))
-    _ ≃ ind_diff (motive := λ _ => X) on_diff a₂ := ind_diff_subst (motive := λ _ => X) ‹a₁ ≃ a₂›
-    _ = rec_diff on_diff a₂                      := rfl
+    _ = rec_diff cd a₁                                      := rfl
+    _ = ind_diff cd.toData a₁                               := rfl
+    _ ≃ cd.C.motive_subst ‹a₁ ≃ a₂› (ind_diff cd.toData a₁) := Rel.symm (cd.motive_subst_const ‹a₁ ≃ a₂› (ind_diff cd.toData a₁))
+    _ ≃ ind_diff cd.toData a₂                               := ind_diff_subst cd.toData ‹a₁ ≃ a₂›
+    _ = rec_diff cd a₂                                      := rfl
 
 /-- TODO -/
 def rec_diff_on
