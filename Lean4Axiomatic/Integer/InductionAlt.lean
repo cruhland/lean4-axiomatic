@@ -219,42 +219,41 @@ theorem rec_diff_subst
     := by
   intro (_ : a₁ ≃ a₂)
   show rec_diff cd a₁ ≃ rec_diff cd a₂
+  let d := cd.toData
+  let idd := ind_diff d
+  let idda₁ : cd.X := idd a₁
+  have wrap_subst : idd a₁ ≃ cd.C.motive_subst ‹a₁ ≃ a₂› (idd a₁) :=
+    Rel.symm (cd.motive_subst_const ‹a₁ ≃ a₂› idda₁)
   calc
-    _ = rec_diff cd a₁                                      := rfl
-    _ = ind_diff cd.toData a₁                               := rfl
-    _ ≃ cd.C.motive_subst ‹a₁ ≃ a₂› (ind_diff cd.toData a₁) := Rel.symm (cd.motive_subst_const ‹a₁ ≃ a₂› (ind_diff cd.toData a₁))
-    _ ≃ ind_diff cd.toData a₂                               := ind_diff_subst cd.toData ‹a₁ ≃ a₂›
-    _ = rec_diff cd a₂                                      := rfl
+    _ = rec_diff cd a₁                       := rfl
+    -- TODO: Factor out middle steps into ind_diff_subst_const?
+    _ = idd a₁                               := rfl
+    _ ≃ cd.C.motive_subst ‹a₁ ≃ a₂› (idd a₁) := wrap_subst
+    _ ≃ idd a₂                               := ind_diff_subst d ‹a₁ ≃ a₂›
+    _ = rec_diff cd a₂                       := rfl
 
 /-- TODO -/
-def rec_diff_on
-    {X : Type u} [EqvOp X]
-    (a : ℤ) (on_diff : (n m : ℕ) → X)
-    [InductionAlt.Data (ℤ := ℤ) (λ {_} => ‹EqvOp X›) on_diff] : X
-    :=
-  rec_diff on_diff a
+def rec_diff_on (a : ℤ) (cd : InductionAlt.ConstData ℤ) : cd.X := rec_diff cd a
 
 /-- TODO -/
 theorem rec_diff_on_eval
-    {X : Type u} [motive_eqv : EqvOp X] {n m : ℕ} {on_diff : ℕ → ℕ → X}
-    [InductionAlt.Data (ℤ := ℤ) (λ {_} => motive_eqv) on_diff] :
-    rec_diff_on ((n:ℤ) - (m:ℤ)) on_diff ≃ on_diff n m
+    (cd : InductionAlt.ConstData ℤ) {n m : ℕ} :
+    rec_diff_on ((n:ℤ) - (m:ℤ)) cd ≃ cd.C.on_diff n m
     := calc
-  _ = rec_diff_on ((n:ℤ) - (m:ℤ)) on_diff := rfl
-  _ = rec_diff on_diff ((n:ℤ) - (m:ℤ))    := rfl
-  _ ≃ on_diff n m                         := rec_diff_eval
+  _ = rec_diff_on ((n:ℤ) - (m:ℤ)) cd := rfl
+  _ = rec_diff cd ((n:ℤ) - (m:ℤ))    := rfl
+  _ ≃ cd.C.on_diff n m               := rec_diff_eval cd
 
 theorem rec_diff_on_subst
-    {X : Type u} [motive_eqv : EqvOp X] {on_diff : ℕ → ℕ → X} {a₁ a₂ : ℤ}
-    [InductionAlt.ConstData (ℤ := ℤ) on_diff] : a₁ ≃ a₂ →
-    rec_diff_on a₁ on_diff ≃ rec_diff_on a₂ on_diff
+    (cd : InductionAlt.ConstData ℤ) {a₁ a₂ : ℤ} : a₁ ≃ a₂ →
+    rec_diff_on a₁ cd ≃ rec_diff_on a₂ cd
     := by
   intro (_ : a₁ ≃ a₂)
-  show rec_diff_on a₁ on_diff ≃ rec_diff_on a₂ on_diff
+  show rec_diff_on a₁ cd ≃ rec_diff_on a₂ cd
   calc
-    _ = rec_diff_on a₁ on_diff := rfl
-    _ = rec_diff on_diff a₁    := rfl
-    _ ≃ rec_diff on_diff a₂    := rec_diff_subst ‹a₁ ≃ a₂›
-    _ = rec_diff_on a₂ on_diff := rfl
+    _ = rec_diff_on a₁ cd := rfl
+    _ = rec_diff cd a₁    := rfl
+    _ ≃ rec_diff cd a₂    := rec_diff_subst cd ‹a₁ ≃ a₂›
+    _ = rec_diff_on a₂ cd := rfl
 
 end Lean4Axiomatic.Integer
