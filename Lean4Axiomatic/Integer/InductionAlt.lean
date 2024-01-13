@@ -34,7 +34,7 @@ open Relation.Equivalence (EqvOp eqvOp_prop_term_inst)
 class InductionAlt.Constraints
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    (motive : ℤ → Sort u) (motive_eqv : {a : ℤ} → EqvOp (motive a))
+    (motive : ℤ → Sort u) (motive_eqv : outParam ({a : ℤ} → EqvOp (motive a)))
     :=
   /-- TODO -/
   motive_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → motive a₁ → motive a₂
@@ -64,7 +64,7 @@ class InductionAlt.Constraints
 -- TODO: What type parameters should be made explicit?
 /-- TODO -/
 class InductionAlt.Data
-    {ℕ : Type} [Natural ℕ]
+    {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     :=
   motive : ℤ → Sort u
@@ -76,8 +76,9 @@ class InductionAlt.Data
 -- TODO: What type parameters should be made explicit?
 /-- TODO -/
 class InductionAlt.ConstData
-    {ℕ : Type} [Natural ℕ]
-    (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    {ℕ : outParam Type} [Natural ℕ]
+    (ℤ : outParam Type)
+      [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     :=
   X : Sort u
 
@@ -221,14 +222,47 @@ theorem rec_diff_subst
   show rec_diff cd a₁ ≃ rec_diff cd a₂
   let d := cd.toData
   let idd := ind_diff d
+  /-
+  Has type:
+  @Operators.tildeDash
+    (InductionAlt.ConstData.X ℕ ℤ)
+    (@EqvOp.toTildeDash
+      (InductionAlt.ConstData.X ℕ ℤ)
+      InductionAlt.ConstData.eqv)
+    (_ : InductionAlt.ConstData.X ℕ ℤ)
+    (_ : InductionAlt.Data.motive ℕ a₁) : Prop
+
+  Expected type:
+  @Operators.tildeDash
+    (InductionAlt.Data.motive ℕ a₁)
+    (@EqvOp.toTildeDash
+      (InductionAlt.Data.motive ℕ a₁)
+      eqvOp_prop_term_inst)
+    (_ : InductionAlt.ConstData.X ℕ ℤ)
+    (_ : InductionAlt.Data.motive ℕ a₁) : Prop
+  -/
+  -- TODO: Might have to think about the classes in much more detail,
+  -- potentially organize them a different way
+  -- But first, start by adding @ to the functions here and filling in all
+  -- arguments. You can maybe separate out the subexpressions to their own
+  -- variables first
   let idda₁ : cd.X := idd a₁
-  have wrap_subst : idd a₁ ≃ cd.C.motive_subst ‹a₁ ≃ a₂› (idd a₁) :=
-    Rel.symm (cd.motive_subst_const ‹a₁ ≃ a₂› idda₁)
+  let iddm : d.motive a₁ := idd a₁
+  let idds : d.motive a₂ := d.C.motive_subst ‹a₁ ≃ a₂› iddm
+  let idda₂ : cd.X := idds
+  -- TODO: Try writing out the tildeDash operation explicitly instead of using
+  -- the · ≃ · operator
+  let foo : InductionAlt.Constraints.motive_subst ‹a₁ ≃ a₂› idda₁ ≃ idda₁ :=
+    @motive_subst_const
+      ℕ ‹Natural ℕ› ℤ ‹Core ℤ› ‹Addition ℤ› ‹Negation ℤ› ‹Subtraction ℤ›
+      cd a₁ a₂ ‹a₁ ≃ a₂› idda₁
+  -- have wrap_subst : idd a₁ ≃ cd.C.motive_subst ‹a₁ ≃ a₂› (idd a₁) :=
+  -- Rel.symm (cd.motive_subst_const ‹a₁ ≃ a₂› (idd a₁))
   calc
     _ = rec_diff cd a₁                       := rfl
     -- TODO: Factor out middle steps into ind_diff_subst_const?
     _ = idd a₁                               := rfl
-    _ ≃ cd.C.motive_subst ‹a₁ ≃ a₂› (idd a₁) := wrap_subst
+    _ ≃ cd.C.motive_subst ‹a₁ ≃ a₂› (idd a₁) := sorry -- wrap_subst
     _ ≃ idd a₂                               := ind_diff_subst d ‹a₁ ≃ a₂›
     _ = rec_diff cd a₂                       := rfl
 
