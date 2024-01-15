@@ -1,5 +1,6 @@
 import Lean4Axiomatic.Integer.Exponentiation
 import Lean4Axiomatic.Integer.Induction
+import Lean4Axiomatic.Integer.InductionAlt
 import Lean4Axiomatic.Integer.Order
 
 /-!

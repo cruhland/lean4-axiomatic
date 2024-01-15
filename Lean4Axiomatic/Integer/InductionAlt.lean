@@ -23,9 +23,9 @@ natural numbers `n` and `m`. This is quite helpful as it's often simpler to
 show a result holds for natural numbers than for integers.
 -/
 
-namespace Lean4Axiomatic.Integer
+namespace Lean4Axiomatic.Integer.Alt
 
-open Relation.Equivalence (EqvOp eqvOp_prop_term_inst)
+open Relation.Equivalence (EqvOp)
 
 /-! ## Axioms -/
 
@@ -114,7 +114,7 @@ def ind_constraints_prop
     InductionAlt.Data ℤ
     := {
   motive := motive
-  motive_eqv := eqvOp_prop_term_inst
+  motive_eqv := Relation.Equivalence.eqvOp_prop_term
   C := {
     motive_subst := motive_subst
     motive_subst_refl := rfl
@@ -163,11 +163,11 @@ class InductionAlt.Props
       [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ] [ops : Ops ℤ]
     :=
   /-- TODO -/
-  ind_diff_eval (d : Data ℤ) {n m : ℕ} : ind_diff d (n - m) ≃ d.C.on_diff n m
+  ind_diff_eval (d : Data ℤ) {n m : ℕ} : d.motive_eqv.tildeDash (ind_diff d (n - m)) (d.C.on_diff n m)
 
   ind_diff_subst
     (d : Data ℤ) {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂) :
-    d.C.motive_subst ‹a₁ ≃ a₂› (ind_diff d a₁) ≃ ind_diff d a₂
+    d.motive_eqv.tildeDash (d.C.motive_subst ‹a₁ ≃ a₂› (ind_diff d a₁)) (ind_diff d a₂)
 
 export InductionAlt.Props (ind_diff_eval ind_diff_subst)
 
@@ -196,11 +196,11 @@ def ind_diff_on (a : ℤ) (d : InductionAlt.Data ℤ) : d.motive a := ind_diff d
 /-- TODO -/
 theorem ind_diff_on_eval
     (d : InductionAlt.Data ℤ) {n m : ℕ} :
-    ind_diff_on ((n:ℤ) - (m:ℤ)) d ≃ d.C.on_diff n m
+    d.motive_eqv.tildeDash (ind_diff_on ((n:ℤ) - (m:ℤ)) d) (d.C.on_diff n m)
     := calc
   _ = ind_diff_on ((n:ℤ) - (m:ℤ)) d := rfl
   _ = ind_diff d ((n:ℤ) - (m:ℤ))    := rfl
-  _ ≃ d.C.on_diff n m               := ind_diff_eval d
+  d.motive_eqv.tildeDash _ (d.C.on_diff n m) := ind_diff_eval d
 
 /-- TODO -/
 def rec_diff (cd : InductionAlt.ConstData ℤ) : ℤ → cd.X := ind_diff cd.toData
@@ -208,18 +208,18 @@ def rec_diff (cd : InductionAlt.ConstData ℤ) : ℤ → cd.X := ind_diff cd.toD
 /-- TODO -/
 theorem rec_diff_eval
     (cd : InductionAlt.ConstData ℤ) {n m : ℕ} :
-    rec_diff cd ((n:ℤ) - (m:ℤ)) ≃ cd.C.on_diff n m
+    cd.eqv.tildeDash (rec_diff cd ((n:ℤ) - (m:ℤ))) (cd.C.on_diff n m)
     := calc
   _ = rec_diff cd ((n:ℤ) - (m:ℤ))        := rfl
   _ = ind_diff cd.toData ((n:ℤ) - (m:ℤ)) := rfl
-  _ ≃ cd.C.on_diff n m                   := ind_diff_eval cd.toData
+  cd.eqv.tildeDash _ (cd.C.on_diff n m)  := ind_diff_eval cd.toData
 
 theorem rec_diff_subst
     (cd : InductionAlt.ConstData ℤ) {a₁ a₂ : ℤ} :
-    a₁ ≃ a₂ → rec_diff cd a₁ ≃ rec_diff cd a₂
+    a₁ ≃ a₂ → cd.eqv.tildeDash (rec_diff cd a₁) (rec_diff cd a₂)
     := by
   intro (_ : a₁ ≃ a₂)
-  show rec_diff cd a₁ ≃ rec_diff cd a₂
+  show cd.eqv.tildeDash (rec_diff cd a₁) (rec_diff cd a₂)
   let d := cd.toData
   let idd := ind_diff d
   /-
@@ -247,12 +247,16 @@ theorem rec_diff_subst
   -- arguments. You can maybe separate out the subexpressions to their own
   -- variables first
   let idda₁ : cd.X := idd a₁
-  let iddm : d.motive a₁ := idd a₁
-  let idds : d.motive a₂ := d.C.motive_subst ‹a₁ ≃ a₂› iddm
-  let idda₂ : cd.X := idds
+  -- let iddm : d.motive a₁ := idd a₁
+  -- let idds : d.motive a₂ := d.C.motive_subst ‹a₁ ≃ a₂› iddm
+  -- let idda₂ : cd.X := idds
   -- TODO: Try writing out the tildeDash operation explicitly instead of using
   -- the · ≃ · operator
-  let foo : InductionAlt.Constraints.motive_subst ‹a₁ ≃ a₂› idda₁ ≃ idda₁ :=
+  let wrap_subst :
+      cd.eqv.tildeDash
+        (cd.C.motive_subst ‹a₁ ≃ a₂› idda₁)
+        idda₁
+        :=
     @motive_subst_const
       ℕ ‹Natural ℕ› ℤ ‹Core ℤ› ‹Addition ℤ› ‹Negation ℤ› ‹Subtraction ℤ›
       cd a₁ a₂ ‹a₁ ≃ a₂› idda₁
@@ -262,8 +266,8 @@ theorem rec_diff_subst
     _ = rec_diff cd a₁                       := rfl
     -- TODO: Factor out middle steps into ind_diff_subst_const?
     _ = idd a₁                               := rfl
-    _ ≃ cd.C.motive_subst ‹a₁ ≃ a₂› (idd a₁) := sorry -- wrap_subst
-    _ ≃ idd a₂                               := ind_diff_subst d ‹a₁ ≃ a₂›
+    cd.eqv.tildeDash _ (cd.C.motive_subst ‹a₁ ≃ a₂› (idd a₁)) := Rel.symm wrap_subst
+    cd.eqv.tildeDash _ (idd a₂)                               := ind_diff_subst d ‹a₁ ≃ a₂›
     _ = rec_diff cd a₂                       := rfl
 
 /-- TODO -/
@@ -272,22 +276,22 @@ def rec_diff_on (a : ℤ) (cd : InductionAlt.ConstData ℤ) : cd.X := rec_diff c
 /-- TODO -/
 theorem rec_diff_on_eval
     (cd : InductionAlt.ConstData ℤ) {n m : ℕ} :
-    rec_diff_on ((n:ℤ) - (m:ℤ)) cd ≃ cd.C.on_diff n m
+    cd.eqv.tildeDash (rec_diff_on ((n:ℤ) - (m:ℤ)) cd) (cd.C.on_diff n m)
     := calc
   _ = rec_diff_on ((n:ℤ) - (m:ℤ)) cd := rfl
   _ = rec_diff cd ((n:ℤ) - (m:ℤ))    := rfl
-  _ ≃ cd.C.on_diff n m               := rec_diff_eval cd
+  cd.eqv.tildeDash _ (cd.C.on_diff n m) := rec_diff_eval cd
 
 theorem rec_diff_on_subst
     (cd : InductionAlt.ConstData ℤ) {a₁ a₂ : ℤ} : a₁ ≃ a₂ →
-    rec_diff_on a₁ cd ≃ rec_diff_on a₂ cd
+    cd.eqv.tildeDash (rec_diff_on a₁ cd) (rec_diff_on a₂ cd)
     := by
   intro (_ : a₁ ≃ a₂)
-  show rec_diff_on a₁ cd ≃ rec_diff_on a₂ cd
+  show cd.eqv.tildeDash (rec_diff_on a₁ cd) (rec_diff_on a₂ cd)
   calc
     _ = rec_diff_on a₁ cd := rfl
     _ = rec_diff cd a₁    := rfl
-    _ ≃ rec_diff cd a₂    := rec_diff_subst cd ‹a₁ ≃ a₂›
+    cd.eqv.tildeDash _ (rec_diff cd a₂) := rec_diff_subst cd ‹a₁ ≃ a₂›
     _ = rec_diff_on a₂ cd := rfl
 
-end Lean4Axiomatic.Integer
+end Lean4Axiomatic.Integer.Alt

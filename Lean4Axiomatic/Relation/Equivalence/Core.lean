@@ -359,7 +359,7 @@ each other. This is known as _proof irrelevance_: Lean considers all proofs of
 a proposition to be equal. Most of the time this is what we want, and makes
 working with propositions much easier.
 -/
-instance eqvOp_prop_term_inst {p : Prop} : EqvOp p := {
+def eqvOp_prop_term {p : Prop} : EqvOp p := {
   tildeDash := (· = ·)
   refl := rfl
   symm := Eq.symm

@@ -25,7 +25,9 @@ show a result holds for natural numbers than for integers.
 
 namespace Lean4Axiomatic.Integer
 
-open Relation.Equivalence (EqvOp eqvOp_prop_term_inst)
+open Relation.Equivalence (EqvOp eqvOp_prop_term)
+
+local instance eqvOp_prop_term_inst {p : Prop} : EqvOp p := eqvOp_prop_term
 
 /-! ## Axioms -/
 
