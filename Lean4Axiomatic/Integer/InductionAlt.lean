@@ -160,6 +160,13 @@ class InductionAlt.Ops
 
 export InductionAlt.Ops (ind_diff)
 
+def InductionAlt.Data.ind_diff
+    {ℕ : Type} [Natural ℕ]
+    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    [Ops ℤ] : (d : Data ℤ) → (a : ℤ) → d.motive a
+    :=
+  Ops.ind_diff
+
 /-- Properties of integer eliminators. -/
 class InductionAlt.Props
     {ℕ : outParam Type} [Natural ℕ]
@@ -167,8 +174,9 @@ class InductionAlt.Props
       [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ] [ops : Ops ℤ]
     :=
   /-- TODO -/
-  ind_diff_eval (d : Data ℤ) {n m : ℕ} : ind_diff d (n - m) ≃ d.C.on_diff n m
+  ind_diff_eval (d : Data ℤ) {n m : ℕ} : d.ind_diff (n - m) ≃ d.C.on_diff n m
 
+  -- TODO: Update all `ind_diff d` calls to `d.ind_diff`
   ind_diff_subst
     (d : Data ℤ) {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂) :
     d.C.motive_subst ‹a₁ ≃ a₂› (ind_diff d a₁) ≃ ind_diff d a₂
