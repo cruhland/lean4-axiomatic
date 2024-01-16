@@ -344,7 +344,7 @@ Equivalence relation of "if and only if" over propositions.
 **Intuition**: Two propositions `p` and `q` have the same truth value if
 `p ↔ q` holds between them.
 -/
-instance eqvOp_prop_inst : EqvOp Prop := {
+def eqvOp_prop : EqvOp Prop := {
   tildeDash := (· ↔ ·)
   refl := Iff.rfl
   symm := Iff.symm
