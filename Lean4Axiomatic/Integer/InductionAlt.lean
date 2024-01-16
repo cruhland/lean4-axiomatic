@@ -75,6 +75,20 @@ class InductionAlt.Data
 
 attribute [instance] InductionAlt.Data.motive_eqv
 
+def InductionAlt.Data.motive_subst
+    {ℕ : Type} [Natural ℕ]
+    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    (d : Data ℤ) : {a₁ a₂ : ℤ} → a₁ ≃ a₂ → motive a₁ → motive a₂
+    :=
+  d.C.motive_subst
+
+def InductionAlt.Data.on_diff
+    {ℕ : Type} [Natural ℕ]
+    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    (d : Data ℤ) : (n m : ℕ) → d.motive (n - m)
+    :=
+  d.C.on_diff
+
 -- TODO: What type parameters should be made explicit?
 /-- TODO -/
 class InductionAlt.ConstData
@@ -174,14 +188,13 @@ class InductionAlt.Props
       [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ] [ops : Ops ℤ]
     :=
   /-- TODO -/
-  ind_diff_eval (d : Data ℤ) {n m : ℕ} : d.ind_diff (n - m) ≃ d.C.on_diff n m
+  ind_diff_eval (d : Data ℤ) {n m : ℕ} : d.ind_diff (n - m) ≃ d.on_diff n m
 
-  -- TODO: Update all `ind_diff d` calls to `d.ind_diff`
   ind_diff_subst
     (d : Data ℤ) {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂) :
-    d.C.motive_subst ‹a₁ ≃ a₂› (ind_diff d a₁) ≃ ind_diff d a₂
+    d.motive_subst ‹a₁ ≃ a₂› (d.ind_diff a₁) ≃ d.ind_diff a₂
 
-export InductionAlt.Props (ind_diff_eval ind_diff_subst)
+export InductionAlt.Props (ind_diff_subst)
 
 /-- All integer induction/eliminator axioms. -/
 class InductionAlt
@@ -200,72 +213,48 @@ variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Core ℤ] [Addition ℤ] [Multiplication (ℕ := ℕ) ℤ]
 variable [Negation ℤ] [Sign ℤ] [Subtraction ℤ] [InductionAlt ℤ]
 
--- TODO: Do we need the ind_on, rec_on functions?
--- Depends on if we can use `apply` cleanly in proofs
-/-- TODO -/
-def ind_diff_on (a : ℤ) (d : InductionAlt.Data ℤ) : d.motive a := ind_diff d a
+def InductionAlt.Data.ind_diff_eval :
+    (d : Data ℤ) → {n m : ℕ} → d.ind_diff (n - m) ≃ d.on_diff n m
+    :=
+  InductionAlt.Props.ind_diff_eval
+
+def InductionAlt.Data.ind_diff_subst :
+    (d : Data ℤ) → {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) →
+    d.motive_subst ‹a₁ ≃ a₂› (d.ind_diff a₁) ≃ d.ind_diff a₂
+    :=
+  InductionAlt.Props.ind_diff_subst
 
 /-- TODO -/
-theorem ind_diff_on_eval
-    (d : InductionAlt.Data ℤ) {n m : ℕ} :
-    ind_diff_on ((n:ℤ) - (m:ℤ)) d ≃ d.C.on_diff n m
-    := calc
-  _ = ind_diff_on ((n:ℤ) - (m:ℤ)) d := rfl
-  _ = ind_diff d ((n:ℤ) - (m:ℤ))    := rfl
-  _ ≃ d.C.on_diff n m               := ind_diff_eval d
+def InductionAlt.ConstData.rec_diff
+    (cd : InductionAlt.ConstData ℤ) : ℤ → cd.X
+    :=
+  cd.toData.ind_diff
 
 /-- TODO -/
-def rec_diff (cd : InductionAlt.ConstData ℤ) : ℤ → cd.X := ind_diff cd.toData
-
-/-- TODO -/
-theorem rec_diff_eval
+theorem InductionAlt.ConstData.rec_diff_eval
     (cd : InductionAlt.ConstData ℤ) {n m : ℕ} :
-    rec_diff cd ((n:ℤ) - (m:ℤ)) ≃ cd.C.on_diff n m
+    cd.rec_diff ((n:ℤ) - (m:ℤ)) ≃ cd.C.on_diff n m
     := calc
-  _ = rec_diff cd ((n:ℤ) - (m:ℤ))        := rfl
-  _ = ind_diff cd.toData ((n:ℤ) - (m:ℤ)) := rfl
-  _ ≃ cd.C.on_diff n m                   := ind_diff_eval cd.toData
+  _ = cd.rec_diff ((n:ℤ) - (m:ℤ))        := rfl
+  _ = cd.toData.ind_diff ((n:ℤ) - (m:ℤ)) := rfl
+  _ ≃ cd.C.on_diff n m                   := cd.toData.ind_diff_eval
 
-theorem rec_diff_subst
+theorem InductionAlt.ConstData.rec_diff_subst
     (cd : InductionAlt.ConstData ℤ) {a₁ a₂ : ℤ} :
-    a₁ ≃ a₂ → rec_diff cd a₁ ≃ rec_diff cd a₂
+    a₁ ≃ a₂ → cd.rec_diff a₁ ≃ cd.rec_diff a₂
     := by
   intro (_ : a₁ ≃ a₂)
-  show rec_diff cd a₁ ≃ rec_diff cd a₂
+  show cd.rec_diff a₁ ≃ cd.rec_diff a₂
   let d := cd.toData
-  let idd := ind_diff d
-  have wrap_subst : idd a₁ ≃ cd.C.motive_subst ‹a₁ ≃ a₂› (idd a₁) :=
-    Rel.symm (cd.motive_subst_const ‹a₁ ≃ a₂› (idd a₁))
+  let did := d.ind_diff
+  have wrap_subst : did a₁ ≃ cd.C.motive_subst ‹a₁ ≃ a₂› (did a₁) :=
+    Rel.symm (cd.motive_subst_const ‹a₁ ≃ a₂› (did a₁))
   calc
-    _ = rec_diff cd a₁                       := rfl
+    _ = cd.rec_diff a₁                       := rfl
     -- TODO: Factor out middle steps into ind_diff_subst_const?
-    _ = idd a₁                               := rfl
-    _ ≃ cd.C.motive_subst ‹a₁ ≃ a₂› (idd a₁) := wrap_subst
-    _ ≃ idd a₂                               := ind_diff_subst d ‹a₁ ≃ a₂›
-    _ = rec_diff cd a₂                       := rfl
-
-/-- TODO -/
-def rec_diff_on (a : ℤ) (cd : InductionAlt.ConstData ℤ) : cd.X := rec_diff cd a
-
-/-- TODO -/
-theorem rec_diff_on_eval
-    (cd : InductionAlt.ConstData ℤ) {n m : ℕ} :
-    rec_diff_on ((n:ℤ) - (m:ℤ)) cd ≃ cd.C.on_diff n m
-    := calc
-  _ = rec_diff_on ((n:ℤ) - (m:ℤ)) cd := rfl
-  _ = rec_diff cd ((n:ℤ) - (m:ℤ))    := rfl
-  _ ≃ cd.C.on_diff n m               := rec_diff_eval cd
-
-theorem rec_diff_on_subst
-    (cd : InductionAlt.ConstData ℤ) {a₁ a₂ : ℤ} : a₁ ≃ a₂ →
-    rec_diff_on a₁ cd ≃ rec_diff_on a₂ cd
-    := by
-  intro (_ : a₁ ≃ a₂)
-  show rec_diff_on a₁ cd ≃ rec_diff_on a₂ cd
-  calc
-    _ = rec_diff_on a₁ cd := rfl
-    _ = rec_diff cd a₁    := rfl
-    _ ≃ rec_diff cd a₂    := rec_diff_subst cd ‹a₁ ≃ a₂›
-    _ = rec_diff_on a₂ cd := rfl
+    _ = did a₁                               := rfl
+    _ ≃ cd.C.motive_subst ‹a₁ ≃ a₂› (did a₁) := wrap_subst
+    _ ≃ did a₂                               := d.ind_diff_subst ‹a₁ ≃ a₂›
+    _ = cd.rec_diff a₂                       := rfl
 
 end Lean4Axiomatic.Integer.Alt
