@@ -29,6 +29,9 @@ open Relation.Equivalence (EqvOp)
 
 /-! ## Axioms -/
 
+-- TODO: hide calls to cd.toData, use cd.function_name directly
+-- TODO: merge this into Induction.lean, then see how clients need to adjust
+
 -- TODO: Operations should maybe be pulled out from properties
 -- Want to avoid the `d.C.motive_subst` ugliness
 class InductionAlt.Constraints
@@ -108,7 +111,19 @@ class InductionAlt.ConstData
 
 attribute [instance] InductionAlt.ConstData.eqv
 
-export InductionAlt.ConstData (motive_subst_const)
+def InductionAlt.ConstData.motive_subst
+    {ℕ : Type} [Natural ℕ]
+    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    (cd : ConstData ℤ) : {a₁ a₂ : ℤ} → a₁ ≃ a₂ → cd.X → cd.X
+    :=
+  cd.C.motive_subst
+
+def InductionAlt.ConstData.on_diff
+    {ℕ : Type} [Natural ℕ]
+    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    (cd : ConstData ℤ) : ℕ → ℕ → cd.X
+    :=
+  cd.C.on_diff
 
 /-- TODO -/
 def InductionAlt.ConstData.toData
@@ -172,8 +187,6 @@ class InductionAlt.Ops
   /-- TODO -/
   ind_diff (d : Data ℤ) (a : ℤ) : d.motive a
 
-export InductionAlt.Ops (ind_diff)
-
 def InductionAlt.Data.ind_diff
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
@@ -193,8 +206,6 @@ class InductionAlt.Props
   ind_diff_subst
     (d : Data ℤ) {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂) :
     d.motive_subst ‹a₁ ≃ a₂› (d.ind_diff a₁) ≃ d.ind_diff a₂
-
-export InductionAlt.Props (ind_diff_subst)
 
 /-- All integer induction/eliminator axioms. -/
 class InductionAlt
@@ -233,11 +244,11 @@ def InductionAlt.ConstData.rec_diff
 /-- TODO -/
 theorem InductionAlt.ConstData.rec_diff_eval
     (cd : InductionAlt.ConstData ℤ) {n m : ℕ} :
-    cd.rec_diff ((n:ℤ) - (m:ℤ)) ≃ cd.C.on_diff n m
+    cd.rec_diff ((n:ℤ) - (m:ℤ)) ≃ cd.on_diff n m
     := calc
   _ = cd.rec_diff ((n:ℤ) - (m:ℤ))        := rfl
   _ = cd.toData.ind_diff ((n:ℤ) - (m:ℤ)) := rfl
-  _ ≃ cd.C.on_diff n m                   := cd.toData.ind_diff_eval
+  _ ≃ cd.on_diff n m                     := cd.toData.ind_diff_eval
 
 theorem InductionAlt.ConstData.rec_diff_subst
     (cd : InductionAlt.ConstData ℤ) {a₁ a₂ : ℤ} :
@@ -247,13 +258,13 @@ theorem InductionAlt.ConstData.rec_diff_subst
   show cd.rec_diff a₁ ≃ cd.rec_diff a₂
   let d := cd.toData
   let did := d.ind_diff
-  have wrap_subst : did a₁ ≃ cd.C.motive_subst ‹a₁ ≃ a₂› (did a₁) :=
+  have wrap_subst : did a₁ ≃ cd.motive_subst ‹a₁ ≃ a₂› (did a₁) :=
     Rel.symm (cd.motive_subst_const ‹a₁ ≃ a₂› (did a₁))
   calc
     _ = cd.rec_diff a₁                       := rfl
     -- TODO: Factor out middle steps into ind_diff_subst_const?
     _ = did a₁                               := rfl
-    _ ≃ cd.C.motive_subst ‹a₁ ≃ a₂› (did a₁) := wrap_subst
+    _ ≃ cd.motive_subst ‹a₁ ≃ a₂› (did a₁)   := wrap_subst
     _ ≃ did a₂                               := d.ind_diff_subst ‹a₁ ≃ a₂›
     _ = cd.rec_diff a₂                       := rfl
 
