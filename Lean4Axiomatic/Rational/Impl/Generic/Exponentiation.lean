@@ -53,6 +53,7 @@ theorem _pow_on_diff_subst
   have : _pow_on_diff p n₁ m₁ ≃ _pow_on_diff p n₂ m₂ := div_eqv_1.mp this
   exact this
 
+-- TODO: Fix compile errors
 instance _pow_ind_diff_constraints
     {p : ℚ} [AP (p ≄ 0)] :
     Integer.Induction.ConstConstraints (ℤ := ℤ) (_pow_on_diff p)

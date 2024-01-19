@@ -270,9 +270,9 @@ theorem pow_substL
       _ ≃ p₂^n / p₁^m        := div_substL (Natural.pow_substL ‹p₁ ≃ p₂›)
       _ ≃ p₂^n / p₂^m        := div_substR (Natural.pow_substL ‹p₁ ≃ p₂›)
       _ ≃ p₂^((n:ℤ) - (m:ℤ)) := eqv_symm Integer.pow_diff
-  have constraints :=
+  let ind_data :=
     Integer.ind_constraints_prop (on_diff := on_diff) motive_subst
-  have : motive a := Integer.ind_diff_on a on_diff
+  have : motive a := ind_data.ind_diff a
   have : p₁^a ≃ p₂^a := this
   exact this
 
@@ -295,9 +295,9 @@ theorem pow_preserves_nonzero {p : ℚ} {a : ℤ} [AP (p ≄ 0)] : p^a ≄ 0 := 
     have : p^n ≃ 0 := div_eqv_0.mp this
     have : p^n ≄ 0 := Natural.pow_preserves_nonzero_base ‹AP (p ≄ 0)›.ev
     exact absurd ‹p^n ≃ 0› ‹p^n ≄ 0›
-  have constraints :=
+  let ind_data :=
     Integer.ind_constraints_prop (on_diff := on_diff) motive_subst
-  have : motive a := Integer.ind_diff_on a on_diff
+  have : motive a := ind_data.ind_diff a
   have : p^a ≄ 0 := this
   exact this
 
