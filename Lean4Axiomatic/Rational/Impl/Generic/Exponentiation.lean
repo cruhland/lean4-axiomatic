@@ -53,15 +53,9 @@ theorem _pow_on_diff_subst
   have : _pow_on_diff p n₁ m₁ ≃ _pow_on_diff p n₂ m₂ := div_eqv_1.mp this
   exact this
 
--- TODO: Fix compile errors
-instance _pow_ind_diff_constraints
-    {p : ℚ} [AP (p ≄ 0)] :
-    Integer.Induction.ConstConstraints (ℤ := ℤ) (_pow_on_diff p)
-    :=
-  Integer.ind_constraints_const (X := ℚ) (_pow_on_diff_subst (p := p))
-
 def _pow (p : ℚ) [AP (p ≄ 0)] (a : ℤ) : ℚ :=
-  Integer.rec_diff_on a (_pow_on_diff p)
+  let cd := Integer.ind_constraints_const (_pow_on_diff_subst (p := p))
+  cd.rec_diff a
 
 /--
 TODO
@@ -77,12 +71,12 @@ local instance exponentiation_ops : Integer.Exponentiation.Ops ℚ ℤ := {
 theorem pow_diff
     {p : ℚ} {n m : ℕ} [AP (p ≄ 0)] : p^((n:ℤ) - m) ≃ p^n / p^m
     := by
-  let on_diff := _pow_on_diff p
+  let cd := Integer.ind_constraints_const (_pow_on_diff_subst (p := p))
   calc
-    _ = p^((n:ℤ) - m)                           := rfl
-    _ = Integer.rec_diff_on ((n:ℤ) - m) on_diff := rfl
-    _ ≃ on_diff n m                             := Integer.rec_diff_on_eval
-    _ = p^n / p^m                               := rfl
+    _ = p^((n:ℤ) - m)       := rfl
+    _ = cd.rec_diff (n - m) := rfl
+    _ ≃ cd.on_diff n m      := cd.rec_diff_eval
+    _ = p^n / p^m           := rfl
 
 /-- TODO -/
 theorem pow_substR
@@ -90,12 +84,12 @@ theorem pow_substR
     := by
   intro (_ : a₁ ≃ a₂)
   show p^a₁ ≃ p^a₂
-  let on_diff := _pow_on_diff p
+  let cd := Integer.ind_constraints_const (_pow_on_diff_subst (p := p))
   calc
-    _ = p^a₁ := rfl
-    _ = Integer.rec_diff_on a₁ on_diff := rfl
-    _ ≃ Integer.rec_diff_on a₂ on_diff := Integer.rec_diff_on_subst ‹a₁ ≃ a₂›
-    _ = p^a₂ := rfl
+    _ = p^a₁           := rfl
+    _ = cd.rec_diff a₁ := rfl
+    _ ≃ cd.rec_diff a₂ := cd.rec_diff_subst ‹a₁ ≃ a₂›
+    _ = p^a₂           := rfl
 
 def exponentiation_props :
     Integer.Exponentiation.Props (α := ℚ) (ℤ := ℤ) (· * ·) (· / ·) := {
