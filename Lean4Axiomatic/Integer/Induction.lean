@@ -29,8 +29,6 @@ open Relation.Equivalence (EqvOp)
 
 /-! ## Axioms -/
 
--- TODO: merge this into Induction.lean, then see how clients need to adjust
-
 -- TODO: Operations should maybe be pulled out from properties
 class Induction.Constraints
     {ℕ : Type} [Natural ℕ]
@@ -105,7 +103,7 @@ class Induction.ConstData
 
   /-- TODO -/
   motive_subst_const
-    {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂) (x : X) : C.motive_subst ‹a₁ ≃ a₂› x ≃ x
+    {a₁ a₂ : ℤ} {a_eqv : a₁ ≃ a₂} {x : X} : C.motive_subst ‹a₁ ≃ a₂› x ≃ x
 
 attribute [instance] Induction.ConstData.eqv
 
@@ -175,7 +173,7 @@ def ind_constraints_const
     on_diff := on_diff
     on_diff_subst := on_diff_subst
   }
-  motive_subst_const := λ _ _ => Rel.refl
+  motive_subst_const := Rel.refl
 }
 
 /-- Operations pertaining to eliminators on integers. -/
@@ -272,17 +270,13 @@ theorem Induction.ConstData.rec_diff_subst
     := by
   intro (_ : a₁ ≃ a₂)
   show cd.rec_diff a₁ ≃ cd.rec_diff a₂
-  let cdid := cd.ind_diff
-  have wrap_subst : cdid a₁ ≃ cd.motive_subst ‹a₁ ≃ a₂› (cdid a₁) :=
-    Rel.symm (cd.motive_subst_const ‹a₁ ≃ a₂› (cdid a₁))
+  let ida₁ := cd.ind_diff a₁
   calc
-    -- TODO: Factor out middle steps into ind_diff_subst_const?
-    _ = cd.rec_diff a₁                      := rfl
-    _ = cd.ind_diff a₁                      := rfl
-    _ = cdid a₁                             := rfl
-    _ ≃ cd.motive_subst ‹a₁ ≃ a₂› (cdid a₁) := wrap_subst
-    _ ≃ cdid a₂                             := cd.ind_diff_subst ‹a₁ ≃ a₂›
-    _ = cd.ind_diff a₂                      := rfl
-    _ = cd.rec_diff a₂                      := rfl
+    _ = cd.rec_diff a₁                 := rfl
+    _ = cd.ind_diff a₁                 := rfl
+    _ = ida₁                           := rfl
+    _ ≃ cd.motive_subst ‹a₁ ≃ a₂› ida₁ := Rel.symm cd.motive_subst_const
+    _ ≃ cd.ind_diff a₂                 := cd.ind_diff_subst ‹a₁ ≃ a₂›
+    _ = cd.rec_diff a₂                 := rfl
 
 end Lean4Axiomatic.Integer
