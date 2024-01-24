@@ -58,12 +58,11 @@ theorem ind_diff_subst
     _ = d.motive_subst ‹a₁ ≃ a₂› (d.motive_subst sub_eqv_diff od₁)
       := rfl
     _ ≃ d.motive_subst (Rel.trans sub_eqv_diff ‹a₁ ≃ a₂›) od₁
-      -- TODO Hide the .C part
-      := d.C.motive_subst_compose
+      := d.motive_subst_compose
     _ ≃ d.motive_subst (Rel.trans sub_eqv_diff ‹a₁ ≃ a₂›) (d.motive_subst diff_eqv od₂)
-      := Rel.symm (d.C.motive_subst_substR (d.C.on_diff_subst diff_eqv))
+      := Rel.symm (d.motive_subst_substR (d.on_diff_subst diff_eqv))
     _ ≃ d.motive_subst (Rel.trans diff_eqv (Rel.trans sub_eqv_diff ‹a₁ ≃ a₂›)) od₂
-      := d.C.motive_subst_compose
+      := d.motive_subst_compose
     _ = d.motive_subst sub_eqv_diff od₂
       := rfl
     _ = idod a₂
@@ -82,11 +81,11 @@ theorem ind_diff_eval
     _ = d.motive_subst (Rel.symm sub_eqv_diff) (d.motive_subst sub_eqv_diff (d.on_diff n m))
         := rfl
     _ ≃ d.motive_subst (Rel.trans sub_eqv_diff (Rel.symm sub_eqv_diff)) (d.on_diff n m)
-        := d.C.motive_subst_compose
+        := d.motive_subst_compose
     _ = d.motive_subst Rel.refl (d.on_diff n m)
         := rfl
     _ ≃ d.on_diff n m
-        := d.C.motive_subst_refl
+        := d.motive_subst_refl
 
 def ind_props : Induction.Props (Difference ℕ) := {
   ind_diff_subst := ind_diff_subst

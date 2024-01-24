@@ -43,22 +43,22 @@ class Induction.Constraints
 
   /-- TODO -/
   motive_subst_compose
-    {a b c : ℤ} {ma : motive a} {ab : a ≃ b} {bc : b ≃ c} :
-    motive_subst ‹b ≃ c› (motive_subst ‹a ≃ b› ma) ≃
-    motive_subst (Rel.trans ‹a ≃ b› ‹b ≃ c›) ma
+    {a b c : ℤ} {ma : motive a} {ab : a ≃ b} {bc : b ≃ c}
+    : motive_subst ‹b ≃ c› (motive_subst ‹a ≃ b› ma) ≃
+      motive_subst (Rel.trans ‹a ≃ b› ‹b ≃ c›) ma
 
   /-- TODO -/
   motive_subst_substR
-    {a b : ℤ} {ma : motive a} {mb : motive b} {ab : a ≃ b} {bc : b ≃ c} :
-    motive_subst ‹a ≃ b› ma ≃ mb →
-    motive_subst ‹b ≃ c› (motive_subst ‹a ≃ b› ma) ≃ motive_subst ‹b ≃ c› mb
+    {a b c : ℤ} {ma : motive a} {mb : motive b} {ab : a ≃ b} {bc : b ≃ c}
+    : motive_subst ‹a ≃ b› ma ≃ mb →
+      motive_subst ‹b ≃ c› (motive_subst ‹a ≃ b› ma) ≃ motive_subst ‹b ≃ c› mb
 
   on_diff (n m : ℕ) : motive ((n:ℤ) - (m:ℤ))
 
   /-- TODO -/
   on_diff_subst
-    {n₁ m₁ n₂ m₂ : ℕ} (diff_eqv : (n₁:ℤ) - (m₁:ℤ) ≃ (n₂:ℤ) - (m₂:ℤ)) :
-    motive_subst diff_eqv (on_diff n₁ m₁) ≃ on_diff n₂ m₂
+    {n₁ m₁ n₂ m₂ : ℕ} (diff_eqv : (n₁:ℤ) - (m₁:ℤ) ≃ (n₂:ℤ) - (m₂:ℤ))
+    : motive_subst diff_eqv (on_diff n₁ m₁) ≃ on_diff n₂ m₂
 
 -- TODO: What type parameters should be made explicit?
 /-- TODO -/
@@ -77,9 +77,38 @@ attribute [instance] Induction.Data.motive_eqv
 def Induction.Data.motive_subst
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    (d : Data ℤ) : {a₁ a₂ : ℤ} → a₁ ≃ a₂ → motive a₁ → motive a₂
+    (d : Data ℤ) {a₁ a₂ : ℤ}
+    : a₁ ≃ a₂ → motive a₁ → motive a₂
     :=
   d.C.motive_subst
+
+def Induction.Data.motive_subst_refl
+    {ℕ : Type} [Natural ℕ]
+    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    (d : Data ℤ) {a : ℤ} {ma : motive a}
+    : d.motive_subst Rel.refl ma ≃ ma
+    :=
+  d.C.motive_subst_refl
+
+def Induction.Data.motive_subst_compose
+    {ℕ : Type} [Natural ℕ]
+    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    (d : Data ℤ) {a b c : ℤ} {ma : motive a} {ab : a ≃ b} {bc : b ≃ c}
+    : d.motive_subst ‹b ≃ c› (d.motive_subst ‹a ≃ b› ma) ≃
+      d.motive_subst (Rel.trans ‹a ≃ b› ‹b ≃ c›) ma
+    :=
+  d.C.motive_subst_compose
+
+def Induction.Data.motive_subst_substR
+    {ℕ : Type} [Natural ℕ]
+    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    (d : Data ℤ) {a b c : ℤ} {ab : a ≃ b} {bc : b ≃ c}
+    {ma : motive a} {mb : motive b}
+    : d.motive_subst ‹a ≃ b› ma ≃ mb →
+      d.motive_subst ‹b ≃ c› (d.motive_subst ‹a ≃ b› ma) ≃
+        d.motive_subst ‹b ≃ c› mb
+    :=
+  d.C.motive_subst_substR
 
 def Induction.Data.on_diff
     {ℕ : Type} [Natural ℕ]
@@ -87,6 +116,15 @@ def Induction.Data.on_diff
     (d : Data ℤ) : (n m : ℕ) → d.motive (n - m)
     :=
   d.C.on_diff
+
+def Induction.Data.on_diff_subst
+    {ℕ : Type} [Natural ℕ]
+    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    (d : Data ℤ)
+    {n₁ m₁ n₂ m₂ : ℕ} (diff_eqv : (n₁:ℤ) - (m₁:ℤ) ≃ (n₂:ℤ) - (m₂:ℤ))
+    : d.motive_subst diff_eqv (d.on_diff n₁ m₁) ≃ d.on_diff n₂ m₂
+    :=
+  d.C.on_diff_subst diff_eqv
 
 -- TODO: What type parameters should be made explicit?
 /-- TODO -/
