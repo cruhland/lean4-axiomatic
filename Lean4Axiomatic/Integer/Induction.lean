@@ -139,10 +139,6 @@ class Induction.ConstData
 
   C : Constraints (ℤ := ℤ) (λ _ => X) eqv
 
-  /-- TODO -/
-  motive_subst_const
-    {a₁ a₂ : ℤ} {a_eqv : a₁ ≃ a₂} {x : X} : C.motive_subst ‹a₁ ≃ a₂› x ≃ x
-
 attribute [instance] Induction.ConstData.eqv
 
 def Induction.ConstData.motive_subst
@@ -211,7 +207,6 @@ def ind_constraints_const
     on_diff := on_diff
     on_diff_subst := on_diff_subst
   }
-  motive_subst_const := Rel.refl
 }
 
 /-- Operations pertaining to eliminators on integers. -/
@@ -227,13 +222,6 @@ def Induction.Data.ind_diff
     [Ops ℤ] : (d : Data ℤ) → (a : ℤ) → d.motive a
     :=
   Ops.ind_diff
-
-def Induction.ConstData.ind_diff
-    {ℕ : Type} [Natural ℕ]
-    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    [Ops ℤ] (cd : ConstData ℤ) : ℤ → cd.X
-    :=
-  cd.toData.ind_diff
 
 /-- Properties of integer eliminators. -/
 class Induction.Props
@@ -270,51 +258,24 @@ def Induction.Data.ind_diff_eval :
     :=
   Induction.Props.ind_diff_eval
 
-def Induction.ConstData.ind_diff_eval
-    (cd : ConstData ℤ) : {n m : ℕ} → cd.ind_diff (n - m) ≃ cd.on_diff n m
-    :=
-  cd.toData.ind_diff_eval
-
 def Induction.Data.ind_diff_subst :
     (d : Data ℤ) → {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) →
     d.motive_subst ‹a₁ ≃ a₂› (d.ind_diff a₁) ≃ d.ind_diff a₂
     :=
   Induction.Props.ind_diff_subst
 
-def Induction.ConstData.ind_diff_subst
+def Induction.ConstData.rec_diff (cd : ConstData ℤ) : ℤ → cd.X :=
+  cd.toData.ind_diff
+
+def Induction.ConstData.rec_diff_eval
+    (cd : ConstData ℤ) : {n m : ℕ} → cd.rec_diff (n - m) ≃ cd.on_diff n m
+    :=
+  cd.toData.ind_diff_eval
+
+def Induction.ConstData.rec_diff_subst
     (cd : ConstData ℤ) : {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) →
-    cd.motive_subst ‹a₁ ≃ a₂› (cd.ind_diff a₁) ≃ cd.ind_diff a₂
+    cd.motive_subst ‹a₁ ≃ a₂› (cd.rec_diff a₁) ≃ cd.rec_diff a₂
     :=
   cd.toData.ind_diff_subst
-
-/-- TODO -/
-def Induction.ConstData.rec_diff
-    (cd : Induction.ConstData ℤ) : ℤ → cd.X
-    :=
-  cd.ind_diff
-
-/-- TODO -/
-theorem Induction.ConstData.rec_diff_eval
-    (cd : Induction.ConstData ℤ) {n m : ℕ} :
-    cd.rec_diff ((n:ℤ) - (m:ℤ)) ≃ cd.on_diff n m
-    := calc
-  _ = cd.rec_diff ((n:ℤ) - (m:ℤ)) := rfl
-  _ = cd.ind_diff ((n:ℤ) - (m:ℤ)) := rfl
-  _ ≃ cd.on_diff n m              := cd.ind_diff_eval
-
-theorem Induction.ConstData.rec_diff_subst
-    (cd : Induction.ConstData ℤ) {a₁ a₂ : ℤ} :
-    a₁ ≃ a₂ → cd.rec_diff a₁ ≃ cd.rec_diff a₂
-    := by
-  intro (_ : a₁ ≃ a₂)
-  show cd.rec_diff a₁ ≃ cd.rec_diff a₂
-  let ida₁ := cd.ind_diff a₁
-  calc
-    _ = cd.rec_diff a₁                 := rfl
-    _ = cd.ind_diff a₁                 := rfl
-    _ = ida₁                           := rfl
-    _ ≃ cd.motive_subst ‹a₁ ≃ a₂› ida₁ := Rel.symm cd.motive_subst_const
-    _ ≃ cd.ind_diff a₂                 := cd.ind_diff_subst ‹a₁ ≃ a₂›
-    _ = cd.rec_diff a₂                 := rfl
 
 end Lean4Axiomatic.Integer
