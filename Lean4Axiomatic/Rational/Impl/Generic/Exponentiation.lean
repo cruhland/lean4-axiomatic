@@ -5,6 +5,7 @@ import Lean4Axiomatic.Rational.Exponentiation
 namespace Lean4Axiomatic.Rational.Impl.Generic
 
 open Lean4Axiomatic.Logic (AP)
+open Lean4Axiomatic.Relation.Equivalence (EqvOp)
 
 variable
   {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ] [Integer.Induction.{1} ℤ]
@@ -13,8 +14,32 @@ variable
     [Reciprocation ℚ] [Division ℚ] [Sign ℚ]
     [Natural.Exponentiation ℕ (α := ℚ) (· * ·)]
 
-def _pow_on_diff (p : ℚ) [AP (p ≄ 0)] (n m : ℕ) : ℚ := p^n / p^m
+def FixedIntPowFn (ℚ : Type) [Core (ℤ := ℤ) ℚ] : Type :=
+  (p : ℚ) → [AP (p ≄ 0)] → ℚ
 
+def _pow_on_diff (n m : ℕ) : FixedIntPowFn ℚ := λ p => p^n / p^m
+
+def fipFn_eqv : FixedIntPowFn ℚ → FixedIntPowFn ℚ → Prop := sorry
+
+local instance fipFn_tildeDash_inst
+    : Operators.TildeDash (FixedIntPowFn ℚ)
+    := {
+  tildeDash := fipFn_eqv
+}
+
+theorem fipFn_eqv_refl {f : FixedIntPowFn ℚ} : f ≃ f := sorry
+
+theorem fipFn_eqv_symm {f g : FixedIntPowFn ℚ} : f ≃ g → g ≃ f := sorry
+
+theorem fipFn_eqv_trans {f g h : FixedIntPowFn ℚ} : f ≃ g → g ≃ h → f ≃ h := sorry
+
+local instance eqvOp_pow_on_diff : EqvOp (FixedIntPowFn ℚ) := {
+  refl := fipFn_eqv_refl
+  symm := fipFn_eqv_symm
+  trans := fipFn_eqv_trans
+}
+
+-- TODO: Update to use above defns
 theorem _pow_on_diff_subst
     {p : ℚ} [AP (p ≄ 0)] {n₁ m₁ n₂ m₂ : ℕ} :
     (n₁:ℤ) - m₁ ≃ n₂ - m₂ → _pow_on_diff p n₁ m₁ ≃ _pow_on_diff p n₂ m₂
@@ -53,9 +78,12 @@ theorem _pow_on_diff_subst
   have : _pow_on_diff p n₁ m₁ ≃ _pow_on_diff p n₂ m₂ := div_eqv_1.mp this
   exact this
 
-def _pow (p : ℚ) [AP (p ≄ 0)] (a : ℤ) : ℚ :=
-  let cd := Integer.ind_constraints_const (_pow_on_diff_subst (p := p))
-  cd.rec_diff a
+def pow_ind_data (p : ℚ) [AP (p ≄ 0)] : Integer.Induction.ConstData ℤ :=
+  Integer.ind_constraints_const (_pow_on_diff_subst (p := p))
+
+-- TODO: If you rearrange the arguments to _pow, you won't need to pass in `p`
+-- to construct the data. I think? Have _pow return a function ℚ → ℚ
+def _pow (p : ℚ) [AP (p ≄ 0)] (a : ℤ) : ℚ := (pow_ind_data p).rec_diff a
 
 /--
 TODO
@@ -71,11 +99,11 @@ local instance exponentiation_ops : Integer.Exponentiation.Ops ℚ ℤ := {
 theorem pow_diff
     {p : ℚ} {n m : ℕ} [AP (p ≄ 0)] : p^((n:ℤ) - m) ≃ p^n / p^m
     := by
-  let cd := Integer.ind_constraints_const (_pow_on_diff_subst (p := p))
+  let pd := pow_ind_data p
   calc
     _ = p^((n:ℤ) - m)       := rfl
-    _ = cd.rec_diff (n - m) := rfl
-    _ ≃ cd.on_diff n m      := cd.rec_diff_eval
+    _ = pd.rec_diff (n - m) := rfl
+    _ ≃ pd.on_diff n m      := pd.rec_diff_eval
     _ = p^n / p^m           := rfl
 
 /-- TODO -/
@@ -84,11 +112,11 @@ theorem pow_substR
     := by
   intro (_ : a₁ ≃ a₂)
   show p^a₁ ≃ p^a₂
-  let cd := Integer.ind_constraints_const (_pow_on_diff_subst (p := p))
+  let pd := pow_ind_data p
   calc
     _ = p^a₁           := rfl
-    _ = cd.rec_diff a₁ := rfl
-    _ ≃ cd.rec_diff a₂ := cd.rec_diff_subst ‹a₁ ≃ a₂›
+    _ = pd.rec_diff a₁ := rfl
+    _ ≃ pd.rec_diff a₂ := pd.rec_diff_subst ‹a₁ ≃ a₂›
     _ = p^a₂           := rfl
 
 def exponentiation_props :
