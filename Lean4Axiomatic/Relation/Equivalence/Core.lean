@@ -318,6 +318,8 @@ Provides an equivalence relation over `α` with the operator `· ≃ ·`.
 -/
 class EqvOp (α : Sort u) extends Operators.TildeDash α, Eqv tildeDash
 
+attribute [instance] EqvOp.toTildeDash
+
 /--
 Predicates on equivalent values are logically equivalent.
 

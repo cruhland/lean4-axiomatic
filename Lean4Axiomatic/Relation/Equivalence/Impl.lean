@@ -6,6 +6,49 @@ namespace Lean4Axiomatic.Relation.Equivalence.Impl
 
 /-! # Implementations of equivalence relations -/
 
+namespace Fn
+
+/-! ## For non-dependent functions -/
+
+variable {α : Sort u} {β : Sort v} [EqvOp β]
+
+def eqv (f₁ f₂ : α → β) : Prop := (x : α) → f₁ x ≃ f₂ x
+
+local instance eqv_tildeDash_inst : Operators.TildeDash (α → β) := {
+  tildeDash := eqv
+}
+
+theorem refl {f : α → β} : f ≃ f := by
+  show (x : α) → f x ≃ f x
+  intro (x : α)
+  have : f x ≃ f x := Rel.refl
+  exact this
+
+theorem symm {f g : α → β} : f ≃ g → g ≃ f := by
+  intro (_ : f ≃ g)
+  show (x : α) → g x ≃ f x
+  intro (x : α)
+  have : f x ≃ g x := ‹f ≃ g› x
+  have : g x ≃ f x := Rel.symm this
+  exact this
+
+theorem trans {f g h : α → β} : f ≃ g → g ≃ h → f ≃ h := by
+  intro (_ : f ≃ g) (_ : g ≃ h)
+  show (x : α) → f x ≃ h x
+  intro (x : α)
+  have : f x ≃ g x := ‹f ≃ g› x
+  have : g x ≃ h x := ‹g ≃ h› x
+  have : f x ≃ h x := Rel.trans ‹f x ≃ g x› ‹g x ≃ h x›
+  exact this
+
+def eqvOp : EqvOp (α → β) := {
+  refl := refl
+  symm := symm
+  trans := trans
+}
+
+end Fn
+
 namespace DepFn
 
 /-! ## For dependent functions -/

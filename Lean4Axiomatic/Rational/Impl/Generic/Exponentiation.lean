@@ -17,32 +17,20 @@ variable
 def FixedIntPowFn (ℚ : Type) [Core (ℤ := ℤ) ℚ] : Type :=
   (p : ℚ) → [AP (p ≄ 0)] → ℚ
 
+local instance fn_eqvOp_inst
+    {α : Sort u} {β : Sort v} [EqvOp β] : EqvOp (α → β)
+    :=
+  Relation.Equivalence.Impl.Fn.eqvOp
+
 def _pow_on_diff (n m : ℕ) : FixedIntPowFn ℚ := λ p => p^n / p^m
 
-def fipFn_eqv : FixedIntPowFn ℚ → FixedIntPowFn ℚ → Prop := sorry
-
-local instance fipFn_tildeDash_inst
-    : Operators.TildeDash (FixedIntPowFn ℚ)
-    := {
-  tildeDash := fipFn_eqv
-}
-
-theorem fipFn_eqv_refl {f : FixedIntPowFn ℚ} : f ≃ f := sorry
-
-theorem fipFn_eqv_symm {f g : FixedIntPowFn ℚ} : f ≃ g → g ≃ f := sorry
-
-theorem fipFn_eqv_trans {f g h : FixedIntPowFn ℚ} : f ≃ g → g ≃ h → f ≃ h := sorry
-
-local instance eqvOp_pow_on_diff : EqvOp (FixedIntPowFn ℚ) := {
-  refl := fipFn_eqv_refl
-  symm := fipFn_eqv_symm
-  trans := fipFn_eqv_trans
-}
+-- TODO: Explicitly construct fn_eqvOp to see if it works
+def fipFn_eqvOp : EqvOp (FixedIntPowFn ℚ) := fn_eqvOp_inst
 
 -- TODO: Update to use above defns
 theorem _pow_on_diff_subst
-    {p : ℚ} [AP (p ≄ 0)] {n₁ m₁ n₂ m₂ : ℕ} :
-    (n₁:ℤ) - m₁ ≃ n₂ - m₂ → _pow_on_diff p n₁ m₁ ≃ _pow_on_diff p n₂ m₂
+    {n₁ m₁ n₂ m₂ : ℕ}
+    : (n₁:ℤ) - m₁ ≃ n₂ - m₂ → (_pow_on_diff n₁ m₁ : FixedIntPowFn ℚ) ≃ _pow_on_diff n₂ m₂
     := by
   intro (_ : (n₁:ℤ) - m₁ ≃ n₂ - m₂)
   show _pow_on_diff p n₁ m₁ ≃ _pow_on_diff p n₂ m₂
