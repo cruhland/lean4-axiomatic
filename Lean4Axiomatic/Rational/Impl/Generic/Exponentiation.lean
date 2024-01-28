@@ -17,23 +17,23 @@ variable
 def FixedIntPowFn (ℚ : Type) [Core (ℤ := ℤ) ℚ] : Type :=
   (p : ℚ) → [AP (p ≄ 0)] → ℚ
 
-local instance fn_eqvOp_inst
-    {α : Sort u} {β : Sort v} [EqvOp β] : EqvOp (α → β)
-    :=
+def fn_eqvOp_family {p : ℚ} : EqvOp ([AP (p ≄ 0)] → ℚ) :=
   Relation.Equivalence.Impl.Fn.eqvOp
+
+-- TODO: Explicitly construct fn_eqvOp to see if it works
+instance fipFn_eqvOp : EqvOp (FixedIntPowFn ℚ) :=
+  Relation.Equivalence.Impl.DepFn.eqvOp fn_eqvOp_family
 
 def _pow_on_diff (n m : ℕ) : FixedIntPowFn ℚ := λ p => p^n / p^m
 
--- TODO: Explicitly construct fn_eqvOp to see if it works
-def fipFn_eqvOp : EqvOp (FixedIntPowFn ℚ) := fn_eqvOp_inst
-
--- TODO: Update to use above defns
 theorem _pow_on_diff_subst
     {n₁ m₁ n₂ m₂ : ℕ}
-    : (n₁:ℤ) - m₁ ≃ n₂ - m₂ → (_pow_on_diff n₁ m₁ : FixedIntPowFn ℚ) ≃ _pow_on_diff n₂ m₂
+    : (n₁:ℤ) - m₁ ≃ n₂ - m₂ → _pow_on_diff (ℚ := ℚ) n₁ m₁ ≃ _pow_on_diff n₂ m₂
     := by
   intro (_ : (n₁:ℤ) - m₁ ≃ n₂ - m₂)
-  show _pow_on_diff p n₁ m₁ ≃ _pow_on_diff p n₂ m₂
+  show _pow_on_diff n₁ m₁ ≃ _pow_on_diff n₂ m₂
+  intro (p : ℚ) (_ : AP (p ≄ 0))
+  show p^n₁ / p^m₁ ≃ p^n₂ / p^m₂
 
   have pow_add_n₁m₂ : p^n₁ * p^m₂ ≃ p^(n₁ + m₂) :=
     Rel.symm Natural.pow_compatL_add
@@ -51,27 +51,20 @@ theorem _pow_on_diff_subst
   have : n₁ + m₂ ≃ m₁ + n₂ := AA.inject this
   have pow_add_subst : p^(n₁ + m₂) ≃ p^(m₁ + n₂) := Natural.pow_substR this
 
-  have : AP (_pow_on_diff p n₂ m₂ ≄ 0) := by
-    have : AP (p^n₂ / p^m₂ ≄ 0) := inferInstance
-    have : AP (_pow_on_diff p n₂ m₂ ≄ 0) := this
-    exact this
-  have : _pow_on_diff p n₁ m₁ / _pow_on_diff p n₂ m₂ ≃ 1 := calc
-    _ = _pow_on_diff p n₁ m₁ / _pow_on_diff p n₂ m₂ := rfl
+  have : (p^n₁ / p^m₁) / (p^n₂ / p^m₂) ≃ 1 := calc
     _ = (p^n₁ / p^m₁) / (p^n₂ / p^m₂) := rfl
     _ ≃ (p^n₁ * p^m₂) / (p^m₁ * p^n₂) := div_div_div
     _ ≃ p^(n₁ + m₂) / (p^m₁ * p^n₂)   := div_substL pow_add_n₁m₂
     _ ≃ p^(n₁ + m₂) / p^(m₁ + n₂)     := div_substR pow_add_m₁n₂
     _ ≃ p^(m₁ + n₂) / p^(m₁ + n₂)     := div_substL pow_add_subst
     _ ≃ 1                             := div_same
-  have : _pow_on_diff p n₁ m₁ ≃ _pow_on_diff p n₂ m₂ := div_eqv_1.mp this
+  have : p^n₁ / p^m₁ ≃ p^n₂ / p^m₂ := div_eqv_1.mp this
   exact this
 
-def pow_ind_data (p : ℚ) [AP (p ≄ 0)] : Integer.Induction.ConstData ℤ :=
-  Integer.ind_constraints_const (_pow_on_diff_subst (p := p))
+def pow_ind_data : Integer.Induction.ConstData ℤ :=
+  Integer.ind_constraints_const (_pow_on_diff_subst (ℚ := ℚ))
 
--- TODO: If you rearrange the arguments to _pow, you won't need to pass in `p`
--- to construct the data. I think? Have _pow return a function ℚ → ℚ
-def _pow (p : ℚ) [AP (p ≄ 0)] (a : ℤ) : ℚ := (pow_ind_data p).rec_diff a
+def _pow (p : ℚ) [AP (p ≄ 0)] (a : ℤ) : ℚ := pow_ind_data.rec_diff a p
 
 /--
 TODO
@@ -87,12 +80,16 @@ local instance exponentiation_ops : Integer.Exponentiation.Ops ℚ ℤ := {
 theorem pow_diff
     {p : ℚ} {n m : ℕ} [AP (p ≄ 0)] : p^((n:ℤ) - m) ≃ p^n / p^m
     := by
-  let pd := pow_ind_data p
+  have rp : pow_ind_data.rec_diff ((n:ℤ) - m) ≃ pow_ind_data.on_diff n m :=
+    (pow_ind_data (ℚ := ℚ)).rec_diff_eval
+  have rp2 : (x : ℚ) → [AP (x ≄ 0)] → pow_ind_data.rec_diff ((n:ℤ) - m) x ≃ pow_ind_data.on_diff n m x := rp
   calc
-    _ = p^((n:ℤ) - m)       := rfl
-    _ = pd.rec_diff (n - m) := rfl
-    _ ≃ pd.on_diff n m      := pd.rec_diff_eval
-    _ = p^n / p^m           := rfl
+    _ = p^((n:ℤ) - m)                       := rfl
+    _ = _pow p ((n:ℤ) - m)                  := rfl
+    _ = pow_ind_data.rec_diff ((n:ℤ) - m) p := rfl
+    _ ≃ pow_ind_data.on_diff n m p          := rp2 p
+    _ = _pow_on_diff n m p                  := rfl
+    _ = p^n / p^m                           := rfl
 
 /-- TODO -/
 theorem pow_substR
@@ -100,12 +97,16 @@ theorem pow_substR
     := by
   intro (_ : a₁ ≃ a₂)
   show p^a₁ ≃ p^a₂
-  let pd := pow_ind_data p
+  have rs : pow_ind_data.rec_diff a₁ ≃ pow_ind_data.rec_diff a₂ :=
+    (pow_ind_data (ℚ := ℚ)).rec_diff_subst ‹a₁ ≃ a₂›
+  have rs2 : (x : ℚ) → [AP (x ≄ 0)] → pow_ind_data.rec_diff a₁ x ≃ pow_ind_data.rec_diff a₂ x := rs
   calc
-    _ = p^a₁           := rfl
-    _ = pd.rec_diff a₁ := rfl
-    _ ≃ pd.rec_diff a₂ := pd.rec_diff_subst ‹a₁ ≃ a₂›
-    _ = p^a₂           := rfl
+    _ = p^a₁                       := rfl
+    _ = _pow p a₁                  := rfl
+    _ = pow_ind_data.rec_diff a₁ p := rfl
+    _ ≃ pow_ind_data.rec_diff a₂ p := rs2 p
+    _ = _pow p a₂                  := rfl
+    _ = p^a₂                       := rfl
 
 def exponentiation_props :
     Integer.Exponentiation.Props (α := ℚ) (ℤ := ℤ) (· * ·) (· / ·) := {
