@@ -6,6 +6,8 @@ namespace Lean4Axiomatic.Rational.Impl.Generic
 
 open Lean4Axiomatic.Logic (AP)
 open Lean4Axiomatic.Relation.Equivalence (EqvOp)
+open Lean4Axiomatic.Relation.Equivalence.Impl.Fn renaming eqvOp → eqvOpFn
+open Lean4Axiomatic.Relation.Equivalence.Impl.DepFn renaming eqvOp → eqvOpDepFn
 
 variable
   {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ] [Integer.Induction.{1} ℤ]
@@ -17,14 +19,12 @@ variable
 def FixedIntPowFn (ℚ : Type) [Core (ℤ := ℤ) ℚ] : Type :=
   (p : ℚ) → [AP (p ≄ 0)] → ℚ
 
-def fn_eqvOp_family {p : ℚ} : EqvOp ([AP (p ≄ 0)] → ℚ) :=
-  Relation.Equivalence.Impl.Fn.eqvOp
-
--- TODO: Explicitly construct fn_eqvOp to see if it works
-instance fipFn_eqvOp : EqvOp (FixedIntPowFn ℚ) :=
-  Relation.Equivalence.Impl.DepFn.eqvOp fn_eqvOp_family
-
 def _pow_on_diff (n m : ℕ) : FixedIntPowFn ℚ := λ p => p^n / p^m
+
+local instance fipFn_eqvOp_inst : EqvOp (FixedIntPowFn ℚ) := by
+  have : {p : ℚ} → EqvOp ([AP (p ≄ 0)] → ℚ) := eqvOpFn
+  have : EqvOp (FixedIntPowFn ℚ) := eqvOpDepFn this
+  exact this
 
 theorem _pow_on_diff_subst
     {n₁ m₁ n₂ m₂ : ℕ}
@@ -61,10 +61,10 @@ theorem _pow_on_diff_subst
   have : p^n₁ / p^m₁ ≃ p^n₂ / p^m₂ := div_eqv_1.mp this
   exact this
 
-def pow_ind_data : Integer.Induction.ConstData ℤ :=
+def ind_ctx : Integer.Induction.ConstData ℤ :=
   Integer.ind_constraints_const (_pow_on_diff_subst (ℚ := ℚ))
 
-def _pow (p : ℚ) [AP (p ≄ 0)] (a : ℤ) : ℚ := pow_ind_data.rec_diff a p
+def _pow (p : ℚ) [AP (p ≄ 0)] (a : ℤ) : ℚ := ind_ctx.rec_diff a p
 
 /--
 TODO
@@ -80,16 +80,19 @@ local instance exponentiation_ops : Integer.Exponentiation.Ops ℚ ℤ := {
 theorem pow_diff
     {p : ℚ} {n m : ℕ} [AP (p ≄ 0)] : p^((n:ℤ) - m) ≃ p^n / p^m
     := by
-  have rp : pow_ind_data.rec_diff ((n:ℤ) - m) ≃ pow_ind_data.on_diff n m :=
-    (pow_ind_data (ℚ := ℚ)).rec_diff_eval
-  have rp2 : (x : ℚ) → [AP (x ≄ 0)] → pow_ind_data.rec_diff ((n:ℤ) - m) x ≃ pow_ind_data.on_diff n m x := rp
+  let ctx := ind_ctx (ℚ := ℚ)
+
+  have : ctx.rec_diff ((n:ℤ) - m) ≃ ctx.on_diff n m := ctx.rec_diff_eval
+  have rec_eval
+    : (x : ℚ) → [AP (x ≄ 0)] → ctx.rec_diff ((n:ℤ) - m) x ≃ ctx.on_diff n m x
+    := this
   calc
-    _ = p^((n:ℤ) - m)                       := rfl
-    _ = _pow p ((n:ℤ) - m)                  := rfl
-    _ = pow_ind_data.rec_diff ((n:ℤ) - m) p := rfl
-    _ ≃ pow_ind_data.on_diff n m p          := rp2 p
-    _ = _pow_on_diff n m p                  := rfl
-    _ = p^n / p^m                           := rfl
+    _ = p^((n:ℤ) - m)              := rfl
+    _ = _pow p ((n:ℤ) - m)         := rfl
+    _ = ctx.rec_diff ((n:ℤ) - m) p := rfl
+    _ ≃ ctx.on_diff n m p          := rec_eval p
+    _ = _pow_on_diff n m p         := rfl
+    _ = p^n / p^m                  := rfl
 
 /-- TODO -/
 theorem pow_substR
@@ -97,16 +100,19 @@ theorem pow_substR
     := by
   intro (_ : a₁ ≃ a₂)
   show p^a₁ ≃ p^a₂
-  have rs : pow_ind_data.rec_diff a₁ ≃ pow_ind_data.rec_diff a₂ :=
-    (pow_ind_data (ℚ := ℚ)).rec_diff_subst ‹a₁ ≃ a₂›
-  have rs2 : (x : ℚ) → [AP (x ≄ 0)] → pow_ind_data.rec_diff a₁ x ≃ pow_ind_data.rec_diff a₂ x := rs
+  let ctx := ind_ctx (ℚ := ℚ)
+
+  have : ctx.rec_diff a₁ ≃ ctx.rec_diff a₂ := ctx.rec_diff_subst ‹a₁ ≃ a₂›
+  have rec_subst
+    : (x : ℚ) → [AP (x ≄ 0)] → ctx.rec_diff a₁ x ≃ ctx.rec_diff a₂ x
+    := this
   calc
-    _ = p^a₁                       := rfl
-    _ = _pow p a₁                  := rfl
-    _ = pow_ind_data.rec_diff a₁ p := rfl
-    _ ≃ pow_ind_data.rec_diff a₂ p := rs2 p
-    _ = _pow p a₂                  := rfl
-    _ = p^a₂                       := rfl
+    _ = p^a₁              := rfl
+    _ = _pow p a₁         := rfl
+    _ = ctx.rec_diff a₁ p := rfl
+    _ ≃ ctx.rec_diff a₂ p := rec_subst p
+    _ = _pow p a₂         := rfl
+    _ = p^a₂              := rfl
 
 def exponentiation_props :
     Integer.Exponentiation.Props (α := ℚ) (ℤ := ℤ) (· * ·) (· / ·) := {

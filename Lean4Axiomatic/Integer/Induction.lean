@@ -172,9 +172,10 @@ def Induction.ConstData.toData
 def ind_constraints_prop
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    {motive : ℤ → Prop} {on_diff : (n m : ℕ) → motive (n - m)}
-    (motive_subst : {a₁ a₂ : ℤ} → a₁ ≃ a₂ → motive a₁ → motive a₂) :
-    Induction.Data ℤ
+    {motive : ℤ → Prop}
+    (motive_subst : {a₁ a₂ : ℤ} → a₁ ≃ a₂ → motive a₁ → motive a₂)
+    (on_diff : (n m : ℕ) → motive (n - m))
+    : Induction.Data ℤ
     := {
   motive := motive
   motive_eqv := Relation.Equivalence.eqvOp_prop_term
