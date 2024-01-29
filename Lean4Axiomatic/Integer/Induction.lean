@@ -29,6 +29,18 @@ open Relation.Equivalence (EqvOp)
 
 /-! ## Axioms -/
 
+class Family {α : Type} (fam : α → Sort u) :=
+  idx_eqv : EqvOp α
+  fam_eqv {x : α} : EqvOp (fam x)
+
+  fsubst {x₁ x₂ : α} : x₁ ≃ x₂ → fam x₁ → fam x₂
+  fsubst_refl {x : α} {x_eqv : x ≃ x} {fx : fam x} : fsubst ‹x ≃ x› fx ≃ fx
+  -- TODO: Fill in other axioms
+  -- TODO: is this valid? Would imply `fsubst_refl`. Hmm, `fy` can be anything?
+  -- Yeah probably not.
+  fsubst_eval
+    {x y : α} {eqv : x ≃ y} {fx : fam x} {fy : fam y} : fsubst ‹x ≃ y› fx ≃ fy
+
 -- TODO: Operations should maybe be pulled out from properties
 class Induction.Constraints
     {ℕ : Type} [Natural ℕ]
