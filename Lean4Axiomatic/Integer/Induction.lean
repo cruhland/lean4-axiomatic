@@ -53,11 +53,36 @@ attribute [instance] IndexedFamily.fam_eqv
 
 export IndexedFamily (fsubst)
 
+instance idx_fam_const_inst
+    {α : Type} [EqvOp α] {X : Sort u} [EqvOp X]
+    : IndexedFamily (λ (_ : α) => X)
+    := {
+  fam_eqv := λ {_} => ‹EqvOp X›
+  fsubst := λ _ => id
+  fsubst_refl := Rel.refl
+  fsubst_trans := Rel.refl
+  fsubst_substR := id
+  fsubst_injectR := id
+}
+
+def idx_fam_prop
+    {α : Type} [EqvOp α] {fam : α → Prop}
+    (fsubst : {x₁ x₂ : α} → x₁ ≃ x₂ → fam x₁ → fam x₂)
+    : IndexedFamily fam
+    := {
+  fam_eqv := Relation.Equivalence.eqvOp_prop_term
+  fsubst := fsubst
+  fsubst_refl := rfl
+  fsubst_trans := rfl
+  fsubst_substR := λ _ => rfl
+  fsubst_injectR := λ _ => rfl
+}
+
 -- TODO: Operations should maybe be pulled out from properties
 class Induction.Constraints
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    (motive : ℤ → Sort u) [IndexedFamily motive] --(motive_eqv : outParam ({a : ℤ} → EqvOp (motive a)))
+    (motive : ℤ → Sort u) [IndexedFamily motive]
     :=
 
   on_diff (n m : ℕ) : motive ((n:ℤ) - (m:ℤ))
@@ -79,44 +104,6 @@ class Induction.Data
 
 attribute [instance] Induction.Data.motive_fam
 
--- TODO: the motive_subst definitions can be removed; use the IndexedFamily
--- members directly
-def Induction.Data.motive_subst
-    {ℕ : Type} [Natural ℕ]
-    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    (d : Data ℤ) {a₁ a₂ : ℤ}
-    : a₁ ≃ a₂ → motive a₁ → motive a₂
-    :=
-  d.C.motive_subst
-
-def Induction.Data.motive_subst_refl
-    {ℕ : Type} [Natural ℕ]
-    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    (d : Data ℤ) {a : ℤ} {ma : motive a}
-    : d.motive_subst Rel.refl ma ≃ ma
-    :=
-  d.C.motive_subst_refl
-
-def Induction.Data.motive_subst_compose
-    {ℕ : Type} [Natural ℕ]
-    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    (d : Data ℤ) {a b c : ℤ} {ma : motive a} {ab : a ≃ b} {bc : b ≃ c}
-    : d.motive_subst ‹b ≃ c› (d.motive_subst ‹a ≃ b› ma) ≃
-      d.motive_subst (Rel.trans ‹a ≃ b› ‹b ≃ c›) ma
-    :=
-  d.C.motive_subst_compose
-
-def Induction.Data.motive_subst_substR
-    {ℕ : Type} [Natural ℕ]
-    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    (d : Data ℤ) {a b c : ℤ} {ab : a ≃ b} {bc : b ≃ c}
-    {ma : motive a} {mb : motive b}
-    : d.motive_subst ‹a ≃ b› ma ≃ mb →
-      d.motive_subst ‹b ≃ c› (d.motive_subst ‹a ≃ b› ma) ≃
-        d.motive_subst ‹b ≃ c› mb
-    :=
-  d.C.motive_subst_substR
-
 def Induction.Data.on_diff
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
@@ -129,7 +116,7 @@ def Induction.Data.on_diff_subst
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     (d : Data ℤ)
     {n₁ m₁ n₂ m₂ : ℕ} (diff_eqv : (n₁:ℤ) - (m₁:ℤ) ≃ (n₂:ℤ) - (m₂:ℤ))
-    : d.motive_subst diff_eqv (d.on_diff n₁ m₁) ≃ d.on_diff n₂ m₂
+    : fsubst diff_eqv (d.on_diff n₁ m₁) ≃ d.on_diff n₂ m₂
     :=
   d.C.on_diff_subst diff_eqv
 
@@ -141,15 +128,10 @@ class Induction.ConstData
       [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     :=
   X : Sort u
-  -- TODO: Make a trivial instance of `IndexedFamily` for constant functions
-  C : Constraints (ℤ := ℤ) (λ _ => X)
+  eqv : EqvOp X
+  C : Constraints (λ (_ : ℤ) => X)
 
-def Induction.ConstData.motive_subst
-    {ℕ : Type} [Natural ℕ]
-    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    (cd : ConstData ℤ) : {a₁ a₂ : ℤ} → a₁ ≃ a₂ → cd.X → cd.X
-    :=
-  cd.C.motive_subst
+attribute [instance] Induction.ConstData.eqv
 
 def Induction.ConstData.on_diff
     {ℕ : Type} [Natural ℕ]
@@ -178,19 +160,16 @@ def ind_constraints_prop
     (motive_subst : {a₁ a₂ : ℤ} → a₁ ≃ a₂ → motive a₁ → motive a₂)
     (on_diff : (n m : ℕ) → motive (n - m))
     : Induction.Data ℤ
-    := {
-  motive := motive
-  -- TODO: replace with IndexedFamily
-  -- motive_eqv := Relation.Equivalence.eqvOp_prop_term
-  C := {
-    --motive_subst := motive_subst
-    --motive_subst_refl := rfl
-    --motive_subst_compose := rfl
-    --motive_subst_substR := λ _ => rfl
-    on_diff := on_diff
-    on_diff_subst := λ _ => rfl
+    :=
+  let motive_fam := idx_fam_prop motive_subst
+  {
+    motive := motive
+    motive_fam := motive_fam
+    C := {
+      on_diff := on_diff
+      on_diff_subst := λ _ => rfl
+    }
   }
-}
 
 def ind_constraints_const
     {ℕ : Type} [Natural ℕ]
@@ -202,12 +181,7 @@ def ind_constraints_const
     Induction.ConstData ℤ
     := {
   X := X
-  -- eqv := ‹EqvOp X›
   C := {
-    --motive_subst := λ _ => id
-    --motive_subst_refl := Rel.refl
-    --motive_subst_compose := Rel.refl
-    --motive_subst_substR := id
     on_diff := on_diff
     on_diff_subst := on_diff_subst
   }
@@ -238,7 +212,7 @@ class Induction.Props
 
   ind_diff_subst
     (d : Data ℤ) {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂) :
-    d.motive_subst ‹a₁ ≃ a₂› (d.ind_diff a₁) ≃ d.ind_diff a₂
+    fsubst ‹a₁ ≃ a₂› (d.ind_diff a₁) ≃ d.ind_diff a₂
 
 /-- All integer induction/eliminator axioms. -/
 class Induction
@@ -264,7 +238,7 @@ def Induction.Data.ind_diff_eval :
 
 def Induction.Data.ind_diff_subst :
     (d : Data ℤ) → {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) →
-    d.motive_subst ‹a₁ ≃ a₂› (d.ind_diff a₁) ≃ d.ind_diff a₂
+    fsubst ‹a₁ ≃ a₂› (d.ind_diff a₁) ≃ d.ind_diff a₂
     :=
   Induction.Props.ind_diff_subst
 
@@ -278,7 +252,7 @@ def Induction.ConstData.rec_diff_eval
 
 def Induction.ConstData.rec_diff_subst
     (cd : ConstData ℤ) : {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) →
-    cd.motive_subst ‹a₁ ≃ a₂› (cd.rec_diff a₁) ≃ cd.rec_diff a₂
+    cd.rec_diff a₁ ≃ cd.rec_diff a₂
     :=
   cd.toData.ind_diff_subst
 
