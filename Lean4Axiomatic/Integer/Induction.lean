@@ -51,7 +51,9 @@ class IndexedFamily {α : Type} [EqvOp α] (fam : α → Sort u) :=
 
 attribute [instance] IndexedFamily.fam_eqv
 
-export IndexedFamily (fsubst)
+export IndexedFamily (
+  fsubst fsubst_injectR fsubst_refl fsubst_substR fsubst_trans
+)
 
 instance idx_fam_const_inst
     {α : Type} [EqvOp α] {X : Sort u} [EqvOp X]

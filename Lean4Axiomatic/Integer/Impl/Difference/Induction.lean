@@ -29,7 +29,7 @@ def ind_diff
   intro (n——m)
   show d.motive (n——m)
   have : d.motive (n - m) := d.on_diff n m
-  have : d.motive (n——m) := d.motive_subst sub_eqv_diff this
+  have : d.motive (n——m) := fsubst sub_eqv_diff this
   exact this
 
 local instance ind_ops : Induction.Ops (Difference ℕ) := {
@@ -40,30 +40,30 @@ local instance ind_ops : Induction.Ops (Difference ℕ) := {
 theorem ind_diff_subst
     (d : Induction.Data (Difference ℕ))
     {a₁ a₂ : Difference ℕ} (a_eqv : a₁ ≃ a₂)
-    : d.motive_subst ‹a₁ ≃ a₂› (d.ind_diff a₁) ≃ d.ind_diff a₂
+    : fsubst ‹a₁ ≃ a₂› (d.ind_diff a₁) ≃ d.ind_diff a₂
     := by
   revert a₁ a₂; intro (n₁——m₁) (n₂——m₂) (_ : n₁——m₁ ≃ n₂——m₂)
   let a₁ := n₁——m₁; let a₂ := n₂——m₂
   let od₁ := d.on_diff n₁ m₁; let od₂ := d.on_diff n₂ m₂
   let idod := d.ind_diff
-  show d.motive_subst ‹a₁ ≃ a₂› (d.ind_diff a₁) ≃ d.ind_diff a₂
+  show fsubst ‹a₁ ≃ a₂› (d.ind_diff a₁) ≃ d.ind_diff a₂
   have diff_eqv : (n₂:Difference ℕ) - m₂ ≃ n₁ - m₁ := calc
     _ = (n₂:Difference ℕ) - m₂ := rfl
     _ ≃ n₂——m₂                 := sub_eqv_diff
     _ ≃ n₁——m₁                 := Rel.symm ‹n₁——m₁ ≃ n₂——m₂›
     _ ≃ n₁ - m₁                := Rel.symm sub_eqv_diff
   calc
-    _ = d.motive_subst ‹a₁ ≃ a₂› (idod a₁)
+    _ = fsubst ‹a₁ ≃ a₂› (idod a₁)
       := rfl
-    _ = d.motive_subst ‹a₁ ≃ a₂› (d.motive_subst sub_eqv_diff od₁)
+    _ = fsubst ‹a₁ ≃ a₂› (fsubst sub_eqv_diff od₁)
       := rfl
-    _ ≃ d.motive_subst (Rel.trans sub_eqv_diff ‹a₁ ≃ a₂›) od₁
-      := d.motive_subst_compose
-    _ ≃ d.motive_subst (Rel.trans sub_eqv_diff ‹a₁ ≃ a₂›) (d.motive_subst diff_eqv od₂)
-      := Rel.symm (d.motive_subst_substR (d.on_diff_subst diff_eqv))
-    _ ≃ d.motive_subst (Rel.trans diff_eqv (Rel.trans sub_eqv_diff ‹a₁ ≃ a₂›)) od₂
-      := d.motive_subst_compose
-    _ = d.motive_subst sub_eqv_diff od₂
+    _ ≃ fsubst (Rel.trans sub_eqv_diff ‹a₁ ≃ a₂›) od₁
+      := fsubst_trans
+    _ ≃ fsubst (Rel.trans sub_eqv_diff ‹a₁ ≃ a₂›) (fsubst diff_eqv od₂)
+      := Rel.symm (fsubst_substR (d.on_diff_subst diff_eqv))
+    _ ≃ fsubst (Rel.trans diff_eqv (Rel.trans sub_eqv_diff ‹a₁ ≃ a₂›)) od₂
+      := fsubst_trans
+    _ = fsubst sub_eqv_diff od₂
       := rfl
     _ = idod a₂
       := rfl
@@ -76,16 +76,16 @@ theorem ind_diff_eval
   calc
     _ = d.ind_diff (n - m)
         := rfl
-    _ ≃ d.motive_subst (Rel.symm sub_eqv_diff) (d.ind_diff (n——m))
+    _ ≃ fsubst (Rel.symm sub_eqv_diff) (d.ind_diff (n——m))
         := Rel.symm (ind_diff_subst d (Rel.symm sub_eqv_diff))
-    _ = d.motive_subst (Rel.symm sub_eqv_diff) (d.motive_subst sub_eqv_diff (d.on_diff n m))
+    _ = fsubst (Rel.symm sub_eqv_diff) (fsubst sub_eqv_diff (d.on_diff n m))
         := rfl
-    _ ≃ d.motive_subst (Rel.trans sub_eqv_diff (Rel.symm sub_eqv_diff)) (d.on_diff n m)
-        := d.motive_subst_compose
-    _ = d.motive_subst Rel.refl (d.on_diff n m)
+    _ ≃ fsubst (Rel.trans sub_eqv_diff (Rel.symm sub_eqv_diff)) (d.on_diff n m)
+        := fsubst_trans
+    _ = fsubst Rel.refl (d.on_diff n m)
         := rfl
     _ ≃ d.on_diff n m
-        := d.motive_subst_refl
+        := fsubst_refl
 
 def ind_props : Induction.Props (Difference ℕ) := {
   ind_diff_subst := ind_diff_subst
