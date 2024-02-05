@@ -91,7 +91,7 @@ class Induction.Constraints
 
   /-- TODO -/
   on_diff_subst
-    {n₁ m₁ n₂ m₂ : ℕ} (diff_eqv : (n₁:ℤ) - (m₁:ℤ) ≃ (n₂:ℤ) - (m₂:ℤ))
+    {n₁ m₁ n₂ m₂ : ℕ} {diff_eqv : (n₁:ℤ) - (m₁:ℤ) ≃ (n₂:ℤ) - (m₂:ℤ)}
     : fsubst diff_eqv (on_diff n₁ m₁) ≃ on_diff n₂ m₂
 
 -- TODO: What type parameters should be made explicit?
@@ -117,10 +117,10 @@ def Induction.Data.on_diff_subst
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     (d : Data ℤ)
-    {n₁ m₁ n₂ m₂ : ℕ} (diff_eqv : (n₁:ℤ) - (m₁:ℤ) ≃ (n₂:ℤ) - (m₂:ℤ))
+    {n₁ m₁ n₂ m₂ : ℕ} {diff_eqv : (n₁:ℤ) - (m₁:ℤ) ≃ (n₂:ℤ) - (m₂:ℤ)}
     : fsubst diff_eqv (d.on_diff n₁ m₁) ≃ d.on_diff n₂ m₂
     :=
-  d.C.on_diff_subst diff_eqv
+  d.C.on_diff_subst
 
 -- TODO: What type parameters should be made explicit?
 /-- TODO -/
@@ -169,7 +169,7 @@ def ind_constraints_prop
     motive_fam := motive_fam
     C := {
       on_diff := on_diff
-      on_diff_subst := λ _ => rfl
+      on_diff_subst := rfl
     }
   }
 
@@ -185,7 +185,7 @@ def ind_constraints_const
   X := X
   C := {
     on_diff := on_diff
-    on_diff_subst := on_diff_subst
+    on_diff_subst := λ {_} {_} {_} {_} {diff_eqv} => on_diff_subst diff_eqv
   }
 }
 
