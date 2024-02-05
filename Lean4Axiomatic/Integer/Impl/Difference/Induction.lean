@@ -63,7 +63,7 @@ theorem ind_diff_subst
       := Rel.symm (fsubst_substR (d.on_diff_subst diff_eqv))
     _ ≃ fsubst (Rel.trans diff_eqv (Rel.trans sub_eqv_diff ‹a₁ ≃ a₂›)) od₂
       := fsubst_trans
-    _ = fsubst sub_eqv_diff od₂
+    _ = fsubst (sub_eqv_diff (ℕ := ℕ)) od₂
       := rfl
     _ = idod a₂
       := rfl
@@ -78,7 +78,7 @@ theorem ind_diff_eval
         := rfl
     _ ≃ fsubst (Rel.symm sub_eqv_diff) (d.ind_diff (n——m))
         := Rel.symm (ind_diff_subst d (Rel.symm sub_eqv_diff))
-    _ = fsubst (Rel.symm sub_eqv_diff) (fsubst sub_eqv_diff (d.on_diff n m))
+    _ = fsubst (Rel.symm (sub_eqv_diff (ℕ := ℕ))) (fsubst sub_eqv_diff (d.on_diff n m))
         := rfl
     _ ≃ fsubst (Rel.trans sub_eqv_diff (Rel.symm sub_eqv_diff)) (d.on_diff n m)
         := fsubst_trans
