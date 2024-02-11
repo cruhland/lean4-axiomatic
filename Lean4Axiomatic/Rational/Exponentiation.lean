@@ -249,6 +249,7 @@ theorem pow_substL
     := by
   intro (_ : p₁ ≃ p₂)
   show p₁^a ≃ p₂^a
+
   let motive (x : ℤ) : Prop := p₁^x ≃ p₂^x
   have motive_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → motive a₁ → motive a₂ := by
     intro (_ : a₁ ≃ a₂) (_ : motive a₁)
@@ -262,6 +263,8 @@ theorem pow_substL
       _ ≃ p₂^a₂ := Integer.pow_substR (α := ℚ) (· * ·) (· / ·) ‹a₁ ≃ a₂›
     have : motive a₂ := this
     exact this
+  let idx_fam_motive := Integer.idx_fam_prop motive_subst
+
   have on_diff (n m : ℕ) : motive (n - m) := by
     show p₁^((n:ℤ) - (m:ℤ)) ≃ p₂^((n:ℤ) - (m:ℤ))
     calc
@@ -270,7 +273,8 @@ theorem pow_substL
       _ ≃ p₂^n / p₁^m        := div_substL (Natural.pow_substL ‹p₁ ≃ p₂›)
       _ ≃ p₂^n / p₂^m        := div_substR (Natural.pow_substL ‹p₁ ≃ p₂›)
       _ ≃ p₂^((n:ℤ) - (m:ℤ)) := eqv_symm Integer.pow_diff
-  let ind_ctx := Integer.ind_constraints_prop motive_subst on_diff
+  let ind_ctx := Integer.ind_constraints_prop on_diff
+
   have : motive a := ind_ctx.ind_diff a
   have : p₁^a ≃ p₂^a := this
   exact this
@@ -286,6 +290,8 @@ theorem pow_preserves_nonzero {p : ℚ} {a : ℤ} [AP (p ≄ 0)] : p^a ≄ 0 := 
     have : p^a₂ ≄ 0 := AA.neqv_substL ‹p^a₁ ≃ p^a₂› this
     have : motive a₂ := this
     exact this
+  let idx_fam_motive := Integer.idx_fam_prop motive_subst
+
   have on_diff (n m : ℕ) : motive (n - m) := by
     intro (_ : p^((n:ℤ) - m) ≃ 0)
     show False
@@ -294,7 +300,8 @@ theorem pow_preserves_nonzero {p : ℚ} {a : ℤ} [AP (p ≄ 0)] : p^a ≄ 0 := 
     have : p^n ≃ 0 := div_eqv_0.mp this
     have : p^n ≄ 0 := Natural.pow_preserves_nonzero_base ‹AP (p ≄ 0)›.ev
     exact absurd ‹p^n ≃ 0› ‹p^n ≄ 0›
-  let ind_ctx := Integer.ind_constraints_prop motive_subst on_diff
+  let ind_ctx := Integer.ind_constraints_prop on_diff
+
   have : motive a := ind_ctx.ind_diff a
   have : p^a ≄ 0 := this
   exact this

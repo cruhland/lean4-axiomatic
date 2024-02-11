@@ -24,12 +24,14 @@ theorem sub_eqv_diff
 
 /-- TODO -/
 def ind_diff
-    (d : Induction.Data (Difference ℕ)) : (a : Difference ℕ) → d.motive a
+    {motive : Difference ℕ → Sort u} [IndexedFamily motive]
+    (d : Induction.Data motive)
+    : (a : Difference ℕ) → motive a
     := by
   intro (n——m)
-  show d.motive (n——m)
-  have : d.motive (n - m) := d.on_diff n m
-  have : d.motive (n——m) := fsubst sub_eqv_diff this
+  show motive (n——m)
+  have : motive (n - m) := d.on_diff n m
+  have : motive (n——m) := fsubst sub_eqv_diff this
   exact this
 
 local instance ind_ops : Induction.Ops (Difference ℕ) := {
@@ -38,8 +40,8 @@ local instance ind_ops : Induction.Ops (Difference ℕ) := {
 
 /-- TODO -/
 theorem ind_diff_subst
-    (d : Induction.Data (Difference ℕ))
-    {a₁ a₂ : Difference ℕ} (a_eqv : a₁ ≃ a₂)
+    {motive : Difference ℕ → Sort u} [IndexedFamily motive]
+    (d : Induction.Data motive) {a₁ a₂ : Difference ℕ} (a_eqv : a₁ ≃ a₂)
     : fsubst ‹a₁ ≃ a₂› (d.ind_diff a₁) ≃ d.ind_diff a₂
     := by
   revert a₁ a₂; intro (n₁——m₁) (n₂——m₂) (_ : n₁——m₁ ≃ n₂——m₂)
@@ -70,7 +72,8 @@ theorem ind_diff_subst
 
 /-- TODO -/
 theorem ind_diff_eval
-    (d : Induction.Data (Difference ℕ)) {n m : ℕ}
+    {motive : Difference ℕ → Sort u} [IndexedFamily motive]
+    (d : Induction.Data motive) {n m : ℕ}
     : d.ind_diff (n - m) ≃ d.on_diff n m
     := by
   calc

@@ -98,59 +98,35 @@ class Induction.Constraints
 /-- TODO -/
 class Induction.Data
     {ℕ : outParam Type} [Natural ℕ]
-    (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    (motive : ℤ → Sort u) [fam : IndexedFamily motive]
     :=
-  motive : ℤ → Sort u
-  motive_fam : IndexedFamily motive
   C : Constraints motive
-
-attribute [instance] Induction.Data.motive_fam
 
 def Induction.Data.on_diff
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    (d : Data ℤ) : (n m : ℕ) → d.motive (n - m)
+    {motive : ℤ → Sort u} [IndexedFamily motive] (d : Data motive)
+    : (n m : ℕ) → motive (n - m)
     :=
   d.C.on_diff
 
 def Induction.Data.on_diff_subst
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    (d : Data ℤ)
+    {motive : ℤ → Sort u} [IndexedFamily motive] (d : Data motive)
     {n₁ m₁ n₂ m₂ : ℕ} {diff_eqv : (n₁:ℤ) - (m₁:ℤ) ≃ (n₂:ℤ) - (m₂:ℤ)}
     : fsubst diff_eqv (d.on_diff n₁ m₁) ≃ d.on_diff n₂ m₂
     :=
   d.C.on_diff_subst
 
--- TODO: What type parameters should be made explicit?
-/-- TODO -/
-class Induction.ConstData
+def Induction.ConstData
     {ℕ : outParam Type} [Natural ℕ]
-    (ℤ : outParam Type)
-      [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    (X : Sort u) [EqvOp X]
+    : Sort (max 1 u)
     :=
-  X : Sort u
-  eqv : EqvOp X
-  C : Constraints (λ (_ : ℤ) => X)
-
-attribute [instance] Induction.ConstData.eqv
-
-def Induction.ConstData.on_diff
-    {ℕ : Type} [Natural ℕ]
-    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    (cd : ConstData ℤ) : ℕ → ℕ → cd.X
-    :=
-  cd.C.on_diff
-
-/-- TODO -/
-def Induction.ConstData.toData
-    {ℕ : Type} [Natural ℕ]
-    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    (cd : ConstData ℤ) : Data ℤ
-    := {
-  motive := λ _ => cd.X
-  C := cd.C
-}
+  Data (λ (_ : ℤ) => X)
 
 -- TODO: Looks like with a `ℤ → Prop` motive, `on_diff` can be anything,
 -- because substitution for it is trivial. Evidence that the `on_diff` stuff
@@ -158,18 +134,14 @@ def Induction.ConstData.toData
 def ind_constraints_prop
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    {motive : ℤ → Prop}
-    (motive_subst : {a₁ a₂ : ℤ} → a₁ ≃ a₂ → motive a₁ → motive a₂)
+    {motive : ℤ → Prop} [IndexedFamily motive]
     (on_diff : (n m : ℕ) → motive (n - m))
-    : Induction.Data ℤ
+    : Induction.Data motive
     :=
-  let motive_fam := idx_fam_prop motive_subst
   {
-    motive := motive
-    motive_fam := motive_fam
     C := {
       on_diff := on_diff
-      on_diff_subst := rfl
+      on_diff_subst := Rel.refl
     }
   }
 
@@ -180,9 +152,8 @@ def ind_constraints_const
     (on_diff_subst :
       {n₁ m₁ n₂ m₂ : ℕ} → (n₁:ℤ) - m₁ ≃ n₂ - m₂ →
       on_diff n₁ m₁ ≃ on_diff n₂ m₂) :
-    Induction.ConstData ℤ
+    Induction.Data (λ (_ : ℤ) => X)
     := {
-  X := X
   C := {
     on_diff := on_diff
     on_diff_subst := λ {_} {_} {_} {_} {diff_eqv} => on_diff_subst diff_eqv
@@ -192,29 +163,38 @@ def ind_constraints_const
 /-- Operations pertaining to eliminators on integers. -/
 class Induction.Ops
     {ℕ : outParam Type} [Natural ℕ]
-    (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ] :=
+    (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    :=
   /-- TODO -/
-  ind_diff (d : Data ℤ) (a : ℤ) : d.motive a
+  ind_diff
+    {motive : ℤ → Sort u} [IndexedFamily motive] (d : Data motive) (a : ℤ)
+    : motive a
 
+-- TODO: Export `ind_diff` would give the same effect as this?
 def Induction.Data.ind_diff
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    [Ops ℤ] : (d : Data ℤ) → (a : ℤ) → d.motive a
+    [Ops ℤ] {motive : ℤ → Sort u} [IndexedFamily motive]
+    : (d : Data motive) → (a : ℤ) → motive a
     :=
   Ops.ind_diff
 
 /-- Properties of integer eliminators. -/
 class Induction.Props
     {ℕ : outParam Type} [Natural ℕ]
-    (ℤ : Type)
-      [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ] [ops : Ops ℤ]
+    (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
+    [Ops ℤ]
     :=
   /-- TODO -/
-  ind_diff_eval (d : Data ℤ) {n m : ℕ} : d.ind_diff (n - m) ≃ d.on_diff n m
+  ind_diff_eval
+    {motive : ℤ → Sort u} [IndexedFamily motive] (d : Data motive) {n m : ℕ}
+    : d.ind_diff (n - m) ≃ d.on_diff n m
 
+  /-- TODO -/
   ind_diff_subst
-    (d : Data ℤ) {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂) :
-    fsubst ‹a₁ ≃ a₂› (d.ind_diff a₁) ≃ d.ind_diff a₂
+    {motive : ℤ → Sort u} [IndexedFamily motive] (d : Data motive)
+    {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂)
+    : fsubst ‹a₁ ≃ a₂› (d.ind_diff a₁) ≃ d.ind_diff a₂
 
 /-- All integer induction/eliminator axioms. -/
 class Induction
@@ -233,29 +213,37 @@ variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Core ℤ] [Addition ℤ] [Multiplication (ℕ := ℕ) ℤ]
 variable [Negation ℤ] [Sign ℤ] [Subtraction ℤ] [Induction ℤ]
 
-def Induction.Data.ind_diff_eval :
-    (d : Data ℤ) → {n m : ℕ} → d.ind_diff (n - m) ≃ d.on_diff n m
+-- TODO: export `ind_diff_eval` gives the same effect?
+def Induction.Data.ind_diff_eval
+    {motive : ℤ → Sort u} [IndexedFamily motive]
+    : (d : Data motive) → {n m : ℕ} → d.ind_diff (n - m) ≃ d.on_diff n m
     :=
   Induction.Props.ind_diff_eval
 
-def Induction.Data.ind_diff_subst :
-    (d : Data ℤ) → {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) →
-    fsubst ‹a₁ ≃ a₂› (d.ind_diff a₁) ≃ d.ind_diff a₂
+-- TODO: export `ind_diff_subst` gives the same effect?
+def Induction.Data.ind_diff_subst
+    {motive : ℤ → Sort u} [IndexedFamily motive]
+    : (d : Data motive) → {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) →
+      fsubst ‹a₁ ≃ a₂› (d.ind_diff a₁) ≃ d.ind_diff a₂
     :=
   Induction.Props.ind_diff_subst
 
-def Induction.ConstData.rec_diff (cd : ConstData ℤ) : ℤ → cd.X :=
-  cd.toData.ind_diff
+def Induction.ConstData.rec_diff
+    {X : Sort u} [EqvOp X] (cd : ConstData ℤ X)
+    : ℤ → X
+    :=
+  cd.ind_diff
 
 def Induction.ConstData.rec_diff_eval
-    (cd : ConstData ℤ) : {n m : ℕ} → cd.rec_diff (n - m) ≃ cd.on_diff n m
+    {X : Sort u} [EqvOp X] (cd : ConstData ℤ X)
+    : {n m : ℕ} → cd.rec_diff (n - m) ≃ cd.on_diff n m
     :=
-  cd.toData.ind_diff_eval
+  cd.ind_diff_eval
 
 def Induction.ConstData.rec_diff_subst
-    (cd : ConstData ℤ) : {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) →
-    cd.rec_diff a₁ ≃ cd.rec_diff a₂
+    {X : Sort u} [EqvOp X] (cd : ConstData ℤ X)
+    : {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) → cd.rec_diff a₁ ≃ cd.rec_diff a₂
     :=
-  cd.toData.ind_diff_subst
+  cd.ind_diff_subst
 
 end Lean4Axiomatic.Integer
