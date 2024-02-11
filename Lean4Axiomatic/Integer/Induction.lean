@@ -120,14 +120,6 @@ def Induction.Data.on_diff_subst
     :=
   d.C.on_diff_subst
 
-def Induction.ConstData
-    {ℕ : outParam Type} [Natural ℕ]
-    (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    (X : Sort u) [EqvOp X]
-    : Sort (max 1 u)
-    :=
-  Data (λ (_ : ℤ) => X)
-
 -- TODO: Looks like with a `ℤ → Prop` motive, `on_diff` can be anything,
 -- because substitution for it is trivial. Evidence that the `on_diff` stuff
 -- should be separated out, it would make proofs much cleaner.
@@ -228,22 +220,22 @@ def Induction.Data.ind_diff_subst
     :=
   Induction.Props.ind_diff_subst
 
-def Induction.ConstData.rec_diff
-    {X : Sort u} [EqvOp X] (cd : ConstData ℤ X)
+def Induction.Data.rec_diff
+    {X : Sort u} [EqvOp X] (d : Data (λ (_ : ℤ) => X))
     : ℤ → X
     :=
-  cd.ind_diff
+  d.ind_diff
 
-def Induction.ConstData.rec_diff_eval
-    {X : Sort u} [EqvOp X] (cd : ConstData ℤ X)
-    : {n m : ℕ} → cd.rec_diff (n - m) ≃ cd.on_diff n m
+def Induction.Data.rec_diff_eval
+    {X : Sort u} [EqvOp X] (d : Data (λ (_ : ℤ) => X))
+    : {n m : ℕ} → d.rec_diff (n - m) ≃ d.on_diff n m
     :=
-  cd.ind_diff_eval
+  d.ind_diff_eval
 
-def Induction.ConstData.rec_diff_subst
-    {X : Sort u} [EqvOp X] (cd : ConstData ℤ X)
-    : {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) → cd.rec_diff a₁ ≃ cd.rec_diff a₂
+def Induction.Data.rec_diff_subst
+    {X : Sort u} [EqvOp X] (d : Data (λ (_ : ℤ) => X))
+    : {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) → d.rec_diff a₁ ≃ d.rec_diff a₂
     :=
-  cd.ind_diff_subst
+  d.ind_diff_subst
 
 end Lean4Axiomatic.Integer

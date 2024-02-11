@@ -61,7 +61,7 @@ theorem _pow_on_diff_subst
   have : p^n₁ / p^m₁ ≃ p^n₂ / p^m₂ := div_eqv_1.mp this
   exact this
 
-def ind_ctx : Integer.Induction.ConstData ℤ (FixedIntPowFn ℚ) :=
+def ind_ctx : Integer.Induction.Data (λ (_ : ℤ) => FixedIntPowFn ℚ) :=
   Integer.ind_constraints_const _pow_on_diff_subst
 
 def _pow (p : ℚ) [AP (p ≄ 0)] (a : ℤ) : ℚ := ind_ctx.rec_diff a p
