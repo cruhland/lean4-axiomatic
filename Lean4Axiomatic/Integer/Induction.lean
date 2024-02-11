@@ -81,44 +81,18 @@ def idx_fam_prop
 }
 
 -- TODO: Operations should maybe be pulled out from properties
-class Induction.Constraints
-    {ℕ : Type} [Natural ℕ]
+class Induction.Data
+    {ℕ : outParam Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     (motive : ℤ → Sort u) [IndexedFamily motive]
     :=
-
+  /-- TODO -/
   on_diff (n m : ℕ) : motive ((n:ℤ) - (m:ℤ))
 
   /-- TODO -/
   on_diff_subst
     {n₁ m₁ n₂ m₂ : ℕ} {diff_eqv : (n₁:ℤ) - (m₁:ℤ) ≃ (n₂:ℤ) - (m₂:ℤ)}
     : fsubst diff_eqv (on_diff n₁ m₁) ≃ on_diff n₂ m₂
-
--- TODO: What type parameters should be made explicit?
-/-- TODO -/
-class Induction.Data
-    {ℕ : outParam Type} [Natural ℕ]
-    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    (motive : ℤ → Sort u) [fam : IndexedFamily motive]
-    :=
-  C : Constraints motive
-
-def Induction.Data.on_diff
-    {ℕ : Type} [Natural ℕ]
-    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    {motive : ℤ → Sort u} [IndexedFamily motive] (d : Data motive)
-    : (n m : ℕ) → motive (n - m)
-    :=
-  d.C.on_diff
-
-def Induction.Data.on_diff_subst
-    {ℕ : Type} [Natural ℕ]
-    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    {motive : ℤ → Sort u} [IndexedFamily motive] (d : Data motive)
-    {n₁ m₁ n₂ m₂ : ℕ} {diff_eqv : (n₁:ℤ) - (m₁:ℤ) ≃ (n₂:ℤ) - (m₂:ℤ)}
-    : fsubst diff_eqv (d.on_diff n₁ m₁) ≃ d.on_diff n₂ m₂
-    :=
-  d.C.on_diff_subst
 
 -- TODO: Looks like with a `ℤ → Prop` motive, `on_diff` can be anything,
 -- because substitution for it is trivial. Evidence that the `on_diff` stuff
@@ -129,13 +103,10 @@ def ind_constraints_prop
     {motive : ℤ → Prop} [IndexedFamily motive]
     (on_diff : (n m : ℕ) → motive (n - m))
     : Induction.Data motive
-    :=
-  {
-    C := {
-      on_diff := on_diff
-      on_diff_subst := Rel.refl
-    }
-  }
+    := {
+  on_diff := on_diff
+  on_diff_subst := Rel.refl
+}
 
 def ind_constraints_const
     {ℕ : Type} [Natural ℕ]
@@ -146,10 +117,8 @@ def ind_constraints_const
       on_diff n₁ m₁ ≃ on_diff n₂ m₂) :
     Induction.Data (λ (_ : ℤ) => X)
     := {
-  C := {
-    on_diff := on_diff
-    on_diff_subst := λ {_} {_} {_} {_} {diff_eqv} => on_diff_subst diff_eqv
-  }
+  on_diff := on_diff
+  on_diff_subst := λ {_} {_} {_} {_} {diff_eqv} => on_diff_subst diff_eqv
 }
 
 /-- Operations pertaining to eliminators on integers. -/
