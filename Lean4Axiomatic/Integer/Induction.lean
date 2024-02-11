@@ -29,7 +29,7 @@ open Relation.Equivalence (EqvOp IndexedFamily fsubst)
 
 /-! ## Axioms -/
 
--- TODO: Operations should maybe be pulled out from properties
+/-- TODO -/
 class Induction.Context
     {ℕ : outParam Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
@@ -43,9 +43,7 @@ class Induction.Context
     {n₁ m₁ n₂ m₂ : ℕ} {diff_eqv : (n₁:ℤ) - m₁ ≃ n₂ - m₂}
     : fsubst diff_eqv (on_diff n₁ m₁) ≃ on_diff n₂ m₂
 
--- TODO: Looks like with a `ℤ → Prop` motive, `on_diff` can be anything,
--- because substitution for it is trivial. Evidence that the `on_diff` stuff
--- should be separated out, it would make proofs much cleaner.
+/-- TODO -/
 def ind_context_prop
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
@@ -57,6 +55,7 @@ def ind_context_prop
   on_diff_subst := Rel.refl
 }
 
+/-- TODO -/
 def ind_context_const
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
@@ -103,8 +102,8 @@ class Induction.Props
 
   /-- TODO -/
   ind_diff_subst
-    {motive : ℤ → Sort u} [IndexedFamily motive] (ctx : Context motive)
-    {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂)
+    {motive : ℤ → Sort u} [IndexedFamily motive] {ctx : Context motive}
+    {a₁ a₂ : ℤ} {a_eqv : a₁ ≃ a₂}
     : fsubst ‹a₁ ≃ a₂› (ctx.ind_diff a₁) ≃ ctx.ind_diff a₂
 
 /-- All integer induction/eliminator axioms. -/
@@ -137,10 +136,10 @@ def Induction.Context.ind_diff_eval
 /-- TODO -/
 def Induction.Context.ind_diff_subst
     {motive : ℤ → Sort u} [IndexedFamily motive]
-    : (ctx : Context motive) → {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) →
-      fsubst ‹a₁ ≃ a₂› (ctx.ind_diff a₁) ≃ ctx.ind_diff a₂
+    (ctx : Context motive) {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂)
+    : fsubst ‹a₁ ≃ a₂› (ctx.ind_diff a₁) ≃ ctx.ind_diff a₂
     :=
-  Induction.Props.ind_diff_subst
+  Induction.Props.ind_diff_subst (ctx := ctx) (a_eqv := a_eqv)
 
 /-- TODO -/
 def Induction.Context.rec_diff

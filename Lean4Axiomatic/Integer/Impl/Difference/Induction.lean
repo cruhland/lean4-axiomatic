@@ -32,7 +32,6 @@ def ind_diff
     := by
   intro (n——m)
   show motive (n——m)
-  -- TODO: `ind_diff` only needs `on_diff` from `Context` -- maybe `Ctx.Ops`?
   have : motive (n - m) := ctx.on_diff n m
   have : motive (n——m) := fsubst sub_eqv_diff this
   exact this
@@ -44,34 +43,31 @@ local instance ind_ops : Induction.Ops (Difference ℕ) := {
 /-- TODO -/
 theorem ind_diff_subst
     {motive : Difference ℕ → Sort u} [IndexedFamily motive]
-    (ctx : Induction.Context motive) {a₁ a₂ : Difference ℕ} (a_eqv : a₁ ≃ a₂)
+    {ctx : Induction.Context motive} {a₁ a₂ : Difference ℕ} {a_eqv : a₁ ≃ a₂}
     : fsubst ‹a₁ ≃ a₂› (ctx.ind_diff a₁) ≃ ctx.ind_diff a₂
     := by
-  revert a₁ a₂; intro (n₁——m₁) (n₂——m₂) (_ : n₁——m₁ ≃ n₂——m₂)
+  revert a₁ a₂; intro (n₁——m₁) (n₂——m₂)
   let a₁ := n₁——m₁; let a₂ := n₂——m₂
-  let od₁ := ctx.on_diff n₁ m₁; let od₂ := ctx.on_diff n₂ m₂
+  intro (_ : a₁ ≃ a₂)
   show fsubst ‹a₁ ≃ a₂› (ctx.ind_diff a₁) ≃ ctx.ind_diff a₂
-  have diff_eqv : (n₂:Difference ℕ) - m₂ ≃ n₁ - m₁ := calc
-    _ = (n₂:Difference ℕ) - m₂ := rfl
-    _ ≃ n₂——m₂                 := sub_eqv_diff
-    _ ≃ n₁——m₁                 := Rel.symm ‹n₁——m₁ ≃ n₂——m₂›
-    _ ≃ n₁ - m₁                := Rel.symm sub_eqv_diff
+
+  let d₁ := (n₁:Difference ℕ) - m₁; let d₂ := (n₂:Difference ℕ) - m₂
+  have : d₁ ≃ a₁ := sub_eqv_diff
+  have : d₂ ≃ a₂ := sub_eqv_diff
+  have : d₁ ≃ a₂ := Rel.trans ‹d₁ ≃ a₁› ‹a₁ ≃ a₂›
+  have : d₂ ≃ d₁ := Rel.trans ‹d₂ ≃ a₂› (Rel.symm ‹d₁ ≃ a₂›)
+
+  let od₁ := ctx.on_diff n₁ m₁; let od₂ := ctx.on_diff n₂ m₂
+  have od_subst : od₁ ≃ fsubst ‹d₂ ≃ d₁› od₂ := Rel.symm ctx.on_diff_subst
   calc
-    _ = fsubst ‹a₁ ≃ a₂› (ctx.ind_diff a₁)
-      := rfl
-    _ = fsubst ‹a₁ ≃ a₂› (fsubst sub_eqv_diff od₁)
-      := rfl
-    _ ≃ fsubst (Rel.trans sub_eqv_diff ‹a₁ ≃ a₂›) od₁
-      := fsubst_trans
-    _ ≃ fsubst (Rel.trans sub_eqv_diff ‹a₁ ≃ a₂›) (fsubst diff_eqv od₂)
-    -- TODO: Needs `on_diff` and `on_diff_subst` from `Context`
-      := fsubst_substR (Rel.symm ctx.on_diff_subst)
-    _ ≃ fsubst (Rel.trans diff_eqv (Rel.trans sub_eqv_diff ‹a₁ ≃ a₂›)) od₂
-      := fsubst_trans
-    _ = fsubst (sub_eqv_diff (ℕ := ℕ)) od₂
-      := rfl
-    _ = ctx.ind_diff a₂
-      := rfl
+    _ = fsubst ‹a₁ ≃ a₂› (ctx.ind_diff a₁)         := rfl
+    _ = fsubst ‹a₁ ≃ a₂› (fsubst ‹d₁ ≃ a₁› od₁)    := rfl
+    _ ≃ fsubst (Rel.trans ‹d₁ ≃ a₁› ‹a₁ ≃ a₂›) od₁ := fsubst_trans
+    _ = fsubst ‹d₁ ≃ a₂› od₁                       := rfl
+    _ ≃ fsubst ‹d₁ ≃ a₂› (fsubst ‹d₂ ≃ d₁› od₂)    := fsubst_substR od_subst
+    _ ≃ fsubst (Rel.trans ‹d₂ ≃ d₁› ‹d₁ ≃ a₂›) od₂ := fsubst_trans
+    _ = fsubst ‹d₂ ≃ a₂› od₂                       := rfl
+    _ = ctx.ind_diff a₂                            := rfl
 
 /-- TODO -/
 theorem ind_diff_eval
@@ -79,20 +75,15 @@ theorem ind_diff_eval
     (ctx : Induction.Context motive) {n m : ℕ}
     : ctx.ind_diff (n - m) ≃ ctx.on_diff n m
     := by
+  have sed : (n:Difference ℕ) - m ≃ n——m := sub_eqv_diff
+  have des : n——m ≃ n - m := Rel.symm sed
   calc
-    _ = ctx.ind_diff (n - m)
-        := rfl
-    _ ≃ fsubst (Rel.symm sub_eqv_diff) (ctx.ind_diff (n——m))
-    -- TODO: Needs `ind_diff_subst`, so needs all of `Context`
-        := Rel.symm (ind_diff_subst ctx (Rel.symm sub_eqv_diff))
-    _ = fsubst (Rel.symm (sub_eqv_diff (ℕ := ℕ))) (fsubst sub_eqv_diff (ctx.on_diff n m))
-        := rfl
-    _ ≃ fsubst (Rel.trans sub_eqv_diff (Rel.symm sub_eqv_diff)) (ctx.on_diff n m)
-        := fsubst_trans
-    _ = fsubst Rel.refl (ctx.on_diff n m)
-        := rfl
-    _ ≃ ctx.on_diff n m
-        := fsubst_refl
+    _ = ctx.ind_diff (n - m)                         := rfl
+    _ ≃ fsubst des (ctx.ind_diff (n——m))             := Rel.symm ind_diff_subst
+    _ = fsubst des (fsubst sed (ctx.on_diff n m))    := rfl
+    _ ≃ fsubst (Rel.trans sed des) (ctx.on_diff n m) := fsubst_trans
+    _ = fsubst Rel.refl (ctx.on_diff n m)            := rfl
+    _ ≃ ctx.on_diff n m                              := fsubst_refl
 
 def ind_props : Induction.Props (Difference ℕ) := {
   ind_diff_subst := ind_diff_subst
