@@ -10,11 +10,11 @@ derived properties.
 
 namespace Lean4Axiomatic.Rational
 
+open Lean4Axiomatic.Function (idx_fam_prop)
 open Lean4Axiomatic.Logic (AP)
 open Lean4Axiomatic.Metric (abs)
+open Lean4Axiomatic.Natural (pow_step pow_zero step)
 open Lean4Axiomatic.Signed (sgn)
-open Natural (pow_step pow_zero step)
-open Relation.Equivalence (idx_fam_prop)
 
 /-! ## Derived properties for exponentiation to a natural number -/
 

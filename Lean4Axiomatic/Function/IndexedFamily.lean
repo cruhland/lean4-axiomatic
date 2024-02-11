@@ -1,6 +1,8 @@
 import Lean4Axiomatic.Relation.Equivalence.Core
 
-namespace Lean4Axiomatic.Relation.Equivalence
+namespace Lean4Axiomatic.Function
+
+open Relation.Equivalence (EqvOp)
 
 class IndexedFamily {α : Type} [EqvOp α] (fam : α → Sort u) :=
   fam_eqv {x : α} : EqvOp (fam x)
@@ -53,4 +55,4 @@ def idx_fam_prop
   fsubst_injectR := λ _ => rfl
 }
 
-end Lean4Axiomatic.Relation.Equivalence
+end Lean4Axiomatic.Function

@@ -1,4 +1,4 @@
-import Lean4Axiomatic.Function
+import Lean4Axiomatic.Function.Core
 import Lean4Axiomatic.Operators
 
 /-!

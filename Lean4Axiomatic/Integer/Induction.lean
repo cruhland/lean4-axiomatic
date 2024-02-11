@@ -1,3 +1,4 @@
+import Lean4Axiomatic.Function
 import Lean4Axiomatic.Integer.Subtraction
 
 /-!
@@ -25,7 +26,8 @@ show a result holds for natural numbers than for integers.
 
 namespace Lean4Axiomatic.Integer
 
-open Relation.Equivalence (EqvOp IndexedFamily fsubst)
+open Function (IndexedFamily fsubst)
+open Relation.Equivalence (EqvOp)
 
 /-! ## Axioms -/
 

@@ -6,9 +6,8 @@ namespace Lean4Axiomatic.Integer.Impl.Difference
 /-! ## Induction/eliminators on formal differences -/
 
 open scoped Integer.Impl.Generic
-open Relation.Equivalence (
-  EqvOp IndexedFamily fsubst fsubst_refl fsubst_substR fsubst_trans
-)
+open Function (IndexedFamily fsubst fsubst_refl fsubst_substR fsubst_trans)
+open Relation.Equivalence (EqvOp)
 
 variable {ℕ : Type} [Natural ℕ]
 
