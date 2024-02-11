@@ -30,7 +30,7 @@ open Relation.Equivalence (EqvOp IndexedFamily fsubst)
 /-! ## Axioms -/
 
 -- TODO: Operations should maybe be pulled out from properties
-class Induction.Data
+class Induction.Context
     {ℕ : outParam Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     (motive : ℤ → Sort u) [IndexedFamily motive]
@@ -46,25 +46,25 @@ class Induction.Data
 -- TODO: Looks like with a `ℤ → Prop` motive, `on_diff` can be anything,
 -- because substitution for it is trivial. Evidence that the `on_diff` stuff
 -- should be separated out, it would make proofs much cleaner.
-def ind_constraints_prop
+def ind_context_prop
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     {motive : ℤ → Prop} [IndexedFamily motive]
     (on_diff : (n m : ℕ) → motive (n - m))
-    : Induction.Data motive
+    : Induction.Context motive
     := {
   on_diff := on_diff
   on_diff_subst := Rel.refl
 }
 
-def ind_constraints_const
+def ind_context_const
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     {X : Sort u} [EqvOp X] {on_diff : ℕ → ℕ → X}
     (on_diff_subst :
       {n₁ m₁ n₂ m₂ : ℕ} → (n₁:ℤ) - m₁ ≃ n₂ - m₂ →
       on_diff n₁ m₁ ≃ on_diff n₂ m₂)
-    : Induction.Data (λ (_ : ℤ) => X)
+    : Induction.Context (λ (_ : ℤ) => X)
     := {
   on_diff := on_diff
   on_diff_subst := λ {_} {_} {_} {_} {diff_eqv} => on_diff_subst diff_eqv
@@ -77,15 +77,15 @@ class Induction.Ops
     :=
   /-- TODO -/
   ind_diff
-    {motive : ℤ → Sort u} [IndexedFamily motive] (d : Data motive) (a : ℤ)
+    {motive : ℤ → Sort u} [IndexedFamily motive] (ctx : Context motive) (a : ℤ)
     : motive a
 
 /-- TODO -/
-def Induction.Data.ind_diff
+def Induction.Context.ind_diff
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     [Ops ℤ] {motive : ℤ → Sort u} [IndexedFamily motive]
-    : (d : Data motive) → (a : ℤ) → motive a
+    : (ctx : Context motive) → (a : ℤ) → motive a
     :=
   Ops.ind_diff
 
@@ -97,14 +97,15 @@ class Induction.Props
     :=
   /-- TODO -/
   ind_diff_eval
-    {motive : ℤ → Sort u} [IndexedFamily motive] (d : Data motive) {n m : ℕ}
-    : d.ind_diff (n - m) ≃ d.on_diff n m
+    {motive : ℤ → Sort u} [IndexedFamily motive] (ctx : Context motive)
+    {n m : ℕ}
+    : ctx.ind_diff (n - m) ≃ ctx.on_diff n m
 
   /-- TODO -/
   ind_diff_subst
-    {motive : ℤ → Sort u} [IndexedFamily motive] (d : Data motive)
+    {motive : ℤ → Sort u} [IndexedFamily motive] (ctx : Context motive)
     {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂)
-    : fsubst ‹a₁ ≃ a₂› (d.ind_diff a₁) ≃ d.ind_diff a₂
+    : fsubst ‹a₁ ≃ a₂› (ctx.ind_diff a₁) ≃ ctx.ind_diff a₂
 
 /-- All integer induction/eliminator axioms. -/
 class Induction
@@ -126,39 +127,40 @@ variable
     [Negation ℤ] [Sign ℤ] [Subtraction ℤ] [Induction ℤ]
 
 /-- TODO -/
-def Induction.Data.ind_diff_eval
+def Induction.Context.ind_diff_eval
     {motive : ℤ → Sort u} [IndexedFamily motive]
-    : (d : Data motive) → {n m : ℕ} → d.ind_diff (n - m) ≃ d.on_diff n m
+    : (ctx : Context motive) → {n m : ℕ} →
+      ctx.ind_diff (n - m) ≃ ctx.on_diff n m
     :=
   Induction.Props.ind_diff_eval
 
 /-- TODO -/
-def Induction.Data.ind_diff_subst
+def Induction.Context.ind_diff_subst
     {motive : ℤ → Sort u} [IndexedFamily motive]
-    : (d : Data motive) → {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) →
-      fsubst ‹a₁ ≃ a₂› (d.ind_diff a₁) ≃ d.ind_diff a₂
+    : (ctx : Context motive) → {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) →
+      fsubst ‹a₁ ≃ a₂› (ctx.ind_diff a₁) ≃ ctx.ind_diff a₂
     :=
   Induction.Props.ind_diff_subst
 
 /-- TODO -/
-def Induction.Data.rec_diff
-    {X : Sort u} [EqvOp X] (d : Data (λ (_ : ℤ) => X))
+def Induction.Context.rec_diff
+    {X : Sort u} [EqvOp X] (ctx : Context (λ (_ : ℤ) => X))
     : ℤ → X
     :=
-  d.ind_diff
+  ctx.ind_diff
 
 /-- TODO -/
-def Induction.Data.rec_diff_eval
-    {X : Sort u} [EqvOp X] (d : Data (λ (_ : ℤ) => X))
-    : {n m : ℕ} → d.rec_diff (n - m) ≃ d.on_diff n m
+def Induction.Context.rec_diff_eval
+    {X : Sort u} [EqvOp X] (ctx : Context (λ (_ : ℤ) => X))
+    : {n m : ℕ} → ctx.rec_diff (n - m) ≃ ctx.on_diff n m
     :=
-  d.ind_diff_eval
+  ctx.ind_diff_eval
 
 /-- TODO -/
-def Induction.Data.rec_diff_subst
-    {X : Sort u} [EqvOp X] (d : Data (λ (_ : ℤ) => X))
-    : {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) → d.rec_diff a₁ ≃ d.rec_diff a₂
+def Induction.Context.rec_diff_subst
+    {X : Sort u} [EqvOp X] (ctx : Context (λ (_ : ℤ) => X))
+    : {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) → ctx.rec_diff a₁ ≃ ctx.rec_diff a₂
     :=
-  d.ind_diff_subst
+  ctx.ind_diff_subst
 
 end Lean4Axiomatic.Integer
