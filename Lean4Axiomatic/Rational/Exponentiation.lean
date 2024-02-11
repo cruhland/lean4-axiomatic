@@ -14,6 +14,7 @@ open Lean4Axiomatic.Logic (AP)
 open Lean4Axiomatic.Metric (abs)
 open Lean4Axiomatic.Signed (sgn)
 open Natural (pow_step pow_zero step)
+open Relation.Equivalence (idx_fam_prop)
 
 /-! ## Derived properties for exponentiation to a natural number -/
 
@@ -263,7 +264,7 @@ theorem pow_substL
       _ ≃ p₂^a₂ := Integer.pow_substR (α := ℚ) (· * ·) (· / ·) ‹a₁ ≃ a₂›
     have : motive a₂ := this
     exact this
-  let idx_fam_motive := Integer.idx_fam_prop motive_subst
+  let idx_fam_motive := idx_fam_prop motive_subst
 
   have on_diff (n m : ℕ) : motive (n - m) := by
     show p₁^((n:ℤ) - (m:ℤ)) ≃ p₂^((n:ℤ) - (m:ℤ))
@@ -290,7 +291,7 @@ theorem pow_preserves_nonzero {p : ℚ} {a : ℤ} [AP (p ≄ 0)] : p^a ≄ 0 := 
     have : p^a₂ ≄ 0 := AA.neqv_substL ‹p^a₁ ≃ p^a₂› this
     have : motive a₂ := this
     exact this
-  let idx_fam_motive := Integer.idx_fam_prop motive_subst
+  let idx_fam_motive := idx_fam_prop motive_subst
 
   have on_diff (n m : ℕ) : motive (n - m) := by
     intro (_ : p^((n:ℤ) - m) ≃ 0)
