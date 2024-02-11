@@ -87,11 +87,11 @@ class Induction.Data
     (motive : ℤ → Sort u) [IndexedFamily motive]
     :=
   /-- TODO -/
-  on_diff (n m : ℕ) : motive ((n:ℤ) - (m:ℤ))
+  on_diff (n m : ℕ) : motive (n - m)
 
   /-- TODO -/
   on_diff_subst
-    {n₁ m₁ n₂ m₂ : ℕ} {diff_eqv : (n₁:ℤ) - (m₁:ℤ) ≃ (n₂:ℤ) - (m₂:ℤ)}
+    {n₁ m₁ n₂ m₂ : ℕ} {diff_eqv : (n₁:ℤ) - m₁ ≃ n₂ - m₂}
     : fsubst diff_eqv (on_diff n₁ m₁) ≃ on_diff n₂ m₂
 
 -- TODO: Looks like with a `ℤ → Prop` motive, `on_diff` can be anything,
@@ -114,8 +114,8 @@ def ind_constraints_const
     {X : Sort u} [EqvOp X] {on_diff : ℕ → ℕ → X}
     (on_diff_subst :
       {n₁ m₁ n₂ m₂ : ℕ} → (n₁:ℤ) - m₁ ≃ n₂ - m₂ →
-      on_diff n₁ m₁ ≃ on_diff n₂ m₂) :
-    Induction.Data (λ (_ : ℤ) => X)
+      on_diff n₁ m₁ ≃ on_diff n₂ m₂)
+    : Induction.Data (λ (_ : ℤ) => X)
     := {
   on_diff := on_diff
   on_diff_subst := λ {_} {_} {_} {_} {diff_eqv} => on_diff_subst diff_eqv
@@ -131,7 +131,7 @@ class Induction.Ops
     {motive : ℤ → Sort u} [IndexedFamily motive] (d : Data motive) (a : ℤ)
     : motive a
 
--- TODO: Export `ind_diff` would give the same effect as this?
+/-- TODO -/
 def Induction.Data.ind_diff
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
@@ -170,18 +170,20 @@ attribute [instance] Induction.toProps
 
 /-! ## Derived properties -/
 
-variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Core ℤ] [Addition ℤ] [Multiplication (ℕ := ℕ) ℤ]
-variable [Negation ℤ] [Sign ℤ] [Subtraction ℤ] [Induction ℤ]
+variable
+  {ℕ : Type} [Natural ℕ]
+  {ℤ : Type}
+    [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ]
+    [Negation ℤ] [Sign ℤ] [Subtraction ℤ] [Induction ℤ]
 
--- TODO: export `ind_diff_eval` gives the same effect?
+/-- TODO -/
 def Induction.Data.ind_diff_eval
     {motive : ℤ → Sort u} [IndexedFamily motive]
     : (d : Data motive) → {n m : ℕ} → d.ind_diff (n - m) ≃ d.on_diff n m
     :=
   Induction.Props.ind_diff_eval
 
--- TODO: export `ind_diff_subst` gives the same effect?
+/-- TODO -/
 def Induction.Data.ind_diff_subst
     {motive : ℤ → Sort u} [IndexedFamily motive]
     : (d : Data motive) → {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) →
@@ -189,18 +191,21 @@ def Induction.Data.ind_diff_subst
     :=
   Induction.Props.ind_diff_subst
 
+/-- TODO -/
 def Induction.Data.rec_diff
     {X : Sort u} [EqvOp X] (d : Data (λ (_ : ℤ) => X))
     : ℤ → X
     :=
   d.ind_diff
 
+/-- TODO -/
 def Induction.Data.rec_diff_eval
     {X : Sort u} [EqvOp X] (d : Data (λ (_ : ℤ) => X))
     : {n m : ℕ} → d.rec_diff (n - m) ≃ d.on_diff n m
     :=
   d.ind_diff_eval
 
+/-- TODO -/
 def Induction.Data.rec_diff_subst
     {X : Sort u} [EqvOp X] (d : Data (λ (_ : ℤ) => X))
     : {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) → d.rec_diff a₁ ≃ d.rec_diff a₂
