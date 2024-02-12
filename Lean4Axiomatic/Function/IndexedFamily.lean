@@ -1,12 +1,34 @@
 import Lean4Axiomatic.Relation.Equivalence.Core
 
+/-! # Indexed families of types -/
+
 namespace Lean4Axiomatic.Function
 
 open Relation.Equivalence (EqvOp)
 
+/--
+Indicates that the provided function is an index into a collection of related
+Sorts that respects equivalence on both the indexing type and each indexed
+Sort.
+
+The equivalence aspect is important when proving properties about the indexed
+family, as it allows the use of substitution. For example, indexed families
+can be viewed as predicates on the indexing type, which makes them commonly
+used for induction proofs.
+-/
 class IndexedFamily {α : Type} [EqvOp α] (fam : α → Sort u) :=
+  /-- Each indexed Sort obeys its own equivalence relation. -/
   fam_eqv {x : α} : EqvOp (fam x)
 
+  /--
+  Equivalence of the indexing type is respected.
+
+  In more detail: if we have a value of Sort `fam x₁`, and `x₁` is equivalent
+  to `x₂`, then we also have a value of Sort `fam x₂`.
+
+  **Intuition**: This must be the case for equivalence on the indexing type to
+  be meaningful.
+  -/
   fsubst {x₁ x₂ : α} : x₁ ≃ x₂ → fam x₁ → fam x₂
 
   fsubst_refl {x : α} {fx : fam x} : fsubst Rel.refl fx ≃ fx
