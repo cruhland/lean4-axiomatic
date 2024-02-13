@@ -17,11 +17,11 @@ can be viewed as predicates on the indexing type, which makes them commonly
 used for induction proofs.
 -/
 class IndexedFamily {α : Type} [EqvOp α] (fam : α → Sort u) :=
-  /-- Each indexed Sort obeys its own equivalence relation. -/
+  /-- Each Sort in the indexed family obeys its own equivalence relation. -/
   fam_eqv {x : α} : EqvOp (fam x)
 
   /--
-  Equivalence of the indexing type is respected.
+  Equivalence of the indexing type in an indexed family is respected.
 
   In more detail: if we have a value of Sort `fam x₁`, and `x₁` is equivalent
   to `x₂`, then we also have a value of Sort `fam x₂`.
@@ -31,8 +31,27 @@ class IndexedFamily {α : Type} [EqvOp α] (fam : α → Sort u) :=
   -/
   fsubst {x₁ x₂ : α} : x₁ ≃ x₂ → fam x₁ → fam x₂
 
+  /--
+  Substituting an indexed family's index with itself does nothing.
+
+  Useful when there's a need to add or remove an `fsubst` in an expression.
+
+  **Intuition**: The `fsubst` function should be implementable for all types.
+  The only consistent thing it can do when the index value is the same is leave
+  the input term unchanged.
+  -/
   fsubst_refl {x : α} {fx : fam x} : fsubst Rel.refl fx ≃ fx
 
+  /--
+  Composing two indexed family substitutions is the same as a single
+  substitution from the first to the last index value.
+
+  Useful when wanting to remove a nested `fsubst` in an expression.
+
+  **Intutition**: The `fsubst` function does not change the underlying terms
+  (elements of the family) in a significant way. Substitution is purely an
+  operation on types.
+  -/
   fsubst_trans
     {x y z : α} {xy : x ≃ y} {yz : y ≃ z} {fx : fam x}
     : fsubst ‹y ≃ z› (fsubst ‹x ≃ y› fx) ≃
