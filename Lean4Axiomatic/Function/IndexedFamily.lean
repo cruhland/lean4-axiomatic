@@ -57,10 +57,28 @@ class IndexedFamily {α : Type} [EqvOp α] (fam : α → Sort u) :=
     : fsubst ‹y ≃ z› (fsubst ‹x ≃ y› fx) ≃
       fsubst (Rel.trans ‹x ≃ y› ‹y ≃ z›) fx
 
+  /--
+  The `fsubst` function supports substitution of its right-hand argument (with
+  respect to equivalence).
+
+  Useful when proving properties of expressions wrapped by `fsubst`.
+
+  **Intuition**: We want `fsubst` to behave like a function with respect to
+  equivalence: it should map equivalent inputs to equivalent outputs.
+  -/
   fsubst_substR
     {x y : α} {xy : x ≃ y} {fx₁ fx₂ : fam x}
     : fx₁ ≃ fx₂ → fsubst ‹x ≃ y› fx₁ ≃ fsubst ‹x ≃ y› fx₂
 
+  /--
+  The `fsubst` function is injective in its right-hand argument (with respect
+  to equivalence).
+
+  **Intuition**: We want `fsubst` to "preserve distinctions" with respect to
+  equivalence: outputs can only be equivalent if they came from equivalent
+  inputs. This is because `fsubst` is merely converting the type of an
+  expression to an equivalent form; it's not changing the expression's value.
+  -/
   fsubst_injectR
     {x y : α} {xy : x ≃ y} {fx₁ fx₂ : fam x}
     : fsubst ‹x ≃ y› fx₁ ≃ fsubst ‹x ≃ y› fx₂ → fx₁ ≃ fx₂
@@ -71,7 +89,18 @@ export IndexedFamily (
   fsubst fsubst_injectR fsubst_refl fsubst_substR fsubst_trans
 )
 
-instance idx_fam_const_inst
+/--
+All constant functions (with domain and range supporting equivalence) are
+(trivially) indexed families.
+
+Useful when defining simple recursive functions, which usually return a single
+type. For example, addition on the natural numbers returns values in `ℕ` for
+all arguments.
+
+**Intuition**: There is nothing for `fsubst` to do, because the output of the
+indexing function is the same for all indices, not just the equivalent ones.
+-/
+instance idx_fam_const
     {α : Type} [EqvOp α] {X : Sort u} [EqvOp X]
     : IndexedFamily (λ (_ : α) => X)
     := {
@@ -83,6 +112,7 @@ instance idx_fam_const_inst
   fsubst_injectR := id
 }
 
+/-- TODO -/
 def idx_fam_prop
     {α : Type} [EqvOp α] {fam : α → Prop}
     (fsubst : {x₁ x₂ : α} → x₁ ≃ x₂ → fam x₁ → fam x₂)
