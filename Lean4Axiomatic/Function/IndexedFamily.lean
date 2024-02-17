@@ -112,7 +112,16 @@ instance idx_fam_const
   fsubst_injectR := id
 }
 
-/-- TODO -/
+/--
+All predicates (functions into `Prop`, with domains supporting equivalence)
+obeying the `fsubst` property are indexed families.
+
+Useful when proving properties by induction: the `motive` predicate just needs
+to support substitution.
+
+**Intuition**: All elements of `fam x` are equal (thus equivalent) for every
+`x`, because `fam x : Prop`.
+-/
 def idx_fam_prop
     {α : Type} [EqvOp α] {fam : α → Prop}
     (fsubst : {x₁ x₂ : α} → x₁ ≃ x₂ → fam x₁ → fam x₂)
