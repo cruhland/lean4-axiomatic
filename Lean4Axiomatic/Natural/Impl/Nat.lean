@@ -249,7 +249,7 @@ theorem compare_lt {n m : Nat} : compare n m = Ordering.lt ↔ lt n m := by
   case mp =>
     intro (h : compare n m = Ordering.lt)
     show lt n m
-    simp [compare, Ord.compare, compareOfLessAndEq] at h
+    simp only [compare, Ord.compare, compareOfLessAndEq] at h
     split at h
     case inl =>
       have : lt n m := prelude_lt_iff_impl_lt.mp ‹n < m›
@@ -259,7 +259,7 @@ theorem compare_lt {n m : Nat} : compare n m = Ordering.lt ↔ lt n m := by
   case mpr =>
     intro (_ : lt n m)
     show compare n m = Ordering.lt
-    simp [compare, Ord.compare, compareOfLessAndEq]
+    simp only [compare, Ord.compare, compareOfLessAndEq]
     split
     case inl =>
       show Ordering.lt = Ordering.lt
