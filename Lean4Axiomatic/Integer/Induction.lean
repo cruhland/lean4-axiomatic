@@ -31,7 +31,25 @@ open Relation.Equivalence (EqvOp)
 
 /-! ## Axioms -/
 
-/-- TODO -/
+/--
+Class providing the definitions needed for "difference induction" to work on
+integers, for a specific motive function.
+
+If you want to apply difference induction, you'll need an instance. To create
+an instance, use the functions `ind_ctx_prop` or `ind_ctx_const`.
+
+Once you have an instance, you can then call an induction function in  the
+`Induction.Context` namespace: `ind_diff`, `ind_diff_eval`, or
+`ind_diff_subst`. Or one of the corresponding recursion helpers: `rec_diff`,
+`rec_diff_eval`, or `rec_diff_subst`.
+
+**Important parameters**
+- `motive`: The indexed family of Sorts to generate via induction or recursion.
+  Facts about integers can be proven with a `ℤ → Prop` motive, while data can
+  be generated for each integer with a `ℤ → Type` motive.
+- `IndexedFamily motive`: Ensures that `motive` is actually an indexed family
+  with respect to equivalence, and provides several useful functions/theorems.
+-/
 class Induction.Context
     {ℕ : outParam Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
@@ -46,7 +64,7 @@ class Induction.Context
     : fsubst diff_eqv (on_diff n₁ m₁) ≃ on_diff n₂ m₂
 
 /-- TODO -/
-def ind_context_prop
+def ind_ctx_prop
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     {motive : ℤ → Prop} [IndexedFamily motive]
@@ -58,7 +76,7 @@ def ind_context_prop
 }
 
 /-- TODO -/
-def ind_context_const
+def ind_ctx_const
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     {X : Sort u} [EqvOp X] {on_diff : ℕ → ℕ → X}

@@ -62,7 +62,7 @@ theorem _pow_on_diff_subst
   exact this
 
 def ind_ctx : Integer.Induction.Context (λ (_ : ℤ) => FixedIntPowFn ℚ) :=
-  Integer.ind_context_const _pow_on_diff_subst
+  Integer.ind_ctx_const _pow_on_diff_subst
 
 def _pow (p : ℚ) [AP (p ≄ 0)] (a : ℤ) : ℚ := ind_ctx.rec_diff a p
 
