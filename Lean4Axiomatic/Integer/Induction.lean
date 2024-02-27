@@ -55,39 +55,31 @@ class Induction.Context
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     (motive : ℤ → Sort u) [IndexedFamily motive]
     :=
-  /-- TODO -/
+  /--
+  The motive holds for every integer of the form `n - m`, where `n` and `m` are
+  natural numbers.
+
+  **Intuition**: It turns out that _all_ integers can be placed in that form,
+  and this is the benefit of the inductive approach: show that the `motive`
+  property holds on a difference of natural numbers, and obtain the result that
+  it holds on all integers.
+  -/
   on_diff (n m : ℕ) : motive (n - m)
 
-  /-- TODO -/
+  /--
+  The `on_diff` function respects equivalence of natural number differences.
+
+  **Intuition**: For `on_diff` to be a function on integers, and not just pairs
+  of natural numbers, it must ensure that differences which represent the same
+  integer are considered equivalent by returning equivalent results for them.
+
+  Note that the `fsubst` function must be used to rewrite the type
+  `motive (n₁ - m₁)` into the type `motive (n₂ - m₂)` so the output equivalence
+  is well-typed.
+  -/
   on_diff_subst
     {n₁ m₁ n₂ m₂ : ℕ} {diff_eqv : (n₁:ℤ) - m₁ ≃ n₂ - m₂}
     : fsubst diff_eqv (on_diff n₁ m₁) ≃ on_diff n₂ m₂
-
-/-- TODO -/
-def ind_ctx_prop
-    {ℕ : Type} [Natural ℕ]
-    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    {motive : ℤ → Prop} [IndexedFamily motive]
-    (on_diff : (n m : ℕ) → motive (n - m))
-    : Induction.Context motive
-    := {
-  on_diff := on_diff
-  on_diff_subst := Rel.refl
-}
-
-/-- TODO -/
-def ind_ctx_const
-    {ℕ : Type} [Natural ℕ]
-    {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    {X : Sort u} [EqvOp X] {on_diff : ℕ → ℕ → X}
-    (on_diff_subst :
-      {n₁ m₁ n₂ m₂ : ℕ} → (n₁:ℤ) - m₁ ≃ n₂ - m₂ →
-      on_diff n₁ m₁ ≃ on_diff n₂ m₂)
-    : Induction.Context (λ (_ : ℤ) => X)
-    := {
-  on_diff := on_diff
-  on_diff_subst := λ {_} {_} {_} {_} {diff_eqv} => on_diff_subst diff_eqv
-}
 
 /-- Operations pertaining to eliminators on integers. -/
 class Induction.Ops
@@ -142,8 +134,29 @@ attribute [instance] Induction.toProps
 variable
   {ℕ : Type} [Natural ℕ]
   {ℤ : Type}
-    [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ]
-    [Negation ℤ] [Sign ℤ] [Subtraction ℤ] [Induction ℤ]
+    [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ] [Induction ℤ]
+
+/-- TODO -/
+def ind_ctx_prop
+    {motive : ℤ → Prop} [IndexedFamily motive]
+    (on_diff : (n m : ℕ) → motive (n - m))
+    : Induction.Context motive
+    := {
+  on_diff := on_diff
+  on_diff_subst := Rel.refl
+}
+
+/-- TODO -/
+def ind_ctx_const
+    {X : Sort u} [EqvOp X] {on_diff : ℕ → ℕ → X}
+    (on_diff_subst :
+      {n₁ m₁ n₂ m₂ : ℕ} → (n₁:ℤ) - m₁ ≃ n₂ - m₂ →
+      on_diff n₁ m₁ ≃ on_diff n₂ m₂)
+    : Induction.Context (λ (_ : ℤ) => X)
+    := {
+  on_diff := on_diff
+  on_diff_subst := λ {_} {_} {_} {_} {diff_eqv} => on_diff_subst diff_eqv
+}
 
 /-- TODO -/
 def Induction.Context.ind_diff_eval
