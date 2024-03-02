@@ -86,12 +86,40 @@ class Induction.Ops
     {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     :=
-  /-- TODO -/
+  /--
+  Induction principle for integers: if a property holds for all differences of
+  two natural numbers, then it holds for all integers.
+
+  The "holds for all differences of natural numbers" part is provided by the
+  `Context motive` argument.
+
+  **Intuition**: This can be a bit tough to describe informally without
+  circular reasoning. But if we take as our starting point the grade school
+  definition of integers as the union of the positive natural numbers, zero,
+  and the negations of the positive naturals, then we can see that any
+  difference `n - m` where `n m : ℕ` can always be rewritten as either
+  `k - 0 ≃ k` or `0 - k ≃ -k`, depending on which of `n` or `m` is greater.
+
+  Ultimately, this operation is asserting that all integers can be
+  _represented_ as the difference of two natural numbers.
+  -/
   ind_diff
     {motive : ℤ → Sort u} [IndexedFamily motive] (ctx : Context motive) (a : ℤ)
     : motive a
 
-/-- TODO -/
+/--
+Induction principle for integers: if a property holds for all differences of
+two natural numbers, then it holds for all integers.
+
+The "holds for all differences of natural numbers" part is provided by the
+`Context motive` argument.
+
+This definition is syntax sugar; it allows a call to
+`Integer.Induction.Ops.ind_diff ctx`, or `Integer.ind_diff ctx`, to be written
+as the more convenient `ctx.ind_diff` instead.
+
+See `Integer.Induction.Ops.ind_diff` for intuition on the operation.
+-/
 def Induction.Context.ind_diff
     {ℕ : Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
