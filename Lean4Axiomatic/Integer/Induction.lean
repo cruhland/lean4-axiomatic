@@ -134,7 +134,17 @@ class Induction.Props
     (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     [Ops ℤ]
     :=
-  /-- TODO -/
+  /--
+  The computational behavior of integer induction: when evaluated on a
+  difference of two natural numbers, the result is given by applying the
+  context's `on_diff` function to those same numbers.
+
+  **Intuition**: Integer induction can somehow treat any integer as a
+  difference of natural numbers, so if it's given an integer that's _already
+  in that form_, then it must be the case that it uses `on_diff` to process the
+  natural numbers directly. This is the intended _meaning_ of `ind_diff` and
+  `on_diff`.
+  -/
   ind_diff_eval
     {motive : ℤ → Sort u} [IndexedFamily motive] (ctx : Context motive)
     {n m : ℕ}
