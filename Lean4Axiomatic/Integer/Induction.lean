@@ -150,7 +150,13 @@ class Induction.Props
     {n m : ℕ}
     : ctx.ind_diff (n - m) ≃ ctx.on_diff n m
 
-  /-- TODO -/
+  /--
+  Integer induction obeys the substitution property on equivalence.
+
+  **Intuition**: Integers are only distinct up to equivalence (not equality),
+  so this property is required for integer induction to be a well-behaved
+  function.
+  -/
   ind_diff_subst
     {motive : ℤ → Sort u} [IndexedFamily motive] {ctx : Context motive}
     {a₁ a₂ : ℤ} {a_eqv : a₁ ≃ a₂}
@@ -174,7 +180,15 @@ variable
   {ℤ : Type}
     [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ] [Induction ℤ]
 
-/-- TODO -/
+/--
+Create an integer induction context for a `ℤ → Prop` motive.
+
+**Intuition**: All that's needed is a plain `on_diff` function; substitution
+always holds because `motive (n₁ - m₁) : Prop` implies
+`motive (n₂ - m₂) : Prop` when `n₁ - m₁ ≃ n₂ - m₂`, thus
+`on_diff n₁ m₁` and `on_diff n₂ m₂` both have type `motive (n₂ - m₂)` and
+therefore are equivalent by proof irrelevance of `Prop` elements.
+-/
 def ind_ctx_prop
     {motive : ℤ → Prop} [IndexedFamily motive]
     (on_diff : (n m : ℕ) → motive (n - m))
