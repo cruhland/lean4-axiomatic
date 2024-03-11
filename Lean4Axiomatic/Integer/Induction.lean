@@ -181,7 +181,7 @@ variable
     [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ] [Induction ℤ]
 
 /--
-Create an integer induction context for a `ℤ → Prop` motive.
+Convenience constructor of integer induction contexts for `ℤ → Prop` motives.
 
 **Intuition**: All that's needed is a plain `on_diff` function; substitution
 always holds because `motive (n₁ - m₁) : Prop` implies
@@ -198,7 +198,12 @@ def ind_ctx_prop
   on_diff_subst := Rel.refl
 }
 
-/-- TODO -/
+/--
+Convenience constructor of integer induction contexts for constant motives;
+i.e. motives of the form `ℤ → X` where `X` is a single type.
+
+**Intuition**: This allows for the `on_diff` function to be inferred.
+-/
 def ind_ctx_const
     {X : Sort u} [EqvOp X] {on_diff : ℕ → ℕ → X}
     (on_diff_subst :
