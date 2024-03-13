@@ -118,7 +118,7 @@ This definition is syntax sugar; it allows a call to
 `Integer.Induction.Ops.ind_diff ctx`, or `Integer.ind_diff ctx`, to be written
 as the more convenient `ctx.ind_diff` instead.
 
-See `Integer.Induction.Ops.ind_diff` for intuition on the operation.
+See `Integer.Induction.Ops.ind_diff` for intuition.
 -/
 def Induction.Context.ind_diff
     {ℕ : Type} [Natural ℕ]
@@ -215,7 +215,17 @@ def ind_ctx_const
   on_diff_subst := λ {_} {_} {_} {_} {diff_eqv} => on_diff_subst diff_eqv
 }
 
-/-- TODO -/
+/--
+The computational behavior of integer induction: when evaluated on a difference
+of two natural numbers, the result is given by applying the context's `on_diff`
+function to those same numbers.
+
+This definition is syntax sugar; it allows a call to
+`Integer.Induction.Props.ind_diff_eval ctx`, or `Integer.ind_diff_eval ctx`, to
+be written as the more convenient `ctx.ind_diff_eval` instead.
+
+See `Integer.Induction.Props.ind_diff_eval` for intuition.
+-/
 def Induction.Context.ind_diff_eval
     {motive : ℤ → Sort u} [IndexedFamily motive]
     : (ctx : Context motive) → {n m : ℕ} →
@@ -223,7 +233,15 @@ def Induction.Context.ind_diff_eval
     :=
   Induction.Props.ind_diff_eval
 
-/-- TODO -/
+/--
+Integer induction obeys the substitution property on equivalence.
+
+This definition is syntax sugar; it allows a call to
+`Integer.Induction.Props.ind_diff_subst ctx`, or `Integer.ind_diff_subst ctx`,
+to be written as the more convenient `ctx.ind_diff_subst` instead.
+
+See `Integer.Induction.Props.ind_diff_subst` for intuition.
+-/
 def Induction.Context.ind_diff_subst
     {motive : ℤ → Sort u} [IndexedFamily motive]
     (ctx : Context motive) {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂)
@@ -231,21 +249,43 @@ def Induction.Context.ind_diff_subst
     :=
   Induction.Props.ind_diff_subst (ctx := ctx) (a_eqv := a_eqv)
 
-/-- TODO -/
+/--
+Recursion principle for integers: if a value of some type `X` can be computed
+for all differences of two natural numbers, then it can be computed for all
+integers.
+
+The "can be computed for all differences of natural numbers" part is provided
+by the `Context (λ (_ : ℤ) => X)` argument.
+
+**Intuition**: This is a special case of `ind_diff` when the `motive` returns
+the same type for all inputs.
+-/
 def Induction.Context.rec_diff
     {X : Sort u} [EqvOp X] (ctx : Context (λ (_ : ℤ) => X))
     : ℤ → X
     :=
   ctx.ind_diff
 
-/-- TODO -/
+/--
+The computational behavior of integer recursion: when evaluated on a difference
+of two natural numbers, the result is given by applying the context's `on_diff`
+function to those same numbers.
+
+**Intuition**: This is a special case of `ind_diff_eval` when the `motive`
+returns the same type for all inputs.
+-/
 def Induction.Context.rec_diff_eval
     {X : Sort u} [EqvOp X] (ctx : Context (λ (_ : ℤ) => X))
     : {n m : ℕ} → ctx.rec_diff (n - m) ≃ ctx.on_diff n m
     :=
   ctx.ind_diff_eval
 
-/-- TODO -/
+/--
+Integer recursion obeys the substitution property on equivalence.
+
+**Intuition**: This is a special case of `ind_diff_subst` when the `motive`
+returns the same type for all inputs.
+-/
 def Induction.Context.rec_diff_subst
     {X : Sort u} [EqvOp X] (ctx : Context (λ (_ : ℤ) => X))
     : {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) → ctx.rec_diff a₁ ≃ ctx.rec_diff a₂
