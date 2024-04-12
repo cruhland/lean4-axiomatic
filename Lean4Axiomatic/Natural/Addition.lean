@@ -1,4 +1,5 @@
 import Lean4Axiomatic.Natural.Core
+import Lean4Axiomatic.ClassicalAlgebra.MulMonoid
 
 /-!
 # Natural number addition
@@ -291,5 +292,26 @@ theorem zero_sum_split {n m : ℕ} : n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0 := by
     have : step (n + m) ≃ 0 :=
       Rel.trans ‹step (n + m) ≃ step n + m› ‹step n + m ≃ 0›
     exact absurd ‹step (n + m) ≃ 0› step_neqv_zero
+
+/--
+
+Example showing that naturals numbers with addition form a Monoid
+and that we can use that fact to prove something.
+
+-/
+
+instance add_monoid_mul : CA.MulMonoid (α := ℕ) := {
+  f := (· + ·)
+  e := 0
+  fs := add_substitutive
+  assoc     := add_associative.assoc
+  identityL := add_identity.identityL.ident
+  identityR := add_identity.identityR.ident
+}
+
+example : (x : ℕ) → ((y : ℕ) → (x + y ≃ y)) → x ≃ 0 := by
+  intro x x_ident_prop
+  exact CA.mul_identity_unique x_ident_prop
+
 
 end Lean4Axiomatic.Natural
