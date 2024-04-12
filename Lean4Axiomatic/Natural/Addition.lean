@@ -294,10 +294,8 @@ theorem zero_sum_split {n m : ℕ} : n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0 := by
     exact absurd ‹step (n + m) ≃ 0› step_neqv_zero
 
 /--
-
-Example showing that naturals numbers with addition form a Monoid
-and that we can use that fact to prove something.
-
+Example showing that naturals numbers with addition form a Monoid and use
+that fact to prove something.
 -/
 
 instance add_monoid_mul : CA.MulMonoid (α := ℕ) := {
