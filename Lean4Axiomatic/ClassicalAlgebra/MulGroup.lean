@@ -26,5 +26,5 @@ def group_cancellationR [EqvOp α] (g : MulGroup α)
     (inverse x) ** (x ** y) ≃ _ := AA.substR ‹x ** y ≃ x ** z›
     (inverse x) ** (x ** z) ≃ _ := Rel.symm g.assoc
     (inverse x ** x) ** z ≃   _ := AA.substL (inverse_propL x)
-    (g.e) ** z ≃              _ := g.identityL
+    g.e ** z ≃                _ := g.identityL
     z ≃                       _ := Rel.refl
