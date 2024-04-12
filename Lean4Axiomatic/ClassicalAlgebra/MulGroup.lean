@@ -21,10 +21,10 @@ def group_cancellationR [EqvOp α] (g : MulGroup α)
     (x y z : α) : (x ** y ≃ x ** z) → y ≃ z := λ _ =>
   show y ≃ z from calc
     y     ≃                   _ := Rel.symm g.identityL
-    CA.MulMonoid.e ** y ≃     _ := AA.substL (Rel.symm (inverse_propL x))
+    g.e ** y ≃     _ := AA.substL (Rel.symm (inverse_propL x))
     ((inverse x) ** x) ** y ≃ _ := g.assoc
     (inverse x) ** (x ** y) ≃ _ := AA.substR ‹x ** y ≃ x ** z›
     (inverse x) ** (x ** z) ≃ _ := Rel.symm g.assoc
     (inverse x ** x) ** z ≃   _ := AA.substL (inverse_propL x)
-    (CA.MulMonoid.e) ** z ≃   _ := g.identityL
+    (g.e) ** z ≃   _ := g.identityL
     z ≃                       _ := Rel.refl
