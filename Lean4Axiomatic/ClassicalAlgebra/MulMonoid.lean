@@ -10,7 +10,7 @@ open Relation.Equivalence (EqvOp)
 An attempt at formalizing traditional algebraic structures
 such as groups and rings.
 
-Here we introduce a Monoid using a muliplication-like notation.
+Here we introduce a Monoid using a multiplicative notation.
 
 Note that we only need a binary operation that is associative and
 has identities.  So for instance, natural numbers with the addition
@@ -32,9 +32,9 @@ attribute [instance] MulMonoid.fs
 export MulMonoid (f e fs assoc identityL identityR)
 
 /--
-An infixl notation is introduced for the main algrebraic operation f,
-and using a mulitplication-like symbol is standard, especially for
-ones where commutativity is not assured, and is much more convient than
+An infixl notation is introduced for the main algrebraic operation f.
+Using a multiplicative symbol is standard, especially for operations
+where commutativity is not assured, and is much more convient than
 function application.
 
 Note: Using '**' so as not to interfere with * which is already in scope
