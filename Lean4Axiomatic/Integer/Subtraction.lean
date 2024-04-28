@@ -1,42 +1,51 @@
-import Lean4Axiomatic.AbstractAlgebra
 import Lean4Axiomatic.Integer.Sign
 
-/-!
-# Integer subtraction
--/
+/-! # Integer subtraction -/
 
 namespace Lean4Axiomatic.Integer
 
-/-!
-## Axioms
--/
+/-! ## Axioms -/
 
-/--
-Definition of subtraction, and properties that it must satisfy.
+/-- Operations pertaining to integer subtraction. -/
+class Subtraction.Ops (ℤ : Type) :=
+  /-- Subtraction of integers. -/
+  sub : ℤ → ℤ → ℤ
 
-All other properties of subtraction can be derived from these.
--/
+export Subtraction.Ops (sub)
+
+/-- Enables the use of the `· - ·` operator for subtraction. -/
+instance sub_op_inst {ℤ : Type} [Subtraction.Ops ℤ] : Sub ℤ := {
+  sub := sub
+}
+
+/-- Properties of integer subtraction. -/
+class Subtraction.Props
+    {ℕ : outParam Type} [Natural ℕ]
+    (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Ops ℤ]
+    :=
+  /-- Subtraction is equivalent to addition of a negated second argument. -/
+  sub_defn {a b : ℤ} : a - b ≃ a + (-b)
+
+export Subtraction.Props (sub_defn)
+
+/-- All integer subtraction axioms. -/
 class Subtraction
     {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ]
     :=
-  /-- Definition of and syntax for subtraction. -/
-  subOp : Sub ℤ
+  toOps : Subtraction.Ops ℤ
+  toProps : Subtraction.Props ℤ
 
-  /-- Subtraction of a value is equivalent to adding its negation. -/
-  sub_defn {a b : ℤ} : a - b ≃ a + (-b)
+attribute [instance] Subtraction.toOps
+attribute [instance] Subtraction.toProps
 
-attribute [instance] Subtraction.subOp
+/-! ## Derived properties -/
 
-export Subtraction (sub_defn subOp)
-
-/-!
-## Derived properties
--/
-
-variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Core ℤ] [Addition ℤ] [Multiplication (ℕ := ℕ) ℤ]
-variable [Negation ℤ] [Sign ℤ] [Subtraction ℤ]
+variable
+  {ℕ : Type} [Natural ℕ]
+  {ℤ : Type}
+    [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ]
+    [Negation ℤ] [Sign ℤ] [Subtraction ℤ]
 
 /--
 Subtraction is left-substitutive.
@@ -98,6 +107,30 @@ theorem sub_same {a : ℤ} : a - a ≃ 0 := calc
   0      ≃ _ := Rel.refl
 
 /--
+Subtraction with the additive identity on the left negates the right operand.
+
+**Property and proof intuition**: By definition of subtraction and the additive
+identity.
+-/
+theorem sub_identL {a : ℤ} : 0 - a ≃ -a := calc
+  _ = 0 - a  := rfl
+  _ ≃ 0 + -a := sub_defn
+  _ ≃ -a     := AA.identL
+
+/--
+Subtraction with the additive identity on the right gives the left operand.
+
+**Property and proof intuition**: By definition of subtraction and the additive
+identity.
+-/
+theorem sub_identR {a : ℤ} : a - 0 ≃ a := calc
+  _ = a - 0        := rfl
+  _ ≃ a + -0       := sub_defn
+  _ ≃ a + (-0 + 0) := AA.substR (Rel.symm AA.identR)
+  _ ≃ a + 0        := AA.substR AA.inverseL
+  _ ≃ a            := AA.identR
+
+/--
 Equivalent integers are the only ones to differ by zero.
 
 **Proof intuition**: The reverse direction is trivial; the forward direction
@@ -126,38 +159,113 @@ theorem zero_diff_iff_eqv {a b : ℤ} : a - b ≃ 0 ↔ a ≃ b := by
       0      ≃ _ := Rel.refl
 
 /--
-The right-hand operand of subtraction can be moved to the left-hand operand of
-addition on the other side of an equivalence.
+Subtraction associates with addition to its left.
 
-**Property intuition**: This is a very common technique in algebra.
+**Property intuition**: In the integers, these expressions are equivalent
+because there's only a single subtraction happening: no matter what order the
+operations happen, the end result will be the same.
 
-**Proof intuition**: There's no key idea for this proof, other than using
-algebra on integers to obtain expressions where assumptions can be used.
+**Proof intuition**: Expand subtraction into addition, then use addition's
+associativity.
 -/
-theorem subR_move_addL {a b c : ℤ} : a - b ≃ c ↔ a ≃ b + c := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : a - b ≃ c)
-    show a ≃ b + c
-    calc
-      a            ≃ _ := Rel.symm AA.identR
-      a + 0        ≃ _ := AA.substR (Rel.symm AA.inverseL)
-      a + (-b + b) ≃ _ := Rel.symm AA.assoc
-      (a + -b) + b ≃ _ := AA.substL (Rel.symm sub_defn)
-      (a - b) + b  ≃ _ := AA.substL ‹a - b ≃ c›
-      c + b        ≃ _ := AA.comm
-      b + c        ≃ _ := Rel.refl
-  case mpr =>
-    intro (_ : a ≃ b + c)
-    show a - b ≃ c
-    calc
-      a - b        ≃ _ := AA.substL ‹a ≃ b + c›
-      b + c - b    ≃ _ := AA.substL AA.comm
-      c + b - b    ≃ _ := sub_defn
-      c + b + -b   ≃ _ := AA.assoc
-      c + (b + -b) ≃ _ := AA.substR AA.inverseR
-      c + 0        ≃ _ := AA.identR
-      c            ≃ _ := Rel.refl
+theorem sub_assoc_addL {a b c : ℤ} : (a + b) - c ≃ a + (b - c) := calc
+  _ = (a + b) - c  := rfl
+  _ ≃ (a + b) + -c := sub_defn
+  _ ≃ a + (b + -c) := AA.assoc
+  _ ≃ a + (b - c)  := AA.substR (Rel.symm sub_defn)
+
+/--
+Subtraction "associates" with addition to its right.
+
+**Property intuition**: This is not true associativity, but resembles it in
+the grouping of terms. What is actually happening is that, because the same
+value `b` is being subtracted on both sides of the equivalence, it doesn't
+matter in what order that occurs.
+
+**Proof intuition**: Expand subtraction into addition; rearrange.
+-/
+theorem sub_assoc_addR {a b c : ℤ} : (a - b) + c ≃ a + (c - b) := calc
+  _ = (a - b) + c  := rfl
+  _ ≃ (a + -b) + c := AA.substL sub_defn
+  _ ≃ a + (-b + c) := AA.assoc
+  _ ≃ a + (c + -b) := AA.substR AA.comm
+  _ ≃ a + (c - b)  := AA.substR (Rel.symm sub_defn)
+
+/--
+Move a subtraction's right operand to an addition's right operand, from left to
+right across an equivalence (or the reverse).
+
+**Property intuition**: This is a fundamental algebraic operation,
+which follows directly from addition obeying substitution and cancellation.
+
+**Proof intuition**: Add `b` to both sides (substitution/cancellation), then
+simplify.
+-/
+theorem subR_moveR_addR {a b c : ℤ} : a - b ≃ c ↔ a ≃ c + b := calc
+  _ ↔       a - b ≃ c     := Iff.rfl
+  _ ↔ (a - b) + b ≃ c + b := add_bijectR
+  _ ↔ a + (b - b) ≃ c + b := AA.eqv_substL_iff sub_assoc_addR
+  _ ↔       a + 0 ≃ c + b := AA.eqv_substL_iff (AA.substR sub_same)
+  _ ↔           a ≃ c + b := AA.eqv_substL_iff AA.identR
+
+/--
+Move a subtraction's right operand to an addition's left operand, from left to
+right across an equivalence (or the reverse).
+
+**Property intuition**: This is a fundamental algebraic operation,
+which follows directly from addition obeying substitution and cancellation.
+
+**Proof intuition**: Trivial corollary to `subR_moveR_addR`.
+-/
+theorem subR_moveR_addL {a b c : ℤ} : a - b ≃ c ↔ a ≃ b + c := calc
+  _ ↔ a - b ≃ c     := Iff.rfl
+  _ ↔     a ≃ c + b := subR_moveR_addR
+  _ ↔     a ≃ b + c := AA.eqv_substR_iff AA.comm
+
+/--
+Move a subtraction's right operand to an addition's right operand, from right
+to left across an equivalence (or the reverse).
+
+**Property intuition**: This is a fundamental algebraic operation,
+which follows directly from addition obeying substitution and cancellation.
+
+**Proof intuition**: Trivial corollary to `subR_moveR_addR`.
+-/
+theorem subR_moveL_addR {a b c : ℤ} : a ≃ b - c ↔ a + c ≃ b := calc
+  _ ↔     a ≃ b - c := Iff.rfl
+  _ ↔ b - c ≃ a     := Fn.swap
+  _ ↔     b ≃ a + c := subR_moveR_addR
+  _ ↔ a + c ≃ b     := Fn.swap
+
+/--
+Move a subtraction's right operand to an addition's left operand, from right to
+left across an equivalence (or the reverse).
+
+**Property intuition**: This is a fundamental algebraic operation,
+which follows directly from addition obeying substitution and cancellation.
+
+**Proof intuition**: Trivial corollary to `subR_moveL_addR`.
+-/
+theorem subR_moveL_addL {a b c : ℤ} : a ≃ b - c ↔ c + a ≃ b := calc
+  _ ↔     a ≃ b - c := Iff.rfl
+  _ ↔ a + c ≃ b     := subR_moveL_addR
+  _ ↔ c + a ≃ b     := AA.eqv_substL_iff AA.comm
+
+/--
+Convert an equivalence of subtractions to one of additions by exchanging
+operands.
+
+**Property intuition**: Add the subtracted operands to both sides and simplify.
+
+**Proof intuition**: Uses lemmas to carry out the strategy from the property
+intuition in fewer steps.
+-/
+theorem sub_swap_add {a b c d : ℤ} : a - b ≃ c - d ↔ a + d ≃ c + b := calc
+  _ ↔ a - b ≃ c - d       := Iff.rfl
+  _ ↔     a ≃ (c - d) + b := subR_moveR_addR
+  _ ↔     a ≃ c + (b - d) := AA.eqv_substR_iff sub_assoc_addR
+  _ ↔     a ≃ (c + b) - d := AA.eqv_substR_iff (Rel.symm sub_assoc_addL)
+  _ ↔ a + d ≃ c + b       := subR_moveL_addR
 
 /--
 Multiplication distributes over subtraction (on the left).

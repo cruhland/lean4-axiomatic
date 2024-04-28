@@ -12,7 +12,7 @@ namespace DepFn
 
 variable {α : Sort u}
 variable {β : α → Sort v}
-variable (indexed_eqvOp : {x : α} → EqvOp (β x))
+variable [indexed_eqvOp : {x : α} → EqvOp (β x)]
 
 /--
 The "pointwise" equivalence relation for dependent functions.
@@ -28,6 +28,10 @@ equivalent for every inhabitant of their domain.
 -/
 def eqv (f₁ f₂ : (x : α) → β x) : Prop := ∀ (x : α), f₁ x ≃ f₂ x
 
+local instance eqv_tildeDash_inst : Operators.TildeDash ((x : α) → β x) := {
+  tildeDash := eqv
+}
+
 /--
 The reflexive property of pointwise equivalence for dependent functions.
 
@@ -35,20 +39,13 @@ The reflexive property of pointwise equivalence for dependent functions.
 follows immediately (by `refl`) from the `EqvOp (β x)` instance obtained from
 `indexed_eqvOp` for each `x`.
 
-Note on syntax: the `· ≃ ·` operator could not be used in the type signature
-because the equivalence relation requires the `indexed_eqvOp` argument in
-addition to its typical arguments.
-
 **Named parameters**
 - `α`: The domain of the dependent functions.
 - `β`: The codomain family of the dependent functions.
 - `indexed_eqvOp`: Evidence that all codomains have an equivalence relation.
 - `f`: The function to evaluate for equivalence to itself.
 -/
-theorem refl
-    {f : (x : α) → β x}
-    : eqv indexed_eqvOp f f
-    := by
+theorem refl {f : (x : α) → β x} : f ≃ f := by
   show ∀ (x : α), f x ≃ f x
   intro x
   exact indexed_eqvOp.refl
@@ -60,20 +57,13 @@ The symmetric property of pointwise equivalence for dependent functions.
 But this follows immediately (by `symm`) from the `EqvOp (β x)` instance
 obtained from `indexed_eqvOp` for each `x`.
 
-Note on syntax: the `· ≃ ·` operator could not be used in the type signature
-because the equivalence relation requires the `indexed_eqvOp` argument in
-addition to its typical arguments.
-
 **Named parameters**
 - `α`: The domain of the dependent functions.
 - `β`: The codomain family of the dependent functions.
 - `indexed_eqvOp`: Evidence that all codomains have an equivalence relation.
 - `f`, `g`: The dependent functions that are arguments to the relation.
 -/
-theorem symm
-    {f g : (x : α) → β x}
-    : eqv indexed_eqvOp f g → eqv indexed_eqvOp g f
-    := by
+theorem symm {f g : (x : α) → β x} : f ≃ g → g ≃ f := by
   intro (_ : ∀ (x : α), f x ≃ g x)
   show ∀ (x : α), g x ≃ f x
   intro x
@@ -87,20 +77,13 @@ The transitive property of pointwise equivalence for dependent functions.
 every `x : α`. But this follows immediately (by `trans`) from the `EqvOp (β x)`
 instance obtained from `indexed_eqvOp` for each `x`.
 
-Note on syntax: the `· ≃ ·` operator could not be used in the type signature
-because the equivalence relation requires the `indexed_eqvOp` argument in
-addition to its typical arguments.
-
 **Named parameters**
 - `α`: The domain of the dependent functions.
 - `β`: The codomain family of the dependent functions.
 - `indexed_eqvOp`: Evidence that all codomains have an equivalence relation.
 - `f`, `g`, `h`: The dependent functions that are arguments to the relation.
 -/
-theorem trans
-    {f g h : (x : α) → β x}
-    : eqv indexed_eqvOp f g → eqv indexed_eqvOp g h → eqv indexed_eqvOp f h
-    := by
+theorem trans {f g h : (x : α) → β x} : f ≃ g → g ≃ h → f ≃ h := by
   intro (_ : ∀ (x : α), f x ≃ g x) (_ : ∀ (x : α), g x ≃ h x)
   show ∀ (x : α), f x ≃ h x
   intro x
@@ -132,11 +115,11 @@ case.
 - `β`: The codomain family of the dependent functions.
 - `indexed_eqvOp`: Evidence that all codomains have an equivalence relation.
 -/
-def eqvOp : EqvOp ((x : α) → β x) := {
-  tildeDash := eqv indexed_eqvOp
-  refl := refl indexed_eqvOp
-  symm := symm indexed_eqvOp
-  trans := trans indexed_eqvOp
+instance eqvOp : EqvOp ((x : α) → β x) := {
+  tildeDash := eqv
+  refl := refl
+  symm := symm
+  trans := trans
 }
 
 end DepFn
@@ -224,7 +207,7 @@ by explicitly listing all associations.
 - `EqvOp α`: Evidence that `α` has an equivalence relation.
 - `EqvOp β`: Evidence that `β` has an equivalence relation.
 -/
-def indexed_eqvOp : {hand : Hand} → EqvOp (hand.pick α β)
+instance indexed_eqvOp : {hand : Hand} → EqvOp (hand.pick α β)
 | Hand.L => ‹EqvOp α›
 | Hand.R => ‹EqvOp β›
 
@@ -245,8 +228,7 @@ type `α × β`.
 - `EqvOp α`: Evidence that `α` has an equivalence relation.
 - `EqvOp β`: Evidence that `β` has an equivalence relation.
 -/
-instance eqvOp : EqvOp (α × β) :=
-  Mapped.eqvOp depFn_from_prod (β_eqvOp := DepFn.eqvOp indexed_eqvOp)
+instance eqvOp : EqvOp (α × β) := Mapped.eqvOp depFn_from_prod
 
 /--
 Characterizes the equivalence relation on ordered pairs in terms of the pairs'
@@ -273,11 +255,8 @@ equivalences between elements on the conjunction side of this theorem's type.
 theorem eqv_defn
     {a₁ a₂ : α} {b₁ b₂ : β} : (a₁, b₁) ≃ (a₂, b₂) ↔ a₁ ≃ a₂ ∧ b₁ ≃ b₂
     := by
-  let expanded_eqv :=
-    ∀ (hand : Hand),
-      indexed_eqvOp.tildeDash
-        (depFn_from_prod (a₁, b₁) hand)
-        (depFn_from_prod (a₂, b₂) hand)
+  let dffp := @depFn_from_prod
+  let expanded_eqv := (hand : Hand) → dffp (a₁, b₁) hand ≃ dffp (a₂, b₂) hand
   apply Iff.intro
   case mp =>
     intro (_ : (a₁, b₁) ≃ (a₂, b₂))

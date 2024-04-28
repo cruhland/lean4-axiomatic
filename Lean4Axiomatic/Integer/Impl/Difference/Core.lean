@@ -149,6 +149,38 @@ instance equivalence : Equivalence (Difference ℕ) := {
   eqvOp := eqvOp
 }
 
+/--
+The `Difference` constructor is left-substitutive.
+
+**Property intuition**: This must be true for differences to correctly model
+subtraction of natural numbers.
+
+**Proof intuition**: Substitute with natural number addition, then rewrite into
+equivalence of differences.
+-/
+theorem diff_substL {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁——m ≃ n₂——m := by
+  intro (_ : n₁ ≃ n₂)
+  show n₁——m ≃ n₂——m
+  have : n₁ + m ≃ n₂ + m := AA.substL ‹n₁ ≃ n₂›
+  have : n₁——m ≃ n₂——m := this
+  exact this
+
+/--
+The `Difference` constructor is right-substitutive.
+
+**Property intuition**: This must be true for differences to correctly model
+subtraction of natural numbers.
+
+**Proof intuition**: Substitute with natural number addition, then rewrite into
+equivalence of differences.
+-/
+theorem diff_substR {n m₁ m₂ : ℕ} : m₁ ≃ m₂ → n——m₁ ≃ n——m₂ := by
+  intro (_ : m₁ ≃ m₂)
+  show n——m₁ ≃ n——m₂
+  have : n + m₂ ≃ n + m₁ := AA.substR (Rel.symm ‹m₁ ≃ m₂›)
+  have : n——m₁ ≃ n——m₂ := this
+  exact this
+
 /-! ### Conversion -/
 
 /--

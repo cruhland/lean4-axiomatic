@@ -1,4 +1,4 @@
-import Lean4Axiomatic.Function
+import Lean4Axiomatic.Function.Core
 import Lean4Axiomatic.Operators
 
 /-!
@@ -318,6 +318,8 @@ Provides an equivalence relation over `α` with the operator `· ≃ ·`.
 -/
 class EqvOp (α : Sort u) extends Operators.TildeDash α, Eqv tildeDash
 
+attribute [instance] EqvOp.toTildeDash
+
 /--
 Predicates on equivalent values are logically equivalent.
 
@@ -337,6 +339,34 @@ theorem iff_subst_eqv
   have : P x₁ → P x₂ := P_subst ‹x₁ ≃ x₂›
   have : P x₂ → P x₁ := P_subst (symm ‹x₁ ≃ x₂›)
   exact Iff.intro ‹P x₁ → P x₂› ‹P x₂ → P x₁›
+
+/--
+Equivalence relation of "if and only if" over propositions.
+
+**Intuition**: Two propositions `p` and `q` have the same truth value if
+`p ↔ q` holds between them.
+-/
+def eqvOp_prop : EqvOp Prop := {
+  tildeDash := (· ↔ ·)
+  refl := Iff.rfl
+  symm := Iff.symm
+  trans := Iff.trans
+}
+
+/--
+Trivial equivalence relation of equality over propositional terms.
+
+**Intuition**: If `p : Prop`, then all terms `t : p` are judgmentally equal to
+each other. This is known as _proof irrelevance_: Lean considers all proofs of
+a proposition to be equal. Most of the time this is what we want, and makes
+working with propositions much easier.
+-/
+def eqvOp_prop_term {p : Prop} : EqvOp p := {
+  tildeDash := (· = ·)
+  refl := rfl
+  symm := Eq.symm
+  trans := Eq.trans
+}
 
 /--
 Extends `EqvOp` with `· ≃? ·`, a decision procedure for equivalence.

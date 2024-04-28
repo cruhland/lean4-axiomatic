@@ -343,6 +343,17 @@ theorem pow_preserves_nonzero_base
   have : x^n ≄ 0 := mt pow_inputs_for_output_zero this
   exact this
 
+/--
+Instance version of `pow_preserves_nonzero_base`.
+
+Enables clean syntax when dividing by an exponentiation expression.
+-/
+instance pow_preserves_nonzero_base_inst
+    [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) mul]
+    {x : α} {n : ℕ} [AP (x ≄ 0)] : AP (x^n ≄ 0)
+    :=
+  ‹AP (x ≄ 0)›.map pow_preserves_nonzero_base
+
 end general
 
 end Lean4Axiomatic.Natural

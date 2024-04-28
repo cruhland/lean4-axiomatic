@@ -39,7 +39,7 @@ def of_scientific
     :=
   let naturalMantissa : ℕ := OfNat.ofNat mantissa
   let naturalDecimalExponent : ℕ := OfNat.ofNat decimalExponent
-  let powTen := 10 ^ naturalDecimalExponent
+  let powTen := (10:ℕ) ^ naturalDecimalExponent
 
   have : Natural.step 0 ≄ 0 := Natural.step_neqv_zero
   have : 1 ≄ 0 := AA.neqv_substL (Rel.symm Natural.literal_step) this
@@ -337,5 +337,82 @@ theorem div_same {p : ℚ} [AP (p ≄ 0)] : p/p ≃ 1 := calc
   _ ≃ p/p     := eqv_refl
   _ ≃ p * p⁻¹ := div_mul_recip
   _ ≃ 1       := mul_inverseR
+
+/--
+Two rational numbers are equivalent if and only if their quotient is one.
+
+**Property intuition**: A fraction with a numerator less than its denominator
+is less than one; with a numerator greater than its denominator, greater than
+one.
+
+**Proof intuition**: The reverse direction trivially follows from `div_same`.
+The forward direction uses the hypothesis `p/q ≃ 1` and the property
+`q⁻¹ * q ≃ 1` to cancel out `p`, leaving `q` behind.
+-/
+theorem div_eqv_1 {p q : ℚ} [AP (q ≄ 0)] : p/q ≃ 1 ↔ p ≃ q := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : p/q ≃ 1)
+    show p ≃ q
+    calc
+      _ ≃ p             := eqv_refl
+      _ ≃ p * 1         := eqv_symm mul_identR
+      _ ≃ p * (q⁻¹ * q) := mul_substR (eqv_symm mul_inverseL)
+      _ ≃ (p * q⁻¹) * q := eqv_symm mul_assoc
+      _ ≃ (p/q) * q     := mul_substL (eqv_symm div_mul_recip)
+      _ ≃ 1 * q         := mul_substL ‹p/q ≃ 1›
+      _ ≃ q             := mul_identL
+  case mpr =>
+    intro (_ : p ≃ q)
+    show p/q ≃ 1
+    calc
+      _ ≃ p/q := eqv_refl
+      _ ≃ q/q := div_substL ‹p ≃ q›
+      _ ≃ 1   := div_same
+
+/--
+The reciprocal of a nonzero rational is itself nonzero.
+
+**Property and proof intuition**: For `p * p⁻¹ ≃ 1` to hold, neither factor can
+be zero.
+-/
+theorem recip_preserves_nonzero {p : ℚ} [AP (p ≄ 0)] : p⁻¹ ≄ 0 := by
+  intro (_ : p⁻¹ ≃ 0)
+  show False
+  have : p ≃ 0 := calc
+    _ ≃ p             := eqv_refl
+    _ ≃ p * 1         := eqv_symm mul_identR
+    _ ≃ p * (p * p⁻¹) := mul_substR (eqv_symm mul_inverseR)
+    _ ≃ p * (p * 0)   := mul_substR (mul_substR ‹p⁻¹ ≃ 0›)
+    _ ≃ p * 0         := mul_substR mul_absorbR
+    _ ≃ 0             := mul_absorbR
+  exact absurd ‹p ≃ 0› ‹AP (p ≄ 0)›.ev
+
+/--
+Instance equivalent of `recip_preserves_nonzero`.
+
+Enables easy syntax for nested reciprocals, or reciprocals in denominators.
+-/
+instance recip_preserves_nonzero_inst
+    {p : ℚ} [AP (p ≄ 0)] : AP (p⁻¹ ≄ 0)
+    :=
+  AP.mk recip_preserves_nonzero
+
+/--
+Double reciprocation is idempotent.
+
+**Property intuition**: "Flipping over" a fraction twice brings back the
+original fraction.
+
+**Proof intuition**: Uses multiplicative inverse twice: first to introduce `p`
+and `p⁻¹`, then to cancel `p⁻¹` and `(p⁻¹)⁻¹`, leaving `p` behind.
+-/
+theorem recip_idemp {p : ℚ} [AP (p ≄ 0)] : (p⁻¹)⁻¹ ≃ p := calc
+  _ ≃ (p⁻¹)⁻¹             := eqv_refl
+  _ ≃ 1 * (p⁻¹)⁻¹         := eqv_symm mul_identL
+  _ ≃ (p * p⁻¹) * (p⁻¹)⁻¹ := mul_substL (eqv_symm mul_inverseR)
+  _ ≃ p * (p⁻¹ * (p⁻¹)⁻¹) := mul_assoc
+  _ ≃ p * 1               := mul_substR mul_inverseR
+  _ ≃ p                   := mul_identR
 
 end Lean4Axiomatic.Rational

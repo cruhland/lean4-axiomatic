@@ -569,17 +569,43 @@ theorem eqv_substL
   exact Rel.trans (Rel.symm ‹x₁ ≃ x₂›) ‹x₁ ≃ y›
 
 /--
+The left-hand side of an equivalence can be replaced by an equivalent value,
+bidirectionally.
+
+**Intuition**: Given `eqv_substL`, symmetry of equivalence means it works in
+the other direction too.
+-/
+theorem eqv_substL_iff
+    {α : Sort u} [EqvOp α] {x₁ x₂ y : α} : x₁ ≃ x₂ → (x₁ ≃ y ↔ x₂ ≃ y)
+    := by
+  intro (_ : x₁ ≃ x₂)
+  exact Iff.intro (eqv_substL ‹x₁ ≃ x₂›) (eqv_substL (Rel.symm ‹x₁ ≃ x₂›))
+
+/--
 The right-hand side of an equivalence can be replaced by an equivalent value.
 
 **Intuition**: This is a somewhat trivial case of binary substitution,
 essentially just transivity expressed in a slightly different way.
 -/
 theorem eqv_substR
-    {α : Sort u} [EqvOp α] {x₁ x₂ y : α} : x₁ ≃ x₂ → y ≃ x₁ → y ≃ x₂
+    {α : Sort u} [EqvOp α] {x y₁ y₂ : α} : y₁ ≃ y₂ → x ≃ y₁ → x ≃ y₂
     := by
-  intro (_ : x₁ ≃ x₂) (_ : y ≃ x₁)
-  show y ≃ x₂
-  exact Rel.trans ‹y ≃ x₁› ‹x₁ ≃ x₂›
+  intro (_ : y₁ ≃ y₂) (_ : x ≃ y₁)
+  show x ≃ y₂
+  exact Rel.trans ‹x ≃ y₁› ‹y₁ ≃ y₂›
+
+/--
+The right-hand side of an equivalence can be replaced by an equivalent value,
+bidirectionally.
+
+**Intuition**: Given `eqv_substR`, symmetry of equivalence means it works in
+the other direction too.
+-/
+theorem eqv_substR_iff
+    {α : Sort u} [EqvOp α] {x y₁ y₂ : α} : y₁ ≃ y₂ → (x ≃ y₁ ↔ x ≃ y₂)
+    := by
+  intro (_ : y₁ ≃ y₂)
+  exact Iff.intro (eqv_substR ‹y₁ ≃ y₂›) (eqv_substR (Rel.symm ‹y₁ ≃ y₂›))
 
 instance eqv_substitutive
     {α : Sort u} [EqvOp α]
