@@ -354,6 +354,21 @@ instance pow_preserves_nonzero_base_inst
     :=
   ‹AP (x ≄ 0)›.map pow_preserves_nonzero_base
 
+/--
+Raising a number to the natural number one leaves the number unchanged.
+
+**Property intuition**: If there's only one copy of the number in the
+multiplication, then that's just the original number.
+
+**Proof intuition**: Exapansion of definitions and simplification.
+-/
+theorem pow_one {x : α} [AA.Identity (1:α) (· * ·)] : x^1 ≃ x := calc
+  _ = x^1        := rfl
+  _ ≃ x^(step 0) := pow_substR literal_step
+  _ ≃ x^0 * x    := pow_step
+  _ ≃ 1 * x      := AA.substL pow_zero
+  _ ≃ x          := AA.identL
+
 end general
 
 end Lean4Axiomatic.Natural
