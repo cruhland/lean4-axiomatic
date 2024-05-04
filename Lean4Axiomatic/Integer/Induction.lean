@@ -292,4 +292,40 @@ def Induction.Context.rec_diff_subst
     :=
   ctx.ind_diff_subst
 
+/--
+Every integer can be expressed as a difference of natural numbers.
+
+**Property intution**: See the comment the top of this file, or the intuition
+for `ind_diff`.
+
+**Proof intuition**: Use "difference" induction: show the property respects
+integer equivalence, define an `on_diff` function, and create a context. Then
+use the context to invoke `ind_diff` on the input integer.
+-/
+theorem as_diff (a : ℤ) : ∃ (n m : ℕ), a ≃ n - m := by
+  let motive (z : ℤ) : Prop := ∃ (n m : ℕ), z ≃ n - m
+
+  let msubst {x₁ x₂ : ℤ} : x₁ ≃ x₂ → motive x₁ → motive x₂ := by
+    intro (_ : x₁ ≃ x₂) (_ : motive x₁)
+    show motive x₂
+
+    have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : x₁ ≃ n - m)) :=
+      ‹motive x₁›
+    have : x₂ ≃ n - m := calc
+      _ = x₂    := rfl
+      _ ≃ x₁    := Rel.symm ‹x₁ ≃ x₂›
+      _ ≃ n - m := ‹x₁ ≃ n - m›
+    have : ∃ (n m : ℕ), x₂ ≃ n - m := Exists.intro n (Exists.intro m this)
+    have : motive x₂ := this
+    exact this
+  let idx_fam := Function.idx_fam_prop msubst
+
+  let on_diff (k j : ℕ) : motive ((k:ℤ) - j) :=
+    Exists.intro k (Exists.intro j Rel.refl)
+  let ctx := ind_ctx_prop on_diff
+
+  have : motive a := ctx.ind_diff a
+  have : ∃ (n m : ℕ), a ≃ n - m := this
+  exact this
+
 end Lean4Axiomatic.Integer

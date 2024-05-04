@@ -268,6 +268,23 @@ theorem sub_swap_add {a b c d : ℤ} : a - b ≃ c - d ↔ a + d ≃ c + b := ca
   _ ↔ a + d ≃ c + b       := subR_moveL_addR
 
 /--
+A sum of differences is equivalent to a difference of sums.
+
+**Property and proof intuition**: Differences are just sums of negated
+quantities, so all terms can be rearranged at will. Group the terms by their
+"negated" status.
+-/
+theorem sub_xchg_add
+    {a b c d : ℤ} : (a - b) + (c - d) ≃ (a + c) - (b + d)
+    := calc
+  _ = (a - b) + (c - d)       := rfl
+  _ ≃ (a + (-b)) + (c - d)    := AA.substL sub_defn
+  _ ≃ (a + (-b)) + (c + (-d)) := AA.substR sub_defn
+  _ ≃ (a + c) + ((-b) + (-d)) := AA.expr_xxfxxff_lr_swap_rl
+  _ ≃ (a + c) + (-(b + d))    := AA.substR (Rel.symm neg_compat_add)
+  _ ≃ (a + c) - (b + d)       := Rel.symm sub_defn
+
+/--
 Multiplication distributes over subtraction (on the left).
 
 **Property and proof intuition**: This is the same as multiplication

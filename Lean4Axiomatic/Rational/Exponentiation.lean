@@ -401,4 +401,48 @@ theorem pow_neg {p : ℚ} {n : ℕ} [AP (p ≄ 0)] : p^(-(n:ℤ)) ≃ 1 / p^n :=
   _ ≃ p^(0:ℕ) / p^n := pow_diff
   _ ≃ 1 / p^n       := div_substL Natural.pow_zero
 
+/--
+Integer exponents add when powers of the same rational number are multiplied.
+
+**Property intuition**: Exponentiation to integers is repeated multiplication,
+either by the base (for positive exponents) or by the base's reciprocal (for
+negative exponents). The exponent gives the number of repetitions. Thus if two
+powers of the same base are multiplied, that's equivalent to the second power's
+multiplication count being combined with the first power's count.
+
+**Proof intuition**: Write both integer exponents as differences of natural
+numbers. Invoke `pow_diff` to convert powers of differences to ratios of
+natural number powers. Rearrange using algebra and the natural number version
+of this property.
+-/
+theorem pow_compatL_add
+    {p : ℚ} [AP (p ≄ 0)] {a b : ℤ} : p^(a + b) ≃ p^a * p^b
+    := by
+  have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : a ≃ n - m)) :=
+    Integer.as_diff a
+  have Exists.intro (k : ℕ) (Exists.intro (j : ℕ) (_ : b ≃ k - j)) :=
+    Integer.as_diff b
+  have : a + b ≃ (n + k : ℕ) - (m + j : ℕ) := calc
+    _ = a + b                     := rfl
+    _ ≃ (n - m) + b               := AA.substL ‹a ≃ n - m›
+    _ ≃ (n - m) + (k - j)         := AA.substR ‹b ≃ k - j›
+    _ ≃ (n + k) - (m + j)         := Integer.sub_xchg_add
+    _ ≃ (n + k : ℕ) - (m + j)     := AA.substL (Rel.symm AA.compat₂)
+    _ ≃ (n + k : ℕ) - (m + j : ℕ) := AA.substR (Rel.symm AA.compat₂)
+  have pow_lift {x y : ℕ} {z : ℤ} : z ≃ x - y → p^x / p^y ≃ p^z := by
+    intro (_ : z ≃ x - y)
+    calc
+      _ = p^x / p^y     := rfl
+      _ ≃ p^((x:ℤ) - y) := eqv_symm pow_diff
+      _ ≃ p^z           := pow_substR (Rel.symm ‹z ≃ x - y›)
+  calc
+    _ = p^(a + b)                         := rfl
+    _ ≃ p^(((n + k : ℕ):ℤ) - (m + j : ℕ)) := pow_substR ‹a+b ≃ (n+k:ℕ)-(m+j:ℕ)›
+    _ ≃ p^(n + k) / p^(m + j)             := pow_diff
+    _ ≃ (p^n * p^k) / p^(m + j)           := div_substL Natural.pow_compatL_add
+    _ ≃ (p^n * p^k) / (p^m * p^j)         := div_substR Natural.pow_compatL_add
+    _ ≃ (p^n / p^m) * (p^k / p^j)         := Rel.symm div_mul_swap
+    _ ≃ p^a * (p^k / p^j)                 := mul_substL (pow_lift ‹a ≃ n - m›)
+    _ ≃ p^a * p^b                         := mul_substR (pow_lift ‹b ≃ k - j›)
+
 end Lean4Axiomatic.Rational
