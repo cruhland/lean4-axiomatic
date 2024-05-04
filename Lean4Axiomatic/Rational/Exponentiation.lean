@@ -274,15 +274,9 @@ values.
 **Property intuition**: For integer exponentiation to make sense as a function
 on rationals, this needs to be true.
 
-**Proof intuition**: Uses "difference" induction of the integer exponent. This
-simplifies the goal from proving a property for all integers, to proving a
-property for all differences of natural numbers. But this is exactly what's
-needed to make use of `pow_diff`! After that, `pow_substL` for _natural number_
-exponents completes the proof.
-
-For difference induction to work, it also needs the `motive` predicate to
-respect equivalence of its argument. This can be shown using the `pow_substR`
-axiom for integer exponentiation of rationals.
+**Proof intuition**: Write the integer exponent as a difference of natural
+numbers, and use `pow_diff` to convert the integer power into a ratio of
+natural number powers. Then delegate to `Natural.pow_substL`.
 -/
 theorem pow_substL
     {p₁ p₂ : ℚ} {a : ℤ} [AP (p₁ ≄ 0)] [AP (p₂ ≄ 0)] : p₁ ≃ p₂ → p₁^a ≃ p₂^a
@@ -290,33 +284,16 @@ theorem pow_substL
   intro (_ : p₁ ≃ p₂)
   show p₁^a ≃ p₂^a
 
-  let motive (x : ℤ) : Prop := p₁^x ≃ p₂^x
-  have motive_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → motive a₁ → motive a₂ := by
-    intro (_ : a₁ ≃ a₂) (_ : motive a₁)
-    show motive a₂
-    have : p₁^a₁ ≃ p₂^a₁ := ‹motive a₁›
-    have : p₁^a₂ ≃ p₂^a₂ := calc
-      _ = p₁^a₂ := rfl
-      _ ≃ p₁^a₁ := pow_substR (Rel.symm ‹a₁ ≃ a₂›)
-      _ ≃ p₂^a₁ := ‹p₁^a₁ ≃ p₂^a₁›
-      _ ≃ p₂^a₂ := pow_substR ‹a₁ ≃ a₂›
-    have : motive a₂ := this
-    exact this
-  let idx_fam_motive := idx_fam_prop motive_subst
-
-  have on_diff (n m : ℕ) : motive (n - m) := by
-    show p₁^((n:ℤ) - (m:ℤ)) ≃ p₂^((n:ℤ) - (m:ℤ))
-    calc
-      _ ≃ p₁^((n:ℤ) - (m:ℤ)) := eqv_refl
-      _ ≃ p₁^n / p₁^m        := pow_diff
-      _ ≃ p₂^n / p₁^m        := div_substL (Natural.pow_substL ‹p₁ ≃ p₂›)
-      _ ≃ p₂^n / p₂^m        := div_substR (Natural.pow_substL ‹p₁ ≃ p₂›)
-      _ ≃ p₂^((n:ℤ) - (m:ℤ)) := eqv_symm pow_diff
-  let ind_ctx := Integer.ind_ctx_prop on_diff
-
-  have : motive a := ind_ctx.ind_diff a
-  have : p₁^a ≃ p₂^a := this
-  exact this
+  have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : a ≃ n - m)) :=
+    Integer.as_diff a
+  calc
+    _ = p₁^a           := rfl
+    _ ≃ p₁^((n:ℤ) - m) := pow_substR ‹a ≃ n - m›
+    _ ≃ p₁^n / p₁^m    := pow_diff
+    _ ≃ p₂^n / p₁^m    := div_substL (Natural.pow_substL ‹p₁ ≃ p₂›)
+    _ ≃ p₂^n / p₂^m    := div_substR (Natural.pow_substL ‹p₁ ≃ p₂›)
+    _ ≃ p₂^((n:ℤ) - m) := eqv_symm pow_diff
+    _ ≃ p₂^a           := pow_substR (Rel.symm ‹a ≃ n - m›)
 
 /--
 Raising a nonzero rational number to any integer power gives a nonzero result.
@@ -326,39 +303,26 @@ nonzero, this is simply an extension of that fact to any number of
 multiplications. "Negative" multiplications are accounted for because
 reciprocals are always nonzero.
 
-**Proof intuition**: Uses "difference" induction on the integer exponent,
-simplifying the goal to showing that raising a nonzero rational to a difference
-of natural numbers is nonzero, or more precisely that assuming the result is
-zero leads to a contradiction. Converting this into a quotient of natural
-number powers using `pow_diff`, we can obtain a contradiction by showing the
+**Proof intuition**: Assume the contrary, and reach a contradiction. Write the
+integer exponent as a difference of natural numbers, and use `pow_diff` to
+convert the this into a quotient of natural number powers. Show that the
 numerator must be zero (from the assumption) and nonzero (from the analogous
-theorem for natural number powers).
+theorem for natural number powers), giving us the desired contradiction.
 -/
 theorem pow_preserves_nonzero {p : ℚ} {a : ℤ} [AP (p ≄ 0)] : p^a ≄ 0 := by
-  let motive (x : ℤ) : Prop := p^x ≄ 0
-  have motive_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → motive a₁ → motive a₂ := by
-    intro (_ : a₁ ≃ a₂) (_ : motive a₁)
-    show motive a₂
-    have : p^a₁ ≃ p^a₂ := pow_substR ‹a₁ ≃ a₂›
-    have : p^a₁ ≄ 0 := ‹motive a₁›
-    have : p^a₂ ≄ 0 := AA.neqv_substL ‹p^a₁ ≃ p^a₂› this
-    have : motive a₂ := this
-    exact this
-  let idx_fam_motive := idx_fam_prop motive_subst
+  intro (_ : p^a ≃ 0)
+  show False
 
-  have on_diff (n m : ℕ) : motive (n - m) := by
-    intro (_ : p^((n:ℤ) - m) ≃ 0)
-    show False
-    have : p^n / p^m ≃ 0 :=
-      eqv_trans (eqv_symm pow_diff) ‹p^((n:ℤ) - m) ≃ 0›
-    have : p^n ≃ 0 := div_eqv_0.mp this
-    have : p^n ≄ 0 := Natural.pow_preserves_nonzero_base ‹AP (p ≄ 0)›.ev
-    exact absurd ‹p^n ≃ 0› ‹p^n ≄ 0›
-  let ind_ctx := Integer.ind_ctx_prop on_diff
-
-  have : motive a := ind_ctx.ind_diff a
-  have : p^a ≄ 0 := this
-  exact this
+  have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : a ≃ n - m)) :=
+    Integer.as_diff a
+  have : p^n / p^m ≃ 0 := calc
+    _ = p^n / p^m     := rfl
+    _ ≃ p^((n:ℤ) - m) := eqv_symm pow_diff
+    _ ≃ p^a           := pow_substR (Rel.symm ‹a ≃ n - m›)
+    _ ≃ 0             := ‹p^a ≃ 0›
+  have : p^n ≃ 0 := div_eqv_0.mp this
+  have : p^n ≄ 0 := Natural.pow_preserves_nonzero_base ‹AP (p ≄ 0)›.ev
+  exact absurd ‹p^n ≃ 0› ‹p^n ≄ 0›
 
 /-- Instance version of `pow_preserves_nonzero`. -/
 instance pow_preserves_nonzero_inst
