@@ -199,6 +199,25 @@ theorem pow_scompatL_abs {p : ℚ} {n : ℕ} : abs (p^n) ≃ (abs p)^n := by
       _ ≃ (abs p)^n' * abs p := mul_substL ih
       _ ≃ (abs p)^(step n')  := eqv_symm pow_step
 
+/--
+A natural number exponent distributes over division.
+
+**Property intuition**: The product of two fractions is the product of their
+numerators over the product of their denominators. Exponentiation is repeated
+multiplication, so we'd expect the same pattern to hold.
+
+**Proof intuition**: Convert division to multiplication by the reciprocal. Then
+distribute the exponent over multiplication, and commute it with reciprocation.
+-/
+theorem pow_distribR_div
+    {p q : ℚ} [AP (q ≄ 0)] {n : ℕ} : (p / q)^n ≃ p^n / q^n
+    := calc
+  _ = (p / q)^n     := rfl
+  _ ≃ (p * q⁻¹)^n   := Natural.pow_substL div_mul_recip
+  _ ≃ p^n * (q⁻¹)^n := Natural.pow_distribR_mul
+  _ ≃ p^n * (q^n)⁻¹ := mul_substR (eqv_symm pow_scompatL_recip)
+  _ ≃ p^n / q^n     := eqv_symm div_mul_recip
+
 end pow_nat
 
 /-! ## Axioms for exponentiation to an integer -/
@@ -408,5 +427,78 @@ theorem pow_compatL_add
     _ ≃ (p^n / p^m) * (p^k / p^j)         := Rel.symm div_mul_swap
     _ ≃ p^a * (p^k / p^j)                 := mul_substL (pow_lift ‹a ≃ n - m›)
     _ ≃ p^a * p^b                         := mul_substR (pow_lift ‹b ≃ k - j›)
+
+/--
+Powers of powers flatten into a single power whose exponent is the product of
+the original exponents.
+
+**Property intuition**: First, `p^a` is `a` repetitions of the base (either
+directly or as a reciprocal, if `a` is negative). So `(p^a)^b` is `b`
+repetitions _of_ an expression that's `a` repetitions of the base, giving
+`a * b` repetitions total.
+
+**Proof intuition**: Write both integer exponents as differences of natural
+numbers. Use `pow_diff` to simplify the expression to one involving powers of
+powers of _natural_ numbers. Use natural number exponent properties, and
+`pow_diff` again, to factor out the base and combine exponents until the
+expression has a single instance of the base raised to a single exponent.
+Simplify that exponent to obtain the result.
+-/
+theorem pow_flatten {p : ℚ} [AP (p ≄ 0)] {a b : ℤ} : (p^a)^b ≃ p^(a * b) := by
+  have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (a_eqv : a ≃ n - m)) :=
+    Integer.as_diff a
+  have Exists.intro (k : ℕ) (Exists.intro (j : ℕ) (b_eqv : b ≃ k - j)) :=
+    Integer.as_diff b
+
+  have pow_expand : (p^a)^b ≃ ((p^n)^k/(p^m)^k) / ((p^n)^j/(p^m)^j) := calc
+    _ = (p^a)^b                               := rfl
+    _ ≃ (p^((n:ℤ)-m))^b                       := pow_substL (pow_substR a_eqv)
+    _ ≃ (p^n/p^m)^b                           := pow_substL pow_diff
+    _ ≃ (p^n/p^m)^((k:ℤ)-j)                   := pow_substR b_eqv
+    _ ≃ (p^n/p^m)^k / (p^n/p^m)^j             := pow_diff
+    _ ≃ ((p^n)^k/(p^m)^k) / (p^n/p^m)^j       := div_substL pow_distribR_div
+    _ ≃ ((p^n)^k/(p^m)^k) / ((p^n)^j/(p^m)^j) := div_substR pow_distribR_div
+  have pow_combine {w x y z : ℕ} : (p^w)^x*(p^y)^z ≃ p^(w*x + y*z) := calc
+    _ = (p^w)^x*(p^y)^z := rfl
+    _ ≃ p^(w*x)*(p^y)^z := mul_substL Natural.pow_flatten
+    _ ≃ p^(w*x)*p^(y*z) := mul_substR Natural.pow_flatten
+    _ ≃ p^(w*x + y*z)   := Rel.symm Natural.pow_compatL_add
+  have multi_compat {w x y z : ℕ} : ((w*x + y*z : ℕ):ℤ) ≃ (w:ℤ)*x + y*z := calc
+    _ = ((w*x + y*z : ℕ):ℤ)           := rfl
+    _ ≃ ((w*x : ℕ):ℤ) + ((y*z : ℕ):ℤ) := AA.compat₂
+    _ ≃ (w:ℤ)*x + ((y*z : ℕ):ℤ)       := AA.substL AA.compat₂
+    _ ≃ (w:ℤ)*x + y*z                 := AA.substR AA.compat₂
+  have diff_expand
+      {w x y z : ℤ} : (w-x) * (y-z) ≃ (w*y + x*z) - (x*y + w*z)
+      := by
+    let wy := w*y; let wz := w*z; let xy := x*y; let xz := x*z
+    calc
+      _ = (w-x) * (y-z)           := rfl
+      _ ≃ w * (y-z) - x * (y-z)   := AA.distribR
+      _ ≃ (wy - wz) - x * (y-z)   := AA.substL AA.distribL
+      _ ≃ (wy - wz) - (xy - xz)   := AA.substR AA.distribL
+      _ ≃ (wy - wz) + -(xy - xz)  := Integer.sub_defn
+      _ ≃ (wy - wz) + (xz - xy)   := AA.substR Integer.sub_neg_flip
+      _ ≃ (wy + -wz) + (xz - xy)  := AA.substL Integer.sub_defn
+      _ ≃ (wy + -wz) + (xz + -xy) := AA.substR Integer.sub_defn
+      _ ≃ (wy + xz) + (-wz + -xy) := AA.expr_xxfxxff_lr_swap_rl
+      _ ≃ (wy + xz) + (-xy + -wz) := AA.substR AA.comm
+      _ ≃ (wy + xz) + -(xy + wz)  := AA.substR (Rel.symm Integer.neg_compat_add)
+      _ ≃ (wy + xz) - (xy + wz)   := Rel.symm Integer.sub_defn
+  have pow_reduce : ((n*k + m*j : ℕ):ℤ) - ((m*k + n*j : ℕ):ℤ) ≃ a * b := calc
+    _ = ((n*k + m*j : ℕ):ℤ) - ((m*k + n*j : ℕ):ℤ) := rfl
+    _ ≃ ((n:ℤ)*k + m*j) - ((m*k + n*j : ℕ):ℤ)     := AA.substL multi_compat
+    _ ≃ ((n:ℤ)*k + m*j) - (m*k + n*j)             := AA.substR multi_compat
+    _ ≃ ((n:ℤ) - m) * (k - j)                     := Rel.symm diff_expand
+    _ ≃ a * (k - j)                               := AA.substL (Rel.symm a_eqv)
+    _ ≃ a * b                                     := AA.substR (Rel.symm b_eqv)
+  calc
+    _ = (p^a)^b                                       := rfl
+    _ ≃ ((p^n)^k/(p^m)^k) / ((p^n)^j/(p^m)^j)         := pow_expand
+    _ ≃ ((p^n)^k*(p^m)^j) / ((p^m)^k*(p^n)^j)         := div_div_div
+    _ ≃ p^(n*k + m*j) / ((p^m)^k*(p^n)^j)             := div_substL pow_combine
+    _ ≃ p^(n*k + m*j) / p^(m*k + n*j)                 := div_substR pow_combine
+    _ ≃ p^(((n*k + m*j : ℕ):ℤ) - ((m*k + n*j : ℕ):ℤ)) := eqv_symm pow_diff
+    _ ≃ p^(a * b)                                     := pow_substR pow_reduce
 
 end Lean4Axiomatic.Rational
