@@ -27,6 +27,30 @@ variable
     [Negation ℚ] [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ]
     [Sign ℚ] [Order ℚ] [Metric ℚ] [Natural.Exponentiation ℕ (α := ℚ) (· * ·)]
 
+-- This is a limited result for convenience
+-- Consider adding pow to Integer, and proving `sgn (p^n) ≃ (sgn p)^n` instead
+theorem sgn_pow {p : ℚ} {n : ℕ} : p > 0 → sgn (p^n) ≃ 1 := by
+  intro (_ : p > 0)
+  show sgn (p^n) ≃ 1
+  apply Natural.ind_on n
+  case zero =>
+    show sgn (p^0) ≃ 1
+    calc
+      _ = sgn (p^0) := rfl
+      _ ≃ sgn (1:ℚ) := sgn_subst Natural.pow_zero
+      _ ≃ 1         := sgn_one
+  case step =>
+    intro (n' : ℕ) (_ : sgn (p^n') ≃ 1)
+    show sgn (p^(step n')) ≃ 1
+    have : sgn p ≃ 1 := gt_zero_sgn.mp ‹p > 0›
+    calc
+      _ = sgn (p^(step n')) := rfl
+      _ ≃ sgn (p^n' * p) := sgn_subst pow_step
+      _ ≃ sgn (p^n') * sgn p := sgn_compat_mul
+      _ ≃ 1 * sgn p := AA.substL ‹sgn (p^n') ≃ 1›
+      _ ≃ sgn p := AA.identL
+      _ ≃ 1 := ‹sgn p ≃ 1›
+
 /--
 Raising two ordered, nonnegative values to the same natural number power
 preserves their ordering and nonnegativity.
@@ -282,8 +306,8 @@ attribute [instance] Exponentiation.toProps
 variable
   {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
   {ℚ : Type}
-    [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
-    [Negation ℚ] [Reciprocation ℚ] [Division ℚ] [Sign ℚ]
+    [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ]
+    [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ] [Sign ℚ] [Order ℚ]
     [Natural.Exponentiation ℕ (α := ℚ) (· * ·)] [Exponentiation ℚ]
 
 /--
@@ -532,5 +556,23 @@ theorem pow_distribR_mul
     _ ≃ p^((n:ℤ)-m) * q^((n:ℤ)-m) := mul_substR (eqv_symm pow_diff)
     _ ≃ p^a * q^((n:ℤ)-m)         := mul_substL (pow_substR (Rel.symm a_eqv))
     _ ≃ p^a * q^a                 := mul_substR (pow_substR (Rel.symm a_eqv))
+
+/-- TODO -/
+theorem pow_preserves_pos_base {p : ℚ} [AP (p > 0)] {a : ℤ} : p^a > 0 := by
+  have : p > 0 := ‹AP (p > 0)›.ev
+  have : sgn p ≃ 1 := gt_zero_sgn.mp ‹p > 0›
+  have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : a ≃ n - m)) :=
+    Integer.as_diff a
+
+  have : sgn (p^a) ≃ 1 := calc
+    _ = sgn (p^a)             := rfl
+    _ ≃ sgn (p^((n:ℤ) - m))   := sgn_subst (pow_substR ‹a ≃ n - m›)
+    _ ≃ sgn (p^n / p^m)       := sgn_subst pow_diff
+    _ ≃ sgn (p^n) * sgn (p^m) := sgn_div
+    _ ≃ 1 * sgn (p^m)         := AA.substL (sgn_pow ‹p > 0›)
+    _ ≃ sgn (p^m)             := AA.identL
+    _ ≃ 1                     := sgn_pow ‹p > 0›
+  have : p^a > 0 := gt_zero_sgn.mpr this
+  exact this
 
 end Lean4Axiomatic.Rational
