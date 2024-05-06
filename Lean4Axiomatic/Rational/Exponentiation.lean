@@ -501,4 +501,36 @@ theorem pow_flatten {p : ℚ} [AP (p ≄ 0)] {a b : ℤ} : (p^a)^b ≃ p^(a * b)
     _ ≃ p^(((n*k + m*j : ℕ):ℤ) - ((m*k + n*j : ℕ):ℤ)) := eqv_symm pow_diff
     _ ≃ p^(a * b)                                     := pow_substR pow_reduce
 
+/--
+Integer exponents distribute over multiplication.
+
+**Property intuition**: Multiplication is commutative, so there should be no
+difference between repeated multiplication of a product (or its reciprocal, for
+negative exponents) and repeated multiplication of its first term, followed by
+repeated multiplication of its second term.
+
+**Proof intuition**: Write the integer exponent as a difference of natural
+numbers. Convert the expression to a ratio of natural number powers via
+`pow_diff`. Invoke the analogous property for natural number exponents, and
+factor the result into a product of fractions. Run `pow_diff` in reverse and
+convert back to integer exponents to obtain the goal.
+-/
+theorem pow_distribR_mul
+    {p q : ℚ} [AP (p ≄ 0)] [AP (q ≄ 0)] {a : ℤ} : (p * q)^a ≃ p^a * q^a
+    := by
+  have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (a_eqv : a ≃ n - m)) :=
+    Integer.as_diff a
+
+  calc
+    _ = (p * q)^a                 := rfl
+    _ ≃ (p * q)^((n:ℤ)-m)         := pow_substR a_eqv
+    _ ≃ (p * q)^n / (p * q)^m     := pow_diff
+    _ ≃ (p^n * q^n) / (p * q)^m   := div_substL Natural.pow_distribR_mul
+    _ ≃ (p^n * q^n) / (p^m * q^m) := div_substR Natural.pow_distribR_mul
+    _ ≃ (p^n / p^m) * (q^n / q^m) := eqv_symm div_mul_swap
+    _ ≃ p^((n:ℤ)-m) * (q^n / q^m) := mul_substL (eqv_symm pow_diff)
+    _ ≃ p^((n:ℤ)-m) * q^((n:ℤ)-m) := mul_substR (eqv_symm pow_diff)
+    _ ≃ p^a * q^((n:ℤ)-m)         := mul_substL (pow_substR (Rel.symm a_eqv))
+    _ ≃ p^a * q^a                 := mul_substR (pow_substR (Rel.symm a_eqv))
+
 end Lean4Axiomatic.Rational
