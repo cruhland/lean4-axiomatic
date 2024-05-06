@@ -331,22 +331,29 @@ theorem sgn_recip {p : ℚ} [AP (p ≄ 0)] : sgn (p⁻¹) ≃ sgn p := by
     sgn (1 * p)                 ≃ _ := sgn_subst mul_identL
     sgn p                       ≃ _ := Rel.refl
 
+/-- TODO -/
+theorem sgn_div {p q : ℚ} [AP (q ≄ 0)] : sgn (p / q) ≃ sgn p * sgn q := calc
+  _ = sgn (p / q)       := rfl
+  _ ≃ sgn (p * q⁻¹)     := sgn_subst div_mul_recip
+  _ ≃ sgn p * sgn (q⁻¹) := sgn_compat_mul
+  _ ≃ sgn p * sgn q     := AA.substR sgn_recip
+
 /--
 The sign of a fraction formed from integers is the product of the integers'
 signs.
+
+TODO update
 
 **Property and proof intuition**: Division is multiplication by a reciprocal,
 and since reciprocal preserves signs, it can be ignored.
 -/
 theorem sgn_div_integers
-    {a b : ℤ} [Integer.Nonzero b] : sgn ((a : ℚ) / (b : ℚ)) ≃ sgn a * sgn b
+    {a b : ℤ} [Integer.Nonzero b] : sgn ((a:ℚ) / (b:ℚ)) ≃ sgn a * sgn b
     := calc
-  sgn ((a : ℚ) / (b : ℚ))       ≃ _ := sgn_subst div_mul_recip
-  sgn ((a : ℚ) * (b : ℚ)⁻¹)     ≃ _ := sgn_compat_mul
-  sgn (a : ℚ) * sgn ((b : ℚ)⁻¹) ≃ _ := AA.substR sgn_recip
-  sgn (a : ℚ) * sgn (b : ℚ)     ≃ _ := AA.substL sgn_from_integer
-  sgn a * sgn (b : ℚ)           ≃ _ := AA.substR sgn_from_integer
-  sgn a * sgn b                 ≃ _ := Rel.refl
+  _ = sgn ((a:ℚ) / (b:ℚ))   := rfl
+  _ ≃ sgn (a:ℚ) * sgn (b:ℚ) := sgn_div
+  _ ≃ sgn a * sgn (b:ℚ)     := AA.substL sgn_from_integer
+  _ ≃ sgn a * sgn b         := AA.substR sgn_from_integer
 
 /--
 The _signum_ function is idempotent: applying it twice is the same as applying
