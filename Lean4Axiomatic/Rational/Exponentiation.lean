@@ -27,29 +27,80 @@ variable
     [Negation ℚ] [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ]
     [Sign ℚ] [Order ℚ] [Metric ℚ] [Natural.Exponentiation ℕ (α := ℚ) (· * ·)]
 
--- This is a limited result for convenience
--- Consider adding pow to Integer, and proving `sgn (p^n) ≃ (sgn p)^n` instead
-theorem sgn_pow {p : ℚ} {n : ℕ} : p > 0 → sgn (p^n) ≃ 1 := by
-  intro (_ : p > 0)
-  show sgn (p^n) ≃ 1
+theorem pow_scompatL_from_integer {a : ℤ} {n : ℕ} : ((a^n : ℤ):ℚ) ≃ (a:ℚ)^n := by
+  admit
+
+/--
+Raising rationals to natural number powers is semicompatible with reciprocation
+on the left operand.
+
+**Property intuition**: Reciprocation and multiplication are compatible, so it
+shouldn't matter if the multiplications for exponentiation happen first, or the
+reciprocation.
+
+**Proof intuition**: Use induction and the compatibility of multiplication and
+reciprocation.
+-/
+theorem pow_scompatL_recip
+    {p : ℚ} {n : ℕ} [AP (p ≄ 0)] : (p^n)⁻¹ ≃ (p⁻¹)^n
+    := by
   apply Natural.ind_on n
   case zero =>
-    show sgn (p^0) ≃ 1
+    show (p^(0:ℕ))⁻¹ ≃ (p⁻¹)^(0:ℕ)
     calc
-      _ = sgn (p^0) := rfl
-      _ ≃ sgn (1:ℚ) := sgn_subst Natural.pow_zero
-      _ ≃ 1         := sgn_one
+      _ = (p^(0:ℕ))⁻¹ := rfl
+      _ ≃ 1⁻¹         := recip_subst pow_zero
+      _ ≃ 1           := recip_sqrt1
+      _ ≃ (p⁻¹)^(0:ℕ) := eqv_symm pow_zero
   case step =>
-    intro (n' : ℕ) (_ : sgn (p^n') ≃ 1)
-    show sgn (p^(step n')) ≃ 1
-    have : sgn p ≃ 1 := gt_zero_sgn.mp ‹p > 0›
+    intro (n' : ℕ) (ih : (p^n')⁻¹ ≃ (p⁻¹)^n')
+    show (p^(step n'))⁻¹ ≃ (p⁻¹)^(step n')
     calc
-      _ = sgn (p^(step n')) := rfl
-      _ ≃ sgn (p^n' * p) := sgn_subst pow_step
-      _ ≃ sgn (p^n') * sgn p := sgn_compat_mul
-      _ ≃ 1 * sgn p := AA.substL ‹sgn (p^n') ≃ 1›
-      _ ≃ sgn p := AA.identL
-      _ ≃ 1 := ‹sgn p ≃ 1›
+      _ ≃ (p^(step n'))⁻¹ := eqv_refl
+      _ ≃ (p^n' * p)⁻¹    := recip_subst pow_step
+      _ ≃ (p^n')⁻¹ * p⁻¹  := recip_compat_mul
+      _ ≃ (p⁻¹)^n' * p⁻¹  := mul_substL ih
+      _ ≃ (p⁻¹)^(step n') := eqv_symm pow_step
+
+/--
+A natural number exponent distributes over division.
+
+**Property intuition**: The product of two fractions is the product of their
+numerators over the product of their denominators. Exponentiation is repeated
+multiplication, so we'd expect the same pattern to hold.
+
+**Proof intuition**: Convert division to multiplication by the reciprocal. Then
+distribute the exponent over multiplication, and commute it with reciprocation.
+-/
+theorem pow_distribR_div
+    {p q : ℚ} [AP (q ≄ 0)] {n : ℕ} : (p / q)^n ≃ p^n / q^n
+    := calc
+  _ = (p / q)^n     := rfl
+  _ ≃ (p * q⁻¹)^n   := Natural.pow_substL div_mul_recip
+  _ ≃ p^n * (q⁻¹)^n := Natural.pow_distribR_mul
+  _ ≃ p^n * (q^n)⁻¹ := mul_substR (eqv_symm pow_scompatL_recip)
+  _ ≃ p^n / q^n     := eqv_symm div_mul_recip
+
+theorem sgn_pow {p : ℚ} {n : ℕ} : sgn (p^n) ≃ (sgn p)^n := by
+  have (AsRatio.intro (a : ℤ) (b : ℤ) (_ : Integer.Nonzero b) p_eqv) :=
+    as_ratio p
+  have : p ≃ a/b := p_eqv
+  calc
+    _ = sgn (p^n)                             := rfl
+    _ ≃ sgn (((a:ℚ)/b)^n)                     := sgn_subst (Natural.pow_substL ‹p ≃ a/b›)
+    _ ≃ sgn ((a:ℚ)^n/b^n)                     := sgn_subst pow_distribR_div
+    _ ≃ sgn ((a:ℚ)^n) * sgn ((b:ℚ)^n)         := sgn_div
+    _ ≃ sgn ((a^n : ℤ):ℚ) * sgn ((b:ℚ)^n)     := AA.substL (sgn_subst (eqv_symm pow_scompatL_from_integer))
+    _ ≃ sgn ((a^n : ℤ):ℚ) * sgn ((b^n : ℤ):ℚ) := AA.substR (sgn_subst (eqv_symm pow_scompatL_from_integer))
+    _ ≃ sgn (a^n) * sgn ((b^n : ℤ):ℚ)         := AA.substL sgn_from_integer
+    _ ≃ sgn (a^n) * sgn (b^n)                 := AA.substR sgn_from_integer
+    _ ≃ (sgn a)^n * sgn (b^n)                 := AA.substL Integer.sgn_pow
+    _ ≃ (sgn a)^n * (sgn b)^n                 := AA.substR Integer.sgn_pow
+    _ ≃ (sgn a * sgn b)^n                     := Rel.symm (Natural.pow_distribR_mul (mul := (· * ·)))
+    _ ≃ (sgn (a:ℚ) * sgn b)^n                 := Natural.pow_substL (AA.substL (Rel.symm sgn_from_integer))
+    _ ≃ (sgn (a:ℚ) * sgn (b:ℚ))^n             := Natural.pow_substL (AA.substR (Rel.symm sgn_from_integer))
+    _ ≃ (sgn ((a:ℚ)/b))^n                     := Natural.pow_substL (Rel.symm sgn_div)
+    _ ≃ (sgn p)^n                             := Natural.pow_substL (sgn_subst (eqv_symm ‹p ≃ a/b›))
 
 /--
 Raising two ordered, nonnegative values to the same natural number power
@@ -162,38 +213,6 @@ theorem pow_pos_substL_gt_nonneg
       exact And.intro ‹p^(step n') > q^(step n')› ‹q^(step n') ≥ 0›
 
 /--
-Raising rationals to natural number powers is semicompatible with reciprocation
-on the left operand.
-
-**Property intuition**: Reciprocation and multiplication are compatible, so it
-shouldn't matter if the multiplications for exponentiation happen first, or the
-reciprocation.
-
-**Proof intuition**: Use induction and the compatibility of multiplication and
-reciprocation.
--/
-theorem pow_scompatL_recip
-    {p : ℚ} {n : ℕ} [AP (p ≄ 0)] : (p^n)⁻¹ ≃ (p⁻¹)^n
-    := by
-  apply Natural.ind_on n
-  case zero =>
-    show (p^(0:ℕ))⁻¹ ≃ (p⁻¹)^(0:ℕ)
-    calc
-      _ = (p^(0:ℕ))⁻¹ := rfl
-      _ ≃ 1⁻¹         := recip_subst pow_zero
-      _ ≃ 1           := recip_sqrt1
-      _ ≃ (p⁻¹)^(0:ℕ) := eqv_symm pow_zero
-  case step =>
-    intro (n' : ℕ) (ih : (p^n')⁻¹ ≃ (p⁻¹)^n')
-    show (p^(step n'))⁻¹ ≃ (p⁻¹)^(step n')
-    calc
-      _ ≃ (p^(step n'))⁻¹ := eqv_refl
-      _ ≃ (p^n' * p)⁻¹    := recip_subst pow_step
-      _ ≃ (p^n')⁻¹ * p⁻¹  := recip_compat_mul
-      _ ≃ (p⁻¹)^n' * p⁻¹  := mul_substL ih
-      _ ≃ (p⁻¹)^(step n') := eqv_symm pow_step
-
-/--
 Absolute value is semicompatible with the base argument of exponentiation.
 
 **Property intuition**: Absolute value is compatible with multiplication, so
@@ -222,25 +241,6 @@ theorem pow_scompatL_abs {p : ℚ} {n : ℕ} : abs (p^n) ≃ (abs p)^n := by
       _ ≃ abs (p^n') * abs p := abs_compat_mul
       _ ≃ (abs p)^n' * abs p := mul_substL ih
       _ ≃ (abs p)^(step n')  := eqv_symm pow_step
-
-/--
-A natural number exponent distributes over division.
-
-**Property intuition**: The product of two fractions is the product of their
-numerators over the product of their denominators. Exponentiation is repeated
-multiplication, so we'd expect the same pattern to hold.
-
-**Proof intuition**: Convert division to multiplication by the reciprocal. Then
-distribute the exponent over multiplication, and commute it with reciprocation.
--/
-theorem pow_distribR_div
-    {p q : ℚ} [AP (q ≄ 0)] {n : ℕ} : (p / q)^n ≃ p^n / q^n
-    := calc
-  _ = (p / q)^n     := rfl
-  _ ≃ (p * q⁻¹)^n   := Natural.pow_substL div_mul_recip
-  _ ≃ p^n * (q⁻¹)^n := Natural.pow_distribR_mul
-  _ ≃ p^n * (q^n)⁻¹ := mul_substR (eqv_symm pow_scompatL_recip)
-  _ ≃ p^n / q^n     := eqv_symm div_mul_recip
 
 end pow_nat
 
@@ -569,9 +569,11 @@ theorem pow_preserves_pos_base {p : ℚ} [AP (p > 0)] {a : ℤ} : p^a > 0 := by
     _ ≃ sgn (p^((n:ℤ) - m))   := sgn_subst (pow_substR ‹a ≃ n - m›)
     _ ≃ sgn (p^n / p^m)       := sgn_subst pow_diff
     _ ≃ sgn (p^n) * sgn (p^m) := sgn_div
-    _ ≃ 1 * sgn (p^m)         := AA.substL (sgn_pow ‹p > 0›)
-    _ ≃ sgn (p^m)             := AA.identL
-    _ ≃ 1                     := sgn_pow ‹p > 0›
+    _ ≃ (sgn p)^n * sgn (p^m) := AA.substL sgn_pow
+    _ ≃ (sgn p)^n * (sgn p)^m := AA.substR sgn_pow
+    _ ≃ (sgn p)^(n + m)       := Rel.symm Natural.pow_compatL_add
+    _ ≃ 1^(n + m)             := Natural.pow_substL ‹sgn p ≃ 1›
+    _ ≃ 1                     := Natural.pow_absorbL
   have : p^a > 0 := gt_zero_sgn.mpr this
   exact this
 
