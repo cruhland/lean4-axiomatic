@@ -47,7 +47,8 @@ export Exponentiation.Props (pow_step pow_zero)
 
 /-- All exponentiation axioms. -/
 class Exponentiation
-    (ℕ : semiOutParam Type) {α : Type} (mul : semiOutParam (α → α → α))
+    (ℕ : semiOutParam Type) {α : semiOutParam Type}
+    (mul : semiOutParam (α → α → α))
     [Core ℕ] [Addition ℕ] [Multiplication ℕ] [EqvOp α] [OfNat α 1]
     :=
   toOps : Exponentiation.Ops α ℕ
@@ -368,6 +369,8 @@ theorem pow_one {x : α} [AA.Identity (1:α) (· * ·)] : x^1 ≃ x := calc
   _ ≃ x^0 * x    := pow_step
   _ ≃ 1 * x      := AA.substL pow_zero
   _ ≃ x          := AA.identL
+
+theorem pow_absorbL {n : ℕ} : (1:α)^n ≃ 1 := sorry
 
 end general
 
