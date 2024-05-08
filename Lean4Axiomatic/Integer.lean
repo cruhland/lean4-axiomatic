@@ -36,7 +36,7 @@ class Integer {ℕ : outParam Type} [Natural ℕ] (ℤ : Type) :=
   toCore : Core (ℕ := ℕ) ℤ
   toAddition : Addition ℤ
   toMultiplication : Multiplication ℤ
-  toExponentiation : Natural.Exponentiation ℕ (α := ℤ) (· * ·)
+  toExponentiation : Natural.Exponentiation ℕ ℤ (· * ·)
   toNegation : Negation ℤ
   toOrder : Order ℤ
   toSign : Sign ℤ

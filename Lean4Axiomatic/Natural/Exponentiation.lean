@@ -34,7 +34,7 @@ instance (priority := default+1) pow_inst
 
 /-- Properties of exponentiation to a natural number. -/
 class Exponentiation.Props
-    {α : Type} {ℕ : outParam Type} (mul : outParam (α → α → α))
+    (α : Type) {ℕ : outParam Type} (mul : outParam (α → α → α))
     [Core ℕ] [Addition ℕ] [Multiplication ℕ] [EqvOp α] [OfNat α 1] [Ops α ℕ]
     :=
   /-- Any number raised to the power zero, is one. -/
@@ -51,7 +51,7 @@ class Exponentiation
     [Core ℕ] [Addition ℕ] [Multiplication ℕ] [EqvOp α] [OfNat α 1]
     :=
   toOps : Exponentiation.Ops α ℕ
-  toProps : Exponentiation.Props mul
+  toProps : Exponentiation.Props α mul
 
 attribute [instance] Exponentiation.toOps
 attribute [instance] Exponentiation.toProps

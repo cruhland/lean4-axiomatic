@@ -25,7 +25,7 @@ variable
   {ℚ : Type}
     [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
     [Negation ℚ] [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ]
-    [Sign ℚ] [Order ℚ] [Metric ℚ] [Natural.Exponentiation ℕ (α := ℚ) (· * ·)]
+    [Sign ℚ] [Order ℚ] [Metric ℚ] [Natural.Exponentiation ℕ ℚ (· * ·)]
 
 theorem pow_scompatL_from_integer {a : ℤ} {n : ℕ} : ((a^n:ℤ):ℚ) ≃ (a:ℚ)^n := by
   apply Natural.ind_on n
@@ -280,7 +280,7 @@ infixr:80 " ^ " => Exponentiation.Ops._pow
 class Exponentiation.Props
     {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
-    [Reciprocation ℚ] [Division ℚ] [Natural.Exponentiation ℕ (α := ℚ) (· * ·)]
+    [Reciprocation ℚ] [Division ℚ] [Natural.Exponentiation ℕ ℚ (· * ·)]
     [Negation ℚ] [Sign ℚ] [Ops ℚ ℤ]
     :=
   /--
@@ -311,7 +311,7 @@ export Exponentiation.Props (pow_diff pow_substR)
 class Exponentiation
     {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
-    [Reciprocation ℚ] [Division ℚ] [Natural.Exponentiation ℕ (α := ℚ) (· * ·)]
+    [Reciprocation ℚ] [Division ℚ] [Natural.Exponentiation ℕ ℚ (· * ·)]
     [Negation ℚ] [Sign ℚ]
     :=
   toOps : Exponentiation.Ops ℚ ℤ
@@ -327,7 +327,7 @@ variable
   {ℚ : Type}
     [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ]
     [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ] [Sign ℚ] [Order ℚ]
-    [Natural.Exponentiation ℕ (α := ℚ) (· * ·)] [Exponentiation ℚ]
+    [Natural.Exponentiation ℕ ℚ (· * ·)] [Exponentiation ℚ]
 
 /--
 Rational number exponentiation to an integer respects equivalence of the base

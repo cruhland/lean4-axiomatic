@@ -47,12 +47,12 @@ theorem pow_step {x : α} {n : ℕ} : x ^ step n ≃ x ^ n * x := calc
   _ = (rec_on n 1 (· * x)) * x  := rec_on_step
   _ = x ^ n * x                 := rfl
 
-def exponentiation_props : Exponentiation.Props (α := α) (· * ·) := {
+def exponentiation_props : Exponentiation.Props α (· * ·) := {
   pow_zero := pow_zero
   pow_step := pow_step
 }
 
-def exponentiation : Exponentiation ℕ (α := α) (· * ·) := {
+def exponentiation : Exponentiation ℕ α (· * ·) := {
   toOps := exponentiation_ops
   toProps := exponentiation_props
 }
