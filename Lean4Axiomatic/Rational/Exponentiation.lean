@@ -27,8 +27,23 @@ variable
     [Negation ℚ] [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ]
     [Sign ℚ] [Order ℚ] [Metric ℚ] [Natural.Exponentiation ℕ (α := ℚ) (· * ·)]
 
-theorem pow_scompatL_from_integer {a : ℤ} {n : ℕ} : ((a^n : ℤ):ℚ) ≃ (a:ℚ)^n := by
-  admit
+theorem pow_scompatL_from_integer {a : ℤ} {n : ℕ} : ((a^n:ℤ):ℚ) ≃ (a:ℚ)^n := by
+  apply Natural.ind_on n
+  case zero =>
+    show ((a^0:ℤ):ℚ) ≃ (a:ℚ)^0
+    calc
+      _ = ((a^0:ℤ):ℚ) := rfl
+      _ ≃ 1           := from_integer_subst Natural.pow_zero
+      _ ≃ (a:ℚ)^0     := eqv_symm Natural.pow_zero
+  case step =>
+    intro (n' : ℕ) (ih : ((a^n':ℤ):ℚ) ≃ (a:ℚ)^n')
+    show ((a^(step n'):ℤ):ℚ) ≃ (a:ℚ)^(step n')
+    calc
+      _ = ((a^(step n'):ℤ):ℚ)  := rfl
+      _ ≃ ((a^n' * a : ℤ):ℚ)   := from_integer_subst Natural.pow_step
+      _ ≃ ((a^n':ℤ):ℚ) * (a:ℚ) := mul_compat_from_integer
+      _ ≃ (a:ℚ)^n' * (a:ℚ)     := mul_substL ih
+      _ ≃ (a:ℚ)^(step n')      := eqv_symm Natural.pow_step
 
 /--
 Raising rationals to natural number powers is semicompatible with reciprocation
@@ -85,22 +100,26 @@ theorem sgn_pow {p : ℚ} {n : ℕ} : sgn (p^n) ≃ (sgn p)^n := by
   have (AsRatio.intro (a : ℤ) (b : ℤ) (_ : Integer.Nonzero b) p_eqv) :=
     as_ratio p
   have : p ≃ a/b := p_eqv
+  have int_sgn_pow {x : ℤ} : sgn ((x:ℚ)^n) ≃ (sgn x)^n := calc
+    _ = sgn ((x:ℚ)^n)   := rfl
+    _ ≃ sgn ((x^n:ℤ):ℚ) := sgn_subst (eqv_symm pow_scompatL_from_integer)
+    _ ≃ sgn (x^n)       := sgn_from_integer
+    _ ≃ (sgn x)^n       := Integer.sgn_pow
+  have sgn_merge : sgn a * sgn b ≃ sgn p := calc
+    _ = sgn a * sgn b         := rfl
+    _ ≃ sgn (a:ℚ) * sgn b     := AA.substL (Rel.symm sgn_from_integer)
+    _ ≃ sgn (a:ℚ) * sgn (b:ℚ) := AA.substR (Rel.symm sgn_from_integer)
+    _ ≃ sgn ((a:ℚ)/b)         := Rel.symm sgn_div
+    _ ≃ sgn p                 := sgn_subst (eqv_symm ‹p ≃ a/b›)
   calc
-    _ = sgn (p^n)                             := rfl
-    _ ≃ sgn (((a:ℚ)/b)^n)                     := sgn_subst (Natural.pow_substL ‹p ≃ a/b›)
-    _ ≃ sgn ((a:ℚ)^n/b^n)                     := sgn_subst pow_distribR_div
-    _ ≃ sgn ((a:ℚ)^n) * sgn ((b:ℚ)^n)         := sgn_div
-    _ ≃ sgn ((a^n : ℤ):ℚ) * sgn ((b:ℚ)^n)     := AA.substL (sgn_subst (eqv_symm pow_scompatL_from_integer))
-    _ ≃ sgn ((a^n : ℤ):ℚ) * sgn ((b^n : ℤ):ℚ) := AA.substR (sgn_subst (eqv_symm pow_scompatL_from_integer))
-    _ ≃ sgn (a^n) * sgn ((b^n : ℤ):ℚ)         := AA.substL sgn_from_integer
-    _ ≃ sgn (a^n) * sgn (b^n)                 := AA.substR sgn_from_integer
-    _ ≃ (sgn a)^n * sgn (b^n)                 := AA.substL Integer.sgn_pow
-    _ ≃ (sgn a)^n * (sgn b)^n                 := AA.substR Integer.sgn_pow
-    _ ≃ (sgn a * sgn b)^n                     := Rel.symm (Natural.pow_distribR_mul (mul := (· * ·)))
-    _ ≃ (sgn (a:ℚ) * sgn b)^n                 := Natural.pow_substL (AA.substL (Rel.symm sgn_from_integer))
-    _ ≃ (sgn (a:ℚ) * sgn (b:ℚ))^n             := Natural.pow_substL (AA.substR (Rel.symm sgn_from_integer))
-    _ ≃ (sgn ((a:ℚ)/b))^n                     := Natural.pow_substL (Rel.symm sgn_div)
-    _ ≃ (sgn p)^n                             := Natural.pow_substL (sgn_subst (eqv_symm ‹p ≃ a/b›))
+    _ = sgn (p^n)                     := rfl
+    _ ≃ sgn (((a:ℚ)/b)^n)             := sgn_subst (Natural.pow_substL p_eqv)
+    _ ≃ sgn ((a:ℚ)^n/b^n)             := sgn_subst pow_distribR_div
+    _ ≃ sgn ((a:ℚ)^n) * sgn ((b:ℚ)^n) := sgn_div
+    _ ≃ (sgn a)^n * sgn ((b:ℚ)^n)     := AA.substL int_sgn_pow
+    _ ≃ (sgn a)^n * (sgn b)^n         := AA.substR int_sgn_pow
+    _ ≃ (sgn a * sgn b)^n             := Rel.symm Natural.pow_distribR_mul
+    _ ≃ (sgn p)^n                     := Natural.pow_substL sgn_merge
 
 /--
 Raising two ordered, nonnegative values to the same natural number power
