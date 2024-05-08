@@ -47,8 +47,7 @@ export Exponentiation.Props (pow_step pow_zero)
 
 /-- All exponentiation axioms. -/
 class Exponentiation
-    (ℕ : semiOutParam Type) {α : semiOutParam Type}
-    (mul : semiOutParam (α → α → α))
+    (ℕ : outParam Type) (α : Type) (mul : outParam (α → α → α))
     [Core ℕ] [Addition ℕ] [Multiplication ℕ] [EqvOp α] [OfNat α 1]
     :=
   toOps : Exponentiation.Ops α ℕ
@@ -68,10 +67,10 @@ section general
 /-! ### General properties for any base type -/
 
 variable
-  {α : Type} {mul : α → α → α} [EqvOp α] [OfNat α 1] [Exponentiation ℕ mul]
+  {α : Type} {mul : α → α → α} [EqvOp α] [OfNat α 1] [Exponentiation ℕ α mul]
 
 /-- Enables the use of `· * ·` syntax for `α`'s multiplication function. -/
-local instance mul_inst [Exponentiation ℕ mul] : Mul α := {
+local instance mul_inst [Exponentiation ℕ α mul] : Mul α := {
   mul := mul
 }
 
@@ -370,7 +369,19 @@ theorem pow_one {x : α} [AA.Identity (1:α) (· * ·)] : x^1 ≃ x := calc
   _ ≃ 1 * x      := AA.substL pow_zero
   _ ≃ x          := AA.identL
 
-theorem pow_absorbL {n : ℕ} : (1:α)^n ≃ 1 := sorry
+theorem pow_absorbL {n : ℕ} [AA.Identity (1:α) (· * ·)] : (1:α)^n ≃ 1 := by
+  apply ind_on n
+  case zero =>
+    show (1:α)^0 ≃ 1
+    exact pow_zero
+  case step =>
+    intro (n' : ℕ) (ih : (1:α)^n' ≃ 1)
+    show (1:α)^(step n') ≃ 1
+    calc
+      _ = (1:α)^(step n') := rfl
+      _ ≃ (1:α)^n' * 1    := pow_step
+      _ ≃ (1:α)^n'        := AA.identR
+      _ ≃ 1               := ih
 
 end general
 
