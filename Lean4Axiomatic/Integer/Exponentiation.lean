@@ -16,7 +16,7 @@ open Natural (step)
 
 variable
   {ℕ ℤ : Type} [Natural ℕ] [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ]
-  [Negation ℤ] [Sign ℤ] [Natural.Exponentiation ℕ (α := ℤ) (· * ·)]
+  [Negation ℤ] [Sign ℤ] [Natural.Exponentiation ℕ ℤ (· * ·)]
 
 /-- TODO -/
 theorem sgn_pow {a : ℤ} {n : ℕ} : sgn (a^n) ≃ (sgn a)^n := by
