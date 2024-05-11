@@ -441,6 +441,18 @@ instance lt_transitive : Relation.Transitive (α := ℤ) (· < ·) := {
   trans := lt_trans
 }
 
+instance trans_eqv_gt_gt_inst : Trans (α := ℤ) (· ≃ ·) (· > ·) (· > ·) := {
+  trans := sorry
+}
+
+instance trans_gt_eqv_gt_inst : Trans (α := ℤ) (· > ·) (· ≃ ·) (· > ·) := {
+  trans := sorry
+}
+
+instance trans_gt_gt_gt_inst : Trans (α := ℤ) (· > ·) (· > ·) (· > ·) := {
+  trans := sorry
+}
+
 /--
 Any pair of integers can only be in one of three relations: _less than_,
 _greater than_, or _equivalence_.
@@ -713,5 +725,7 @@ theorem gt_sgn {a b : ℤ} : a > b ↔ sgn (a - b) ≃ 1 := by
     have : Positive (a - b) := sgn_positive.mpr ‹sgn (a - b) ≃ 1›
     have : a > b := gt_iff_pos_diff.mpr this
     exact this
+
+theorem gt_zero_sgn {a : ℤ} : a > 0 ↔ sgn a ≃ 1 := sorry
 
 end Lean4Axiomatic.Integer

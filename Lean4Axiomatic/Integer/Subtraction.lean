@@ -327,6 +327,23 @@ theorem sub_sums_sameR {a b c : ℤ} : a + c - (b + c) ≃ a - b := calc
   a - b                     ≃ _ := Rel.refl
 
 /--
+The simplest example of a "telescoping" sum: adding two differences with a
+common middle value results in the difference of the endpoints.
+
+**Property and proof intuition**: The middle value is positive in one of the
+sum's arguments, and negative in the other. Those are additive inverses so they
+sum to zero and disappear from the result.
+-/
+theorem add_sub_telescope {a b c : ℤ} : (a - b) + (b - c) ≃ a - c := calc
+  (a - b) + (b - c)   ≃ _ := AA.substL sub_defn
+  (a + -b) + (b - c)  ≃ _ := AA.substR sub_defn
+  (a + -b) + (b + -c) ≃ _ := AA.expr_xxfxxff_lr_swap_rr
+  (a + -c) + (b + -b) ≃ _ := AA.substR AA.inverseR
+  (a + -c) + 0        ≃ _ := AA.identR
+  a + -c              ≃ _ := Rel.symm sub_defn
+  a - c               ≃ _ := Rel.refl
+
+/--
 Multiplication by a nonzero value on the left is injective.
 
 **Property and proof intuition**: Viewing multiplication as a scaling
