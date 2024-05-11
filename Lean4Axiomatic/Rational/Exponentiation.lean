@@ -303,8 +303,22 @@ theorem pow_scompatL_abs {p : ℚ} {n : ℕ} : abs (p^n) ≃ (abs p)^n := by
       _ ≃ (abs p)^n' * abs p := mul_substL ih
       _ ≃ (abs p)^(step n')  := eqv_symm pow_step
 
+theorem pow_pos_preserves_gt_nonneg
+    {p q : ℚ} {n : ℕ} : q ≥ 0 → n > 0 → p > q → p^n > q^n
+    := by
+  intro (_ : q ≥ 0) (_ : n > 0) (_ : p > q)
+  show p^n > q^n
+  -- sgn (p^n - q^n) ≃ 1
+  -- sgn ((a/b)^n - (c/d)^n)
+  -- sgn (a^n/b^n - c^n/d^n)
+  -- sgn ((a^nd^n - b^nc^n)/(b^nd^n))
+  -- sgn ((ad)^n - (bc)^n) * sgn ((bd)^n)
+  -- 1 (from integer proof) * (sgn b * sgn d)^n = 1
+  admit
+
 end pow_nat
 
+/-
 /-! ## Axioms for exponentiation to an integer -/
 
 /-- Operations for raising rational numbers to integer powers. -/
@@ -651,5 +665,5 @@ theorem pow_order_smth
   -- Prove positive case using natural number result above
   -- Negative case can be shown to transform into the positive case
   admit
-
+-/
 end Lean4Axiomatic.Rational
