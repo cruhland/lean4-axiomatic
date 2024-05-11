@@ -354,6 +354,22 @@ instance pow_preserves_nonzero_base_inst
     :=
   ‹AP (x ≄ 0)›.map pow_preserves_nonzero_base
 
+theorem pow_of_zero
+    [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) mul]
+    [AA.Absorbing 0 mul] {n : ℕ} : (0:α)^n ≃ 0 ∨ (0:α)^n ≃ 1
+    := by
+  have : n ≃ 0 ∨ n ≄ 0 := (n ≃? 0).em
+  match this with
+  | Or.inl (_ : n ≃ 0) =>
+    have : (0:α)^n ≃ 1 := calc
+      _ = (0:α)^n := rfl
+      _ ≃ 0^0     := pow_substR ‹n ≃ 0›
+      _ ≃ 1       := pow_zero
+    exact Or.inr ‹(0:α)^n ≃ 1›
+  | Or.inr (_ : n ≄ 0) =>
+    have : (0:α)^n ≃ 0 := pow_eqv_zero.mpr (And.intro Rel.refl ‹n ≄ 0›)
+    exact Or.inl ‹(0:α)^n ≃ 0›
+
 /--
 Raising a number to the natural number one leaves the number unchanged.
 

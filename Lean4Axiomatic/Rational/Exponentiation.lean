@@ -27,6 +27,7 @@ variable
     [Negation ℚ] [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ]
     [Sign ℚ] [Order ℚ] [Metric ℚ] [Natural.Exponentiation ℕ ℚ (· * ·)]
 
+/-- TODO -/
 theorem pow_scompatL_from_integer {a : ℤ} {n : ℕ} : ((a^n:ℤ):ℚ) ≃ (a:ℚ)^n := by
   apply Natural.ind_on n
   case zero =>
@@ -96,6 +97,7 @@ theorem pow_distribR_div
   _ ≃ p^n * (q^n)⁻¹ := mul_substR (eqv_symm pow_scompatL_recip)
   _ ≃ p^n / q^n     := eqv_symm div_mul_recip
 
+/-- TODO -/
 theorem sgn_pow {p : ℚ} {n : ℕ} : sgn (p^n) ≃ (sgn p)^n := by
   have (AsRatio.intro (a : ℤ) (b : ℤ) (_ : Integer.Nonzero b) p_eqv) :=
     as_ratio p
@@ -120,6 +122,46 @@ theorem sgn_pow {p : ℚ} {n : ℕ} : sgn (p^n) ≃ (sgn p)^n := by
     _ ≃ (sgn a)^n * (sgn b)^n         := AA.substR int_sgn_pow
     _ ≃ (sgn a * sgn b)^n             := Rel.symm Natural.pow_distribR_mul
     _ ≃ (sgn p)^n                     := Natural.pow_substL sgn_merge
+
+/-- TODO -/
+theorem pow_preserves_pos {p : ℚ} {n : ℕ} : p > 0 → p^n > 0 := by
+  intro (_ : p > 0)
+  show p^n > 0
+  have : sgn p ≃ 1 := gt_zero_sgn.mp ‹p > 0›
+  have : sgn (p^n) ≃ 1 := calc
+    _ = sgn (p^n) := rfl
+    _ ≃ (sgn p)^n := sgn_pow
+    _ ≃ 1^n       := Natural.pow_substL ‹sgn p ≃ 1›
+    _ ≃ 1         := Natural.pow_absorbL
+  have : p^n > 0 := gt_zero_sgn.mpr ‹sgn (p^n) ≃ 1›
+  exact this
+
+/-- TODO -/
+theorem pow_preserves_nonneg {p : ℚ} {n : ℕ} : p ≥ 0 → p^n ≥ 0 := by
+  intro (_ : p ≥ 0)
+  show p^n ≥ 0
+
+  have : p > 0 ∨ p ≃ 0 := ge_cases.mp ‹p ≥ 0›
+  match this with
+  | Or.inl (_ : p > 0) =>
+    have : p^n > 0 := pow_preserves_pos ‹p > 0›
+    have : p^n ≥ 0 := ge_cases.mpr (Or.inl ‹p^n > 0›)
+    exact this
+  | Or.inr (_ : p ≃ 0) =>
+    have : (0:ℚ)^n ≃ 0 ∨ 0^n ≃ 1 := Natural.pow_of_zero
+    match this with
+    | Or.inl (_ : (0:ℚ)^n ≃ 0) =>
+      calc
+        _ = p^n := rfl
+        _ ≃ 0^n := Natural.pow_substL ‹p ≃ 0›
+        _ ≃ 0   := ‹(0:ℚ)^n ≃ 0›
+        _ ≥ 0   := le_refl
+    | Or.inr (_ : (0:ℚ)^n ≃ 1) =>
+      calc
+        _ = p^n := rfl
+        _ ≃ 0^n := Natural.pow_substL ‹p ≃ 0›
+        _ ≃ 1   := ‹(0:ℚ)^n ≃ 1›
+        _ ≥ 0   := one_ge_zero
 
 /--
 Raising two ordered, nonnegative values to the same natural number power
@@ -595,5 +637,19 @@ theorem pow_preserves_pos_base {p : ℚ} [AP (p > 0)] {a : ℤ} : p^a > 0 := by
     _ ≃ 1                     := Natural.pow_absorbL
   have : p^a > 0 := gt_zero_sgn.mpr this
   exact this
+
+theorem pow_order_smth
+    {p q : ℚ} {a : ℤ} (p_gt_q : p > q) (q_pos : q > 0)
+    : have : AP (p > 0) := AP.mk (gt_trans ‹p > q› ‹q > 0›)
+      have : AP (q > 0) := AP.mk ‹q > 0›
+      sgn (p^a - q^a) ≃ sgn a
+    := by
+  -- TODO: Split up the natural number version(s) of this theorem above
+  -- The q > 0 part can be done completely separately
+  -- And the p^n > q^n part can depend on it
+  -- Then here, use integer trichotomy on a
+  -- Prove positive case using natural number result above
+  -- Negative case can be shown to transform into the positive case
+  admit
 
 end Lean4Axiomatic.Rational
