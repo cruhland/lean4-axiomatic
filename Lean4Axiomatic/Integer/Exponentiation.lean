@@ -39,12 +39,24 @@ theorem sgn_pow {a : ℤ} {n : ℕ} : sgn (a^n) ≃ (sgn a)^n := by
       _ ≃ (sgn a)^n' * sgn a := AA.substL ih
       _ ≃ (sgn a)^(step n')  := Rel.symm Natural.pow_step
 
-theorem pow_preserves_pos {a : ℤ} {n : ℕ} : a > 0 → a^n > 0 := sorry
+theorem pow_preserves_pos {a : ℤ} {n : ℕ} : a > 0 → a^n > 0 := by
+  intro (_ : a > 0)
+  show a^n > 0
+  have : sgn a ≃ 1 := gt_zero_sgn.mp ‹a > 0›
+  have : sgn (a^n) ≃ 1 := calc
+    _ = sgn (a^n) := rfl
+    _ ≃ (sgn a)^n := sgn_pow
+    _ ≃ 1^n       := Natural.pow_substL ‹sgn a ≃ 1›
+    _ ≃ 1         := Natural.pow_absorbL
+  have : a^n > 0 := gt_zero_sgn.mpr ‹sgn (a^n) ≃ 1›
+  exact this
+
+theorem pow_preserves_nonneg {a : ℤ} {n : ℕ} : a ≥ 0 → a^n ≥ 0 := sorry
 
 theorem pow_pos_preserves_gt_pos
-    {a b : ℤ} {n : ℕ} : b > 0 → n > 0 → a > b → a^n > b^n
+    {a b : ℤ} {n : ℕ} : b ≥ 0 → n > 0 → a > b → a^n > b^n
     := by
-  intro (_ : b > 0) (_ : n > 0) (_ : a > b)
+  intro (_ : b ≥ 0) (_ : n > 0) (_ : a > b)
   revert ‹n > 0›
   show n > 0 → a^n > b^n
 
@@ -72,12 +84,11 @@ theorem pow_pos_preserves_gt_pos
         _ > b           := ‹a > b›
         _ ≃ b^(step n') := Rel.symm pow_step_reduce
     | Or.inr (_ : n' > 0) =>
-      have : a > 0 := trans ‹a > b› ‹b > 0›
-      have : b^n' > 0 := pow_preserves_pos ‹b > 0›
+      have : a > 0 := trans ‹a > b› ‹b ≥ 0›
+      have : b^n' ≥ 0 := pow_preserves_nonneg ‹b ≥ 0›
       have : sgn (a - b) ≃ 1 := gt_sgn.mp ‹a > b›
       have : a^n' > b^n' := ih ‹n' > 0›
       have : sgn (a^n' - b^n') ≃ 1 := gt_sgn.mp ‹a^n' > b^n'›
-      -- TODO: these next two items could be generalized
       have : sgn (a^n' * a - b^n' * a) ≃ 1 := calc
         _ = sgn (a^n' * a - b^n' * a) := rfl
         _ ≃ sgn ((a^n' - b^n') * a)   := sgn_subst (Rel.symm AA.distribR)
@@ -85,20 +96,18 @@ theorem pow_pos_preserves_gt_pos
         _ ≃ 1 * sgn a                 := AA.substL ‹sgn (a^n' - b^n') ≃ 1›
         _ ≃ sgn a                     := AA.identL
         _ ≃ 1                         := gt_zero_sgn.mp ‹a > 0›
-      have : sgn (b^n' * a - b^n' * b) ≃ 1 := calc
+      have : sgn (b^n' * a - b^n' * b) ≥ 0 := calc
         _ = sgn (b^n' * a - b^n' * b) := rfl
         _ ≃ sgn (b^n' * (a - b))      := sgn_subst (Rel.symm AA.distribL)
         _ ≃ sgn (b^n') * sgn (a - b)  := sgn_compat_mul
         _ ≃ sgn (b^n') * 1            := AA.substR ‹sgn (a - b) ≃ 1›
         _ ≃ sgn (b^n')                := AA.identR
-        _ ≃ 1                         := gt_zero_sgn.mp ‹b^n' > 0›
-      have : sgn (a^(step n') - b^(step n')) ≃ 1 := calc
-        _ = sgn (a^(step n') - b^(step n'))                     := rfl
-        _ ≃ sgn (a^n' * a - b^(step n'))                        := sgn_subst (sub_substL Natural.pow_step)
-        _ ≃ sgn (a^n' * a - b^n' * b)                           := sgn_subst (sub_substR Natural.pow_step)
-        _ ≃ sgn ((a^n' * a - b^n' * a) + (b^n' * a - b^n' * b)) := sgn_subst (Rel.symm add_sub_telescope)
-        _ ≃ 1                                                   := add_preserves_sign ‹sgn (a^n' * a - b^n' * a) ≃ 1› ‹sgn (b^n' * a - b^n' * b) ≃ 1›
-      have : a^(step n') > b^(step n') := gt_sgn.mpr this
-      exact this
+        _ ≥ 0                         := sgn_preserves_ge_zero.mp ‹b^n' ≥ 0›
+      calc
+        _ = a^(step n') := rfl
+        _ ≃ a^n' * a := Natural.pow_step
+        _ > b^n' * a := gt_sgn.mpr ‹sgn (a^n' * a - b^n' * a) ≃ 1›
+        _ ≥ b^n' * b := sgn_diff_ge_zero.mpr ‹sgn (b^n' * a - b^n' * b) ≥ 0›
+        _ ≃ b^(step n') := Rel.symm Natural.pow_step
 
 end Lean4Axiomatic.Integer

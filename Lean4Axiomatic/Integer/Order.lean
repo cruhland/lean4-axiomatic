@@ -5,6 +5,7 @@ import Lean4Axiomatic.Integer.Subtraction
 namespace Lean4Axiomatic.Integer
 
 open Coe (coe)
+open Logic (AP)
 open Natural (step)
 open Signed (Negative Positive)
 
@@ -449,6 +450,14 @@ instance trans_gt_eqv_gt_inst : Trans (α := ℤ) (· > ·) (· ≃ ·) (· > ·
   trans := sorry
 }
 
+instance trans_eqv_ge_ge_inst : Trans (α := ℤ) (· ≃ ·) (· ≥ ·) (· ≥ ·) := {
+  trans := sorry
+}
+
+instance trans_gt_ge_gt_inst : Trans (α := ℤ) (· > ·) (· ≥ ·) (· > ·) := {
+  trans := sorry
+}
+
 instance trans_gt_gt_gt_inst : Trans (α := ℤ) (· > ·) (· > ·) (· > ·) := {
   trans := sorry
 }
@@ -727,5 +736,9 @@ theorem gt_sgn {a b : ℤ} : a > b ↔ sgn (a - b) ≃ 1 := by
     exact this
 
 theorem gt_zero_sgn {a : ℤ} : a > 0 ↔ sgn a ≃ 1 := sorry
+
+theorem sgn_preserves_ge_zero {a : ℤ} : a ≥ 0 ↔ sgn a ≥ 0 := sorry
+
+theorem sgn_diff_ge_zero {a b : ℤ} : a ≥ b ↔ sgn (a - b) ≥ 0 := sorry
 
 end Lean4Axiomatic.Integer
