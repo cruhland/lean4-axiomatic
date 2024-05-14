@@ -303,18 +303,64 @@ theorem pow_scompatL_abs {p : ℚ} {n : ℕ} : abs (p^n) ≃ (abs p)^n := by
       _ ≃ (abs p)^n' * abs p := mul_substL ih
       _ ≃ (abs p)^(step n')  := eqv_symm pow_step
 
+inductive NonnegRatio (p : ℚ) : Prop :=
+| intro (a b : ℤ) (b_pos : AP ((b:ℚ) > 0)) (a_nneg : a ≥ 0) (p_eqv : p ≃ a / b) : NonnegRatio p
+
+theorem as_nonneg_ratio {p : ℚ} : p ≥ 0 → NonnegRatio p := by
+  admit
+
 theorem pow_pos_preserves_gt_nonneg
     {p q : ℚ} {n : ℕ} : q ≥ 0 → n > 0 → p > q → p^n > q^n
     := by
   intro (_ : q ≥ 0) (_ : n > 0) (_ : p > q)
   show p^n > q^n
-  -- sgn (p^n - q^n) ≃ 1
-  -- sgn ((a/b)^n - (c/d)^n)
-  -- sgn (a^n/b^n - c^n/d^n)
-  -- sgn ((a^nd^n - b^nc^n)/(b^nd^n))
-  -- sgn ((ad)^n - (bc)^n) * sgn ((bd)^n)
-  -- 1 (from integer proof) * (sgn b * sgn d)^n = 1
-  admit
+  have : p > 0 := trans ‹p > q› ‹q ≥ 0›
+  have : p ≥ 0 := ge_cases.mpr (Or.inl ‹p > 0›)
+  have (NonnegRatio.intro
+      (a : ℤ) (b : ℤ) (_ : AP ((b:ℚ) > 0)) (_ : a ≥ 0) p_eqv)
+      := as_nonneg_ratio ‹p ≥ 0›
+  have : p ≃ a/b := p_eqv
+  have (NonnegRatio.intro
+      (c : ℤ) (d : ℤ) (_ : AP ((d:ℚ) > 0)) (_ : c ≥ 0) q_eqv)
+      := as_nonneg_ratio ‹q ≥ 0›
+  have : q ≃ c/d := q_eqv
+
+  let aqn := (a:ℚ)^n; let bqn := (b:ℚ)^n
+  let cqn := (c:ℚ)^n; let dqn := (d:ℚ)^n
+
+  -- we need to prove that if p > q, then ad > bc!
+  -- sgn (p - q) ≃ 1
+  -- sgn ((a/b) - (c/d))
+  -- sgn ((ad - bc)/(bd))
+  -- sgn (ad - bc) ≃ 1 (QED)
+
+  -- we have b:ℤ, d:ℤ, (b:ℚ) > 0 and (d:ℚ) > 0
+  -- need to generate b > 0, d > 0 (or ≄)
+  -- then b * d > 0 (or ≄)
+  -- then (b * d)^n > 0 (or ≄)
+  -- then (((b * d)^n : ℤ): ℚ) > 0 (or ≄)
+  have : p^n - q^n ≃ (((a * d)^n - (b * c)^n : ℤ):ℚ)/(((b * d)^n : ℤ):ℚ) := calc
+    _ = p^n - q^n := rfl
+    -- pull out a helper to handle each side of the subtraction
+    _ ≃ ((a:ℚ)/b)^n - q^n := sub_substL (Natural.pow_substL ‹p ≃ a/b›)
+    _ ≃ ((a:ℚ)/b)^n - ((c:ℚ)/d)^n := sub_substR (Natural.pow_substL ‹q ≃ c/d›)
+    _ ≃ aqn/bqn - ((c:ℚ)/d)^n := sub_substL pow_distribR_div
+    _ ≃ aqn/bqn - cqn/dqn := sub_substR pow_distribR_div
+  have : sgn (p^n - q^n) ≃ 1 := calc
+    _ = sgn (p^n - q^n) := rfl
+    _ ≃ sgn (((a:ℚ)/b)^n - q^n) := sgn_subst (sub_substL (Natural.pow_substL ‹p ≃ a/b›))
+    _ ≃ sgn (((a:ℚ)/b)^n - ((c:ℚ)/d)^n) := sgn_subst (sub_substR (Natural.pow_substL ‹q ≃ c/d›))
+    _ ≃ sgn ((a:ℚ)^n/(b:ℚ)^n - ((c:ℚ)/d)^n) := sgn_subst (sub_substL pow_distribR_div)
+    _ ≃ sgn ((a:ℚ)^n/(b:ℚ)^n - (c:ℚ)^n/(d:ℚ)^n) := sgn_subst (sub_substR pow_distribR_div)
+    _ ≃ sgn (((a:ℚ)^n * (d:ℚ)^n - (b:ℚ)^n * (c:ℚ)^n)/((b:ℚ)^n * (d:ℚ)^n)) := sorry
+    _ ≃ sgn (((a:ℚ)^n * (d:ℚ)^n - (b:ℚ)^n * (c:ℚ)^n) * sgn ((b:ℚ)^n * (d:ℚ)^n)) := sorry
+    _ ≃ sgn ((a^n * d^n - b^n * c^n : ℤ):ℚ) * sgn ((b^n * d^n : ℤ):ℚ) := sorry
+    _ ≃ sgn (a^n * d^n - b^n * c^n) * sgn (b^n * d^n) := sorry
+    _ ≃ sgn ((a * d)^n - (b * c)^n) * 1^n := sorry
+    _ ≃ sgn ((a * d)^n - (b * c)^n) := sorry
+    _ ≃ 1 := sorry -- Integer.gt_zero_sgn.mp (Integer.pow_pos_preserves_gt_pos sorry sorry sorry)
+  have : p^n > q^n := gt_sgn.mpr ‹sgn (p^n - q^n) ≃ 1›
+  exact this
 
 end pow_nat
 
