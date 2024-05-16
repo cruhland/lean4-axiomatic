@@ -334,18 +334,21 @@ theorem pow_pos_preserves_gt_nonneg
   -- sgn ((ad - bc)/(bd))
   -- sgn (ad - bc) ≃ 1 (QED)
 
-  -- we have b:ℤ, d:ℤ, (b:ℚ) > 0 and (d:ℚ) > 0
-  -- need to generate b > 0, d > 0 (or ≄)
-  -- then b * d > 0 (or ≄)
-  -- then (b * d)^n > 0 (or ≄)
-  -- then (((b * d)^n : ℤ): ℚ) > 0 (or ≄)
+  have : AP (((b^n * d^n : ℤ):ℚ) ≄ 0) := sorry
+  have : AP ((((b * d)^n : ℤ):ℚ) ≄ 0) := sorry
   have : p^n - q^n ≃ (((a * d)^n - (b * c)^n : ℤ):ℚ)/(((b * d)^n : ℤ):ℚ) := calc
     _ = p^n - q^n := rfl
-    -- pull out a helper to handle each side of the subtraction
+    -- pull out a helper to handle each side of the subtraction?
     _ ≃ ((a:ℚ)/b)^n - q^n := sub_substL (Natural.pow_substL ‹p ≃ a/b›)
     _ ≃ ((a:ℚ)/b)^n - ((c:ℚ)/d)^n := sub_substR (Natural.pow_substL ‹q ≃ c/d›)
     _ ≃ aqn/bqn - ((c:ℚ)/d)^n := sub_substL pow_distribR_div
     _ ≃ aqn/bqn - cqn/dqn := sub_substR pow_distribR_div
+    _ ≃ (aqn * dqn - bqn * cqn)/(bqn * dqn) := sorry
+    _ ≃ ((a^n * d^n - b^n * c^n : ℤ):ℚ)/(bqn * dqn) := div_substL sorry
+    _ ≃ ((a^n * d^n - b^n * c^n : ℤ):ℚ)/((b^n * d^n : ℤ):ℚ) := div_substR sorry
+    _ ≃ (((a * d)^n - b^n * c^n : ℤ):ℚ)/((b^n * d^n : ℤ):ℚ) := div_substL (from_integer_subst (Integer.sub_substL (Rel.symm Natural.pow_distribR_mul)))
+    _ ≃ (((a * d)^n - (b * c)^n : ℤ):ℚ)/((b^n * d^n : ℤ):ℚ) := div_substL (from_integer_subst (Integer.sub_substR (Rel.symm Natural.pow_distribR_mul)))
+    _ ≃ (((a * d)^n - (b * c)^n : ℤ):ℚ)/(((b * d)^n : ℤ):ℚ) := div_substR (from_integer_subst (Rel.symm Natural.pow_distribR_mul))
   have : sgn (p^n - q^n) ≃ 1 := calc
     _ = sgn (p^n - q^n) := rfl
     _ ≃ sgn (((a:ℚ)/b)^n - q^n) := sgn_subst (sub_substL (Natural.pow_substL ‹p ≃ a/b›))
