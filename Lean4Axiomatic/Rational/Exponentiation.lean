@@ -325,8 +325,8 @@ theorem pow_pos_preserves_gt_nonneg
       := as_nonneg_ratio ‹q ≥ 0›
   have : q ≃ c/d := q_eqv
 
-  let aqn := (a:ℚ)^n; let bqn := (b:ℚ)^n
-  let cqn := (c:ℚ)^n; let dqn := (d:ℚ)^n
+  let aQn := (a:ℚ)^n; let bQn := (b:ℚ)^n
+  let cQn := (c:ℚ)^n; let dQn := (d:ℚ)^n
 
   -- we need to prove that if p > q, then ad > bc!
   -- sgn (p - q) ≃ 1
@@ -334,6 +334,22 @@ theorem pow_pos_preserves_gt_nonneg
   -- sgn ((ad - bc)/(bd))
   -- sgn (ad - bc) ≃ 1 (QED)
 
+  have sub_liftQ {x y : ℤ} : (x:ℚ) - y ≃ ((x - y : ℤ):ℚ) :=
+    eqv_symm sub_compat_from_integer
+  have mul_liftQ {x y : ℤ} : (x:ℚ) * y ≃ ((x * y : ℤ):ℚ) :=
+    eqv_symm mul_compat_from_integer
+  have mul_pow_liftQ
+      {x y : ℤ} {k : ℕ} : (x:ℚ)^k * (y:ℚ)^k ≃ (((x * y)^k : ℤ):ℚ)
+      := calc
+    _ = (x:ℚ)^k * (y:ℚ)^k   := rfl
+    _ ≃ ((x:ℚ) * y)^k       := eqv_symm Natural.pow_distribR_mul
+    _ ≃ ((x * y : ℤ):ℚ)^k   := Natural.pow_substL mul_liftQ
+    _ ≃ (((x * y)^k : ℤ):ℚ) := eqv_symm pow_scompatL_from_integer
+  have : aQn * dQn - bQn * cQn ≃ (((a * d)^n - (b * c)^n : ℤ):ℚ) := calc
+    _ = aQn * dQn - bQn * cQn                     := rfl
+    _ ≃ (((a * d)^n : ℤ):ℚ) - bQn * cQn           := sub_substL mul_pow_liftQ
+    _ ≃ (((a * d)^n : ℤ):ℚ) - (((b * c)^n : ℤ):ℚ) := sub_substR mul_pow_liftQ
+    _ ≃ (((a * d)^n - (b * c)^n : ℤ):ℚ)           := sub_liftQ
   have : AP (((b^n * d^n : ℤ):ℚ) ≄ 0) := sorry
   have : AP ((((b * d)^n : ℤ):ℚ) ≄ 0) := sorry
   have : p^n - q^n ≃ (((a * d)^n - (b * c)^n : ℤ):ℚ)/(((b * d)^n : ℤ):ℚ) := calc
@@ -341,10 +357,11 @@ theorem pow_pos_preserves_gt_nonneg
     -- pull out a helper to handle each side of the subtraction?
     _ ≃ ((a:ℚ)/b)^n - q^n := sub_substL (Natural.pow_substL ‹p ≃ a/b›)
     _ ≃ ((a:ℚ)/b)^n - ((c:ℚ)/d)^n := sub_substR (Natural.pow_substL ‹q ≃ c/d›)
-    _ ≃ aqn/bqn - ((c:ℚ)/d)^n := sub_substL pow_distribR_div
-    _ ≃ aqn/bqn - cqn/dqn := sub_substR pow_distribR_div
-    _ ≃ (aqn * dqn - bqn * cqn)/(bqn * dqn) := sorry
-    _ ≃ ((a^n * d^n - b^n * c^n : ℤ):ℚ)/(bqn * dqn) := div_substL sorry
+    _ ≃ aQn/bQn - ((c:ℚ)/d)^n := sub_substL pow_distribR_div
+    _ ≃ aQn/bQn - cQn/dQn := sub_substR pow_distribR_div
+    _ ≃ (aQn * dQn - bQn * cQn)/(bQn * dQn) := sorry
+    _ ≃ ((a^n * d^n - b^n * c^n : ℤ):ℚ)/(bQn * dQn) := div_substL sorry
+    -- Will need to use subexpression variables to keep this compact enough
     _ ≃ ((a^n * d^n - b^n * c^n : ℤ):ℚ)/((b^n * d^n : ℤ):ℚ) := div_substR sorry
     _ ≃ (((a * d)^n - b^n * c^n : ℤ):ℚ)/((b^n * d^n : ℤ):ℚ) := div_substL (from_integer_subst (Integer.sub_substL (Rel.symm Natural.pow_distribR_mul)))
     _ ≃ (((a * d)^n - (b * c)^n : ℤ):ℚ)/((b^n * d^n : ℤ):ℚ) := div_substL (from_integer_subst (Integer.sub_substR (Rel.symm Natural.pow_distribR_mul)))
