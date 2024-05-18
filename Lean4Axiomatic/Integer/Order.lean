@@ -63,7 +63,7 @@ theorem gt_iff_pos_diff {a b : ℤ} : a > b ↔ Positive (a - b) := by
       le_iff_add_nat.mp ‹b ≤ a›
     have : a - b ≃ coe k := subR_moveR_addL.mpr ‹a ≃ b + coe k›
     have : a - b ≄ 0 := mt zero_diff_iff_eqv.mp (Rel.symm ‹b ≄ a›)
-    have : coe k ≄ 0 := AA.neqv_substL ‹a - b ≃ coe k› ‹a - b ≄ 0›
+    have : (k:ℤ) ≄ 0 := AA.neqv_substL ‹a - b ≃ coe k› ‹a - b ≄ 0›
     have : k ≄ 0 := AA.inject ‹coe k ≄ coe (0 : ℕ)›
     have : Positive k := Signed.positive_defn.mpr ‹k ≄ 0›
     have : Positive (a - b) := positive_intro_nat ‹Positive k› ‹a - b ≃ coe k›
@@ -79,7 +79,7 @@ theorem gt_iff_pos_diff {a b : ℤ} : a > b ↔ Positive (a - b) := by
     have : a ≃ b + coe k := subR_moveR_addL.mp ‹a - b ≃ coe k›
     have : b ≤ a := le_iff_add_nat.mpr (Exists.intro k ‹a ≃ b + coe k›)
     have : k ≄ 0 := Signed.positive_defn.mp ‹Positive k›
-    have : (coe k : ℤ) ≄ coe 0 := AA.subst₁ ‹k ≄ 0›
+    have : (k:ℤ) ≄ ((0:ℕ):ℤ) := AA.subst₁ ‹k ≄ 0›
     have : a - b ≄ 0 :=
       AA.neqv_substL (Rel.symm ‹a - b ≃ coe k›) ‹(coe k : ℤ) ≄ 0›
     have : b ≄ a := Rel.symm (mt zero_diff_iff_eqv.mpr ‹a - b ≄ 0›)

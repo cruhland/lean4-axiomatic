@@ -84,10 +84,10 @@ positive number.
 theorem positive_step {n : ℕ} : Positive n → ∃ m : ℕ, step m ≃ n := by
   apply cases_on (motive := λ n => Positive n → ∃ m, step m ≃ n) n
   case zero =>
-    intro (_ : Positive (0 : ℕ))
+    intro (_ : Positive (0:ℕ))
     apply False.elim
     show False
-    have : 0 ≄ 0 := Signed.positive_defn.mp ‹Positive (0 : ℕ)›
+    have : (0:ℕ) ≄ 0 := Signed.positive_defn.mp ‹Positive (0:ℕ)›
     apply this
     show 0 ≃ 0
     exact Rel.refl

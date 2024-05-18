@@ -260,13 +260,13 @@ theorem sgn_zero {a : Difference ℕ} : a ≃ 0 ↔ sgn a ≃ 0 := by
     have : compare n m = Ordering.eq := Natural.compare_eq.mpr this
     have : ord_sgn (compare n m) ≃ ord_sgn Ordering.eq :=
       ord_sgn_subst (ℤ := Difference ℕ) this
-    have : ord_sgn (compare n m) ≃ 0 := this
+    have : ord_sgn (compare n m) ≃ (0:Difference ℕ) := this
     have : sgn (n——m) ≃ 0 := this
     exact this
   case mpr =>
     intro (_ : sgn (n——m) ≃ 0)
     show n——m ≃ 0
-    have : ord_sgn (compare n m) ≃ 0 := ‹sgn (n——m) ≃ 0›
+    have : ord_sgn (compare n m) ≃ (0:Difference ℕ) := ‹sgn (n——m) ≃ 0›
     have : ord_sgn (compare n m) ≃ ord_sgn Ordering.eq := this
     have : compare n m = Ordering.eq := ord_sgn_inject this
     have : n ≃ m := Natural.compare_eq.mp this
@@ -293,13 +293,13 @@ theorem sgn_positive {a : Difference ℕ} : Positive a ↔ sgn a ≃ 1 := by
     have : compare n m = Ordering.gt := Natural.compare_gt.mpr this
     have : ord_sgn (compare n m) ≃ ord_sgn Ordering.gt :=
       ord_sgn_subst (ℤ := Difference ℕ) this
-    have : ord_sgn (compare n m) ≃ 1 := this
+    have : ord_sgn (compare n m) ≃ (1:Difference ℕ) := this
     have : sgn (n——m) ≃ 1 := this
     exact this
   case mpr =>
     intro (_ : sgn (n——m) ≃ 1)
     show Positive (n——m)
-    have : ord_sgn (compare n m) ≃ 1 := ‹sgn (n——m) ≃ 1›
+    have : ord_sgn (compare n m) ≃ (1:Difference ℕ) := ‹sgn (n——m) ≃ 1›
     have : ord_sgn (compare n m) ≃ ord_sgn Ordering.gt := this
     have : compare n m = Ordering.gt := ord_sgn_inject this
     have : n > m := Natural.compare_gt.mp this
@@ -326,13 +326,13 @@ theorem sgn_negative {a : Difference ℕ} : Negative a ↔ sgn a ≃ -1 := by
     have : compare n m = Ordering.lt := Natural.compare_lt.mpr this
     have : ord_sgn (compare n m) ≃ ord_sgn Ordering.lt :=
       ord_sgn_subst (ℤ := Difference ℕ) this
-    have : ord_sgn (compare n m) ≃ -1 := this
+    have : ord_sgn (compare n m) ≃ (-1:Difference ℕ) := this
     have : sgn (n——m) ≃ -1 := this
     exact this
   case mpr =>
     intro (_ : sgn (n——m) ≃ -1)
     show Negative (n——m)
-    have : ord_sgn (compare n m) ≃ -1 := ‹sgn (n——m) ≃ -1›
+    have : ord_sgn (compare n m) ≃ (-1:Difference ℕ) := ‹sgn (n——m) ≃ -1›
     have : ord_sgn (compare n m) ≃ ord_sgn Ordering.lt := this
     have : compare n m = Ordering.lt := ord_sgn_inject this
     have : n < m := Natural.compare_lt.mp this

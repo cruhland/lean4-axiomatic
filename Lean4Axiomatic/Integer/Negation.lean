@@ -55,16 +55,16 @@ The integer negative one (`-1`) is not equivalent to zero.
 **Proof intuition**: Assume that it is; add one to both sides, obtaining
 `0 ≃ 1`. Contradict with `0 ≄ 1` to prove the negation.
 -/
-theorem neg_one_neqv_zero : -1 ≄ (0 : ℤ) := by
-  intro (_ : -1 ≃ (0 : ℤ))
+theorem neg_one_neqv_zero : -1 ≄ (0:ℤ) := by
+  intro (_ : -1 ≃ (0:ℤ))
   show False
-  have : 1 ≃ (0 : ℤ) := calc
+  have : 1 ≃ (0:ℤ) := calc
     1      ≃ _ := Rel.symm AA.identR
-    1 + 0  ≃ _ := AA.substR (Rel.symm ‹-1 ≃ (0 : ℤ)›)
+    1 + 0  ≃ _ := AA.substR (Rel.symm ‹-1 ≃ (0:ℤ)›)
     1 + -1 ≃ _ := AA.inverseR
     0      ≃ _ := Rel.refl
-  have : 1 ≄ 0 := one_neqv_zero (ℤ := ℤ)
-  exact absurd ‹1 ≃ (0 : ℤ)› ‹1 ≄ (0 : ℤ)›
+  have : (1:ℤ) ≄ 0 := one_neqv_zero
+  exact absurd ‹1 ≃ (0:ℤ)› ‹1 ≄ (0:ℤ)›
 
 /--
 The integer negative one (`-1`) is not equivalent to one.

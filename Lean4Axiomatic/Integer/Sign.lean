@@ -168,9 +168,9 @@ A pure sign (i.e., a square root of unity) is its own sign value.
 **Intuition**: Set the magnitude component of `NonzeroWithSign` to one.
 -/
 def NonzeroWithSign.for_sign {s : ℤ} [Sqrt1 s] : NonzeroWithSign s s :=
-  have : Positive 1 := Natural.one_positive
+  have : Positive (1:ℕ) := Natural.one_positive
   have : s ≃ s * 1 := Rel.symm AA.identR
-  NonzeroWithSign.intro (1 : ℕ) ‹Positive (1 : ℕ)› ‹s ≃ s * 1›
+  NonzeroWithSign.intro (1:ℕ) ‹Positive (1:ℕ)› ‹s ≃ s * 1›
 
 /--
 `NonzeroWithSign` respects equivalence of its nonzero integer parameter.
@@ -633,11 +633,11 @@ Negative one (the negation of one) is a negative integer.
 **Proof intuition**: A negative integer is the negation of a positive natural
 number, in this case one.
 -/
-theorem neg_one_negative : Negative (-1 : ℤ) := by
-  have : Positive (1 : ℕ) := Natural.one_positive
-  have : (-1 : ℤ) ≃ -(coe (1 : ℕ)) := Rel.refl
-  have : Negative (-1) :=
-    negative_intro_nat ‹Positive (1 : ℕ)› ‹(-1 : ℤ) ≃ -(coe (1 : ℕ))›
+theorem neg_one_negative : Negative (-1:ℤ) := by
+  have : Positive (1:ℕ) := Natural.one_positive
+  have : (-1:ℤ) ≃ -(coe (1:ℕ)) := Rel.refl
+  have : Negative (-1:ℤ) :=
+    negative_intro_nat ‹Positive (1:ℕ)› ‹(-1:ℤ) ≃ -(coe (1:ℕ))›
   exact this
 
 /-- Corollary of trichotomy that saves space in proofs. -/
@@ -1460,13 +1460,13 @@ theorem sgn_nonzero {a : ℤ} : Nonzero a ↔ Sqrt1 (sgn a) := by
     match this with
     | Or.inl (_ : Positive a) =>
       have : 1 ≃ sgn a := Rel.symm (sgn_positive.mp ‹Positive a›)
-      have : Sqrt1 1 := sqrt1_one (ℤ := ℤ)
-      have : Sqrt1 (sgn a) := sqrt1_subst ‹1 ≃ sgn a› ‹Sqrt1 (1 : ℤ)›
+      have : Sqrt1 (1:ℤ) := sqrt1_one
+      have : Sqrt1 (sgn a) := sqrt1_subst ‹1 ≃ sgn a› ‹Sqrt1 (1:ℤ)›
       exact this
     | Or.inr (_ : Negative a) =>
       have : -1 ≃ sgn a := Rel.symm (sgn_negative.mp ‹Negative a›)
-      have : Sqrt1 (-1) := sqrt1_neg_one (ℤ := ℤ)
-      have : Sqrt1 (sgn a) := sqrt1_subst ‹-1 ≃ sgn a› ‹Sqrt1 (-1 : ℤ)›
+      have : Sqrt1 (-1:ℤ) := sqrt1_neg_one
+      have : Sqrt1 (sgn a) := sqrt1_subst ‹-1 ≃ sgn a› ‹Sqrt1 (-1:ℤ)›
       exact this
   case mpr =>
     intro (_ : Sqrt1 (sgn a))
