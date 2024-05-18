@@ -74,10 +74,9 @@ theorem pow_pos_preserves_gt_pos
     | Or.inl (_ : n' ≃ 0) =>
       have pow_step_reduce {x : ℤ} : x^(step n') ≃ x := calc
         _ = x^(step n') := rfl
-        _ ≃ x^n' * x    := Natural.pow_step
-        _ ≃ x^0 * x     := AA.substL (Natural.pow_substR ‹n' ≃ 0›)
-        _ ≃ 1 * x       := AA.substL Natural.pow_zero
-        _ ≃ x           := AA.identL
+        _ ≃ x^(step 0)  := Natural.pow_substR (AA.subst₁ ‹n' ≃ 0›)
+        _ ≃ x^1         := Natural.pow_substR (Rel.symm Natural.literal_step)
+        _ ≃ x           := Natural.pow_one
       calc
         _ = a^(step n') := rfl
         _ ≃ a           := pow_step_reduce
@@ -105,9 +104,9 @@ theorem pow_pos_preserves_gt_pos
         _ ≥ 0                         := sgn_preserves_ge_zero.mp ‹b^n' ≥ 0›
       calc
         _ = a^(step n') := rfl
-        _ ≃ a^n' * a := Natural.pow_step
-        _ > b^n' * a := gt_sgn.mpr ‹sgn (a^n' * a - b^n' * a) ≃ 1›
-        _ ≥ b^n' * b := sgn_diff_ge_zero.mpr ‹sgn (b^n' * a - b^n' * b) ≥ 0›
+        _ ≃ a^n' * a    := Natural.pow_step
+        _ > b^n' * a    := gt_sgn.mpr ‹sgn (a^n' * a - b^n' * a) ≃ 1›
+        _ ≥ b^n' * b    := sgn_diff_ge_zero.mpr ‹sgn (b^n' * a - b^n' * b) ≥ 0›
         _ ≃ b^(step n') := Rel.symm Natural.pow_step
 
 end Lean4Axiomatic.Integer

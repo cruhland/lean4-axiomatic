@@ -345,39 +345,37 @@ theorem pow_pos_preserves_gt_nonneg
     _ ≃ ((x:ℚ) * y)^k       := eqv_symm Natural.pow_distribR_mul
     _ ≃ ((x * y : ℤ):ℚ)^k   := Natural.pow_substL mul_liftQ
     _ ≃ (((x * y)^k : ℤ):ℚ) := eqv_symm pow_scompatL_from_integer
-  have : aQn * dQn - bQn * cQn ≃ (((a * d)^n - (b * c)^n : ℤ):ℚ) := calc
+  have sub_mul_liftQ
+      : aQn * dQn - bQn * cQn ≃ (((a * d)^n - (b * c)^n : ℤ):ℚ)
+      := calc
     _ = aQn * dQn - bQn * cQn                     := rfl
     _ ≃ (((a * d)^n : ℤ):ℚ) - bQn * cQn           := sub_substL mul_pow_liftQ
     _ ≃ (((a * d)^n : ℤ):ℚ) - (((b * c)^n : ℤ):ℚ) := sub_substR mul_pow_liftQ
     _ ≃ (((a * d)^n - (b * c)^n : ℤ):ℚ)           := sub_liftQ
+  have sub_pow_expand : p^n - q^n ≃ (a:ℚ)^n/b^n - (c:ℚ)^n/d^n := calc
+    _ = p^n - q^n                 := rfl
+    _ ≃ ((a:ℚ)/b)^n - q^n         := sub_substL (Natural.pow_substL ‹p ≃ a/b›)
+    _ ≃ ((a:ℚ)/b)^n - ((c:ℚ)/d)^n := sub_substR (Natural.pow_substL ‹q ≃ c/d›)
+    _ ≃ (a:ℚ)^n/b^n - ((c:ℚ)/d)^n := sub_substL pow_distribR_div
+    _ ≃ (a:ℚ)^n/b^n - (c:ℚ)^n/d^n := sub_substR pow_distribR_div
   have : AP (((b^n * d^n : ℤ):ℚ) ≄ 0) := sorry
   have : AP ((((b * d)^n : ℤ):ℚ) ≄ 0) := sorry
-  have : p^n - q^n ≃ (((a * d)^n - (b * c)^n : ℤ):ℚ)/(((b * d)^n : ℤ):ℚ) := calc
-    _ = p^n - q^n := rfl
-    -- pull out a helper to handle each side of the subtraction?
-    _ ≃ ((a:ℚ)/b)^n - q^n := sub_substL (Natural.pow_substL ‹p ≃ a/b›)
-    _ ≃ ((a:ℚ)/b)^n - ((c:ℚ)/d)^n := sub_substR (Natural.pow_substL ‹q ≃ c/d›)
-    _ ≃ aQn/bQn - ((c:ℚ)/d)^n := sub_substL pow_distribR_div
-    _ ≃ aQn/bQn - cQn/dQn := sub_substR pow_distribR_div
-    _ ≃ (aQn * dQn - bQn * cQn)/(bQn * dQn) := sorry
-    _ ≃ ((a^n * d^n - b^n * c^n : ℤ):ℚ)/(bQn * dQn) := div_substL sorry
-    -- Will need to use subexpression variables to keep this compact enough
-    _ ≃ ((a^n * d^n - b^n * c^n : ℤ):ℚ)/((b^n * d^n : ℤ):ℚ) := div_substR sorry
-    _ ≃ (((a * d)^n - b^n * c^n : ℤ):ℚ)/((b^n * d^n : ℤ):ℚ) := div_substL (from_integer_subst (Integer.sub_substL (Rel.symm Natural.pow_distribR_mul)))
-    _ ≃ (((a * d)^n - (b * c)^n : ℤ):ℚ)/((b^n * d^n : ℤ):ℚ) := div_substL (from_integer_subst (Integer.sub_substR (Rel.symm Natural.pow_distribR_mul)))
-    _ ≃ (((a * d)^n - (b * c)^n : ℤ):ℚ)/(((b * d)^n : ℤ):ℚ) := div_substR (from_integer_subst (Rel.symm Natural.pow_distribR_mul))
+  have sub_pow_frac
+      : p^n - q^n ≃ (((a * d)^n - (b * c)^n : ℤ):ℚ)/(((b * d)^n : ℤ):ℚ)
+      := calc
+    _ = p^n - q^n                               := rfl
+    _ ≃ aQn/bQn - cQn/dQn                       := sub_pow_expand
+    _ ≃ (aQn * dQn - bQn * cQn)/(bQn * dQn)     := sorry -- TODO need theorem
+    _ ≃ (((a*d)^n-(b*c)^n:ℤ):ℚ)/(bQn * dQn)     := div_substL sub_mul_liftQ
+    _ ≃ (((a*d)^n-(b*c)^n:ℤ):ℚ)/(((b*d)^n:ℤ):ℚ) := div_substR mul_pow_liftQ
   have : sgn (p^n - q^n) ≃ 1 := calc
     _ = sgn (p^n - q^n) := rfl
-    _ ≃ sgn (((a:ℚ)/b)^n - q^n) := sgn_subst (sub_substL (Natural.pow_substL ‹p ≃ a/b›))
-    _ ≃ sgn (((a:ℚ)/b)^n - ((c:ℚ)/d)^n) := sgn_subst (sub_substR (Natural.pow_substL ‹q ≃ c/d›))
-    _ ≃ sgn ((a:ℚ)^n/(b:ℚ)^n - ((c:ℚ)/d)^n) := sgn_subst (sub_substL pow_distribR_div)
-    _ ≃ sgn ((a:ℚ)^n/(b:ℚ)^n - (c:ℚ)^n/(d:ℚ)^n) := sgn_subst (sub_substR pow_distribR_div)
-    _ ≃ sgn (((a:ℚ)^n * (d:ℚ)^n - (b:ℚ)^n * (c:ℚ)^n)/((b:ℚ)^n * (d:ℚ)^n)) := sorry
-    _ ≃ sgn (((a:ℚ)^n * (d:ℚ)^n - (b:ℚ)^n * (c:ℚ)^n) * sgn ((b:ℚ)^n * (d:ℚ)^n)) := sorry
-    _ ≃ sgn ((a^n * d^n - b^n * c^n : ℤ):ℚ) * sgn ((b^n * d^n : ℤ):ℚ) := sorry
-    _ ≃ sgn (a^n * d^n - b^n * c^n) * sgn (b^n * d^n) := sorry
-    _ ≃ sgn ((a * d)^n - (b * c)^n) * 1^n := sorry
-    _ ≃ sgn ((a * d)^n - (b * c)^n) := sorry
+    _ ≃ sgn ((((a*d)^n-(b*c)^n:ℤ):ℚ)/(((b*d)^n:ℤ):ℚ)) := sgn_subst sub_pow_frac
+    _ ≃ sgn (((a*d)^n-(b*c)^n:ℤ):ℚ) * sgn (((b*d)^n:ℤ):ℚ) := sgn_div
+    _ ≃ sgn ((a*d)^n-(b*c)^n) * sgn (((b*d)^n:ℤ):ℚ) := AA.substL sgn_from_integer
+    _ ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n) := AA.substR sgn_from_integer
+    _ ≃ sgn ((a*d)^n-(b*c)^n) * 1^n := sorry
+    _ ≃ sgn ((a*d)^n-(b*c)^n) := sorry
     _ ≃ 1 := sorry -- Integer.gt_zero_sgn.mp (Integer.pow_pos_preserves_gt_pos sorry sorry sorry)
   have : p^n > q^n := gt_sgn.mpr ‹sgn (p^n - q^n) ≃ 1›
   exact this
