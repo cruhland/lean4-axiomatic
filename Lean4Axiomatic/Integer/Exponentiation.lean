@@ -54,9 +54,9 @@ theorem pow_preserves_pos {a : ℤ} {n : ℕ} : a > 0 → a^n > 0 := by
 theorem pow_preserves_nonneg {a : ℤ} {n : ℕ} : a ≥ 0 → a^n ≥ 0 := sorry
 
 theorem pow_pos_preserves_gt_pos
-    {a b : ℤ} {n : ℕ} : b ≥ 0 → n > 0 → a > b → a^n > b^n
+    {a b : ℤ} {n : ℕ} : n > 0 → b ≥ 0 → a > b → a^n > b^n
     := by
-  intro (_ : b ≥ 0) (_ : n > 0) (_ : a > b)
+  intro (_ : n > 0) (_ : b ≥ 0) (_ : a > b)
   revert ‹n > 0›
   show n > 0 → a^n > b^n
 

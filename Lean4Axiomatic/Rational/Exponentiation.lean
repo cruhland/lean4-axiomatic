@@ -148,7 +148,7 @@ theorem pow_preserves_nonneg {p : ℚ} {n : ℕ} : p ≥ 0 → p^n ≥ 0 := by
     have : p^n ≥ 0 := ge_cases.mpr (Or.inl ‹p^n > 0›)
     exact this
   | Or.inr (_ : p ≃ 0) =>
-    have : (0:ℚ)^n ≃ 0 ∨ 0^n ≃ 1 := Natural.pow_of_zero
+    have : (0:ℚ)^n ≃ 0 ∨ (0:ℚ)^n ≃ 1 := Natural.pow_of_zero
     match this with
     | Or.inl (_ : (0:ℚ)^n ≃ 0) =>
       calc
@@ -310,9 +310,9 @@ theorem as_nonneg_ratio {p : ℚ} : p ≥ 0 → NonnegRatio p := by
   admit
 
 theorem pow_pos_preserves_gt_nonneg
-    {p q : ℚ} {n : ℕ} : q ≥ 0 → n > 0 → p > q → p^n > q^n
+    {p q : ℚ} {n : ℕ} : n > 0 → q ≥ 0 → p > q → p^n > q^n
     := by
-  intro (_ : q ≥ 0) (_ : n > 0) (_ : p > q)
+  intro (_ : n > 0) (_ : q ≥ 0) (_ : p > q)
   show p^n > q^n
   have : p > 0 := trans ‹p > q› ‹q ≥ 0›
   have : p ≥ 0 := ge_cases.mpr (Or.inl ‹p > 0›)
@@ -365,18 +365,25 @@ theorem pow_pos_preserves_gt_nonneg
       := calc
     _ = p^n - q^n                               := rfl
     _ ≃ aQn/bQn - cQn/dQn                       := sub_pow_expand
-    _ ≃ (aQn * dQn - bQn * cQn)/(bQn * dQn)     := sorry -- TODO need theorem
+    _ ≃ (aQn * dQn - bQn * cQn)/(bQn * dQn)     := sub_fractions
     _ ≃ (((a*d)^n-(b*c)^n:ℤ):ℚ)/(bQn * dQn)     := div_substL sub_mul_liftQ
     _ ≃ (((a*d)^n-(b*c)^n:ℤ):ℚ)/(((b*d)^n:ℤ):ℚ) := div_substR mul_pow_liftQ
+  have : (b * d)^n > 0 := sorry
+  have : Integer.Nonzero ((b * d)^n) := sorry
+  have : sgn ((b * d)^n) ≃ 1 := Integer.gt_zero_sgn.mp ‹(b * d)^n > 0›
+  have : b * c ≥ 0 := sorry
+  have : a * d > b * c := sorry
+  have : (a*d)^n > (b*c)^n :=
+    Integer.pow_pos_preserves_gt_pos ‹n > 0› ‹b*c ≥ 0› ‹a*d > b*c›
+  have : sgn ((a*d)^n - (b*c)^n) ≃ 1 := Integer.gt_sgn.mp this
   have : sgn (p^n - q^n) ≃ 1 := calc
-    _ = sgn (p^n - q^n) := rfl
+    _ = sgn (p^n - q^n)                               := rfl
     _ ≃ sgn ((((a*d)^n-(b*c)^n:ℤ):ℚ)/(((b*d)^n:ℤ):ℚ)) := sgn_subst sub_pow_frac
-    _ ≃ sgn (((a*d)^n-(b*c)^n:ℤ):ℚ) * sgn (((b*d)^n:ℤ):ℚ) := sgn_div
-    _ ≃ sgn ((a*d)^n-(b*c)^n) * sgn (((b*d)^n:ℤ):ℚ) := AA.substL sgn_from_integer
-    _ ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n) := AA.substR sgn_from_integer
-    _ ≃ sgn ((a*d)^n-(b*c)^n) * 1^n := sorry
-    _ ≃ sgn ((a*d)^n-(b*c)^n) := sorry
-    _ ≃ 1 := sorry -- Integer.gt_zero_sgn.mp (Integer.pow_pos_preserves_gt_pos sorry sorry sorry)
+    _ ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n)         := sgn_div_integers
+    -- TODO: Can we avoid the reference to this here?
+    _ ≃ 1 * sgn ((b*d)^n)                             := AA.substL this
+    _ ≃ sgn ((b*d)^n)                                 := AA.identL
+    _ ≃ 1                                             := ‹sgn ((b * d)^n) ≃ 1›
   have : p^n > q^n := gt_sgn.mpr ‹sgn (p^n - q^n) ≃ 1›
   exact this
 
