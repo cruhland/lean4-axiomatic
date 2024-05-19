@@ -950,4 +950,12 @@ theorem add_preserves_sign
       ≃ _ := Rel.refl
   exact this
 
+theorem sub_fractions
+    {p q r s : ℚ} [AP (q ≄ 0)] [AP (s ≄ 0)]
+    : p/q - r/s ≃ (p * s - q * r)/(q * s)
+    := calc
+  _ = p/q - r/s := rfl
+  -- Prove addition of fractions? Then this is adding a negated fraction
+  _ ≃ (p * s - q * r)/(q * s) := sorry
+
 end Lean4Axiomatic.Rational
