@@ -368,20 +368,28 @@ theorem pow_pos_preserves_gt_nonneg
     _ ≃ (aQn * dQn - bQn * cQn)/(bQn * dQn)     := sub_fractions
     _ ≃ (((a*d)^n-(b*c)^n:ℤ):ℚ)/(bQn * dQn)     := div_substL sub_mul_liftQ
     _ ≃ (((a*d)^n-(b*c)^n:ℤ):ℚ)/(((b*d)^n:ℤ):ℚ) := div_substR mul_pow_liftQ
+  have : sgn (b * d) ≃ 1 := sorry
+  have : Integer.Nonzero (b * d) := sorry
   have : (b * d)^n > 0 := sorry
   have : Integer.Nonzero ((b * d)^n) := sorry
+  have : AP (((b * d : ℤ):ℚ) ≄ 0) := sorry
   have : sgn ((b * d)^n) ≃ 1 := Integer.gt_zero_sgn.mp ‹(b * d)^n > 0›
   have : b * c ≥ 0 := sorry
-  have : a * d > b * c := sorry
-  have : (a*d)^n > (b*c)^n :=
-    Integer.pow_pos_preserves_gt_pos ‹n > 0› ‹b*c ≥ 0› ‹a*d > b*c›
-  have : sgn ((a*d)^n - (b*c)^n) ≃ 1 := Integer.gt_sgn.mp this
+  have : sgn (a * d - b * c) ≃ 1 := calc
+    _ = sgn (a * d - b * c) := rfl
+    _ ≃ sgn (a * d - b * c) * 1 := Rel.symm AA.identR
+    _ ≃ sgn (a * d - b * c) * sgn (b * d) := AA.substR (Rel.symm ‹sgn (b * d) ≃ 1›)
+    _ ≃ sgn (((a * d - b * c : ℤ):ℚ)/(b * d : ℤ):ℚ) := Rel.symm sgn_div_integers
+    _ ≃ 1 := sorry
+  have : a * d > b * c := Integer.gt_sgn.mpr ‹sgn (a * d - b * c) ≃ 1›
+  have : (a * d)^n > (b * c)^n :=
+    Integer.pow_pos_preserves_gt_pos ‹n > 0› ‹b * c ≥ 0› ‹a * d > b * c›
+  have sub_pow_pos : sgn ((a * d)^n - (b * c)^n) ≃ 1 := Integer.gt_sgn.mp this
   have : sgn (p^n - q^n) ≃ 1 := calc
     _ = sgn (p^n - q^n)                               := rfl
     _ ≃ sgn ((((a*d)^n-(b*c)^n:ℤ):ℚ)/(((b*d)^n:ℤ):ℚ)) := sgn_subst sub_pow_frac
     _ ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n)         := sgn_div_integers
-    -- TODO: Can we avoid the reference to this here?
-    _ ≃ 1 * sgn ((b*d)^n)                             := AA.substL this
+    _ ≃ 1 * sgn ((b*d)^n)                             := AA.substL sub_pow_pos
     _ ≃ sgn ((b*d)^n)                                 := AA.identL
     _ ≃ 1                                             := ‹sgn ((b * d)^n) ≃ 1›
   have : p^n > q^n := gt_sgn.mpr ‹sgn (p^n - q^n) ≃ 1›
