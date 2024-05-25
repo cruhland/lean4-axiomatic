@@ -319,21 +319,42 @@ theorem pow_pos_preserves_gt_nonneg
   have (NonnegRatio.intro
       (a : ℤ) (b : ℤ) (_ : AP ((b:ℚ) > 0)) (_ : a ≥ 0) p_eqv)
       := as_nonneg_ratio ‹p ≥ 0›
+  have : b > 0 := sorry
   have : p ≃ a/b := p_eqv
   have (NonnegRatio.intro
       (c : ℤ) (d : ℤ) (_ : AP ((d:ℚ) > 0)) (_ : c ≥ 0) q_eqv)
       := as_nonneg_ratio ‹q ≥ 0›
+  have : d > 0 := sorry
   have : q ≃ c/d := q_eqv
 
-  have : sgn (b * d) ≃ 1 := sorry
-  have : Integer.Nonzero (b * d) := sorry
-  have : (b * d)^n > 0 := sorry
-  have : Integer.Nonzero ((b * d)^n) := sorry
-  have : AP (((b * d : ℤ):ℚ) ≄ 0) := sorry
-  have : sgn ((b * d)^n) ≃ 1 := Integer.gt_zero_sgn.mp ‹(b * d)^n > 0›
-  have : b * c ≥ 0 := sorry
-  have : AP (((b^n * d^n : ℤ):ℚ) ≄ 0) := sorry
-  have : AP ((((b * d)^n : ℤ):ℚ) ≄ 0) := sorry
+  have sgn_mul_absorbL {x y : ℤ} : x > 0 → sgn (x * y) ≃ sgn y := by
+    intro (_ : x > 0)
+    show sgn (x * y) ≃ sgn y
+    calc
+      _ = sgn (x * y)   := rfl
+      _ ≃ sgn x * sgn y := Integer.sgn_compat_mul
+      _ ≃ 1 * sgn y     := AA.substL (Integer.gt_zero_sgn.mp ‹x > 0›)
+      _ ≃ sgn y         := AA.identL
+  have : sgn (b * d) ≃ 1 := calc
+    _ = sgn (b * d)   := rfl
+    _ ≃ sgn d         := sgn_mul_absorbL ‹b > 0›
+    _ ≃ 1             := Integer.gt_zero_sgn.mp ‹d > 0›
+  have : sgn ((b * d)^n) ≃ 1 := calc
+    _ = sgn ((b * d)^n) := rfl
+    _ ≃ (sgn (b * d))^n := Integer.sgn_pow
+    _ ≃ 1^n             := Natural.pow_substL ‹sgn (b * d) ≃ 1›
+    _ ≃ 1               := Natural.pow_absorbL
+  have : Integer.Sqrt1 (sgn (b * d)) :=
+    Integer.sqrt1_cases.mpr (Or.inl ‹sgn (b * d) ≃ 1›)
+  have : Integer.Nonzero (b * d) := Integer.sgn_nonzero.mpr this
+  have : Integer.Sqrt1 (sgn ((b * d)^n)) :=
+    Integer.sqrt1_cases.mpr (Or.inl ‹sgn ((b * d)^n) ≃ 1›)
+  have : Integer.Nonzero ((b * d)^n) := Integer.sgn_nonzero.mpr this
+  have : sgn (b * c) ≥ 0 := calc
+    _ = sgn (b * c)   := rfl
+    _ ≃ sgn c         := sgn_mul_absorbL ‹b > 0›
+    _ ≥ 0             := Integer.sgn_preserves_ge_zero.mp ‹c ≥ 0›
+  have : b * c ≥ 0 := Integer.sgn_preserves_ge_zero.mpr this
 
   have sub_liftQ {x y : ℤ} : (x:ℚ) - y ≃ ((x - y : ℤ):ℚ) :=
     eqv_symm sub_compat_from_integer
@@ -376,13 +397,16 @@ theorem pow_pos_preserves_gt_nonneg
     _ ≃ (((a*d:ℤ):ℚ) - ((b*c:ℤ):ℚ))/(b*d) := div_substL (sub_substR mul_liftQ)
     _ ≃ (((a*d - b*c : ℤ):ℚ))/(b*d)       := div_substL sub_liftQ
     _ ≃ (((a*d - b*c : ℤ):ℚ))/((b*d:ℤ):ℚ) := div_substR mul_liftQ
-  have : sgn (a * d - b * c) ≃ 1 := Rel.symm <| calc
-    _ = 1                                       := rfl
-    _ ≃ sgn (p - q)                             := Rel.symm (gt_sgn.mp ‹p > q›)
+  have : sgn (p - q) ≃ sgn (a * d - b * c) := calc
+    _ = sgn (p - q)                             := rfl
     _ ≃ sgn ((((a*d - b*c : ℤ):ℚ))/((b*d:ℤ):ℚ)) := sgn_subst sub_frac
     _ ≃ sgn (a*d - b*c) * sgn (b*d)             := sgn_div_integers
     _ ≃ sgn (a*d - b*c) * 1                     := AA.substR ‹sgn (b * d) ≃ 1›
     _ ≃ sgn (a*d - b*c)                         := AA.identR
+  have : sgn (a * d - b * c) ≃ 1 := calc
+    _ = sgn (a * d - b * c) := rfl
+    _ ≃ sgn (p - q)         := Rel.symm ‹sgn (p - q) ≃ sgn (a * d - b * c)›
+    _ ≃ 1                   := gt_sgn.mp ‹p > q›
 
   have : a * d > b * c := Integer.gt_sgn.mpr ‹sgn (a * d - b * c) ≃ 1›
   have : (a * d)^n > (b * c)^n :=
