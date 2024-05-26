@@ -303,12 +303,31 @@ theorem pow_scompatL_abs {p : ℚ} {n : ℕ} : abs (p^n) ≃ (abs p)^n := by
       _ ≃ (abs p)^n' * abs p := mul_substL ih
       _ ≃ (abs p)^(step n')  := eqv_symm pow_step
 
+theorem from_integer_preserves_gt_zero {a : ℤ} : a > 0 → (a:ℚ) > 0 := by
+  intro (_ : a > 0)
+  show (a:ℚ) > 0
+  have : sgn (a:ℚ) ≃ 1 := calc
+    _ = sgn (a:ℚ) := rfl
+    _ ≃ sgn a     := sgn_from_integer
+    _ ≃ 1         := Integer.gt_zero_sgn.mp ‹a > 0›
+  have : (a:ℚ) > 0 := gt_zero_sgn.mpr ‹sgn (a:ℚ) ≃ 1›
+  exact this
+
 inductive NonnegRatio (p : ℚ) : Prop :=
-| intro (a b : ℤ) (b_pos : AP ((b:ℚ) > 0)) (a_nneg : a ≥ 0) (p_eqv : p ≃ a / b) : NonnegRatio p
+| intro
+    (a b : ℤ)
+    (a_nneg : a ≥ 0)
+    (b_pos : b > 0)
+    (p_eqv :
+      have : AP ((b:ℚ) > 0) := AP.mk (from_integer_preserves_gt_zero ‹b > 0›)
+      p ≃ a / b
+    )
+  : NonnegRatio p
 
 theorem as_nonneg_ratio {p : ℚ} : p ≥ 0 → NonnegRatio p := by
   admit
 
+/-- TODO -/
 theorem pow_pos_preserves_gt_nonneg
     {p q : ℚ} {n : ℕ} : n > 0 → q ≥ 0 → p > q → p^n > q^n
     := by
@@ -316,15 +335,13 @@ theorem pow_pos_preserves_gt_nonneg
   show p^n > q^n
   have : p > 0 := trans ‹p > q› ‹q ≥ 0›
   have : p ≥ 0 := ge_cases.mpr (Or.inl ‹p > 0›)
-  have (NonnegRatio.intro
-      (a : ℤ) (b : ℤ) (_ : AP ((b:ℚ) > 0)) (_ : a ≥ 0) p_eqv)
-      := as_nonneg_ratio ‹p ≥ 0›
-  have : b > 0 := sorry
+  have (NonnegRatio.intro (a : ℤ) (b : ℤ) (_ : a ≥ 0) (_ : b > 0) p_eqv) :=
+    as_nonneg_ratio ‹p ≥ 0›
+  have : AP ((b:ℚ) > 0) := AP.mk (from_integer_preserves_gt_zero ‹b > 0›)
   have : p ≃ a/b := p_eqv
-  have (NonnegRatio.intro
-      (c : ℤ) (d : ℤ) (_ : AP ((d:ℚ) > 0)) (_ : c ≥ 0) q_eqv)
-      := as_nonneg_ratio ‹q ≥ 0›
-  have : d > 0 := sorry
+  have (NonnegRatio.intro (c : ℤ) (d : ℤ) (_ : c ≥ 0) (_ : d > 0) q_eqv) :=
+    as_nonneg_ratio ‹q ≥ 0›
+  have : AP ((d:ℚ) > 0) := AP.mk (from_integer_preserves_gt_zero ‹d > 0›)
   have : q ≃ c/d := q_eqv
 
   have sgn_mul_absorbL {x y : ℤ} : x > 0 → sgn (x * y) ≃ sgn y := by
