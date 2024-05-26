@@ -313,6 +313,7 @@ theorem from_integer_preserves_gt_zero {a : ℤ} : a > 0 → (a:ℚ) > 0 := by
   have : (a:ℚ) > 0 := gt_zero_sgn.mpr ‹sgn (a:ℚ) ≃ 1›
   exact this
 
+/-- TODO -/
 inductive NonnegRatio (p : ℚ) : Prop :=
 | intro
     (a b : ℤ)
@@ -324,8 +325,30 @@ inductive NonnegRatio (p : ℚ) : Prop :=
     )
   : NonnegRatio p
 
+/-- TODO -/
 theorem as_nonneg_ratio {p : ℚ} : p ≥ 0 → NonnegRatio p := by
-  admit
+  intro (_ : p ≥ 0)
+  show NonnegRatio p
+  have (AsRatio.intro (x : ℤ) (y : ℤ) (_ : Integer.Nonzero y) p_eqv) :=
+    as_ratio p
+  have : p ≃ x/y := p_eqv
+  -- sgn b = sgn (y * sgn y) = sgn y * sgn (sgn y) = sgn y * sgn y = 1
+  -- b > 0
+  -- sgn a = sgn (x * sgn y) = sgn x * sgn (sgn y) = sgn x * sgn y
+  -- sgn p ≥ 0
+  -- sgn (x/y) ≥ 0
+  -- sgn x * sgn y ≥ 0
+  -- sgn a ≥ 0
+  -- a ≥ 0
+  -- p = x/y = (x/y) * 1 = (x/y) * (sgn y/sgn y) = (x*sgn y)/(y*sgn y) = a/b
+  let a := x * sgn y
+  let b := y * sgn y
+  have : a ≥ 0 := sorry
+  have : b > 0 := sorry
+  have : AP ((b:ℚ) > 0) := AP.mk (from_integer_preserves_gt_zero ‹b > 0›)
+  have : p ≃ a/b := sorry
+  have : NonnegRatio p := NonnegRatio.intro a b ‹a ≥ 0› ‹b > 0› ‹p ≃ a/b›
+  exact this
 
 /-- TODO -/
 theorem pow_pos_preserves_gt_nonneg
