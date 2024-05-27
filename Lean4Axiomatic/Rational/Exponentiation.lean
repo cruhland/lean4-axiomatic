@@ -332,21 +332,46 @@ theorem as_nonneg_ratio {p : ℚ} : p ≥ 0 → NonnegRatio p := by
   have (AsRatio.intro (x : ℤ) (y : ℤ) (_ : Integer.Nonzero y) p_eqv) :=
     as_ratio p
   have : p ≃ x/y := p_eqv
-  -- sgn b = sgn (y * sgn y) = sgn y * sgn (sgn y) = sgn y * sgn y = 1
-  -- b > 0
-  -- sgn a = sgn (x * sgn y) = sgn x * sgn (sgn y) = sgn x * sgn y
-  -- sgn p ≥ 0
-  -- sgn (x/y) ≥ 0
-  -- sgn x * sgn y ≥ 0
-  -- sgn a ≥ 0
-  -- a ≥ 0
-  -- p = x/y = (x/y) * 1 = (x/y) * (sgn y/sgn y) = (x*sgn y)/(y*sgn y) = a/b
   let a := x * sgn y
   let b := y * sgn y
-  have : a ≥ 0 := sorry
-  have : b > 0 := sorry
+
+  have : sgn a ≥ 0 := calc
+    _ = sgn a               := rfl
+    _ = sgn (x * sgn y)     := rfl
+    _ ≃ sgn x * sgn (sgn y) := Integer.sgn_compat_mul
+    _ ≃ sgn x * sgn y       := AA.substR Integer.sgn_idemp
+    _ ≃ sgn ((x:ℚ)/y)       := Rel.symm sgn_div_integers
+    _ ≃ sgn p               := sgn_subst (eqv_symm ‹p ≃ x/y›)
+    _ ≥ 0                   := sgn_preserves_ge_zero.mp ‹p ≥ 0›
+  have : a ≥ 0 := Integer.sgn_preserves_ge_zero.mpr ‹sgn a ≥ 0›
+
+  have : Integer.Sqrt1 (sgn y) := Integer.sgn_nonzero.mp ‹Integer.Nonzero y›
+  have : sgn b ≃ 1 := calc
+    _ = sgn b               := rfl
+    _ = sgn (y * sgn y)     := rfl
+    _ ≃ sgn y * sgn (sgn y) := Integer.sgn_compat_mul
+    _ ≃ sgn y * sgn y       := AA.substR Integer.sgn_idemp
+    _ ≃ 1                   := ‹Integer.Sqrt1 (sgn y)›.elim
+  have : b > 0 := Integer.gt_zero_sgn.mpr ‹sgn b ≃ 1›
+
+  have a_liftQ : (x:ℚ) * sgn y ≃ (a:ℚ) := calc
+    _ = (x:ℚ) * sgn y       := rfl
+    _ ≃ ((x * sgn y : ℤ):ℚ) := eqv_symm mul_compat_from_integer
+    _ ≃ (a:ℚ)               := from_integer_subst Rel.refl
+  have b_liftQ : (y:ℚ) * sgn y ≃ (b:ℚ) := calc
+    _ = (y:ℚ) * sgn y       := rfl
+    _ ≃ ((y * sgn y : ℤ):ℚ) := eqv_symm mul_compat_from_integer
+    _ ≃ (b:ℚ)               := from_integer_subst Rel.refl
   have : AP ((b:ℚ) > 0) := AP.mk (from_integer_preserves_gt_zero ‹b > 0›)
-  have : p ≃ a/b := sorry
+  have : p ≃ a/b := calc
+    _ = p                                   := rfl
+    _ ≃ x/y                                 := ‹p ≃ x/y›
+    _ ≃ ((x:ℚ)/y) * 1                       := eqv_symm mul_identR
+    _ ≃ ((x:ℚ)/y) * (((sgn y:ℤ):ℚ)/(sgn y)) := mul_substR (eqv_symm div_same)
+    _ ≃ ((x:ℚ) * sgn y)/(y * sgn y)         := div_mul_swap
+    _ ≃ ((x * sgn y : ℤ):ℚ)/(y * sgn y)     := div_substL a_liftQ
+    _ ≃ (a:ℚ)/b                             := div_substR b_liftQ
+
   have : NonnegRatio p := NonnegRatio.intro a b ‹a ≥ 0› ‹b > 0› ‹p ≃ a/b›
   exact this
 
