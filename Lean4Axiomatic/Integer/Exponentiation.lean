@@ -39,6 +39,7 @@ theorem sgn_pow {a : ℤ} {n : ℕ} : sgn (a^n) ≃ (sgn a)^n := by
       _ ≃ (sgn a)^n' * sgn a := AA.substL ih
       _ ≃ (sgn a)^(step n')  := Rel.symm Natural.pow_step
 
+/-- TODO -/
 theorem pow_preserves_pos {a : ℤ} {n : ℕ} : a > 0 → a^n > 0 := by
   intro (_ : a > 0)
   show a^n > 0
@@ -51,8 +52,10 @@ theorem pow_preserves_pos {a : ℤ} {n : ℕ} : a > 0 → a^n > 0 := by
   have : a^n > 0 := gt_zero_sgn.mpr ‹sgn (a^n) ≃ 1›
   exact this
 
+/-- TODO -/
 theorem pow_preserves_nonneg {a : ℤ} {n : ℕ} : a ≥ 0 → a^n ≥ 0 := sorry
 
+/-- TODO -/
 theorem pow_pos_preserves_gt_pos
     {a b : ℤ} {n : ℕ} : n > 0 → b ≥ 0 → a > b → a^n > b^n
     := by
@@ -108,5 +111,32 @@ theorem pow_pos_preserves_gt_pos
         _ > b^n' * a    := gt_sgn.mpr ‹sgn (a^n' * a - b^n' * a) ≃ 1›
         _ ≥ b^n' * b    := sgn_diff_ge_zero.mpr ‹sgn (b^n' * a - b^n' * b) ≥ 0›
         _ ≃ b^(step n') := Rel.symm Natural.pow_step
+
+/-- TODO -/
+theorem pow_preserves_ge_nonneg
+    {a b : ℤ} {n : ℕ} : b ≥ 0 → a ≥ b → a^n ≥ b^n
+    := by
+  intro (_ : b ≥ 0) (_ : a ≥ b)
+  show a^n ≥ b^n
+  have : a > b ∨ b ≃ a := le_iff_lt_or_eqv.mp ‹a ≥ b›
+  match this with
+  | Or.inl (_ : a > b) =>
+    have : n > 0 ∨ n ≃ 0 := Natural.ge_split Natural.ge_zero
+    match this with
+    | Or.inl (_ : n > 0) =>
+      have : a^n > b^n := pow_pos_preserves_gt_pos ‹n > 0› ‹b ≥ 0› ‹a > b›
+      have : a^n ≥ b^n := le_iff_lt_or_eqv.mpr (Or.inl ‹a^n > b^n›)
+      exact this
+    | Or.inr (_ : n ≃ 0) =>
+      calc
+        _ = a^n := rfl
+        _ ≃ a^0 := Natural.pow_substR ‹n ≃ 0›
+        _ ≥ 1   := le_iff_lt_or_eqv.mpr (Or.inr (Rel.symm Natural.pow_zero))
+        _ ≃ b^0 := Rel.symm Natural.pow_zero
+        _ ≃ b^n := Natural.pow_substR (Rel.symm ‹n ≃ 0›)
+  | Or.inr (_ : b ≃ a) =>
+    have : b^n ≃ a^n := Natural.pow_substL ‹b ≃ a›
+    have : a^n ≥ b^n := le_iff_lt_or_eqv.mpr (Or.inr ‹b^n ≃ a^n›)
+    exact this
 
 end Lean4Axiomatic.Integer

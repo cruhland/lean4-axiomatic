@@ -454,6 +454,10 @@ instance trans_eqv_ge_ge_inst : Trans (α := ℤ) (· ≃ ·) (· ≥ ·) (· �
   trans := sorry
 }
 
+instance trans_ge_eqv_ge_inst : Trans (α := ℤ) (· ≥ ·) (· ≃ ·) (· ≥ ·) := {
+  trans := sorry
+}
+
 instance trans_gt_ge_gt_inst : Trans (α := ℤ) (· > ·) (· ≥ ·) (· > ·) := {
   trans := sorry
 }
@@ -563,6 +567,8 @@ theorem le_iff_lt_or_eqv {a b : ℤ} : a ≤ b ↔ a < b ∨ a ≃ b := by
       have : a ≤ b := AA.substRFn ‹a ≃ b› ‹a ≤ a›
       ‹a ≤ b›
     exact this
+
+-- TODO: Make version of above for a ≥ b
 
 /--
 The _less than or equivalent to_ relation is reversed with negated operands.

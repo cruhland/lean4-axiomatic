@@ -598,6 +598,8 @@ theorem le_split {n m : ℕ} : n ≤ m → n < m ∨ n ≃ m := by
       n + step d   ≃ _ := ‹n + step d ≃ m›
       m            ≃ _ := Rel.refl
 
+theorem ge_zero {n : ℕ} : n ≥ 0 := sorry
+
 /--
 Split _greater than or equivalent to_ into the relations implied by its name.
 
