@@ -163,6 +163,7 @@ theorem pow_preserves_nonneg {p : ℚ} {n : ℕ} : p ≥ 0 → p^n ≥ 0 := by
         _ ≃ 1   := ‹(0:ℚ)^n ≃ 1›
         _ ≥ 0   := one_ge_zero
 
+-- TODO: Remove the next two proofs; they have been replaced by newer ones
 /--
 Raising two ordered, nonnegative values to the same natural number power
 preserves their ordering and nonnegativity.
@@ -369,7 +370,7 @@ theorem as_nonneg_ratio {p : ℚ} : p ≥ 0 → NonnegRatio p := by
     _ ≃ ((x:ℚ)/y) * 1                       := eqv_symm mul_identR
     _ ≃ ((x:ℚ)/y) * (((sgn y:ℤ):ℚ)/(sgn y)) := mul_substR (eqv_symm div_same)
     _ ≃ ((x:ℚ) * sgn y)/(y * sgn y)         := div_mul_swap
-    _ ≃ ((x * sgn y : ℤ):ℚ)/(y * sgn y)     := div_substL a_liftQ
+    _ ≃ (a:ℚ)/(y * sgn y)                   := div_substL a_liftQ
     _ ≃ (a:ℚ)/b                             := div_substR b_liftQ
 
   have : NonnegRatio p := NonnegRatio.intro a b ‹a ≥ 0› ‹b > 0› ‹p ≃ a/b›
@@ -490,7 +491,6 @@ theorem pow_pos_preserves_gt_nonneg
 
 end pow_nat
 
-/-
 /-! ## Axioms for exponentiation to an integer -/
 
 /-- Operations for raising rational numbers to integer powers. -/
@@ -805,12 +805,15 @@ theorem pow_distribR_mul
     _ ≃ p^a * q^a                 := mul_substR (pow_substR (Rel.symm a_eqv))
 
 /-- TODO -/
-theorem pow_preserves_pos_base {p : ℚ} [AP (p > 0)] {a : ℤ} : p^a > 0 := by
-  have : p > 0 := ‹AP (p > 0)›.ev
-  have : sgn p ≃ 1 := gt_zero_sgn.mp ‹p > 0›
+theorem pow_preserves_pos_base
+    {p : ℚ} {a : ℤ} (p_pos : p > 0)
+    : have : AP (p > 0) := AP.mk ‹p > 0›
+      p^a > 0
+    := by
   have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : a ≃ n - m)) :=
     Integer.as_diff a
 
+  have : AP (p > 0) := AP.mk ‹p > 0›
   have : sgn (p^a) ≃ 1 := calc
     _ = sgn (p^a)             := rfl
     _ ≃ sgn (p^((n:ℤ) - m))   := sgn_subst (pow_substR ‹a ≃ n - m›)
@@ -819,23 +822,47 @@ theorem pow_preserves_pos_base {p : ℚ} [AP (p > 0)] {a : ℤ} : p^a > 0 := by
     _ ≃ (sgn p)^n * sgn (p^m) := AA.substL sgn_pow
     _ ≃ (sgn p)^n * (sgn p)^m := AA.substR sgn_pow
     _ ≃ (sgn p)^(n + m)       := Rel.symm Natural.pow_compatL_add
-    _ ≃ 1^(n + m)             := Natural.pow_substL ‹sgn p ≃ 1›
+    _ ≃ 1^(n + m)             := Natural.pow_substL (gt_zero_sgn.mp ‹p > 0›)
     _ ≃ 1                     := Natural.pow_absorbL
   have : p^a > 0 := gt_zero_sgn.mpr this
   exact this
 
-theorem pow_order_smth
+/-- TODO -/
+theorem pow_determines_order
     {p q : ℚ} {a : ℤ} (p_gt_q : p > q) (q_pos : q > 0)
     : have : AP (p > 0) := AP.mk (gt_trans ‹p > q› ‹q > 0›)
       have : AP (q > 0) := AP.mk ‹q > 0›
       sgn (p^a - q^a) ≃ sgn a
     := by
-  -- TODO: Split up the natural number version(s) of this theorem above
-  -- The q > 0 part can be done completely separately
-  -- And the p^n > q^n part can depend on it
-  -- Then here, use integer trichotomy on a
-  -- Prove positive case using natural number result above
-  -- Negative case can be shown to transform into the positive case
-  admit
--/
+  have : AP (p > 0) := AP.mk (gt_trans ‹p > q› ‹q > 0›)
+  have : AP (q > 0) := AP.mk ‹q > 0›
+
+  have : AA.OneOfThree₁ (sgn a ≃ 0) (sgn a ≃ 1) (sgn a ≃ -1) :=
+    Integer.sgn_trichotomy a
+  match this with
+  | AA.OneOfThree₁.first (_ : sgn a ≃ 0) =>
+    have a_pow_reduce {x : ℚ} [AP (x > 0)] : x^a ≃ 1 := calc
+      _ = x^a     := rfl
+      _ ≃ x^(0:ℤ) := pow_substR (Integer.sgn_zero.mpr ‹sgn a ≃ 0›)
+      _ ≃ 1       := sorry
+    have : p^a - q^a ≃ 0 := calc
+      _ = p^a - q^a := rfl
+      _ ≃ 1 - q^a   := sub_substL a_pow_reduce
+      _ ≃ (1:ℚ) - 1 := sub_substR a_pow_reduce
+      _ ≃ 0         := sorry
+    calc
+      _ = sgn (p^a - q^a) := rfl
+      _ ≃ sgn (0:ℚ)       := sgn_subst ‹p^a - q^a ≃ 0›
+      _ ≃ sgn (0:ℤ)       := sgn_from_integer
+      _ ≃ 0               := Integer.sgn_zero.mp Rel.refl
+      _ ≃ sgn a           := Rel.symm ‹sgn a ≃ 0›
+  | AA.OneOfThree₁.second (_ : sgn a ≃ 1) =>
+    -- Use pow_pos_preserves_gt_nonneg to prove this
+    -- Will need to convert `a` to a natural number
+    admit
+  | AA.OneOfThree₁.third (_ : sgn a ≃ -1) =>
+    -- Convert to something provable by pow_pos_preserves_gt_nonneg
+    -- Then convert back
+    admit
+
 end Lean4Axiomatic.Rational
