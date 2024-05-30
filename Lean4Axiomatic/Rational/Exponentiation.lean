@@ -14,7 +14,7 @@ open Lean4Axiomatic.Function (idx_fam_prop)
 open Lean4Axiomatic.Logic (AP)
 open Lean4Axiomatic.Metric (abs)
 open Lean4Axiomatic.Natural (pow_step pow_zero step)
-open Lean4Axiomatic.Signed (sgn)
+open Lean4Axiomatic.Signed (Positive sgn)
 
 /-! ## Derived properties for exponentiation to a natural number -/
 
@@ -855,12 +855,13 @@ theorem pow_determines_order
     have a_pow_reduce {x : ℚ} [AP (x > 0)] : x^a ≃ 1 := calc
       _ = x^a     := rfl
       _ ≃ x^(0:ℤ) := pow_substR (Integer.sgn_zero.mpr ‹sgn a ≃ 0›)
-      _ ≃ 1       := sorry
+      _ ≃ x^(0:ℕ) := pow_nonneg
+      _ ≃ 1       := Natural.pow_zero
     have : p^a - q^a ≃ 0 := calc
       _ = p^a - q^a := rfl
       _ ≃ 1 - q^a   := sub_substL a_pow_reduce
       _ ≃ (1:ℚ) - 1 := sub_substR a_pow_reduce
-      _ ≃ 0         := sorry
+      _ ≃ 0         := sub_eqv_zero_iff_eqv.mpr eqv_refl
     calc
       _ = sgn (p^a - q^a) := rfl
       _ ≃ sgn (0:ℚ)       := sgn_subst ‹p^a - q^a ≃ 0›
@@ -868,12 +869,35 @@ theorem pow_determines_order
       _ ≃ 0               := Integer.sgn_zero.mp Rel.refl
       _ ≃ sgn a           := Rel.symm ‹sgn a ≃ 0›
   | AA.OneOfThree₁.second (_ : sgn a ≃ 1) =>
-    -- Use pow_pos_preserves_gt_nonneg to prove this
-    -- Will need to convert `a` to a natural number
-    admit
+    have : Positive a := Integer.sgn_positive.mpr ‹sgn a ≃ 1›
+    have (Exists.intro (n : ℕ) (And.intro (_ : Positive n) (_ : a ≃ (n:ℤ)))) :=
+      Integer.positive_elim_nat ‹Positive a›
+    have : n > 0 := Natural.lt_zero_pos.mp ‹Positive n›
+    have : q ≥ 0 := ge_cases.mpr (Or.inl ‹q > 0›)
+    have : p^n > q^n := pow_pos_preserves_gt_nonneg ‹n > 0› ‹q ≥ 0› ‹p > q›
+    have : p^a - q^a ≃ p^n - q^n := calc
+      _ = p^a - q^a     := rfl
+      _ ≃ p^(n:ℤ) - q^a := sub_substL (pow_substR ‹a ≃ (n:ℤ)›)
+      _ ≃ p^n - q^a     := sub_substL pow_nonneg
+      _ ≃ p^n - q^(n:ℤ) := sub_substR (pow_substR ‹a ≃ (n:ℤ)›)
+      _ ≃ p^n - q^n     := sub_substR pow_nonneg
+    calc
+      _ = sgn (p^a - q^a) := rfl
+      _ ≃ sgn (p^n - q^n) := sgn_subst ‹p^a - q^a ≃ p^n - q^n›
+      _ ≃ 1               := gt_sgn.mp ‹p^n > q^n›
+      _ ≃ sgn a           := Rel.symm ‹sgn a ≃ 1›
   | AA.OneOfThree₁.third (_ : sgn a ≃ -1) =>
-    -- Convert to something provable by pow_pos_preserves_gt_nonneg
-    -- Then convert back
-    admit
+    let n : ℕ := sorry
+    have pow_expand {x : ℚ} [AP (x ≄ 0)] : x^a ≃ (x^n)⁻¹ := sorry
+    have : p^n > q^n := sorry
+    calc
+      _ = sgn (p^a - q^a)         := rfl
+      _ ≃ sgn ((p^n)⁻¹ - q^a)     := sgn_subst (sub_substL pow_expand)
+      _ ≃ sgn ((p^n)⁻¹ - (q^n)⁻¹) := sgn_subst (sub_substR pow_expand)
+      _ ≃ sgn (q^n - p^n)         := sgn_sub_recip
+      _ ≃ sgn (-(p^n - q^n))      := sgn_subst (eqv_symm neg_sub)
+      _ ≃ -sgn (p^n - q^n)        := sgn_compat_neg
+      _ ≃ -1                      := AA.subst₁ (gt_sgn.mp ‹p^n > q^n›)
+      _ ≃ sgn a                   := Rel.symm ‹sgn a ≃ -1›
 
 end Lean4Axiomatic.Rational

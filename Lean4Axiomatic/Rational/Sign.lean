@@ -331,6 +331,11 @@ theorem sgn_recip {p : ℚ} [AP (p ≄ 0)] : sgn (p⁻¹) ≃ sgn p := by
     sgn (1 * p)                 ≃ _ := sgn_subst mul_identL
     sgn p                       ≃ _ := Rel.refl
 
+theorem sgn_sub_recip
+    {p q : ℚ} [AP (p ≄ 0)] [AP (q ≄ 0)] : sgn (p⁻¹ - q⁻¹) ≃ sgn (q - p)
+    := by
+  admit
+
 /-- TODO -/
 theorem sgn_div {p q : ℚ} [AP (q ≄ 0)] : sgn (p / q) ≃ sgn p * sgn q := calc
   _ = sgn (p / q)       := rfl
