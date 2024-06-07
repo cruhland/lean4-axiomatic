@@ -569,6 +569,7 @@ theorem le_iff_lt_or_eqv {a b : ℤ} : a ≤ b ↔ a < b ∨ a ≃ b := by
     exact this
 
 -- TODO: Make version of above for a ≥ b
+theorem ge_split {a b : ℤ} : a ≥ b ↔ a > b ∨ a ≃ b := sorry
 
 /--
 The _less than or equivalent to_ relation is reversed with negated operands.
@@ -746,5 +747,8 @@ theorem gt_zero_sgn {a : ℤ} : a > 0 ↔ sgn a ≃ 1 := sorry
 theorem sgn_preserves_ge_zero {a : ℤ} : a ≥ 0 ↔ sgn a ≥ 0 := sorry
 
 theorem sgn_diff_ge_zero {a b : ℤ} : a ≥ b ↔ sgn (a - b) ≥ 0 := sorry
+
+theorem mul_gt_zero_iff_sgn_same
+    {a b : ℤ} : a * b > 0 ↔ sgn a ≃ sgn b ∧ a * b ≄ 0 := sorry
 
 end Lean4Axiomatic.Integer
