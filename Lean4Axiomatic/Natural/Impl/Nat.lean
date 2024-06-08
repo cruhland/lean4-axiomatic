@@ -251,20 +251,20 @@ theorem compare_lt {n m : Nat} : compare n m = Ordering.lt ↔ lt n m := by
     show lt n m
     simp only [compare, Ord.compare, compareOfLessAndEq] at h
     split at h
-    case inl =>
+    case isTrue =>
       have : lt n m := prelude_lt_iff_impl_lt.mp ‹n < m›
       exact this
-    case inr =>
+    case isFalse =>
       split at h <;> contradiction
   case mpr =>
     intro (_ : lt n m)
     show compare n m = Ordering.lt
     simp only [compare, Ord.compare, compareOfLessAndEq]
     split
-    case inl =>
+    case isTrue =>
       show Ordering.lt = Ordering.lt
       rfl
-    case inr =>
+    case isFalse =>
       have : ¬(n < m) := by assumption
       have : n < m := prelude_lt_iff_impl_lt.mpr ‹lt n m›
       exact absurd ‹n < m› ‹¬(n < m)›
@@ -282,16 +282,16 @@ theorem compare_eq {n m : Nat} : compare n m = Ordering.eq ↔ n ≃ m := by
     show n ≃ m
     simp [compare, Ord.compare, compareOfLessAndEq] at h
     split at h
-    case inl =>
+    case isTrue =>
       have : n < m := by assumption
       contradiction
-    case inr =>
+    case isFalse =>
       split at h
-      case inl =>
+      case isTrue =>
         have : n = m := by assumption
         have : n ≃ m := ‹n = m›
         exact this
-      case inr =>
+      case isFalse =>
         have : n ≠ m := by assumption
         contradiction
   case mpr =>
@@ -299,18 +299,18 @@ theorem compare_eq {n m : Nat} : compare n m = Ordering.eq ↔ n ≃ m := by
     show compare n m = Ordering.eq
     simp [compare, Ord.compare, compareOfLessAndEq]
     split
-    case inl =>
+    case isTrue =>
       have : n < m := by assumption
       have : n = m := ‹n ≃ m›
       rw [‹n = m›] at ‹n < m›
       have : ¬(m < m) := Nat.lt_irrefl m
       exact absurd ‹m < m› ‹¬(m < m)›
-    case inr =>
+    case isFalse =>
       split
-      case inl =>
+      case isTrue =>
         show Ordering.eq = Ordering.eq
         rfl
-      case inr =>
+      case isFalse =>
         have : n ≠ m := by assumption
         have : n = m := ‹n ≃ m›
         exact absurd ‹n = m› ‹n ≠ m›
@@ -329,15 +329,15 @@ theorem compare_gt {n m : Nat} : compare n m = Ordering.gt ↔ lt m n := by
     show lt m n
     simp [compare, Ord.compare, compareOfLessAndEq] at h
     split at h
-    case inl =>
+    case isTrue =>
       have : n < m := by assumption
       contradiction
-    case inr =>
+    case isFalse =>
       split at h
-      case inl =>
+      case isTrue =>
         have : n = m := by assumption
         contradiction
-      case inr =>
+      case isFalse =>
         have : ¬(n < m) := by assumption
         have : ¬(n = m) := by assumption
         have : n > m ∨ n ≤ m := Nat.lt_or_ge m n
@@ -360,23 +360,23 @@ theorem compare_gt {n m : Nat} : compare n m = Ordering.gt ↔ lt m n := by
       (trichotomy (order_inst := order) n m).atMostOne
     simp [compare, Ord.compare, compareOfLessAndEq]
     split
-    case inl =>
+    case isTrue =>
       have : n < m := by assumption
       show False
       have : lt n m := prelude_lt_iff_impl_lt.mp ‹n < m›
       have two : AA.TwoOfThree (lt n m) (n ≃ m) (lt m n) :=
         AA.TwoOfThree.oneAndThree ‹lt n m› ‹lt m n›
       exact absurd two notTwo
-    case inr =>
+    case isFalse =>
       split
-      case inl =>
+      case isTrue =>
         have : n = m := by assumption
         show False
         have : n ≃ m := ‹n = m›
         have two : AA.TwoOfThree (lt n m) (n ≃ m) (lt m n) :=
           AA.TwoOfThree.twoAndThree ‹n ≃ m› ‹lt m n›
         exact absurd two notTwo
-      case inr =>
+      case isFalse =>
         show Ordering.gt = Ordering.gt
         rfl
 
