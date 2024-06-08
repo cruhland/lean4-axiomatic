@@ -182,71 +182,112 @@ theorem sgn_diff_pow
       _ ≃ sgn (a - b) * 1 := Rel.symm AA.identR
       _ ≃ sgn (a - b) * sgn (step m : ℤ) := AA.substR (Rel.symm sgn_step)
 
-theorem sgn_sum_ordered_pos
-    {a b : ℤ}
-    : sgn a * sgn b ≥ 0 → sgn a ≥ sgn b → sgn b ≥ 0 →
-    sgn (a + b) ≃ sgn a + sgn b - (sgn a) * (sgn b)^2
-    := by
-  -- THIS IS NOT NEEDED
-  -- under all constraints, we must have
-  -- (sgn a ≃ 1 ∧ sgn b ≃ 1) ∨ (sgn a ≃ 1 ∧ sgn b ≃ 0) ∨ (sgn a ≃ 0 ∧ sgn b ≃ 0)
-  -- probably easiest to have a lemma generate the above cases
-  -- then do a match on them and evaluate below
-  -- sgn a ≃ 1 ∧ sgn b ≃ 1:
-  --   sgn (a + b) ≃ 1 b/c add_preserves_sgn
-  --   sgn a + sgn b - (sgn a) * (sgn b)^2
-  --   = 1 + 1 - 1 * 1^2
-  --   = 2 - 1
-  --   = 1 ✓
-  -- sgn a ≃ 1 ∧ sgn b ≃ 0:
-  --   sgn (a + b) = sgn (a + 0) = sgn a = 1
-  --   sgn a + sgn b - (sgn a) * (sgn b)^2
-  --   = 1 + 0 - 1 * 0^2
-  --   = 1 - 0
-  --   = 1 ✓
-  -- sgn a ≃ 0 ∧ sgn b ≃ 0:
-  --   sgn (a + b) = sgn 0 = 0
-  --   sgn a + sgn b - (sgn a) * (sgn b)^2
-  --   = 0 + 0 - 0 * 0^2
-  --   = 0 - 0
-  --   = 0 ✓
-  admit
+theorem pow_sgn_even {a : ℤ} {n : ℕ} : (sgn a)^(2 * n) ≃ (sgn a)^2 := sorry
 
-theorem sgn_sum_ordered
-    {a b : ℤ}
-    : sgn a * sgn b ≥ 0 → sgn a ≥ sgn b →
-    sgn (a + b) ≃ sgn a + sgn b - (sgn a) * (sgn b)^2
-    := by
-  -- THIS IS NOT NEEDED
-  -- (sgn a, sgn b) combos considered
-  -- (1, 1), (1, 0), (0, 0), (0, -1), (-1, -1)
-  -- we have b ≥ 0 or b < 0 → b ≤ 0
-  -- if b ≥ 0:
-  -- then immediately call sgn_sum_ordered_pos
-  -- if b < 0:
-  -- then call sgn_sum_ordered_pos where
-  -- a := -b, b := -a
-  -- sgn (-b) * sgn (-a) = -(sgn b) * -(sgn a) = -(-(sgn b * sgn a)) = sgn a * sgn b ≥ 0
-  -- sgn (-b) ≥ sgn (-a) → -sgn b ≥ -sgn a → sgn a ≥ sgn b
-  -- sgn (-a) ≥ 0 ↔ -sgn a ≥ 0 ↔ sgn a ≤ 0 ... somehow show this
-  -- oops, and then you'll have to reverse the result to match the goal
-  admit
+theorem pow_sgn_odd {a : ℤ} {n : ℕ} : (sgn a)^(2 * n + 1) ≃ sgn a := sorry
 
+/-- TODO -/
+theorem sgn_sum_pos_prod
+    {a b : ℤ} : a * b > 0 → sgn (a + b) ≃ sgn a + sgn b - (sgn a) * (sgn b)^2
+    := by
+  intro (_ : a * b > 0)
+  show sgn (a + b) ≃ sgn a + sgn b - (sgn a) * (sgn b)^2
+  let sum_formula (x y : ℤ) : ℤ := x + y - x * y^2
+  have (And.intro (_ : sgn a ≃ sgn b) _) :=
+    mul_gt_zero_iff_sgn_same.mp ‹a * b > 0›
+  have sum_same {x y : ℤ} : x ≃ y → sum_formula x y ≃ y + y - y^(2*1+1) := by
+    intro (_ : x ≃ y)
+    show sum_formula x y ≃ y + y - y^(2*1+1)
+    have : (2:ℕ) * 1 + 1 ≃ 3 := calc
+      _ = (2:ℕ) * 1 + 1 := rfl
+      _ ≃ 2 + 1         := AA.substL AA.identR
+      _ ≃ step 2        := Natural.add_one_step
+      _ ≃ 3             := Rel.symm Natural.literal_step
+    have : x * y^2 ≃ y^(2*1+1) := calc
+      _ = x * y^2    := rfl
+      _ ≃ y * y^2    := AA.substL ‹x ≃ y›
+      _ ≃ y^2 * y    := AA.comm
+      _ ≃ y^(step 2) := Rel.symm Natural.pow_step
+      _ ≃ y^3        := Natural.pow_substR (Rel.symm Natural.literal_step)
+      _ ≃ y^(2*1+1)  := Natural.pow_substR (Rel.symm ‹(2:ℕ) * 1 + 1 ≃ 3›)
+    calc
+      _ = sum_formula x y   := rfl
+      _ = x + y - x * y^2   := rfl
+      _ ≃ y + y - x * y^2   := sub_substL (AA.substL ‹x ≃ y›)
+      _ ≃ y + y - y^(2*1+1) := sub_substR ‹x * y^2 ≃ y^(2*1+1)›
+  let s := sum_formula (sgn a) (sgn b)
+  have : s ≃ sgn b := calc
+    _ = s                                   := rfl
+    _ = sgn a + sgn b - (sgn a) * (sgn b)^2 := rfl
+    _ ≃ sgn b + sgn b - (sgn b)^(2 * 1 + 1) := sum_same ‹sgn a ≃ sgn b›
+    _ ≃ sgn b + sgn b - sgn b               := sub_substR pow_sgn_odd
+    _ ≃ sgn b + (sgn b - sgn b)             := sub_assoc_addL
+    _ ≃ sgn b + 0                           := AA.substR sub_same
+    _ ≃ sgn b                               := AA.identR
+  have : sgn b ≃ s := Rel.symm ‹s ≃ sgn b›
+  have : sgn a ≃ s := Rel.trans ‹sgn a ≃ sgn b› ‹sgn b ≃ s›
+  have : sgn (a + b) ≃ s := add_preserves_sign ‹sgn a ≃ s› ‹sgn b ≃ s›
+  exact this
+
+/-- TODO -/
+theorem sgn_sum_zero_prod
+    {a b : ℤ} : a * b ≃ 0 → sgn (a + b) ≃ sgn a + sgn b - (sgn a) * (sgn b)^2
+    := by
+  intro (_ : a * b ≃ 0)
+  show sgn (a + b) ≃ sgn a + sgn b - (sgn a) * (sgn b)^2
+  have sgn_sum_zeroL {x y : ℤ} : x ≃ 0 → sgn (x + y) ≃ sgn x + sgn y := by
+    intro (_ : x ≃ 0)
+    show sgn (x + y) ≃ sgn x + sgn y
+    calc
+      _ = sgn (x + y)   := rfl
+      _ ≃ sgn (0 + y)   := sgn_subst (AA.substL ‹x ≃ 0›)
+      _ ≃ sgn y         := sgn_subst AA.identL
+      _ ≃ 0 + sgn y     := Rel.symm AA.identL
+      _ ≃ sgn x + sgn y := AA.substL (Rel.symm (sgn_zero.mp ‹x ≃ 0›))
+  have : a ≃ 0 ∨ b ≃ 0 := mul_split_zero.mp ‹a * b ≃ 0›
+  have : sgn (a + b) ≃ sgn a + sgn b :=
+    match ‹a ≃ 0 ∨ b ≃ 0› with
+    | Or.inl (_ : a ≃ 0) =>
+      sgn_sum_zeroL ‹a ≃ 0›
+    | Or.inr (_ : b ≃ 0) =>
+      calc
+        _ = sgn (a + b)   := rfl
+        _ ≃ sgn (b + a)   := sgn_subst AA.comm
+        _ ≃ sgn b + sgn a := sgn_sum_zeroL ‹b ≃ 0›
+        _ ≃ sgn a + sgn b := AA.comm
+  have : a * b^2 ≃ 0 := calc
+    _ = a * b^2        := rfl
+    _ ≃ a * b^(step 1) := AA.substR (Natural.pow_substR Natural.literal_step)
+    _ ≃ a * (b^1 * b)  := AA.substR Natural.pow_step
+    _ ≃ a * (b * b^1)  := AA.substR AA.comm
+    _ ≃ (a * b) * b^1  := Rel.symm AA.assoc
+    _ ≃ 0 * b^1        := AA.substL ‹a * b ≃ 0›
+    _ ≃ 0              := AA.absorbL
+  have : (sgn a) * (sgn b)^2 ≃ 0 := calc
+    _ = (sgn a) * (sgn b)^2   := rfl
+    _ ≃ (sgn a) * (sgn (b^2)) := AA.substR (Rel.symm sgn_pow)
+    _ ≃ sgn (a * b^2)         := Rel.symm sgn_compat_mul
+    _ ≃ sgn (0:ℤ)             := sgn_subst ‹a * b^2 ≃ 0›
+    _ ≃ 0                     := sgn_zero.mp Rel.refl
+  have zero_eqv_sgn_prod := Rel.symm ‹(sgn a) * (sgn b)^2 ≃ 0›
+  calc
+    _ = sgn (a + b)                         := rfl
+    _ ≃ sgn a + sgn b                       := ‹sgn (a + b) ≃ sgn a + sgn b›
+    _ ≃ sgn a + sgn b - 0                   := Rel.symm sub_identR
+    _ ≃ sgn a + sgn b - (sgn a) * (sgn b)^2 := sub_substR zero_eqv_sgn_prod
+
+/-- TODO -/
 theorem sgn_sum
     {a b : ℤ} : a * b ≥ 0 → sgn (a + b) ≃ sgn a + sgn b - (sgn a) * (sgn b)^2
     := by
   intro (_ : a * b ≥ 0)
   show sgn (a + b) ≃ sgn a + sgn b - (sgn a) * (sgn b)^2
   have : a * b > 0 ∨ a * b ≃ 0 := ge_split.mp ‹a * b ≥ 0›
-  match this with
+  exact match this with
   | Or.inl (_ : a * b > 0) =>
-    have (And.intro (_ : sgn a ≃ sgn b) (_ : a * b ≄ 0)) :=
-      mul_gt_zero_iff_sgn_same.mp ‹a * b > 0›
-    admit
+    sgn_sum_pos_prod ‹a * b > 0›
   | Or.inr (_ : a * b ≃ 0) =>
-    -- make a lemma showing when a ≃ 0, both sides are the same
-    -- then use lemma for sgn a case and sgn b case, swapping vars
-    admit
+    sgn_sum_zero_prod ‹a * b ≃ 0›
 
 end Lean4Axiomatic.Integer
 
