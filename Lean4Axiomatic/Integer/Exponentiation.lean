@@ -141,47 +141,6 @@ theorem pow_preserves_ge_nonneg
 
 theorem sgn_step {n : ℕ} : sgn (step n : ℤ) ≃ 1 := sorry
 
-theorem sgn_diff_pow
-    {a b : ℤ} {n : ℕ}
-    : a ≥ 0 → b ≥ 0 → sgn (a^n - b^n) ≃ sgn (a - b) * sgn (n:ℤ)
-    := by
-  intro (_ : a ≥ 0) (_ : b ≥ 0)
-  show sgn (a^n - b^n) ≃ sgn (a - b) * sgn (n:ℤ)
-  apply Natural.ind_on n
-  case zero =>
-    have : sgn (0:ℤ) ≃ 0 := sgn_zero.mp Rel.refl
-    calc
-      _ = sgn (a^0 - b^0)         := rfl
-      _ ≃ sgn (1 - b^0)           := sgn_subst (sub_substL Natural.pow_zero)
-      _ ≃ sgn ((1:ℤ) - 1)         := sgn_subst (sub_substR Natural.pow_zero)
-      _ ≃ sgn (0:ℤ)               := sgn_subst (zero_diff_iff_eqv.mpr Rel.refl)
-      _ ≃ 0                       := ‹sgn (0:ℤ) ≃ 0›
-      _ ≃ sgn (a - b) * 0         := Rel.symm AA.absorbR
-      _ ≃ sgn (a - b) * sgn (0:ℤ) := AA.substR (Rel.symm ‹sgn (0:ℤ) ≃ 0›)
-  case step =>
-    intro (m : ℕ) (ih : sgn (a^m - b^m) ≃ sgn (a - b) * sgn (m:ℤ))
-    -- m ≃ 0:
-    -- sgn (a^1 - b^1) = sgn (a - b) * 1 = sgn (a - b) * sgn (step 0)
-    -- m > 0:
-    -- ih : sgn (a^m - b^m) ≃ sgn (a - b) * sgn m = sgn (a - b)
-    -- sgn (a^m * b - b^m * b)
-    -- = sgn (a^m - b^m) * sgn b
-    -- = sgn (a - b) * sgn b
-    -- sgn (a^m * a - a^m * b) = (sgn a)^m * sgn (a - b) = sgn a * sgn (a - b)
-    -- sgn a | sgn b | sgn (a - b) | sgn a * sgn (a - b) | sgn (a - b) * sgn b
-    --   0   |   0   |     0       |         0           |           0
-    --   0   |   1   |    -1       |         0           |          -1
-    --   1   |   0   |     1       |         1           |           0
-    --   1   |   1   | sgn (a - b) |    sgn (a - b)      |     sgn (a - b)
-    calc
-      _ = sgn (a^(step m) - b^(step m)) := rfl
-      -- sgn (a^m * a - b^m * b)
-      -- sgn (a^m * a - a^m * b) = sgn (a^m) * sgn (a - b) = (sgn a)^m * sgn (a - b)
-      -- sgn (a^m * b - b^m * b) = sgn (a^m - b^m) * sgn b = sgn (a - b) * sgn (m:ℤ) * sgn b
-      _ ≃ sgn (a - b) := sorry
-      _ ≃ sgn (a - b) * 1 := Rel.symm AA.identR
-      _ ≃ sgn (a - b) * sgn (step m : ℤ) := AA.substR (Rel.symm sgn_step)
-
 theorem pow_sgn_even {a : ℤ} {n : ℕ} : (sgn a)^(2 * n) ≃ (sgn a)^2 := sorry
 
 theorem pow_sgn_odd {a : ℤ} {n : ℕ} : (sgn a)^(2 * n + 1) ≃ sgn a := sorry
@@ -289,17 +248,75 @@ theorem sgn_sum
   | Or.inr (_ : a * b ≃ 0) =>
     sgn_sum_zero_prod ‹a * b ≃ 0›
 
-end Lean4Axiomatic.Integer
+theorem sgn_diff_pow_pos
+    {a b : ℤ} {n : ℕ} : a ≥ 0 → b ≥ 0 → n > 0 → sgn (a^n - b^n) ≃ sgn (a - b)
+    := by
+  intro (_ : a ≥ 0) (_ : b ≥ 0)
+  show n > 0 → sgn (a^n - b^n) ≃ sgn (a - b)
+  apply Natural.ind_on n
+  case zero =>
+    intro (_ : (0:ℕ) > 0)
+    show sgn (a^0 - b^0) ≃ sgn (a - b)
+    admit
+  case step =>
+    intro (m : ℕ) (ih : m > 0 → sgn (a^m - b^m) ≃ sgn (a - b)) (_ : step m > 0)
+    show sgn (a^(step m) - b^(step m)) ≃ sgn (a - b)
+    have : m ≥ 0 := sorry
+    have : m > 0 ∨ m ≃ 0 := sorry
+    match this.symm with
+    | Or.inl (_ : m ≃ 0) =>
+      admit
+    | Or.inr (_ : m > 0) =>
+    -- sgn (a^(step m) - b^(step m))
+    -- = sgn (a^m * a - b^m * b)
+    -- = sgn ((a^m * a - a^m * b) + (a^m * b - b^m * b))
+    -- = sgn (a^m * (a - b) + (a^m - b^m) * b)
+    -- = sgn (a^m * (a - b)) + sgn ((a^m - b^m) * b)
+    --   - (sgn (a^m * (a - b))) * (sgn ((a^m - b^m) * b))^2
+    -- = sgn (a^m) * sgn (a - b) + sgn (a^m - b^m) * sgn b
+    --   - (sgn (a^m) * sgn (a - b)) * (sgn (a^m - b^m) * sgn b)^2
+    -- = (sgn a)^m * sgn (a - b) + sgn (a - b) * sgn b
+    --   - ((sgn a)^m * sgn (a - b)) * (sgn (a - b) * sgn b)^2
+    -- = sgn a * sgn (a - b) + sgn (a - b) * sgn b
+    --   - (sgn a * sgn (a - b)) * (sgn (a - b))^2 * (sgn b)^2
+    -- = sgn a * sgn (a - b) + sgn (a - b) * sgn b
+    --   - sgn a * (sgn b)^2 * (sgn (a - b))^3
+    -- = sgn a * sgn (a - b) + sgn (a - b) * sgn b
+    --   - sgn a * (sgn b)^2 * sgn (a - b)
+    -- = sgn (a - b) * (sgn a + sgn b - sgn a * sgn b)
+    -- = sgn (a - b) * (sgn a + sgn b - sgn a * (sgn b)^2)
+    -- = sgn (a - b) * sgn (a + b)
+    -- = sgn (a - b) * 1
+    -- = sgn (a - b) * sgn (step m)
+      admit
 
--- n > 0 → q ≥ 0 → p > q → p^n > q^n
--- {p q : ℚ} {n : ℕ} : sgn (p^n - q^n) ≃? sgn (p - q) * sgn n
--- n = 0:
--- sgn (p^0 - q^0) = sgn (1 - 1) = sgn 0 = sgn (p - q) * sgn 0 = sgn (p - q) * sgn n
--- n > 0:
--- p ≃ q:
--- sgn (p^n - q^n) = sgn 0 = sgn (p - p) * sgn n = sgn (p - q) * sgn n
--- p > q:
--- sgn (p^n - q^n) = sgn n = 1 * sgn n = sgn (p - q) * sgn n
--- p < q:
--- sgn (p^n - q^n) = -sgn (q^n - p^n) = -sgn n = 1 * -sgn n = sgn (q - p) * -sgn n
--- = -sgn (p - q) * -sgn n = sgn (p - q) * sgn n
+theorem sgn_diff_pow
+    {a b : ℤ} {n : ℕ}
+    : a ≥ 0 → b ≥ 0 → sgn (a^n - b^n) ≃ sgn (a - b) * sgn (n:ℤ)
+    := by
+  intro (_ : a ≥ 0) (_ : b ≥ 0)
+  show sgn (a^n - b^n) ≃ sgn (a - b) * sgn (n:ℤ)
+  have : n ≥ 0 := sorry
+  have : n > 0 ∨ n ≃ 0 := sorry
+  match this.symm with
+  | Or.inl (_ : n ≃ 0) =>
+    have : sgn (0:ℤ) ≃ 0 := sgn_zero.mp Rel.refl
+    calc
+      _ = sgn (a^n - b^n)         := rfl
+      _ ≃ sgn (a^0 - b^n)         := sgn_subst (sub_substL (Natural.pow_substR ‹n ≃ 0›))
+      _ ≃ sgn (a^0 - b^0)         := sgn_subst (sub_substR (Natural.pow_substR ‹n ≃ 0›))
+      _ ≃ sgn (1 - b^0)           := sgn_subst (sub_substL Natural.pow_zero)
+      _ ≃ sgn ((1:ℤ) - 1)         := sgn_subst (sub_substR Natural.pow_zero)
+      _ ≃ sgn (0:ℤ)               := sgn_subst (zero_diff_iff_eqv.mpr Rel.refl)
+      _ ≃ 0                       := ‹sgn (0:ℤ) ≃ 0›
+      _ ≃ sgn (a - b) * 0         := Rel.symm AA.absorbR
+      _ ≃ sgn (a - b) * sgn (0:ℤ) := AA.substR (Rel.symm ‹sgn (0:ℤ) ≃ 0›)
+      _ ≃ sgn (a - b) * sgn (n:ℤ) := AA.substR (sgn_subst (AA.subst₁ (Rel.symm ‹n ≃ 0›)))
+  | Or.inr (_ : n > 0) =>
+    calc
+      _ = sgn (a^n - b^n)         := rfl
+      _ ≃ sgn (a - b)             := sgn_diff_pow_pos ‹a ≥ 0› ‹b ≥ 0› ‹n > 0›
+      _ ≃ sgn (a - b) * 1         := Rel.symm AA.identR
+      _ ≃ sgn (a - b) * sgn (n:ℤ) := sorry
+
+end Lean4Axiomatic.Integer
