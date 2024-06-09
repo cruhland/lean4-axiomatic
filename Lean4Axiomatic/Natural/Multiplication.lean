@@ -508,4 +508,12 @@ theorem sqrt1 {n : ℕ} : n * n ≃ 1 ↔ n ≃ 1 := by
     have : n * n ≃ 1 := factors_eqv_1.mpr (And.intro ‹n ≃ 1› ‹n ≃ 1›)
     exact this
 
+theorem three_odd : (3:ℕ) ≃ 2 * 1 + 1 := sorry
+/-
+      _ = (2:ℕ) * 1 + 1 := rfl
+      _ ≃ 2 + 1         := AA.substL AA.identR
+      _ ≃ step 2        := Natural.add_one_step
+      _ ≃ 3             := Rel.symm Natural.literal_step
+
+-/
 end Lean4Axiomatic.Natural
