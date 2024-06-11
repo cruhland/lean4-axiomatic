@@ -274,14 +274,14 @@ theorem sgn_diff_pow_pos
         _ ≃ sgn (a^1 - b^1) := sorry
         _ ≃ sgn (a - b) := sorry
     | Or.inr (_ : m > 0) =>
-      have sum_ops_mul : (a^m * (a - b)) * ((a^m - b^m) * b) ≥ 0 := sorry
+      have ops_mul : (a^m * (a - b)) * ((a^m - b^m) * b) ≥ 0 := sorry
       have : a * b ≥ 0 := sorry
       have : sgn (a - b) ≃ 0 ∨ sgn (a + b) ≃ 1 := sorry
       let sab := sgn (a - b)
       let sam := sgn (a^m)
       let sabm := sgn (a^m - b^m)
-      let samab := sgn (a^m * (a - b))
-      let sabmb := sgn ((a^m - b^m) * b)
+      let amab := a^m * (a - b)
+      let abmb := (a^m - b^m) * b
       have expand
           : a^(step m) - b^(step m) ≃ a^m * (a - b) + (a^m - b^m) * b
           := calc
@@ -303,10 +303,10 @@ theorem sgn_diff_pow_pos
         _ ≃ (sam * (sgn b)^2) * sab           := AA.substR pow_sgn_odd
         _ ≃ sab * (sam * (sgn b)^2)           := AA.comm
       have pull_sab
-          : samab + sabmb - samab * sabmb^2
+          : sgn amab + sgn abmb - sgn amab * (sgn abmb)^2
             ≃ sab * ((sam + sgn b) - (sam * (sgn b)^2))
           := calc
-        _ = samab + sabmb - samab * sabmb^2                           := rfl
+        _ = sgn amab + sgn abmb - sgn amab * (sgn abmb)^2             := rfl
         _ ≃ sam * sab + sabm * sgn b - (sam * sab) * (sabm * sgn b)^2 := sorry
         _ ≃ sam * sab + sab * sgn b - (sam * sab) * (sab * sgn b)^2   := sorry
         _ ≃ sab * sam + sab * sgn b - (sam * sab) * (sab * sgn b)^2   := sub_substL (AA.substL AA.comm)
@@ -323,12 +323,12 @@ theorem sgn_diff_pow_pos
       have drop_sgn_sum : sgn (a - b) * sgn (a + b) ≃ sgn (a - b) :=
         mul_identR_reasons.mpr ‹sgn (a - b) ≃ 0 ∨ sgn (a + b) ≃ 1›
       calc
-        _ = sgn (a^(step m) - b^(step m))             := rfl
-        _ ≃ sgn (a^m * (a - b) + (a^m - b^m) * b)     := sgn_subst expand
-        _ ≃ samab + sabmb - samab * sabmb^2           := sgn_sum sum_ops_mul
-        _ ≃ sab * ((sam + sgn b) - (sam * (sgn b)^2)) := pull_sab
-        _ ≃ sab * sgn (a + b)                         := AA.substR reduce
-        _ ≃ sab                                       := drop_sgn_sum
+        _ = sgn (a^(step m) - b^(step m))                   := rfl
+        _ ≃ sgn (amab + abmb)                               := sgn_subst expand
+        _ ≃ sgn amab + sgn abmb - sgn amab * (sgn abmb)^2   := sgn_sum ops_mul
+        _ ≃ sgn (a-b) * ((sam + sgn b) - (sam * (sgn b)^2)) := pull_sab
+        _ ≃ sgn (a-b) * sgn (a+b)                           := AA.substR reduce
+        _ ≃ sgn (a-b)                                       := drop_sgn_sum
 
 theorem sgn_diff_pow
     {a b : ℤ} {n : ℕ}
