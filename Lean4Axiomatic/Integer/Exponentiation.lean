@@ -11,6 +11,7 @@ derived properties.
 namespace Lean4Axiomatic.Integer
 
 open Natural (step)
+open Signed (Positive)
 
 /-! ## Derived properties for exponentiation to a natural number -/
 
@@ -330,33 +331,43 @@ theorem sgn_diff_pow_pos
         _ ≃ sgn (a-b) * sgn (a+b)                           := AA.substR reduce
         _ ≃ sgn (a-b)                                       := drop_sgn_sum
 
+/-- TODO -/
 theorem sgn_diff_pow
     {a b : ℤ} {n : ℕ}
     : a ≥ 0 → b ≥ 0 → sgn (a^n - b^n) ≃ sgn (a - b) * sgn (n:ℤ)
     := by
   intro (_ : a ≥ 0) (_ : b ≥ 0)
   show sgn (a^n - b^n) ≃ sgn (a - b) * sgn (n:ℤ)
-  have : n ≥ 0 := sorry
-  have : n > 0 ∨ n ≃ 0 := sorry
+  have : n ≥ 0 := Natural.ge_zero
+  have : n > 0 ∨ n ≃ 0 := Natural.ge_split ‹n ≥ 0›
   match this.symm with
   | Or.inl (_ : n ≃ 0) =>
-    have : sgn (0:ℤ) ≃ 0 := sgn_zero.mp Rel.refl
+    have : a^n - b^n ≃ (n:ℤ) := calc
+      _ = a^n - b^n := rfl
+      _ ≃ a^0 - b^n := sub_substL (Natural.pow_substR ‹n ≃ 0›)
+      _ ≃ a^0 - b^0 := sub_substR (Natural.pow_substR ‹n ≃ 0›)
+      _ ≃ 1 - b^0   := sub_substL Natural.pow_zero
+      _ ≃ (1:ℤ) - 1 := sub_substR Natural.pow_zero
+      _ ≃ 0         := zero_diff_iff_eqv.mpr Rel.refl
+      _ ≃ (n:ℤ)     := AA.subst₁ (Rel.symm ‹n ≃ 0›)
+    have : sgn (n:ℤ) ≃ 0 := calc
+      _ = sgn (n:ℤ)     := rfl
+      _ ≃ sgn ((0:ℕ):ℤ) := sgn_subst (AA.subst₁ ‹n ≃ 0›)
+      _ ≃ 0             := sgn_zero.mp Rel.refl
     calc
       _ = sgn (a^n - b^n)         := rfl
-      _ ≃ sgn (a^0 - b^n)         := sgn_subst (sub_substL (Natural.pow_substR ‹n ≃ 0›))
-      _ ≃ sgn (a^0 - b^0)         := sgn_subst (sub_substR (Natural.pow_substR ‹n ≃ 0›))
-      _ ≃ sgn (1 - b^0)           := sgn_subst (sub_substL Natural.pow_zero)
-      _ ≃ sgn ((1:ℤ) - 1)         := sgn_subst (sub_substR Natural.pow_zero)
-      _ ≃ sgn (0:ℤ)               := sgn_subst (zero_diff_iff_eqv.mpr Rel.refl)
-      _ ≃ 0                       := ‹sgn (0:ℤ) ≃ 0›
+      _ ≃ sgn (n:ℤ)               := sgn_subst ‹a^n - b^n ≃ (n:ℤ)›
+      _ ≃ 0                       := ‹sgn (n:ℤ) ≃ 0›
       _ ≃ sgn (a - b) * 0         := Rel.symm AA.absorbR
-      _ ≃ sgn (a - b) * sgn (0:ℤ) := AA.substR (Rel.symm ‹sgn (0:ℤ) ≃ 0›)
-      _ ≃ sgn (a - b) * sgn (n:ℤ) := AA.substR (sgn_subst (AA.subst₁ (Rel.symm ‹n ≃ 0›)))
+      _ ≃ sgn (a - b) * sgn (n:ℤ) := AA.substR (Rel.symm ‹sgn (n:ℤ) ≃ 0›)
   | Or.inr (_ : n > 0) =>
+    have : Positive n := Natural.lt_zero_pos.mpr ‹n > 0›
+    have : Positive (n:ℤ) := positive_intro_nat ‹Positive n› Rel.refl
+    have : sgn (n:ℤ) ≃ 1 := sgn_positive.mp ‹Positive (n:ℤ)›
     calc
       _ = sgn (a^n - b^n)         := rfl
       _ ≃ sgn (a - b)             := sgn_diff_pow_pos ‹a ≥ 0› ‹b ≥ 0› ‹n > 0›
       _ ≃ sgn (a - b) * 1         := Rel.symm AA.identR
-      _ ≃ sgn (a - b) * sgn (n:ℤ) := sorry
+      _ ≃ sgn (a - b) * sgn (n:ℤ) := AA.substR (Rel.symm ‹sgn (n:ℤ) ≃ 1›)
 
 end Lean4Axiomatic.Integer
