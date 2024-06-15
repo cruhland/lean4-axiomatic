@@ -251,57 +251,57 @@ theorem sgn_sum
   | Or.inr (_ : a * b ≃ 0) =>
     sgn_sum_zero_prod ‹a * b ≃ 0›
 
-def sum_sub_err (x y : ℤ) : ℤ := x + y - x * y^2
+def sum_sub_err (a b : ℤ) : ℤ := a + b - a * b^2
 
 theorem sse_substL
-    {x₁ x₂ y : ℤ} : x₁ ≃ x₂ → sum_sub_err x₁ y ≃ sum_sub_err x₂ y
+    {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → sum_sub_err a₁ b ≃ sum_sub_err a₂ b
     := by
-  intro (_ : x₁ ≃ x₂)
-  show sum_sub_err x₁ y ≃ sum_sub_err x₂ y
+  intro (_ : a₁ ≃ a₂)
+  show sum_sub_err a₁ b ≃ sum_sub_err a₂ b
   calc
-    _ = sum_sub_err x₁ y  := rfl
-    _ = x₁ + y - x₁ * y^2 := rfl
-    _ ≃ x₂ + y - x₁ * y^2 := sub_substL (AA.substL ‹x₁ ≃ x₂›)
-    _ ≃ x₂ + y - x₂ * y^2 := sub_substR (AA.substL ‹x₁ ≃ x₂›)
-    _ = sum_sub_err x₂ y  := rfl
+    _ = sum_sub_err a₁ b  := rfl
+    _ = a₁ + b - a₁ * b^2 := rfl
+    _ ≃ a₂ + b - a₁ * b^2 := sub_substL (AA.substL ‹a₁ ≃ a₂›)
+    _ ≃ a₂ + b - a₂ * b^2 := sub_substR (AA.substL ‹a₁ ≃ a₂›)
+    _ = sum_sub_err a₂ b  := rfl
 
 theorem sse_substR
-    {x y₁ y₂ : ℤ} : y₁ ≃ y₂ → sum_sub_err x y₁ ≃ sum_sub_err x y₂
+    {a b₁ b₂ : ℤ} : b₁ ≃ b₂ → sum_sub_err a b₁ ≃ sum_sub_err a b₂
     := by
-  intro (_ : y₁ ≃ y₂)
-  show sum_sub_err x y₁ ≃ sum_sub_err x y₂
-  have : y₁^2 ≃ y₂^2 := Natural.pow_substL ‹y₁ ≃ y₂›
+  intro (_ : b₁ ≃ b₂)
+  show sum_sub_err a b₁ ≃ sum_sub_err a b₂
+  have : b₁^2 ≃ b₂^2 := Natural.pow_substL ‹b₁ ≃ b₂›
   calc
-    _ = sum_sub_err x y₁  := rfl
-    _ = x + y₁ - x * y₁^2 := rfl
-    _ ≃ x + y₂ - x * y₁^2 := sub_substL (AA.substR ‹y₁ ≃ y₂›)
-    _ ≃ x + y₂ - x * y₂^2 := sub_substR (AA.substR ‹y₁^2 ≃ y₂^2›)
-    _ = sum_sub_err x y₂  := rfl
+    _ = sum_sub_err a b₁  := rfl
+    _ = a + b₁ - a * b₁^2 := rfl
+    _ ≃ a + b₂ - a * b₁^2 := sub_substL (AA.substR ‹b₁ ≃ b₂›)
+    _ ≃ a + b₂ - a * b₂^2 := sub_substR (AA.substR ‹b₁^2 ≃ b₂^2›)
+    _ = sum_sub_err a b₂  := rfl
 
 theorem sse_compat_mul
-    {x y z : ℤ}
-    : x^3 ≃ x → sum_sub_err (x * y) (x * z) ≃ x * sum_sub_err y z
+    {a b c : ℤ}
+    : a^3 ≃ a → sum_sub_err (a * b) (a * c) ≃ a * sum_sub_err b c
     := by
-  intro (_ : x^3 ≃ x)
-  show sum_sub_err (x * y) (x * z) ≃ x * sum_sub_err y z
-  have : x * x^2 ≃ x := calc
-    _ = x * x^2    := rfl
-    _ ≃ x^2 * x    := AA.comm
-    _ ≃ x^(step 2) := Rel.symm Natural.pow_step
-    _ ≃ x^3        := Natural.pow_substR (Rel.symm Natural.literal_step)
-    _ ≃ x          := ‹x^3 ≃ x›
-  have pull_out_x : (x * y) * (x * z)^2 ≃ x * (y * z^2) := calc
-    _ = (x * y) * (x * z)^2   := rfl
-    _ ≃ (x * y) * (x^2 * z^2) := AA.substR Natural.pow_distribR_mul
-    _ ≃ (x * x^2) * (y * z^2) := AA.expr_xxfxxff_lr_swap_rl
-    _ ≃ x * (y * z^2)         := AA.substL ‹x * x^2 ≃ x›
+  intro (_ : a^3 ≃ a)
+  show sum_sub_err (a * b) (a * c) ≃ a * sum_sub_err b c
+  have : a * a^2 ≃ a := calc
+    _ = a * a^2    := rfl
+    _ ≃ a^2 * a    := AA.comm
+    _ ≃ a^(step 2) := Rel.symm Natural.pow_step
+    _ ≃ a^3        := Natural.pow_substR (Rel.symm Natural.literal_step)
+    _ ≃ a          := ‹a^3 ≃ a›
+  have pull_out_a : (a * b) * (a * c)^2 ≃ a * (b * c^2) := calc
+    _ = (a * b) * (a * c)^2   := rfl
+    _ ≃ (a * b) * (a^2 * c^2) := AA.substR Natural.pow_distribR_mul
+    _ ≃ (a * a^2) * (b * c^2) := AA.expr_xxfxxff_lr_swap_rl
+    _ ≃ a * (b * c^2)         := AA.substL ‹a * a^2 ≃ a›
   calc
-    _ = sum_sub_err (x * y) (x * z)         := rfl
-    _ = x * y + x * z - (x * y) * (x * z)^2 := rfl
-    _ ≃ x * (y + z) - (x * y) * (x * z)^2   := sub_substL (Rel.symm AA.distribL)
-    _ ≃ x * (y + z) - x * (y * z^2)         := sub_substR pull_out_x
-    _ ≃ x * (y + z - y * z^2)               := Rel.symm AA.distribL
-    _ = x * sum_sub_err y z                 := rfl
+    _ = sum_sub_err (a * b) (a * c)         := rfl
+    _ = a * b + a * c - (a * b) * (a * c)^2 := rfl
+    _ ≃ a * (b + c) - (a * b) * (a * c)^2   := sub_substL (Rel.symm AA.distribL)
+    _ ≃ a * (b + c) - a * (b * c^2)         := sub_substR pull_out_a
+    _ ≃ a * (b + c - b * c^2)               := Rel.symm AA.distribL
+    _ = a * sum_sub_err b c                 := rfl
 
 theorem sgn_diff_pow_pos
     {a b : ℤ} {n : ℕ} : a ≥ 0 → b ≥ 0 → n > 0 → sgn (a^n - b^n) ≃ sgn (a - b)
