@@ -281,6 +281,8 @@ instance add_cancellative_lt
   cancellativeR := AA.cancelR_from_cancelL add_cancellativeL_lt
 }
 
+theorem ge_add {a b c d : ℤ} : a ≥ b → c ≥ d → a + c ≥ b + d := sorry
+
 /--
 The `· < ·` relation is preserved when both sides are multiplied on the right
 by the same positive value.
@@ -465,6 +467,8 @@ instance trans_gt_ge_gt_inst : Trans (α := ℤ) (· > ·) (· ≥ ·) (· > ·)
 instance trans_gt_gt_gt_inst : Trans (α := ℤ) (· > ·) (· > ·) (· > ·) := {
   trans := sorry
 }
+
+theorem mul_preserves_ge_zero {a b : ℤ} : a ≥ 0 → b ≥ 0 → a * b ≥ 0 := sorry
 
 /--
 Any pair of integers can only be in one of three relations: _less than_,
@@ -747,6 +751,11 @@ theorem gt_zero_sgn {a : ℤ} : a > 0 ↔ sgn a ≃ 1 := sorry
 theorem sgn_preserves_ge_zero {a : ℤ} : a ≥ 0 ↔ sgn a ≥ 0 := sorry
 
 theorem sgn_diff_ge_zero {a b : ℤ} : a ≥ b ↔ sgn (a - b) ≥ 0 := sorry
+
+theorem sum_zero_prod_nonneg_iff_both_zero
+    {a b : ℤ} : a + b ≃ 0 ∧ a * b ≥ 0 ↔ a ≃ 0 ∧ b ≃ 0
+    := by
+  admit
 
 theorem mul_gt_zero_iff_sgn_same
     {a b : ℤ} : a * b > 0 ↔ sgn a ≃ sgn b ∧ a * b ≄ 0 := sorry

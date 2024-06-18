@@ -312,24 +312,53 @@ theorem sgn_diff_pow_pos
   case zero =>
     intro (_ : (0:ℕ) > 0)
     show sgn (a^0 - b^0) ≃ sgn (a - b)
-    have : (0:ℕ) ≯ 0 := sorry
+    have : (0:ℕ) ≯ 0 := Natural.lt_zero
     exact absurd ‹(0:ℕ) > 0› ‹(0:ℕ) ≯ 0›
   case step =>
     intro (m : ℕ) (ih : m > 0 → sgn (a^m - b^m) ≃ sgn (a - b)) (_ : step m > 0)
     show sgn (a^(step m) - b^(step m)) ≃ sgn (a - b)
-    have : m ≥ 0 := sorry
-    have : m > 0 ∨ m ≃ 0 := sorry
+    have : m ≥ 0 := Natural.ge_zero
+    have : m > 0 ∨ m ≃ 0 := Natural.ge_split ‹m ≥ 0›
     match this.symm with
     | Or.inl (_ : m ≃ 0) =>
+      have drop_pow {x : ℤ} : x^(step m) ≃ x := calc
+        _ = x^(step m) := rfl
+        _ ≃ x^(step 0) := Natural.pow_substR (AA.subst₁ ‹m ≃ 0›)
+        _ ≃ x^1        := Natural.pow_substR (Rel.symm Natural.literal_step)
+        _ ≃ x          := Natural.pow_one
       calc
         _ = sgn (a^(step m) - b^(step m)) := rfl
-        _ ≃ sgn (a^(step 0) - b^(step 0)) := sorry
-        _ ≃ sgn (a^1 - b^1) := sorry
-        _ ≃ sgn (a - b) := sorry
+        _ ≃ sgn (a - b^(step m))          := sgn_subst (sub_substL drop_pow)
+        _ ≃ sgn (a - b)                   := sgn_subst (sub_substR drop_pow)
     | Or.inr (_ : m > 0) =>
-      have ops_mul : (a^m * (a - b)) * ((a^m - b^m) * b) ≥ 0 := sorry
-      have : a * b ≥ 0 := sorry
-      have : sgn (a - b) ≃ 0 ∨ sgn (a + b) ≃ 1 := sorry
+      have : a * b ≥ 0 := mul_preserves_ge_zero ‹a ≥ 0› ‹b ≥ 0›
+      have ops_mul : (a^m * (a - b)) * ((a^m - b^m) * b) ≥ 0 :=
+        -- just show sgn ((a^m * (a - b)) * ((a^m - b^m) * b)) ≥ 0
+        -- sgn (a^m) * sgn (a - b) * sgn (a^m - b^m) * sgn b
+        -- sgn (a^m) * sgn (a - b) * sgn (a - b) * sgn b -- (by ih)
+        -- sgn a * sgn b * (sgn (a - b))^2
+        -- (0 or 1) * (0 or 1) * (0 or 1) ≥ 0 QED
+        sorry
+      have : a + b ≥ 0 := calc
+        _ = a + b := rfl
+        _ ≥ 0 + 0 := ge_add ‹a ≥ 0› ‹b ≥ 0›
+        _ ≃ 0     := AA.identL
+      have : a + b > 0 ∨ a + b ≃ 0 := ge_split.mp ‹a + b ≥ 0›
+      have : sgn (a - b) ≃ 0 ∨ sgn (a + b) ≃ 1 := match this with
+      | Or.inl (_ : a + b > 0) =>
+        have : sgn (a + b) ≃ 1 := gt_zero_sgn.mp ‹a + b > 0›
+        Or.inr ‹sgn (a + b) ≃ 1›
+      | Or.inr (_ : a + b ≃ 0) =>
+        have : a + b ≃ 0 ∧ a * b ≥ 0 := And.intro ‹a + b ≃ 0› ‹a * b ≥ 0›
+        have (And.intro (_ : a ≃ 0) (_ : b ≃ 0)) :=
+          sum_zero_prod_nonneg_iff_both_zero.mp ‹a + b ≃ 0 ∧ a * b ≥ 0›
+        have : sgn (a - b) ≃ 0 := calc
+          _ = sgn (a - b)     := rfl
+          _ ≃ sgn (0 - b)     := sgn_subst (sub_substL ‹a ≃ 0›)
+          _ ≃ sgn ((0:ℤ) - 0) := sgn_subst (sub_substR ‹b ≃ 0›)
+          _ ≃ sgn (0:ℤ)       := sgn_subst sub_same
+          _ ≃ 0               := sgn_zero.mp Rel.refl
+        Or.inl ‹sgn (a - b) ≃ 0›
       let sab := sgn (a - b)
       let sam := sgn (a^m)
       let sabm := sgn (a^m - b^m)
