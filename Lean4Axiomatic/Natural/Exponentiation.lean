@@ -385,6 +385,8 @@ theorem pow_one {x : α} [AA.Identity (1:α) (· * ·)] : x^1 ≃ x := calc
   _ ≃ 1 * x      := AA.substL pow_zero
   _ ≃ x          := AA.identL
 
+theorem pow_two {x : α} : x^2 ≃ x * x := sorry
+
 theorem pow_absorbL {n : ℕ} [AA.Identity (1:α) (· * ·)] : (1:α)^n ≃ 1 := by
   apply ind_on n
   case zero =>
