@@ -153,6 +153,8 @@ theorem sgn_absorb_pow
     := by
   admit
 
+theorem sgn_squared_ge_zero {a : ℤ} : (sgn a)^2 ≥ 0 := sorry
+
 /-- TODO -/
 theorem sgn_sum_pos_prod
     {a b : ℤ} : a * b > 0 → sgn (a + b) ≃ sgn a + sgn b - (sgn a) * (sgn b)^2
@@ -332,13 +334,7 @@ theorem sgn_diff_pow_pos
         _ ≃ sgn (a - b)                   := sgn_subst (sub_substR drop_pow)
     | Or.inr (_ : m > 0) =>
       have : a * b ≥ 0 := mul_preserves_ge_zero ‹a ≥ 0› ‹b ≥ 0›
-      have ops_mul : (a^m * (a - b)) * ((a^m - b^m) * b) ≥ 0 :=
-        -- just show sgn ((a^m * (a - b)) * ((a^m - b^m) * b)) ≥ 0
-        -- sgn (a^m) * sgn (a - b) * sgn (a^m - b^m) * sgn b
-        -- sgn (a^m) * sgn (a - b) * sgn (a - b) * sgn b -- (by ih)
-        -- sgn a * sgn b * (sgn (a - b))^2
-        -- (0 or 1) * (0 or 1) * (0 or 1) ≥ 0 QED
-        sorry
+      have : sgn (a * b) ≥ 0 := sgn_preserves_ge_zero.mp ‹a * b ≥ 0›
       have : a + b ≥ 0 := calc
         _ = a + b := rfl
         _ ≥ 0 + 0 := ge_add ‹a ≥ 0› ‹b ≥ 0›
@@ -361,7 +357,6 @@ theorem sgn_diff_pow_pos
         Or.inl ‹sgn (a - b) ≃ 0›
       let sab := sgn (a - b)
       let sam := sgn (a^m)
-      let sabm := sgn (a^m - b^m)
       let amab := a^m * (a - b)
       let abmb := (a^m - b^m) * b
       have sub_to_sum
@@ -394,13 +389,26 @@ theorem sgn_diff_pow_pos
         _ = sgn (a^m) := rfl
         _ ≃ (sgn a)^m := sgn_pow
         _ ≃ sgn a     := sgn_absorb_pow ‹a ≥ 0› ‹m > 0›
+      -- TODO: fit within margin
+      have : sgn ((a^m * (a - b)) * ((a^m - b^m) * b)) ≥ 0 := calc
+        _ = sgn ((a^m * (a - b)) * ((a^m - b^m) * b))         := rfl
+        _ ≃ sgn (a^m * (a - b)) * sgn ((a^m - b^m) * b)       := sgn_compat_mul
+        _ ≃ (sgn (a - b) * sgn (a^m)) * sgn ((a^m - b^m) * b) := AA.substL factor_sumL
+        _ ≃ (sgn (a - b) * sgn a) * sgn ((a^m - b^m) * b)     := AA.substL (AA.substR ‹sgn (a^m) ≃ sgn a›)
+        _ ≃ (sgn (a - b) * sgn a) * (sgn (a - b) * sgn b)     := AA.substR factor_sumR
+        _ ≃ (sgn (a - b) * sgn (a - b)) * (sgn a * sgn b)     := AA.expr_xxfxxff_lr_swap_rl
+        _ ≃ (sgn (a - b))^2 * (sgn a * sgn b)                 := AA.substL (Rel.symm Natural.pow_two)
+        _ ≃ (sgn (a - b))^2 * sgn (a * b)                     := AA.substR (Rel.symm sgn_compat_mul)
+        _ ≥ 0                                                 := mul_preserves_ge_zero sgn_squared_ge_zero ‹sgn (a * b) ≥ 0›
+      have terms_prod_nonneg : (a^m * (a - b)) * ((a^m - b^m) * b) ≥ 0 :=
+        sgn_preserves_ge_zero.mpr this
       have reduce : sum_sub_err (sgn (a^m)) (sgn b) ≃ sgn (a + b) := calc
         _ = sum_sub_err (sgn (a^m)) (sgn b) := rfl
         _ ≃ sum_sub_err (sgn a) (sgn b)     := sse_substL ‹sgn (a^m) ≃ sgn a›
         _ ≃ sgn (a + b)                     := Rel.symm (sgn_sum ‹a * b ≥ 0›)
       have factor_sgn_sum : sgn (amab + abmb) ≃ sgn (a-b) * sgn (a+b) := calc
         _ = sgn (amab + abmb)                     := rfl
-        _ ≃ sum_sub_err (sgn amab) (sgn abmb)     := sgn_sum ops_mul
+        _ ≃ sum_sub_err (sgn amab) (sgn abmb)     := sgn_sum terms_prod_nonneg
         _ ≃ sum_sub_err (sab * sam) (sgn abmb)    := sse_substL factor_sumL
         _ ≃ sum_sub_err (sab * sam) (sab * sgn b) := sse_substR factor_sumR
         _ ≃ sab * sum_sub_err sam (sgn b)         := sse_compat_mul sgn_cubed
