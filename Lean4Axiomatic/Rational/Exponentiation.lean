@@ -838,6 +838,28 @@ theorem pow_preserves_pos_base
   have : p^a > 0 := gt_zero_sgn.mpr this
   exact this
 
+theorem sgn_diff_pow_pos
+    {p q : ℚ} {n : ℕ} : p ≥ 0 → q ≥ 0 → n > 0 → sgn (p^n - q^n) ≃ sgn (p - q)
+    := by
+  admit
+
+theorem sgn_diff_pow
+    {p q : ℚ} {a : ℤ} [p_pos : AP (p > 0)] [q_pos : AP (q > 0)]
+    : sgn (p^a - q^a) ≃ sgn (p - q) * sgn a
+    := by
+  have (Exists.intro (n : ℕ) (And.intro (_ : n > 0) (_ : a ≃ n * sgn a))) :=
+    sorry
+  have : AA.OneOfThree₁ (sgn a ≃ 0) (sgn a ≃ 1) (sgn a ≃ -1) :=
+    Integer.sgn_trichotomy a
+  match ‹AA.OneOfThree₁ (sgn a ≃ 0) (sgn a ≃ 1) (sgn a ≃ -1)› with
+  | AA.OneOfThree₁.first (_ : sgn a ≃ 0) =>
+    admit
+  | AA.OneOfThree₁.second (_ : sgn a ≃ 1) =>
+    admit
+  | AA.OneOfThree₁.third (_ : sgn a ≃ -1) =>
+    admit
+
+/-
 /-- TODO -/
 theorem pow_determines_order
     {p q : ℚ} {a : ℤ} (p_gt_q : p > q) (q_pos : q > 0)
@@ -899,5 +921,5 @@ theorem pow_determines_order
       _ ≃ -sgn (p^n - q^n)        := sgn_compat_neg
       _ ≃ -1                      := AA.subst₁ (gt_sgn.mp ‹p^n > q^n›)
       _ ≃ sgn a                   := Rel.symm ‹sgn a ≃ -1›
-
+-/
 end Lean4Axiomatic.Rational
