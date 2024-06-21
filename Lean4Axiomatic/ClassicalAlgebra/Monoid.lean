@@ -1,5 +1,3 @@
-import Lean4Axiomatic.AbstractAlgebra.Commutative
-import Lean4Axiomatic.AbstractAlgebra.Core
 import Lean4Axiomatic.AbstractAlgebra.Substitutive
 
 namespace Lean4Axiomatic.CA

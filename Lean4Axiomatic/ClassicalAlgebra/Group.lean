@@ -1,13 +1,9 @@
-import Lean4Axiomatic.AbstractAlgebra.Commutative
-import Lean4Axiomatic.AbstractAlgebra.Core
 import Lean4Axiomatic.AbstractAlgebra.Substitutive
 import Lean4Axiomatic.ClassicalAlgebra.Monoid
 
 namespace Lean4Axiomatic.CA
 
 open Relation.Equivalence (EqvOp)
-
-
 /-!
 A formalization of Group using multiplicative notation.
 -/
@@ -26,8 +22,8 @@ local instance group_mul_op_inst {α : Type} [EqvOp α] [Group.Ops α] : Mul α 
 }
 
 class Group.Props (α : Type) [EqvOp α] [Ops α] where
-  substL {x y z : α} : x ≃ y → f x z ≃ f y z
-  substR {x y z : α} : x ≃ y → f z x ≃ f z y
+  substL {x y z : α} : x ≃ y → x * z ≃ y * z
+  substR {x y z : α} : x ≃ y → z * x ≃ z * y
   assoc {x y z : α} : (x * y) * z ≃ x * (y * z)
   identityL {x : α} : e * x ≃ x
   identityR {x : α} : x * e ≃ x
@@ -57,11 +53,11 @@ instance group_subst_inst : AA.Substitutive₂ (α := α) (f) AA.tc (· ≃ ·) 
     substitutiveR := { subst₂ := λ (_ : True) => substR }
   }
 
-def group_mul_identity_unique {x : α} (x_is_identity : ((y : α) → (x * y) ≃ y)) :
-    x ≃ e :=
+def group_mul_identity_unique {x : α}
+    (x_is_left_identity : ((y : α) → (x * y) ≃ y)) : x ≃ e :=
   calc
     x    ≃   _ := Rel.symm identityR
-    x * e ≃  _ := ‹(y : α) → (x * y) ≃ y› e
+    x * e ≃  _ := x_is_left_identity e
     e ≃      _ := Rel.refl
 
 def group_cancellationR (x y z : α) : (x * y ≃ x * z) → y ≃ z := λ _ =>
@@ -86,9 +82,9 @@ Demonstrates that any group is also a monoid.
 instance monoid_from_group : CA.Monoid (α := α) := {
   toOps := monoid_from_group_ops
   toProps := {
-    substL   := g.toProps.substL
-    substR   := g.toProps.substR
-    assoc    := g.toProps.assoc
+    substL    := g.toProps.substL
+    substR    := g.toProps.substR
+    assoc     := g.toProps.assoc
     identityL := g.toProps.identityL
     identityR := g.toProps.identityR
   }
