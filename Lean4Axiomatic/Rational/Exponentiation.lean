@@ -906,11 +906,29 @@ theorem sgn_diff_pow
       _ ≃ sgn (p - q) * -1        := AA.comm
       _ ≃ sgn (p - q) * sgn a     := AA.substR (Rel.symm ‹sgn a ≃ -1›)
 
+/-- TODO -/
 theorem pow_pos_preserves_ge_pos
     {p q : ℚ} {a : ℤ} (q_pos : q > 0) (a_pos : a > 0) (p_ge_q : p ≥ q)
     : have : AP (q > 0) := AP.mk ‹q > 0›
       have : AP (p > 0) := AP.mk (trans ‹p ≥ q› ‹q > 0›)
       p^a ≥ q^a
+    := by
+  have : AP (q > 0) := AP.mk ‹q > 0›
+  have : AP (p > 0) := AP.mk (trans ‹p ≥ q› ‹q > 0›)
+  have : sgn (p^a - q^a) ≥ 0 := calc
+    _ = sgn (p^a - q^a)     := rfl
+    _ ≃ sgn (p - q) * sgn a := sgn_diff_pow
+    _ ≃ sgn (p - q) * 1     := AA.substR (Integer.gt_zero_sgn.mp ‹a > 0›)
+    _ ≃ sgn (p - q)         := AA.identR
+    _ ≥ 0                   := ge_sgn_ge_zero.mp ‹p ≥ q›
+  have : p^a ≥ q^a := ge_sgn_ge_zero.mpr ‹sgn (p^a - q^a) ≥ 0›
+  exact this
+
+theorem pow_neg_reverses_ge_pos
+    {p q : ℚ} {a : ℤ} (q_pos : q > 0) (a_neg : a < 0) (p_ge_q : p ≥ q)
+    : have : AP (q > 0) := AP.mk ‹q > 0›
+      have : AP (p > 0) := AP.mk (trans ‹p ≥ q› ‹q > 0›)
+      p^a ≤ q^a
     := by
   admit
 

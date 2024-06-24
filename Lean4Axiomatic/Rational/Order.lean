@@ -1551,4 +1551,6 @@ theorem le_diff_upper {ε p q : ℚ} : q - p ≤ ε ↔ q ≤ p + ε := by
 
 theorem sgn_preserves_ge_zero {p : ℚ} : p ≥ 0 ↔ sgn p ≥ 0 := sorry
 
+theorem ge_sgn_ge_zero {p q : ℚ} : p ≥ q ↔ sgn (p - q) ≥ 0 := sorry
+
 end Lean4Axiomatic.Rational
