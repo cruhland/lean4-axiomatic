@@ -53,13 +53,6 @@ instance group_subst_inst : AA.Substitutive₂ (α := α) (f) AA.tc (· ≃ ·) 
     substitutiveR := { subst₂ := λ (_ : True) => substR }
   }
 
-def group_mul_identity_unique {x : α}
-    (x_is_left_identity : ((y : α) → (x * y) ≃ y)) : x ≃ e :=
-  calc
-    x    ≃   _ := Rel.symm identityR
-    x * e ≃  _ := x_is_left_identity e
-    e ≃      _ := Rel.refl
-
 def group_cancellationR (x y z : α) : (x * y ≃ x * z) → y ≃ z := λ _ =>
   show y ≃ z from calc
     y     ≃                 _ := Rel.symm identityL
@@ -89,3 +82,10 @@ instance monoid_from_group : CA.Monoid (α := α) := {
     identityR := g.toProps.identityR
   }
 }
+
+def group_mul_identity_unique {x : α}
+    (x_is_left_identity : ((y : α) → (x * y) ≃ y)) : x ≃ e :=
+  calc
+    x    ≃   _ := Rel.symm g.toProps.identityR
+    x * g.toOps.e ≃  _ := x_is_left_identity g.toOps.e
+    g.toOps.e ≃      _ := Rel.refl

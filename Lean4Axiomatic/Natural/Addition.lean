@@ -300,8 +300,8 @@ that fact to prove something.
 -/
 
 local instance add_monoid_ops :  CA.Monoid.Ops ℕ := {
-  f := (· + ·)
-  e := 0
+  binop := (· + ·)
+  ident := 0
 }
 
 def subst_addR {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m + n₁ ≃ m + n₂ := AA.substR
@@ -309,18 +309,18 @@ def subst_addR {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m + n₁ ≃ m + n₂ := 
 def add_monoid_props : CA.Monoid.Props ℕ := {
   substL   := subst_add
   substR   := subst_addR
-  assoc     := add_associative.assoc
-  identityL := add_identity.identityL.ident
-  identityR := add_identity.identityR.ident
+  assoc    := add_associative.assoc
+  identL := add_identity.identityL.ident
+  identR := add_identity.identityR.ident
 }
 
-instance add_monoid : CA.Monoid (α := ℕ) := {
+instance add_monoid : CA.Monoid.Monoid (α := ℕ) := {
   toOps   := add_monoid_ops
   toProps := add_monoid_props
 }
 
 example : (x : ℕ) → ((y : ℕ) → (x + y ≃ y)) → x ≃ 0 := by
   intro x x_ident_prop
-  exact CA.mul_identity_unique x_ident_prop
+  exact CA.Monoid.mul_identity_unique x_ident_prop
 
 end Lean4Axiomatic.Natural

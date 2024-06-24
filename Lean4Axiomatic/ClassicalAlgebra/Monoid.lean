@@ -1,6 +1,6 @@
 import Lean4Axiomatic.AbstractAlgebra.Substitutive
 
-namespace Lean4Axiomatic.CA
+namespace Lean4Axiomatic.CA.Monoid
 
 open Relation.Equivalence (EqvOp)
 
@@ -17,23 +17,27 @@ operator is a monoid.
 
 /-! ### Definitions -/
 
-class Monoid.Ops (α : Type) [EqvOp α] where
-  f : α → α → α
-  e : α
-export Monoid.Ops (f e)
+/--
+Operations for Monoid, namely the binary operation and identity element.
+-/
+class Ops (α : Type) :=
+  binop : α → α → α
+  ident : α
+export Ops (ident)
 
 /-- Enables the use of the `· * ·` operator for f (the monoid operation). -/
-local instance monoid_mul_op_inst {α : Type} [EqvOp α] [Monoid.Ops α] : Mul α := {
-  mul := f
+local instance monoid_mul_op_inst {α : Type} [Monoid.Ops α] : Mul α := {
+  mul := Monoid.Ops.binop
 }
 
-class Monoid.Props (α : Type) [EqvOp α] [Ops α] where
+/-- Properties of rational number multiplication. -/
+class Props (α : Type) [EqvOp α] [Ops α] :=
   substL {x y z : α} : x ≃ y → x * z ≃ y * z
   substR {x y z : α} : x ≃ y → z * x ≃ z * y
   assoc {x y z : α} : (x * y) * z ≃ x * (y * z)
-  identityL {x : α} : e * x ≃ x
-  identityR {x : α} : x * e ≃ x
-export Monoid.Props (substL substR assoc identityL identityR)
+  identL {x : α} : ident* x ≃ x
+  identR {x : α} : x * ident ≃ x
+export Props (substL substR assoc identL identR)
 
 class Monoid (α : Type) [EqvOp α] where
   toOps : Monoid.Ops α
@@ -47,17 +51,33 @@ attribute [instance] Monoid.toProps
 variable {α : Type} [EqvOp α] [m : Monoid α]
 
 /-- Enables the use of `AA.substL`, `AA.substR`, etc. -/
-instance monoid_subst_inst : AA.Substitutive₂ (α := α) (f) AA.tc (· ≃ ·) (· ≃ ·) := {
+instance monoid_subst_inst
+    : AA.Substitutive₂ (α := α) (· * ·) AA.tc (· ≃ ·) (· ≃ ·)
+    := {
   substitutiveL := { subst₂ := λ (_ : True) => substL }
   substitutiveR := { subst₂ := λ (_ : True) => substR }
 }
 
-/-- There is only one element, namely the identity e, such that e * x ≃ e
-for all elements x. -/
-def mul_identity_unique
-    {x : α} (x_is_left_identity : ((y : α) → (x * y) ≃ y)) :
-    x ≃ e :=
-  calc
-    x    ≃   _ := Rel.symm identityR
-    x * e ≃  _ := x_is_left_identity e
-    e ≃      _ := Rel.refl
+/--
+Intuition: There is only one element, namely the identity ident, such that
+  ident * y ≃ ident for all elements y.
+
+Technical note: when we say one element, we don't mean uniqueness in the
+underlying type α, as α could use a representation where many elements
+are equivalent to ident under the ≃ relation. For example, α could a type
+representing rational numbers as ratios of integers where
+ident = 0 / 0 = 0 / 1, etc...
+
+What we show is that elements x satisfying the x_is_left_ident are equivalent
+to ident.
+More formally, the quotient class α/≃ has only one element whose members
+satisfy the identity condition.
+
+From the perspective of the monoid and matching intuition, all elements that
+are equivalent are treated the same.
+-/
+theorem mul_identity_unique
+    {x : α} (x_is_left_ident : ((y : α) → (x * y) ≃ y)) : x ≃ ident := calc
+    x    ≃   _ := Rel.symm identR
+    x * ident ≃  _ := x_is_left_ident ident
+    ident ≃      _ := Rel.refl
