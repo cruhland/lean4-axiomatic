@@ -1806,4 +1806,6 @@ theorem sgn_two_eqv_one : sgn (2:ℤ) ≃ 1 := by
     _ ≃ sgn (1 + 1 : ℤ) := sgn_subst (Rel.symm add_one_one)
     _ ≃ 1               := add_preserves_sign ‹sgn (1:ℤ) ≃ 1› ‹sgn (1:ℤ) ≃ 1›
 
+theorem as_size_with_sign (a : ℤ) : ∃ (n : ℕ), n > 0 ∧ a ≃ n * sgn a := sorry
+
 end Lean4Axiomatic.Integer

@@ -666,6 +666,8 @@ theorem pow_neg {p : ℚ} {n : ℕ} [AP (p ≄ 0)] : p^(-(n:ℤ)) ≃ 1 / p^n :=
   _ ≃ p^(0:ℕ) / p^n := pow_diff
   _ ≃ 1 / p^n       := div_substL Natural.pow_zero
 
+theorem pow_neg_one {p : ℚ} [AP (p ≄ 0)] : p^(-1:ℤ) ≃ p⁻¹ := sorry
+
 /--
 Integer exponents add when powers of the same rational number are multiplied.
 
@@ -841,85 +843,75 @@ theorem pow_preserves_pos_base
 theorem sgn_diff_pow_pos
     {p q : ℚ} {n : ℕ} : p ≥ 0 → q ≥ 0 → n > 0 → sgn (p^n - q^n) ≃ sgn (p - q)
     := by
+  -- TODO: I think you've already proved a lot of this above?
   admit
 
+/-- TODO -/
 theorem sgn_diff_pow
     {p q : ℚ} {a : ℤ} [p_pos : AP (p > 0)] [q_pos : AP (q > 0)]
     : sgn (p^a - q^a) ≃ sgn (p - q) * sgn a
     := by
+  have : p ≥ 0 := ge_cases.mpr (Or.inl ‹AP (p > 0)›.ev)
+  have : q ≥ 0 := ge_cases.mpr (Or.inl ‹AP (q > 0)›.ev)
   have (Exists.intro (n : ℕ) (And.intro (_ : n > 0) (_ : a ≃ n * sgn a))) :=
-    sorry
+    Integer.as_size_with_sign a
   have : AA.OneOfThree₁ (sgn a ≃ 0) (sgn a ≃ 1) (sgn a ≃ -1) :=
     Integer.sgn_trichotomy a
   match ‹AA.OneOfThree₁ (sgn a ≃ 0) (sgn a ≃ 1) (sgn a ≃ -1)› with
   | AA.OneOfThree₁.first (_ : sgn a ≃ 0) =>
-    admit
-  | AA.OneOfThree₁.second (_ : sgn a ≃ 1) =>
-    admit
-  | AA.OneOfThree₁.third (_ : sgn a ≃ -1) =>
-    admit
-
-/-
-/-- TODO -/
-theorem pow_determines_order
-    {p q : ℚ} {a : ℤ} (p_gt_q : p > q) (q_pos : q > 0)
-    : have : AP (p > 0) := AP.mk (gt_trans ‹p > q› ‹q > 0›)
-      have : AP (q > 0) := AP.mk ‹q > 0›
-      sgn (p^a - q^a) ≃ sgn a
-    := by
-  have : AP (p > 0) := AP.mk (gt_trans ‹p > q› ‹q > 0›)
-  have : AP (q > 0) := AP.mk ‹q > 0›
-
-  have : AA.OneOfThree₁ (sgn a ≃ 0) (sgn a ≃ 1) (sgn a ≃ -1) :=
-    Integer.sgn_trichotomy a
-  match this with
-  | AA.OneOfThree₁.first (_ : sgn a ≃ 0) =>
-    have a_pow_reduce {x : ℚ} [AP (x > 0)] : x^a ≃ 1 := calc
+    have pow_a_simp {x : ℚ} [AP (x ≄ 0)] : x^a ≃ 1 := calc
       _ = x^a     := rfl
       _ ≃ x^(0:ℤ) := pow_substR (Integer.sgn_zero.mpr ‹sgn a ≃ 0›)
       _ ≃ x^(0:ℕ) := pow_nonneg
       _ ≃ 1       := Natural.pow_zero
-    have : p^a - q^a ≃ 0 := calc
-      _ = p^a - q^a := rfl
-      _ ≃ 1 - q^a   := sub_substL a_pow_reduce
-      _ ≃ (1:ℚ) - 1 := sub_substR a_pow_reduce
-      _ ≃ 0         := sub_eqv_zero_iff_eqv.mpr eqv_refl
     calc
-      _ = sgn (p^a - q^a) := rfl
-      _ ≃ sgn (0:ℚ)       := sgn_subst ‹p^a - q^a ≃ 0›
-      _ ≃ sgn (0:ℤ)       := sgn_from_integer
-      _ ≃ 0               := Integer.sgn_zero.mp Rel.refl
-      _ ≃ sgn a           := Rel.symm ‹sgn a ≃ 0›
+      _ = sgn (p^a - q^a)     := rfl
+      _ ≃ sgn (1 - q^a)       := sgn_subst (sub_substL pow_a_simp)
+      _ ≃ sgn ((1:ℚ) - 1)     := sgn_subst (sub_substR pow_a_simp)
+      _ ≃ sgn (0:ℚ)           := sgn_subst (sub_eqv_zero_iff_eqv.mpr eqv_refl)
+      _ ≃ 0                   := sgn_zero.mp eqv_refl
+      _ ≃ sgn (p - q) * 0     := Rel.symm AA.absorbR
+      _ ≃ sgn (p - q) * sgn a := AA.substR (Rel.symm ‹sgn a ≃ 0›)
   | AA.OneOfThree₁.second (_ : sgn a ≃ 1) =>
-    have : Positive a := Integer.sgn_positive.mpr ‹sgn a ≃ 1›
-    have (Exists.intro (n : ℕ) (And.intro (_ : Positive n) (_ : a ≃ (n:ℤ)))) :=
-      Integer.positive_elim_nat ‹Positive a›
-    have : n > 0 := Natural.lt_zero_pos.mp ‹Positive n›
-    have : q ≥ 0 := ge_cases.mpr (Or.inl ‹q > 0›)
-    have : p^n > q^n := pow_pos_preserves_gt_nonneg ‹n > 0› ‹q ≥ 0› ‹p > q›
-    have : p^a - q^a ≃ p^n - q^n := calc
-      _ = p^a - q^a     := rfl
-      _ ≃ p^(n:ℤ) - q^a := sub_substL (pow_substR ‹a ≃ (n:ℤ)›)
-      _ ≃ p^n - q^a     := sub_substL pow_nonneg
-      _ ≃ p^n - q^(n:ℤ) := sub_substR (pow_substR ‹a ≃ (n:ℤ)›)
-      _ ≃ p^n - q^n     := sub_substR pow_nonneg
+    have pow_a_simp {x : ℚ} [AP (x ≄ 0)] : x^a ≃ x^n := calc
+      _ = x^a               := rfl
+      _ ≃ x^((n:ℤ) * sgn a) := pow_substR ‹a ≃ n * sgn a›
+      _ ≃ x^((n:ℤ) * 1)     := pow_substR (AA.substR ‹sgn a ≃ 1›)
+      _ ≃ x^(n:ℤ)           := pow_substR AA.identR
+      _ ≃ x^n               := pow_nonneg
     calc
-      _ = sgn (p^a - q^a) := rfl
-      _ ≃ sgn (p^n - q^n) := sgn_subst ‹p^a - q^a ≃ p^n - q^n›
-      _ ≃ 1               := gt_sgn.mp ‹p^n > q^n›
-      _ ≃ sgn a           := Rel.symm ‹sgn a ≃ 1›
+      _ = sgn (p^a - q^a)     := rfl
+      _ ≃ sgn (p^n - q^a)     := sgn_subst (sub_substL pow_a_simp)
+      _ ≃ sgn (p^n - q^n)     := sgn_subst (sub_substR pow_a_simp)
+      _ ≃ sgn (p - q)         := sgn_diff_pow_pos ‹p ≥ 0› ‹q ≥ 0› ‹n > 0›
+      _ ≃ sgn (p - q) * 1     := Rel.symm AA.identR
+      _ ≃ sgn (p - q) * sgn a := AA.substR (Rel.symm ‹sgn a ≃ 1›)
   | AA.OneOfThree₁.third (_ : sgn a ≃ -1) =>
-    let n : ℕ := sorry
-    have pow_expand {x : ℚ} [AP (x ≄ 0)] : x^a ≃ (x^n)⁻¹ := sorry
-    have : p^n > q^n := sorry
+    have pow_a_simp {x : ℚ} [AP (x ≄ 0)] : x^a ≃ (x^n)⁻¹ := calc
+      _ = x^a               := rfl
+      _ ≃ x^((n:ℤ) * sgn a) := pow_substR ‹a ≃ n * sgn a›
+      _ ≃ x^((n:ℤ) * -1)    := pow_substR (AA.substR ‹sgn a ≃ -1›)
+      _ ≃ (x^(n:ℤ))^(-1:ℤ)  := eqv_symm pow_flatten
+      _ ≃ (x^(n:ℤ))⁻¹       := pow_neg_one
+      _ ≃ (x^n)⁻¹           := recip_subst pow_nonneg
     calc
       _ = sgn (p^a - q^a)         := rfl
-      _ ≃ sgn ((p^n)⁻¹ - q^a)     := sgn_subst (sub_substL pow_expand)
-      _ ≃ sgn ((p^n)⁻¹ - (q^n)⁻¹) := sgn_subst (sub_substR pow_expand)
+      _ ≃ sgn ((p^n)⁻¹ - q^a)     := sgn_subst (sub_substL pow_a_simp)
+      _ ≃ sgn ((p^n)⁻¹ - (q^n)⁻¹) := sgn_subst (sub_substR pow_a_simp)
       _ ≃ sgn (q^n - p^n)         := sgn_sub_recip
-      _ ≃ sgn (-(p^n - q^n))      := sgn_subst (eqv_symm neg_sub)
-      _ ≃ -sgn (p^n - q^n)        := sgn_compat_neg
-      _ ≃ -1                      := AA.subst₁ (gt_sgn.mp ‹p^n > q^n›)
-      _ ≃ sgn a                   := Rel.symm ‹sgn a ≃ -1›
--/
+      _ ≃ sgn (q - p)             := sgn_diff_pow_pos ‹q ≥ 0› ‹p ≥ 0› ‹n > 0›
+      _ ≃ sgn (-(p - q))          := sgn_subst (eqv_symm neg_sub)
+      _ ≃ -sgn (p - q)            := sgn_compat_neg
+      _ ≃ -1 * sgn (p - q)        := Rel.symm Integer.mul_neg_one
+      _ ≃ sgn (p - q) * -1        := AA.comm
+      _ ≃ sgn (p - q) * sgn a     := AA.substR (Rel.symm ‹sgn a ≃ -1›)
+
+theorem pow_pos_preserves_ge_pos
+    {p q : ℚ} {a : ℤ} (q_pos : q > 0) (a_pos : a > 0) (p_ge_q : p ≥ q)
+    : have : AP (q > 0) := AP.mk ‹q > 0›
+      have : AP (p > 0) := AP.mk (trans ‹p ≥ q› ‹q > 0›)
+      p^a ≥ q^a
+    := by
+  admit
+
 end Lean4Axiomatic.Rational
