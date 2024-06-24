@@ -39,7 +39,7 @@ class Props (α : Type) [EqvOp α] [Ops α] :=
   identR {x : α} : x * ident ≃ x
 export Props (substL substR assoc identL identR)
 
-class Monoid (α : Type) [EqvOp α] where
+class Monoid (α : Type) [EqvOp α] :=
   toOps : Monoid.Ops α
   toProps : Monoid.Props α
 
