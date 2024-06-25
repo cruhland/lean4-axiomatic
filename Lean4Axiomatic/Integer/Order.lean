@@ -748,6 +748,8 @@ theorem gt_sgn {a b : ℤ} : a > b ↔ sgn (a - b) ≃ 1 := by
 
 theorem gt_zero_sgn {a : ℤ} : a > 0 ↔ sgn a ≃ 1 := sorry
 
+theorem lt_zero_sgn {a : ℤ} : a < 0 ↔ sgn a ≃ -1 := sorry
+
 theorem sgn_preserves_ge_zero {a : ℤ} : a ≥ 0 ↔ sgn a ≥ 0 := sorry
 
 theorem sgn_diff_ge_zero {a b : ℤ} : a ≥ b ↔ sgn (a - b) ≥ 0 := sorry

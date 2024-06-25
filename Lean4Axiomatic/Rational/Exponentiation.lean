@@ -924,12 +924,25 @@ theorem pow_pos_preserves_ge_pos
   have : p^a ≥ q^a := ge_sgn_ge_zero.mpr ‹sgn (p^a - q^a) ≥ 0›
   exact this
 
+/-- TODO -/
 theorem pow_neg_reverses_ge_pos
     {p q : ℚ} {a : ℤ} (q_pos : q > 0) (a_neg : a < 0) (p_ge_q : p ≥ q)
     : have : AP (q > 0) := AP.mk ‹q > 0›
       have : AP (p > 0) := AP.mk (trans ‹p ≥ q› ‹q > 0›)
       p^a ≤ q^a
     := by
-  admit
+  have : AP (q > 0) := AP.mk ‹q > 0›
+  have : AP (p > 0) := AP.mk (trans ‹p ≥ q› ‹q > 0›)
+  have : sgn (q^a - p^a) ≥ 0 := calc
+    _ = sgn (q^a - p^a)     := rfl
+    _ ≃ sgn (q - p) * sgn a := sgn_diff_pow
+    _ ≃ sgn (q - p) * -1    := AA.substR (Integer.lt_zero_sgn.mp ‹a < 0›)
+    _ ≃ -1 * sgn (q - p)    := AA.comm
+    _ ≃ -sgn (q - p)        := Integer.mul_neg_one
+    _ ≃ sgn (-(q - p))      := Rel.symm sgn_compat_neg
+    _ ≃ sgn (p - q)         := sgn_subst neg_sub
+    _ ≥ 0                   := ge_sgn_ge_zero.mp ‹p ≥ q›
+  have : p^a ≤ q^a := ge_sgn_ge_zero.mpr ‹sgn (q^a - p^a) ≥ 0›
+  exact this
 
 end Lean4Axiomatic.Rational
