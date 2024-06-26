@@ -100,7 +100,7 @@ instance monoid_from_group : CA.Monoid.Monoid (α := α) := {
 
 /--
   There is only one element, namely the identity ident, such that
-  ident * y ≃ ident for all elements y.  The proof follow from fact that
+  ident * y ≃ ident for all elements y.  The proof follows from fact that
   Groups are Monoids aned the result holds for Monoids.
 -/
 theorem mul_identity_unique
