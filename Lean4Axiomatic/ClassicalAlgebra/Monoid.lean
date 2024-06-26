@@ -30,12 +30,12 @@ local instance monoid_mul_op_inst {α : Type} [Monoid.Ops α] : Mul α := {
   mul := Monoid.Ops.binop
 }
 
-/-- Properties of rational number multiplication. -/
+/-- Properties of Monoid. -/
 class Props (α : Type) [EqvOp α] [Ops α] :=
   substL {x y z : α} : x ≃ y → x * z ≃ y * z
   substR {x y z : α} : x ≃ y → z * x ≃ z * y
   assoc {x y z : α} : (x * y) * z ≃ x * (y * z)
-  identL {x : α} : ident* x ≃ x
+  identL {x : α} : ident * x ≃ x
   identR {x : α} : x * ident ≃ x
 export Props (substL substR assoc identL identR)
 
@@ -45,6 +45,7 @@ class Monoid (α : Type) [EqvOp α] :=
 
 attribute [instance] Monoid.toOps
 attribute [instance] Monoid.toProps
+
 
 /-! ### Properties -/
 
@@ -78,6 +79,6 @@ are equivalent are treated the same.
 -/
 theorem mul_identity_unique
     {x : α} (x_is_left_ident : ((y : α) → (x * y) ≃ y)) : x ≃ ident := calc
-    x    ≃   _ := Rel.symm identR
-    x * ident ≃  _ := x_is_left_ident ident
-    ident ≃      _ := Rel.refl
+  _ = x     := rfl
+  _ ≃ x * ident := Rel.symm identR
+  _ ≃ ident     := x_is_left_ident ident

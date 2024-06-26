@@ -1,41 +1,49 @@
 import Lean4Axiomatic.AbstractAlgebra.Substitutive
 import Lean4Axiomatic.ClassicalAlgebra.Monoid
 
-namespace Lean4Axiomatic.CA
+namespace Lean4Axiomatic.CA.Group
 
 open Relation.Equivalence (EqvOp)
+
+
 /-!
 A formalization of Group using multiplicative notation.
 -/
 
 /-! ### Definitions -/
 
-class Group.Ops (α : Type) [EqvOp α] where
-  f : α → α → α
-  e : α
+/--
+Operations for Group, namely the binary operation, identity element, and
+existence of inverses.
+-/
+class Ops (α : Type) :=
+  binop : α → α → α
+  ident : α
+  inverse : (x : α) → α
 
-export Group.Ops (f e)
+export Ops (ident inverse)
 
 /-- Enables the use of the `· * ·` operator for f (the monoid operation). -/
-local instance group_mul_op_inst {α : Type} [EqvOp α] [Group.Ops α] : Mul α := {
-  mul := f
+local instance group_mul_op_inst {α : Type} [Ops α] : Mul α := {
+  mul := Group.Ops.binop
 }
 
-class Group.Props (α : Type) [EqvOp α] [Ops α] where
+/-- Properties of Group. -/
+class Props (α : Type) [EqvOp α] [Ops α] :=
   substL {x y z : α} : x ≃ y → x * z ≃ y * z
   substR {x y z : α} : x ≃ y → z * x ≃ z * y
   assoc {x y z : α} : (x * y) * z ≃ x * (y * z)
-  identityL {x : α} : e * x ≃ x
-  identityR {x : α} : x * e ≃ x
-  inverse : (x : α) → α
-  inverse_propL (x : α) : (inverse x) * x ≃ e
-  inverse_propR (x : α) : x * (inverse x) ≃ e
+  identL {x : α} : ident * x ≃ x
+  identR {x : α} : x * ident ≃ x
+  inverse_propL (x : α) : (inverse x) * x ≃ ident
+  inverse_propR (x : α) : x * (inverse x) ≃ ident
 
-export Group.Props (
-  substL substR assoc identityL identityR inverse inverse_propL inverse_propR
+export Props (
+  substL substR assoc identL identR inverse_propL inverse_propR
 )
 
-class Group (α : Type) [EqvOp α] where
+/-- All axioms for generic types to form a Group. -/
+class Group (α : Type) [EqvOp α] :=
   toOps : Group.Ops α
   toProps : Group.Props α
 
@@ -47,45 +55,54 @@ attribute [instance] Group.toProps
 variable {α : Type} [EqvOp α] [g : Group α]
 
 /-- Enables the use of `AA.substL`, `AA.substR`, etc. -/
-instance group_subst_inst : AA.Substitutive₂ (α := α) (f) AA.tc (· ≃ ·) (· ≃ ·)
-  := {
-    substitutiveL := { subst₂ := λ (_ : True) => substL }
-    substitutiveR := { subst₂ := λ (_ : True) => substR }
-  }
+instance group_subst_inst
+    : AA.Substitutive₂ (α := α) (· * ·) AA.tc (· ≃ ·) (· ≃ ·)
+    := {
+  substitutiveL := { subst₂ := λ (_ : True) => substL }
+  substitutiveR := { subst₂ := λ (_ : True) => substR }
+}
 
-def group_cancellationR (x y z : α) : (x * y ≃ x * z) → y ≃ z := λ _ =>
+/--
+You May perform cancellation of an element x, and conclude from
+x * y ≃ x * z that y ≃ z.
+-/
+def group_cancellationL
+    {x y z : α} : (x * y ≃ x * z) → y ≃ z := λ _ =>
   show y ≃ z from calc
-    y     ≃                 _ := Rel.symm identityL
-    e * y ≃                 _ := substL (Rel.symm (inverse_propL x))
-    ((inverse x) * x) * y ≃ _ := assoc
-    (inverse x) * (x * y) ≃ _ := substR ‹x * y ≃ x * z›
-    (inverse x) * (x * z) ≃ _ := Rel.symm assoc
-    (inverse x * x) * z   ≃ _ := substL (inverse_propL x)
-    e * z ≃                 _ := identityL
-    z ≃                     _ := Rel.refl
+    _ ≃ y                     := Rel.refl
+    _ ≃ ident * y             := Rel.symm identL
+    _ ≃ ((inverse x) * x) * y := substL (Rel.symm (inverse_propL x))
+    _ ≃ (inverse x) * (x * y) := assoc
+    _ ≃ (inverse x) * (x * z) := substR ‹x * y ≃ x * z›
+    _ ≃ (inverse x * x) * z   := Rel.symm assoc
+    _ ≃ ident * z             := substL (inverse_propL x)
+    _ ≃ z                     := identL
+
 
 local instance monoid_from_group_ops :  CA.Monoid.Ops α := {
-  f := (· * ·)
-  e := g.toOps.e
+  binop := (· * ·)
+  ident := g.toOps.ident
 }
 
 /--
 Demonstrates that any group is also a monoid.
 -/
-instance monoid_from_group : CA.Monoid (α := α) := {
+instance monoid_from_group : CA.Monoid.Monoid (α := α) := {
   toOps := monoid_from_group_ops
   toProps := {
     substL    := g.toProps.substL
     substR    := g.toProps.substR
     assoc     := g.toProps.assoc
-    identityL := g.toProps.identityL
-    identityR := g.toProps.identityR
+    identL := g.toProps.identL
+    identR := g.toProps.identR
   }
 }
 
-def group_mul_identity_unique {x : α}
-    (x_is_left_identity : ((y : α) → (x * y) ≃ y)) : x ≃ e :=
-  calc
-    x    ≃   _ := Rel.symm g.toProps.identityR
-    x * g.toOps.e ≃  _ := x_is_left_identity g.toOps.e
-    g.toOps.e ≃      _ := Rel.refl
+/--
+  There is only one element, namely the identity ident, such that
+  ident * y ≃ ident for all elements y.  Proof follow from fact that Groups
+  are Monoids aned it holds for Monoids.
+-/
+theorem mul_identity_unique
+    {x : α} (x_is_left_ident : ((y : α) → (x * y) ≃ y)) : x ≃ ident :=
+  Lean4Axiomatic.CA.Monoid.mul_identity_unique x_is_left_ident
