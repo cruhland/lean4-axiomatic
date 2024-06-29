@@ -762,4 +762,6 @@ theorem sum_zero_prod_nonneg_iff_both_zero
 theorem mul_gt_zero_iff_sgn_same
     {a b : ℤ} : a * b > 0 ↔ sgn a ≃ sgn b ∧ a * b ≄ 0 := sorry
 
+theorem mul_preserves_nonneg {a b : ℤ} : a ≥ 0 → b ≥ 0 → a * b ≥ 0 := sorry
+
 end Lean4Axiomatic.Integer
