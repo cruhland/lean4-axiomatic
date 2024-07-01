@@ -921,33 +921,49 @@ theorem sgn_diff_pow_pos
       := by
     have : Integer.Nonzero ((b * d)^k) := nonzero_bd_pow
     calc
-    _ = p^k - q^k                                                   := rfl
-    _ ≃ (a:ℚ)^k/b^k - (c:ℚ)^k/d^k                                   := sub_pow_expand
-    _ ≃ ((a:ℚ)^k * (d:ℚ)^k - (b:ℚ)^k * (c:ℚ)^k)/((b:ℚ)^k * (d:ℚ)^k) := sub_fractions
-    _ ≃ (((a*d)^k-(b*c)^k:ℤ):ℚ)/((b:ℚ)^k * (d:ℚ)^k)                 := div_substL sub_mul_liftQ
-    _ ≃ (((a*d)^k-(b*c)^k:ℤ):ℚ)/(((b*d)^k:ℤ):ℚ)                     := div_substR mul_pow_liftQ
+    _ = p^k - q^k                                   := rfl
+    _ ≃ (a:ℚ)^k/b^k - (c:ℚ)^k/d^k                   := sub_pow_expand
+    _ ≃ ((a:ℚ)^k*(d:ℚ)^k - (b:ℚ)^k*(c:ℚ)^k)/((b:ℚ)^k*(d:ℚ)^k) := sub_fractions
+    _ ≃ (((a*d)^k-(b*c)^k:ℤ):ℚ)/((b:ℚ)^k * (d:ℚ)^k) := div_substL sub_mul_liftQ
+    _ ≃ (((a*d)^k-(b*c)^k:ℤ):ℚ)/(((b*d)^k:ℤ):ℚ)     := div_substR mul_pow_liftQ
 
-  have sub_frac : p - q ≃ ((a * d - b * c : ℤ):ℚ)/((b * d : ℤ):ℚ) := calc
-    _ = p - q                                               := rfl
-    _ ≃ p^1 - q                                             := sub_substL (eqv_symm Natural.pow_one)
-    _ ≃ p^1 - q^1                                           := sub_substR (eqv_symm Natural.pow_one)
-    _ ≃ (((a * d)^1 - (b * c)^1 : ℤ):ℚ)/(((b * d)^1 : ℤ):ℚ) := sub_pow_frac
-    _ ≃ ((a * d - (b * c)^1 : ℤ):ℚ)/(((b * d)^1 : ℤ):ℚ)     := div_substL (from_integer_subst (AA.substL Natural.pow_one))
-    _ ≃ ((a * d - b * c : ℤ):ℚ)/(((b * d)^1 : ℤ):ℚ)         := div_substL (from_integer_subst (AA.substR Natural.pow_one))
-    _ ≃ ((a * d - b * c : ℤ):ℚ)/((b * d : ℤ):ℚ)             := div_substR (from_integer_subst Natural.pow_one)
-
-  have sgn_diff_int_pow : sgn ((a * d)^n - (b * c)^n) ≃ sgn (a * d - b * c) :=
-    Integer.sgn_diff_pow_pos ‹a * d ≥ 0› ‹b * c ≥ 0› ‹n > 0›
-
-  calc
+  have sgn_sub_pow_factor
+      : sgn (p^n - q^n) ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n)
+      := calc
     _ = sgn (p^n - q^n)                               := rfl
     _ ≃ sgn ((((a*d)^n-(b*c)^n:ℤ):ℚ)/(((b*d)^n:ℤ):ℚ)) := sgn_subst sub_pow_frac
     _ ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n)         := sgn_div_integers
-    _ ≃ sgn (a*d - b*c) * sgn ((b*d)^n)               := AA.substL sgn_diff_int_pow
-    _ ≃ sgn (a*d - b*c) * (sgn (b*d))^n               := AA.substR Integer.sgn_pow
-    _ ≃ sgn (a*d - b*c) * sgn (b*d)                   := AA.substR (Integer.sgn_absorb_pow ‹b*d ≥ 0› ‹n > 0›)
-    _ ≃ sgn (((a*d - b*c:ℤ):ℚ)/((b*d:ℤ):ℚ))           := Rel.symm sgn_div_integers
-    _ ≃ sgn (p - q)                                   := sgn_subst (eqv_symm sub_frac)
+  have sgn_diff_int_pow : sgn ((a * d)^n - (b * c)^n) ≃ sgn (a * d - b * c) :=
+    Integer.sgn_diff_pow_pos ‹a * d ≥ 0› ‹b * c ≥ 0› ‹n > 0›
+  have sgn_bd_drop_pow : sgn ((b * d)^n) ≃ sgn (b * d) := calc
+    _ = sgn ((b * d)^n) := rfl
+    _ ≃ (sgn (b * d))^n := Integer.sgn_pow
+    _ ≃ sgn (b * d)     := Integer.sgn_absorb_pow ‹b * d ≥ 0› ‹n > 0›
+
+  have drop_pow_ones_ℚ : p^1 - q^1 ≃ p - q := calc
+    _ = p^1 - q^1 := rfl
+    _ ≃ p - q^1   := sub_substL Natural.pow_one
+    _ ≃ p - q     := sub_substR Natural.pow_one
+  have drop_pow_num {x y : ℤ} : ((x^1 - y^1 : ℤ):ℚ) ≃ ((x - y : ℤ):ℚ) := calc
+    _ = ((x^1 - y^1 : ℤ):ℚ) := rfl
+    _ ≃ ((x - y^1 : ℤ):ℚ)   := from_integer_subst (AA.substL Natural.pow_one)
+    _ ≃ ((x - y : ℤ):ℚ)     := from_integer_subst (AA.substR Natural.pow_one)
+  have drop_pow_den {x : ℤ} : ((x^1:ℤ):ℚ) ≃ (x:ℚ) :=
+    from_integer_subst Natural.pow_one
+  have sub_frac : p - q ≃ ((a * d - b * c : ℤ):ℚ)/((b * d : ℤ):ℚ) := calc
+    _ = p - q                                       := rfl
+    _ ≃ p^1 - q^1                                   := eqv_symm drop_pow_ones_ℚ
+    _ ≃ (((a*d)^1 - (b*c)^1 : ℤ):ℚ)/(((b*d)^1:ℤ):ℚ) := sub_pow_frac
+    _ ≃ ((a*d - b*c : ℤ):ℚ)/(((b*d)^1:ℤ):ℚ)         := div_substL drop_pow_num
+    _ ≃ ((a*d - b*c : ℤ):ℚ)/((b*d:ℤ):ℚ)             := div_substR drop_pow_den
+
+  calc
+    _ = sgn (p^n - q^n)                       := rfl
+    _ ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n) := sgn_sub_pow_factor
+    _ ≃ sgn (a*d - b*c) * sgn ((b*d)^n)       := AA.substL sgn_diff_int_pow
+    _ ≃ sgn (a*d - b*c) * sgn (b*d)           := AA.substR sgn_bd_drop_pow
+    _ ≃ sgn (((a*d - b*c:ℤ):ℚ)/((b*d:ℤ):ℚ))   := Rel.symm sgn_div_integers
+    _ ≃ sgn (p - q)                           := sgn_subst (eqv_symm sub_frac)
 
 /-- TODO -/
 theorem sgn_diff_pow
