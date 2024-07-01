@@ -376,17 +376,6 @@ theorem as_nonneg_ratio {p : ℚ} : p ≥ 0 → NonnegRatio p := by
   have : NonnegRatio p := NonnegRatio.intro a b ‹a ≥ 0› ‹b > 0› ‹p ≃ a/b›
   exact this
 
-theorem pow_preserves_ge_nonneg
-    {p q : ℚ} {n : ℕ} : q ≥ 0 → p ≥ q → p^n ≥ q^n
-    := by
-  intro (_ : q ≥ 0) (_ : p ≥ q)
-  show p^n ≥ q^n
-  -- Factor out main lemma from below proof
-  -- sgn (p^n - q^n) ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n)
-  -- Then use Integer version to show sgn ((a*d)^n-(b*c)^n) ≥ 0
-  -- Thus, sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n) ≥ 0 * sgn ((b*d)^n) ≃ 0
-  admit
-
 /-- TODO -/
 theorem pow_pos_preserves_gt_nonneg
     {p q : ℚ} {n : ℕ} : n > 0 → q ≥ 0 → p > q → p^n > q^n
@@ -666,7 +655,13 @@ theorem pow_neg {p : ℚ} {n : ℕ} [AP (p ≄ 0)] : p^(-(n:ℤ)) ≃ 1 / p^n :=
   _ ≃ p^(0:ℕ) / p^n := pow_diff
   _ ≃ 1 / p^n       := div_substL Natural.pow_zero
 
-theorem pow_neg_one {p : ℚ} [AP (p ≄ 0)] : p^(-1:ℤ) ≃ p⁻¹ := sorry
+/-- TODO -/
+theorem pow_neg_one {p : ℚ} [AP (p ≄ 0)] : p^(-1:ℤ) ≃ p⁻¹ := calc
+  _ = p^(-1:ℤ)    := rfl
+  _ = p^(-(1:ℤ))  := rfl
+  _ ≃ 1 / p^(1:ℕ) := pow_neg
+  _ ≃ 1 / p       := div_substR Natural.pow_one
+  _ ≃ p⁻¹         := div_identL
 
 /--
 Integer exponents add when powers of the same rational number are multiplied.
