@@ -367,7 +367,14 @@ theorem pow_pos_preserves_gt_nonneg
     := by
   intro (_ : n > 0) (_ : q ≥ 0) (_ : p > q)
   show p^n > q^n
-  admit
+  have : p ≥ q := ge_cases.mpr (Or.inl ‹p > q›)
+  have : p ≥ 0 := ge_trans ‹p ≥ q› ‹q ≥ 0›
+  have : sgn (p^n - q^n) ≃ 1 := calc
+    _ = sgn (p^n - q^n) := rfl
+    _ ≃ sgn (p - q)     := sgn_diff_pow_pos ‹p ≥ 0› ‹q ≥ 0› ‹n > 0›
+    _ ≃ 1               := gt_sgn.mp ‹p > q›
+  have : p^n > q^n := gt_sgn.mpr ‹sgn (p^n - q^n) ≃ 1›
+  exact this
 
 /-- TODO -/
 theorem pow_preserves_ge_nonneg
@@ -375,7 +382,26 @@ theorem pow_preserves_ge_nonneg
     := by
   intro (_ : q ≥ 0) (_ : p ≥ q)
   show p^n ≥ q^n
-  admit
+  have : n ≥ 0 := Natural.ge_zero
+  have : n > 0 ∨ n ≃ 0 := Natural.ge_split ‹n ≥ 0›
+  match ‹n > 0 ∨ n ≃ 0› with
+  | Or.inl (_ : n > 0) =>
+    have : p ≥ 0 := ge_trans ‹p ≥ q› ‹q ≥ 0›
+    have : sgn (p^n - q^n) ≥ 0 := calc
+      _ = sgn (p^n - q^n) := rfl
+      _ ≃ sgn (p - q)     := sgn_diff_pow_pos ‹p ≥ 0› ‹q ≥ 0› ‹n > 0›
+      _ ≥ 0               := ge_sgn_ge_zero.mp ‹p ≥ q›
+    have : p^n ≥ q^n := ge_sgn_ge_zero.mpr ‹sgn (p^n - q^n) ≥ 0›
+    exact this
+  | Or.inr (_ : n ≃ 0) =>
+    have : p^n ≃ q^n := calc
+      _ = p^n := rfl
+      _ ≃ p^0 := Natural.pow_substR ‹n ≃ 0›
+      _ ≃ 1   := Natural.pow_zero
+      _ ≃ q^0 := eqv_symm Natural.pow_zero
+      _ ≃ q^n := Natural.pow_substR (Rel.symm ‹n ≃ 0›)
+    have : p^n ≥ q^n := ge_cases.mpr (Or.inr ‹p^n ≃ q^n›)
+    exact this
 
 /--
 Absolute value is semicompatible with the base argument of exponentiation.
