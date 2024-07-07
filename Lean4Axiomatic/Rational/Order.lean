@@ -1549,8 +1549,24 @@ theorem le_diff_upper {ε p q : ℚ} : q - p ≤ ε ↔ q ≤ p + ε := by
       _ ≃ ε + 0          := add_substR add_inverseR
       _ ≃ ε              := add_identR
 
-theorem sgn_preserves_ge_zero {p : ℚ} : p ≥ 0 ↔ sgn p ≥ 0 := sorry
+/-- TODO -/
+theorem sgn_preserves_ge_zero {p : ℚ} : p ≥ 0 ↔ sgn p ≥ 0 := by
+  have inner_sgn : sgn (p - 0) ≃ sgn (sgn p - 0) := calc
+    _ = sgn (p - 0)     := rfl
+    _ ≃ sgn p           := sgn_subst sub_zero
+    _ ≃ sgn (sgn p)     := Rel.symm sgn_idemp
+    _ ≃ sgn (sgn p - 0) := Integer.sgn_subst (Rel.symm Integer.sub_identR)
+  calc
+    _ ↔ p ≥ 0                := Rel.refl
+    _ ↔ sgn (p - 0) ≄ -1     := ge_sgn
+    _ ↔ sgn (sgn p - 0) ≄ -1 := Rel.iff_subst_eqv AA.neqv_substL inner_sgn
+    _ ↔ sgn p ≥ 0            := Integer.ge_sgn.symm
 
-theorem ge_sgn_ge_zero {p q : ℚ} : p ≥ q ↔ sgn (p - q) ≥ 0 := sorry
+/-- TODO -/
+theorem ge_sgn_ge_zero {p q : ℚ} : p ≥ q ↔ sgn (p - q) ≥ 0 := calc
+  _ ↔ p ≥ q            := Rel.refl
+  _ ↔ sgn (p - q) ≄ -1 := ge_sgn
+  _ ↔ p - q ≥ 0        := ge_zero_sgn.symm
+  _ ↔ sgn (p - q) ≥ 0  := sgn_preserves_ge_zero
 
 end Lean4Axiomatic.Rational
