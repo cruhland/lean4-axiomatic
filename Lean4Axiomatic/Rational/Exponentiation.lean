@@ -828,11 +828,12 @@ theorem sgn_diff_pow
       _ ≃ (x^(n:ℤ))^(-1:ℤ)  := eqv_symm pow_flatten
       _ ≃ (x^(n:ℤ))⁻¹       := pow_neg_one
       _ ≃ (x^n)⁻¹           := recip_subst pow_nonneg
+    have : p^n * q^n > 0 := sorry
     calc
       _ = sgn (p^a - q^a)         := rfl
       _ ≃ sgn ((p^n)⁻¹ - q^a)     := sgn_subst (sub_substL pow_a_simp)
       _ ≃ sgn ((p^n)⁻¹ - (q^n)⁻¹) := sgn_subst (sub_substR pow_a_simp)
-      _ ≃ sgn (q^n - p^n)         := sgn_sub_recip
+      _ ≃ sgn (q^n - p^n)         := sgn_sub_recip ‹p^n * q^n > 0›
       _ ≃ sgn (q - p)             := sgn_diff_pow_pos ‹q ≥ 0› ‹p ≥ 0› ‹n > 0›
       _ ≃ sgn (-(p - q))          := sgn_subst (eqv_symm neg_sub)
       _ ≃ -sgn (p - q)            := sgn_compat_neg

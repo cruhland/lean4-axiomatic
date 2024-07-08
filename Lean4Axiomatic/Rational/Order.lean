@@ -1569,4 +1569,36 @@ theorem ge_sgn_ge_zero {p q : ℚ} : p ≥ q ↔ sgn (p - q) ≥ 0 := calc
   _ ↔ p - q ≥ 0        := ge_zero_sgn.symm
   _ ↔ sgn (p - q) ≥ 0  := sgn_preserves_ge_zero
 
+theorem pos_nonzero {p : ℚ} : p > 0 → p ≄ 0 := sorry
+
+theorem mul_nonzero {p q : ℚ} : p * q ≄ 0 ↔ p ≄ 0 ∧ q ≄ 0 := sorry
+
+theorem sgn_sub_recip
+    {p q : ℚ} (pq_pos : p * q > 0)
+    : have : p * q ≄ 0 := pos_nonzero ‹p * q > 0›
+      have : p ≄ 0 ∧ q ≄ 0 := mul_nonzero.mp ‹p * q ≄ 0›
+      have : AP (p ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.1
+      have : AP (q ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.2
+      sgn (p⁻¹ - q⁻¹) ≃ sgn (q - p)
+    := by
+  have : p * q ≄ 0 := pos_nonzero ‹p * q > 0›
+  have : p ≄ 0 ∧ q ≄ 0 := mul_nonzero.mp ‹p * q ≄ 0›
+  have : AP (p ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.1
+  have : AP (q ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.2
+  show sgn (p⁻¹ - q⁻¹) ≃ sgn (q - p)
+
+  have sub_recips : p⁻¹ - q⁻¹ ≃ (q - p)/(p * q) := calc
+    _ = p⁻¹ - q⁻¹               := rfl
+    _ ≃ 1/p - q⁻¹               := sub_substL (eqv_symm div_identL)
+    _ ≃ 1/p - 1/q               := sub_substR (eqv_symm div_identL)
+    _ ≃ (1 * q - p * 1)/(p * q) := sub_fractions
+    _ ≃ (q - p * 1)/(p * q)     := div_substL (sub_substL mul_identL)
+    _ ≃ (q - p)/(p * q)         := div_substL (sub_substR mul_identR)
+  calc
+    _ = sgn (p⁻¹ - q⁻¹)           := rfl
+    _ ≃ sgn ((q - p)/(p * q))     := sgn_subst sub_recips
+    _ ≃ sgn (q - p) * sgn (p * q) := sgn_div
+    _ ≃ sgn (q - p) * 1           := AA.substR (gt_zero_sgn.mp ‹p * q > 0›)
+    _ ≃ sgn (q - p)               := AA.identR
+
 end Lean4Axiomatic.Rational

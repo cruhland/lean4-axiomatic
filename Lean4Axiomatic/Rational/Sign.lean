@@ -331,11 +331,6 @@ theorem sgn_recip {p : ℚ} [AP (p ≄ 0)] : sgn (p⁻¹) ≃ sgn p := by
     sgn (1 * p)                 ≃ _ := sgn_subst mul_identL
     sgn p                       ≃ _ := Rel.refl
 
-theorem sgn_sub_recip
-    {p q : ℚ} [AP (p ≄ 0)] [AP (q ≄ 0)] : sgn (p⁻¹ - q⁻¹) ≃ sgn (q - p)
-    := by
-  admit
-
 /-- TODO -/
 theorem sgn_div {p q : ℚ} [AP (q ≄ 0)] : sgn (p / q) ≃ sgn p * sgn q := calc
   _ = sgn (p / q)       := rfl
@@ -955,12 +950,42 @@ theorem add_preserves_sign
       ≃ _ := Rel.refl
   exact this
 
+/-- TODO -/
+theorem div_distribR {p q r : ℚ} [AP (r ≄ 0)] : (p + q)/r ≃ p/r + q/r := calc
+  _ = (p + q)/r         := rfl
+  _ ≃ (p + q) * r⁻¹     := div_mul_recip
+  _ ≃ p * r⁻¹ + q * r⁻¹ := mul_distribR
+  _ ≃ p/r + q * r⁻¹     := add_substL (eqv_symm div_mul_recip)
+  _ ≃ p/r + q/r         := add_substR (eqv_symm div_mul_recip)
+
+/-- TODO -/
+theorem add_fractions
+    {p q r s : ℚ} [AP (q ≄ 0)] [AP (s ≄ 0)]
+    : p/q + r/s ≃ (p * s + q * r)/(q * s)
+    := calc
+  _ = p/q + r/s                 := rfl
+  _ ≃ (p/q) * 1 + r/s           := add_substL (eqv_symm mul_identR)
+  _ ≃ (p/q)*(s/s) + r/s         := add_substL (mul_substR (eqv_symm div_same))
+  _ ≃ (p*s)/(q*s) + r/s         := add_substL div_mul_swap
+  _ ≃ (p*s)/(q*s) + 1 * (r/s)   := add_substR (eqv_symm mul_identL)
+  _ ≃ (p*s)/(q*s) + (q/q)*(r/s) := add_substR (mul_substL (eqv_symm div_same))
+  _ ≃ (p*s)/(q*s) + (q*r)/(q*s) := add_substR div_mul_swap
+  _ ≃ (p*s + q*r)/(q*s)         := eqv_symm div_distribR
+
+/-- TODO -/
 theorem sub_fractions
     {p q r s : ℚ} [AP (q ≄ 0)] [AP (s ≄ 0)]
     : p/q - r/s ≃ (p * s - q * r)/(q * s)
-    := calc
-  _ = p/q - r/s := rfl
-  -- Prove addition of fractions? Then this is adding a negated fraction
-  _ ≃ (p * s - q * r)/(q * s) := sorry
+    := by
+  have neg_to_sub : p * s + q * (-r) ≃ p * s - q * r := calc
+    _ = p * s + q * (-r) := rfl
+    _ ≃ p * s + -(q * r) := add_substR (eqv_symm neg_scompatR_mul)
+    _ ≃ p * s - q * r    := eqv_symm sub_add_neg
+  calc
+    _ = p/q - r/s                  := rfl
+    _ ≃ p/q + -(r/s)               := sub_add_neg
+    _ ≃ p/q + (-r/s)               := add_substR neg_scompatL_div
+    _ ≃ (p * s + q * (-r))/(q * s) := add_fractions
+    _ ≃ (p * s - q * r)/(q * s)    := div_substL neg_to_sub
 
 end Lean4Axiomatic.Rational
