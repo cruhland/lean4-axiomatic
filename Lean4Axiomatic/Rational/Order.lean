@@ -1573,6 +1573,20 @@ theorem pos_nonzero {p : ℚ} : p > 0 → p ≄ 0 := sorry
 
 theorem mul_nonzero {p q : ℚ} : p * q ≄ 0 ↔ p ≄ 0 ∧ q ≄ 0 := sorry
 
+/-- TODO -/
+theorem mul_preserves_pos {p q : ℚ} : p > 0 → q > 0 → p * q > 0 := by
+  intro (_ : p > 0) (_ : q > 0)
+  show p * q > 0
+  have : sgn (p * q) ≃ 1 := calc
+    _ = sgn (p * q)   := rfl
+    _ ≃ sgn p * sgn q := sgn_compat_mul
+    _ ≃ 1 * sgn q     := AA.substL (gt_zero_sgn.mp ‹p > 0›)
+    _ ≃ sgn q         := AA.identL
+    _ ≃ 1             := gt_zero_sgn.mp ‹q > 0›
+  have : p * q > 0 := gt_zero_sgn.mpr ‹sgn (p * q) ≃ 1›
+  exact this
+
+/-- TODO -/
 theorem sgn_sub_recip
     {p q : ℚ} (pq_pos : p * q > 0)
     : have : p * q ≄ 0 := pos_nonzero ‹p * q > 0›

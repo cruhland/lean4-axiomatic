@@ -785,8 +785,10 @@ theorem sgn_diff_pow
     {p q : ℚ} {a : ℤ} [p_pos : AP (p > 0)] [q_pos : AP (q > 0)]
     : sgn (p^a - q^a) ≃ sgn (p - q) * sgn a
     := by
-  have : p ≥ 0 := ge_cases.mpr (Or.inl ‹AP (p > 0)›.ev)
-  have : q ≥ 0 := ge_cases.mpr (Or.inl ‹AP (q > 0)›.ev)
+  have : p > 0 := ‹AP (p > 0)›.ev
+  have : q > 0 := ‹AP (q > 0)›.ev
+  have : p ≥ 0 := ge_cases.mpr (Or.inl ‹p > 0›)
+  have : q ≥ 0 := ge_cases.mpr (Or.inl ‹q > 0›)
   have (Exists.intro (n : ℕ) (And.intro (_ : n > 0) (_ : a ≃ n * sgn a))) :=
     Integer.as_size_with_sign a
   have : AA.OneOfThree₁ (sgn a ≃ 0) (sgn a ≃ 1) (sgn a ≃ -1) :=
@@ -828,7 +830,9 @@ theorem sgn_diff_pow
       _ ≃ (x^(n:ℤ))^(-1:ℤ)  := eqv_symm pow_flatten
       _ ≃ (x^(n:ℤ))⁻¹       := pow_neg_one
       _ ≃ (x^n)⁻¹           := recip_subst pow_nonneg
-    have : p^n * q^n > 0 := sorry
+    have : p^n > 0 := pow_preserves_pos ‹p > 0›
+    have : q^n > 0 := pow_preserves_pos ‹q > 0›
+    have : p^n * q^n > 0 := mul_preserves_pos ‹p^n > 0› ‹q^n > 0›
     calc
       _ = sgn (p^a - q^a)         := rfl
       _ ≃ sgn ((p^n)⁻¹ - q^a)     := sgn_subst (sub_substL pow_a_simp)
