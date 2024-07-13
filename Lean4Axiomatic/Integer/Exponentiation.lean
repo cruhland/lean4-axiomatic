@@ -153,7 +153,15 @@ theorem sgn_absorb_pow
     := by
   admit
 
-theorem sgn_squared_ge_zero {a : ℤ} : (sgn a)^2 ≥ 0 := sorry
+/-- TODO -/
+theorem sgn_sqr_nonneg {a : ℤ} : (sgn a)^2 ≥ 0 := by
+  have : sgn (a * a) ≄ -1 := nonneg_square
+  have : a * a ≥ 0 := ge_zero_sgn.mpr ‹sgn (a * a) ≄ -1›
+  calc
+    _ = (sgn a)^2   := rfl
+    _ ≃ sgn (a^2)   := Rel.symm sgn_pow
+    _ ≃ sgn (a * a) := sgn_subst Natural.pow_two
+    _ ≥ 0           := sgn_preserves_ge_zero.mp ‹a * a ≥ 0›
 
 /-- TODO -/
 theorem sgn_sum_pos_prod
@@ -362,7 +370,7 @@ theorem sgn_diff_pow_pos
       have : a * b ≥ 0 := mul_preserves_ge_zero ‹a ≥ 0› ‹b ≥ 0›
       have : sgn (a * b) ≥ 0 := sgn_preserves_ge_zero.mp ‹a * b ≥ 0›
       have : sab^2 * sgn (a * b) ≥ 0 :=
-        mul_preserves_ge_zero sgn_squared_ge_zero ‹sgn (a * b) ≥ 0›
+        mul_preserves_ge_zero sgn_sqr_nonneg ‹sgn (a * b) ≥ 0›
       have : sgn (amab * abmb) ≥ 0 := calc
         _ = sgn (amab * abmb)           := rfl
         _ ≃ sgn amab * sgn abmb         := sgn_compat_mul

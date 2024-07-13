@@ -1808,4 +1808,32 @@ theorem sgn_two_eqv_one : sgn (2:ℤ) ≃ 1 := by
 
 theorem as_size_with_sign (a : ℤ) : ∃ (n : ℕ), n > 0 ∧ a ≃ n * sgn a := sorry
 
+/--
+The square of an integer is nonnegative.
+
+**Property intuition**: The product of two negative numbers is positive, and
+zero times anything is zero, so this must be true.
+
+**Proof intuition**: Assume that the square is negative and reach a
+contradiction. The sign of the number being squared must be nonzero, otherwise
+its square would have a sign of zero. We also know that the square of the sign
+is `-1`. If two nonzero signs have a negative product, then they must be
+distinct -- but in this case that means the sign is distinct from itself.
+Contradiction.
+-/
+theorem nonneg_square {a : ℤ} : sgn (a * a) ≄ -1 := by
+  intro (_ : sgn (a * a) ≃ -1)
+  show False
+  have : sgn a * sgn a ≃ -1 :=
+    Rel.trans (Rel.symm sgn_compat_mul) ‹sgn (a * a) ≃ -1›
+  have : Nonzero (-1:ℤ) := nonzero_sqrt1
+  have : Nonzero (sgn a * sgn a) :=
+    nonzero_subst (Rel.symm ‹sgn a * sgn a ≃ -1›) ‹Nonzero (-1:ℤ)›
+  have (And.intro (_ : Nonzero (sgn a)) _) :=
+    nonzero_factors_if_nonzero_product ‹Nonzero (sgn a * sgn a)›
+  have : Sqrt1 (sgn (sgn a)) := sgn_nonzero.mp ‹Nonzero (sgn a)›
+  have : Sqrt1 (sgn a) := sqrt1_subst sgn_idemp ‹Sqrt1 (sgn (sgn a))›
+  have : sgn a ≄ sgn a := mul_sqrt1_neqv.mp ‹sgn a * sgn a ≃ -1›
+  exact absurd Rel.refl this
+
 end Lean4Axiomatic.Integer

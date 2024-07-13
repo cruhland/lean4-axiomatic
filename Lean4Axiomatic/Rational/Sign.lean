@@ -483,28 +483,17 @@ The square of a rational number is nonnegative.
 **Property intuition**: The product of two negative numbers is positive, and
 zero times anything is zero, so this must be true.
 
-**Proof intuition**: Assume that the square is negative and reach a
-contradiction. The sign of the number being squared must be nonzero, otherwise
-its square would have a sign of zero. We also know that the square of the sign
-is `-1`. If two nonzero signs have a negative product, then they must be
-distinct -- but in this case that means the sign is distinct from itself.
-Contradiction.
+**Proof intuition**: TODO
 -/
 theorem nonneg_square {p : ℚ} : sgn (p * p) ≄ -1 := by
-  intro (_ : sgn (p * p) ≃ -1)
-  show False
-  have : sgn p * sgn p ≃ -1 :=
-    Rel.trans (Rel.symm sgn_compat_mul) ‹sgn (p * p) ≃ -1›
-  have : Integer.Nonzero (-1 : ℤ) := Integer.nonzero_sqrt1
-  have : Integer.Nonzero (sgn p * sgn p) :=
-    Integer.nonzero_subst (Rel.symm ‹sgn p * sgn p ≃ -1›) this
-  have (And.intro (_ : Integer.Nonzero (sgn p)) _) :=
-    Integer.nonzero_factors_if_nonzero_product this
-  have : Integer.Sqrt1 (sgn (sgn p)) :=
-    Integer.sgn_nonzero.mp ‹Integer.Nonzero (sgn p)›
-  have : Integer.Sqrt1 (sgn p) := Integer.sqrt1_subst sgn_idemp this
-  have : sgn p ≄ sgn p := Integer.mul_sqrt1_neqv.mp ‹sgn p * sgn p ≃ -1›
-  exact absurd Rel.refl this
+  have : sgn (sgn p * sgn p) ≃ sgn (p * p) := calc
+    _ = sgn (sgn p * sgn p) := rfl
+    _ ≃ sgn (sgn (p * p))   := Integer.sgn_subst (Rel.symm sgn_compat_mul)
+    _ ≃ sgn (p * p)         := sgn_idemp
+  have : sgn (sgn p * sgn p) ≄ -1 := Integer.nonneg_square
+  have : sgn (p * p) ≄ -1 :=
+    AA.neqv_substL ‹sgn (sgn p * sgn p) ≃ sgn (p * p)› this
+  exact this
 
 /--
 For a product of rational numbers to be zero, at least one of its factors must
