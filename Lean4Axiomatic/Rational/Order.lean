@@ -1569,9 +1569,21 @@ theorem ge_sgn_ge_zero {p q : ℚ} : p ≥ q ↔ sgn (p - q) ≥ 0 := calc
   _ ↔ p - q ≥ 0        := ge_zero_sgn.symm
   _ ↔ sgn (p - q) ≥ 0  := sgn_preserves_ge_zero
 
-theorem pos_nonzero {p : ℚ} : p > 0 → p ≄ 0 := sorry
+/-- TODO -/
+theorem pos_nonzero {p : ℚ} : p > 0 → p ≄ 0 := by
+  intro (_ : p > 0)
+  show p ≄ 0
+  have : sgn p ≃ 1 := gt_zero_sgn.mp ‹p > 0›
+  have : (1:ℤ) ≄ 0 := Integer.one_neqv_zero
+  have : sgn p ≄ 0 := AA.neqv_substL (Rel.symm ‹sgn p ≃ 1›) ‹(1:ℤ) ≄ 0›
+  have : p ≄ 0 := mt sgn_zero.mp ‹sgn p ≄ 0›
+  exact this
 
-theorem mul_nonzero {p q : ℚ} : p * q ≄ 0 ↔ p ≄ 0 ∧ q ≄ 0 := sorry
+/-- TODO -/
+theorem mul_nonzero {p q : ℚ} : p * q ≄ 0 ↔ p ≄ 0 ∧ q ≄ 0 := calc
+  _ ↔ p * q ≄ 0        := Rel.refl
+  _ ↔ ¬(p ≃ 0 ∨ q ≃ 0) := Logic.iff_subst_contra mt mul_split_zero
+  _ ↔ p ≄ 0 ∧ q ≄ 0    := Logic.not_or_iff_and_not
 
 /-- TODO -/
 theorem mul_preserves_pos {p q : ℚ} : p > 0 → q > 0 → p * q > 0 := by
