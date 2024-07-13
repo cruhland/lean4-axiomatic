@@ -849,6 +849,12 @@ theorem trichotomy (n m : ℕ)
       have ⟨_, (_ : m ≄ n)⟩ := lt_defn.mp ‹n > m›
       exact absurd ‹n ≃ m› (Rel.symm ‹m ≄ n›)
 
+def ind_from
+    {motive : ℕ → Sort u} {n m : ℕ} (n_ge_m : n ≥ m)
+    (base : motive m) (step : (k : ℕ) → motive k → motive (step k)) : motive n
+    := by
+  admit
+
 /--
 Defines `compare`, a comparison function on natural numbers, that determines
 the ordering between any two of them: whether one is less than, equivalent to,

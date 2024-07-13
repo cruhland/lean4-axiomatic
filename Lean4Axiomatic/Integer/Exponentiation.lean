@@ -148,10 +148,30 @@ theorem pow_sgn_even {a : ℤ} {n : ℕ} : (sgn a)^(2 * n) ≃ (sgn a)^2 := sorr
 
 theorem pow_sgn_odd {a : ℤ} {n : ℕ} : (sgn a)^(2 * n + 1) ≃ sgn a := sorry
 
+/-- TODO -/
 theorem sgn_absorb_pow
     {a : ℤ} {n : ℕ} : a ≥ 0 → n > 0 → (sgn a)^n ≃ sgn a
     := by
-  admit
+  intro (_ : a ≥ 0) (_ : n > 0)
+  show (sgn a)^n ≃ sgn a
+  have : step 0 ≤ n := Natural.lt_step_le.mp ‹0 < n›
+  have : 1 ≤ n := AA.substLFn (Rel.symm Natural.literal_step) ‹step 0 ≤ n›
+  apply Natural.ind_from ‹n ≥ 1›
+  case base =>
+    show (sgn a)^1 ≃ sgn a
+    exact Natural.pow_one
+  case step =>
+    intro (k : ℕ) (ih : (sgn a)^k ≃ sgn a)
+    show (sgn a)^(step k) ≃ sgn a
+    have : a > 0 ∨ a ≃ 0 := ge_split.mp ‹a ≥ 0›
+    have : sgn a ≃ 0 ∨ sgn a ≃ 1 := match ‹a > 0 ∨ a ≃ 0› with
+    | Or.inl (_ : a > 0) => Or.inr (gt_zero_sgn.mp ‹a > 0›)
+    | Or.inr (_ : a ≃ 0) => Or.inl (sgn_zero.mp ‹a ≃ 0›)
+    calc
+      _ = (sgn a)^(step k)  := rfl
+      _ ≃ (sgn a)^k * sgn a := Natural.pow_step
+      _ ≃ sgn a * sgn a     := AA.substL ih
+      _ ≃ sgn a             := mul_identR_reasons.mpr ‹sgn a ≃ 0 ∨ sgn a ≃ 1›
 
 /-- TODO -/
 theorem sgn_sqr_nonneg {a : ℤ} : (sgn a)^2 ≥ 0 := by
