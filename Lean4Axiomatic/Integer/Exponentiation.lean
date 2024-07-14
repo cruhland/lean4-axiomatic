@@ -144,9 +144,15 @@ theorem mul_identR_reasons {a b : ℤ} : a * b ≃ a ↔ a ≃ 0 ∨ b ≃ 1 := 
 
 theorem sgn_step {n : ℕ} : sgn (step n : ℤ) ≃ 1 := sorry
 
-theorem pow_sgn_even {a : ℤ} {n : ℕ} : (sgn a)^(2 * n) ≃ (sgn a)^2 := sorry
-
-theorem pow_sgn_odd {a : ℤ} {n : ℕ} : (sgn a)^(2 * n + 1) ≃ sgn a := sorry
+/-- TODO -/
+theorem sgn_sqr_nonneg {a : ℤ} : (sgn a)^2 ≥ 0 := by
+  have : sgn (a * a) ≄ -1 := nonneg_square
+  have : a * a ≥ 0 := ge_zero_sgn.mpr ‹sgn (a * a) ≄ -1›
+  calc
+    _ = (sgn a)^2   := rfl
+    _ ≃ sgn (a^2)   := Rel.symm sgn_pow
+    _ ≃ sgn (a * a) := sgn_subst Natural.pow_two
+    _ ≥ 0           := sgn_preserves_ge_zero.mp ‹a * a ≥ 0›
 
 /-- TODO -/
 theorem sgn_absorb_pow
@@ -174,14 +180,65 @@ theorem sgn_absorb_pow
       _ ≃ sgn a             := mul_identR_reasons.mpr ‹sgn a ≃ 0 ∨ sgn a ≃ 1›
 
 /-- TODO -/
-theorem sgn_sqr_nonneg {a : ℤ} : (sgn a)^2 ≥ 0 := by
-  have : sgn (a * a) ≄ -1 := nonneg_square
-  have : a * a ≥ 0 := ge_zero_sgn.mpr ‹sgn (a * a) ≄ -1›
+theorem pow_sgn_even
+    {a : ℤ} {n : ℕ} : n > 0 → (sgn a)^(2 * n) ≃ (sgn a)^2 := by
+  intro (_ : n > 0)
+  show (sgn a)^(2 * n) ≃ (sgn a)^2
+  have : (sgn a)^2 ≃ sgn ((sgn a)^2) := calc
+    _ = (sgn a)^2       := rfl
+    _ ≃ (sgn (sgn a))^2 := Natural.pow_substL (Rel.symm sgn_idemp)
+    _ ≃ sgn ((sgn a)^2) := Rel.symm sgn_pow
   calc
-    _ = (sgn a)^2   := rfl
-    _ ≃ sgn (a^2)   := Rel.symm sgn_pow
-    _ ≃ sgn (a * a) := sgn_subst Natural.pow_two
-    _ ≥ 0           := sgn_preserves_ge_zero.mp ‹a * a ≥ 0›
+    _ = (sgn a)^(2 * n)     := rfl
+    _ ≃ ((sgn a)^2)^n       := Rel.symm Natural.pow_flatten
+    _ ≃ (sgn ((sgn a)^2))^n := Natural.pow_substL ‹(sgn a)^2 ≃ sgn ((sgn a)^2)›
+    _ ≃ sgn ((sgn a)^2)     := sgn_absorb_pow sgn_sqr_nonneg ‹n > 0›
+    _ ≃ (sgn (sgn a))^2     := sgn_pow
+    _ ≃ (sgn a)^2           := Natural.pow_substL sgn_idemp
+
+/-- TODO -/
+theorem pow_sgn_odd {a : ℤ} {n : ℕ} : (sgn a)^(2 * n + 1) ≃ sgn a := by
+  have : (sgn a)^2 ≥ 0 := sgn_sqr_nonneg
+  have : (sgn a)^2 > 0 ∨ (sgn a)^2 ≃ 0 := ge_split.mp ‹(sgn a)^2 ≥ 0›
+  have zero_or_one : sgn a ≃ 0 ∨ (sgn a)^(2 * n) ≃ 1 :=
+    match ‹(sgn a)^2 > 0 ∨ (sgn a)^2 ≃ 0› with
+    | Or.inl (_ : (sgn a)^2 > 0) =>
+      have : n ≥ 0 := Natural.ge_zero
+      have : n > 0 ∨ n ≃ 0 := Natural.ge_split ‹n ≥ 0›
+      have : (sgn a)^(2 * n) ≃ 1 :=
+        match ‹n > 0 ∨ n ≃ 0› with
+        | Or.inl (_ : n > 0) =>
+          have : sgn (a^2) > 0 := calc
+            _ = sgn (a^2) := rfl
+            _ ≃ (sgn a)^2 := sgn_pow
+            _ > 0         := ‹(sgn a)^2 > 0›
+          have : a^2 > 0 := sgn_preserves_gt_zero.mpr ‹sgn (a^2) > 0›
+          calc
+            _ = (sgn a)^(2 * n) := rfl
+            _ ≃ (sgn a)^2       := pow_sgn_even ‹n > 0›
+            _ ≃ sgn (a^2)       := Rel.symm sgn_pow
+            _ ≃ 1               := gt_zero_sgn.mp ‹a^2 > 0›
+        | Or.inr (_ : n ≃ 0) =>
+          calc
+            _ = (sgn a)^(2 * n) := rfl
+            _ ≃ (sgn a)^(2 * 0) := Natural.pow_substR (AA.substR ‹n ≃ 0›)
+            _ ≃ (sgn a)^0       := Natural.pow_substR AA.absorbR
+            _ ≃ 1               := Natural.pow_zero
+      Or.inr ‹(sgn a)^(2 * n) ≃ 1›
+    | Or.inr (_ : (sgn a)^2 ≃ 0) =>
+      have : sgn a * sgn a ≃ 0 := calc
+        _ = sgn a * sgn a := rfl
+        _ ≃ (sgn a)^2     := Rel.symm Natural.pow_two
+        _ ≃ 0             := ‹(sgn a)^2 ≃ 0›
+      have : sgn a ≃ 0 ∨ sgn a ≃ 0 := mul_split_zero.mp ‹sgn a * sgn a ≃ 0›
+      have : sgn a ≃ 0 := ‹sgn a ≃ 0 ∨ sgn a ≃ 0›.elim id id
+      Or.inl ‹sgn a ≃ 0›
+  calc
+    _ = (sgn a)^(2 * n + 1)         := rfl
+    _ ≃ (sgn a)^(2 * n) * (sgn a)^1 := Natural.pow_compatL_add
+    _ ≃ (sgn a)^(2 * n) * sgn a     := AA.substR Natural.pow_one
+    _ ≃ sgn a * (sgn a)^(2 * n)     := AA.comm
+    _ ≃ sgn a                       := mul_identR_reasons.mpr zero_or_one
 
 /-- TODO -/
 theorem sgn_sum_pos_prod
