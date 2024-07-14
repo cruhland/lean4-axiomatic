@@ -140,9 +140,40 @@ theorem pow_preserves_ge_nonneg
     have : a^n ≥ b^n := le_iff_lt_or_eqv.mpr (Or.inr ‹b^n ≃ a^n›)
     exact this
 
-theorem mul_identR_reasons {a b : ℤ} : a * b ≃ a ↔ a ≃ 0 ∨ b ≃ 1 := sorry
-
-theorem sgn_step {n : ℕ} : sgn (step n : ℤ) ≃ 1 := sorry
+/-- TODO -/
+theorem mul_identR_reasons {a b : ℤ} : a * b ≃ a ↔ a ≃ 0 ∨ b ≃ 1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a * b ≃ a)
+    show a ≃ 0 ∨ b ≃ 1
+    have : a * (b - 1) ≃ 0 := calc
+      _ = a * (b - 1)   := rfl
+      _ ≃ a * b - a * 1 := mul_distribL_sub
+      _ ≃ a - a * 1     := sub_substL ‹a * b ≃ a›
+      _ ≃ a - a         := sub_substR AA.identR
+      _ ≃ 0             := sub_same
+    have : a ≃ 0 ∨ b - 1 ≃ 0 := mul_split_zero.mp ‹a * (b - 1) ≃ 0›
+    match ‹a ≃ 0 ∨ b - 1 ≃ 0› with
+    | Or.inl (_ : a ≃ 0) =>
+      exact Or.inl ‹a ≃ 0›
+    | Or.inr (_ : b - 1 ≃ 0) =>
+      have : b ≃ 1 := zero_diff_iff_eqv.mp ‹b - 1 ≃ 0›
+      exact Or.inr ‹b ≃ 1›
+  case mpr =>
+    intro (_ : a ≃ 0 ∨ b ≃ 1)
+    show a * b ≃ a
+    match ‹a ≃ 0 ∨ b ≃ 1› with
+    | Or.inl (_ : a ≃ 0) =>
+      calc
+        _ = a * b := rfl
+        _ ≃ 0 * b := AA.substL ‹a ≃ 0›
+        _ ≃ 0     := AA.absorbL
+        _ ≃ a     := Rel.symm ‹a ≃ 0›
+    | Or.inr (_ : b ≃ 1) =>
+      calc
+        _ = a * b := rfl
+        _ ≃ a * 1 := AA.substR ‹b ≃ 1›
+        _ ≃ a     := AA.identR
 
 /-- TODO -/
 theorem sgn_sqr_nonneg {a : ℤ} : (sgn a)^2 ≥ 0 := by
@@ -240,9 +271,11 @@ theorem pow_sgn_odd {a : ℤ} {n : ℕ} : (sgn a)^(2 * n + 1) ≃ sgn a := by
     _ ≃ sgn a * (sgn a)^(2 * n)     := AA.comm
     _ ≃ sgn a                       := mul_identR_reasons.mpr zero_or_one
 
+def sum_sub_err (a b : ℤ) : ℤ := a + b - a * b^2
+
 /-- TODO -/
 theorem sgn_sum_pos_prod
-    {a b : ℤ} : a * b > 0 → sgn (a + b) ≃ sgn a + sgn b - (sgn a) * (sgn b)^2
+    {a b : ℤ} : a * b > 0 → sgn (a + b) ≃ sum_sub_err (sgn a) (sgn b)
     := by
   intro (_ : a * b > 0)
   show sgn (a + b) ≃ sgn a + sgn b - (sgn a) * (sgn b)^2
@@ -280,7 +313,7 @@ theorem sgn_sum_pos_prod
 
 /-- TODO -/
 theorem sgn_sum_zero_prod
-    {a b : ℤ} : a * b ≃ 0 → sgn (a + b) ≃ sgn a + sgn b - (sgn a) * (sgn b)^2
+    {a b : ℤ} : a * b ≃ 0 → sgn (a + b) ≃ sum_sub_err (sgn a) (sgn b)
     := by
   intro (_ : a * b ≃ 0)
   show sgn (a + b) ≃ sgn a + sgn b - (sgn a) * (sgn b)^2
@@ -327,7 +360,7 @@ theorem sgn_sum_zero_prod
 
 /-- TODO -/
 theorem sgn_sum
-    {a b : ℤ} : a * b ≥ 0 → sgn (a + b) ≃ sgn a + sgn b - (sgn a) * (sgn b)^2
+    {a b : ℤ} : a * b ≥ 0 → sgn (a + b) ≃ sum_sub_err (sgn a) (sgn b)
     := by
   intro (_ : a * b ≥ 0)
   show sgn (a + b) ≃ sgn a + sgn b - (sgn a) * (sgn b)^2
@@ -337,8 +370,6 @@ theorem sgn_sum
     sgn_sum_pos_prod ‹a * b > 0›
   | Or.inr (_ : a * b ≃ 0) =>
     sgn_sum_zero_prod ‹a * b ≃ 0›
-
-def sum_sub_err (a b : ℤ) : ℤ := a + b - a * b^2
 
 theorem sse_substL
     {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → sum_sub_err a₁ b ≃ sum_sub_err a₂ b
