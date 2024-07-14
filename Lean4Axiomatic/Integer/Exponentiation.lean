@@ -10,6 +10,7 @@ derived properties.
 
 namespace Lean4Axiomatic.Integer
 
+open Logic (AP)
 open Natural (step)
 open Signed (Positive)
 
@@ -54,7 +55,31 @@ theorem pow_preserves_pos {a : ℤ} {n : ℕ} : a > 0 → a^n > 0 := by
   exact this
 
 /-- TODO -/
-theorem pow_preserves_nonneg {a : ℤ} {n : ℕ} : a ≥ 0 → a^n ≥ 0 := sorry
+theorem pow_preserves_nonneg {a : ℤ} {n : ℕ} : a ≥ 0 → a^n ≥ 0 := by
+  intro (_ : a ≥ 0)
+  show a^n ≥ 0
+  have : a > 0 ∨ a ≃ 0 := ge_split.mp ‹a ≥ 0›
+  match ‹a > 0 ∨ a ≃ 0› with
+  | Or.inl (_ : a > 0) =>
+    have : a^n > 0 := pow_preserves_pos ‹a > 0›
+    have : a^n ≥ 0 := ge_split.mpr (Or.inl ‹a^n > 0›)
+    exact this
+  | Or.inr (_ : a ≃ 0) =>
+    have : AP ((1:ℤ) ≄ 0) := AP.mk one_neqv_zero
+    have : (0:ℤ)^n ≃ 0 ∨ (0:ℤ)^n ≃ 1 := Natural.pow_of_zero
+    match ‹(0:ℤ)^n ≃ 0 ∨ (0:ℤ)^n ≃ 1› with
+    | Or.inl (_ : (0:ℤ)^n ≃ 0) =>
+      calc
+        _ = a^n     := rfl
+        _ ≃ (0:ℤ)^n := Natural.pow_substL ‹a ≃ 0›
+        _ ≥ 0       := ge_split.mpr (Or.inr ‹(0:ℤ)^n ≃ 0›)
+    | Or.inr (_ : (0:ℤ)^n ≃ 1) =>
+      have : (1:ℤ) > 0 := zero_lt_one
+      calc
+        _ = a^n     := rfl
+        _ ≃ (0:ℤ)^n := Natural.pow_substL ‹a ≃ 0›
+        _ ≃ 1       := ‹(0:ℤ)^n ≃ 1›
+        _ ≥ 0       := ge_split.mpr (Or.inl ‹(1:ℤ) > 0›)
 
 /-- TODO -/
 theorem pow_pos_preserves_gt_pos

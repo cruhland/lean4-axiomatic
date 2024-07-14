@@ -354,6 +354,7 @@ instance pow_preserves_nonzero_base_inst
     :=
   ‹AP (x ≄ 0)›.map pow_preserves_nonzero_base
 
+/-- TODO -/
 theorem pow_of_zero
     [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) mul]
     [AA.Absorbing 0 mul] {n : ℕ} : (0:α)^n ≃ 0 ∨ (0:α)^n ≃ 1

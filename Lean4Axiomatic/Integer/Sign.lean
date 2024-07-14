@@ -1102,6 +1102,11 @@ theorem mul_split_zero {a b : ℤ} : a * b ≃ 0 ↔ a ≃ 0 ∨ b ≃ 0 := by
       a * 0 ≃ _ := AA.absorbR
       0     ≃ _ := Rel.refl
 
+/-- Integers satisfy the zero-product property. -/
+instance zero_product_inst : AA.ZeroProduct (α := ℤ) (· * ·) := {
+  zero_prod := mul_split_zero.mp
+}
+
 /--
 If a product of integers is nonzero, then both factors must be nonzero.
 
