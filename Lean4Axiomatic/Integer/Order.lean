@@ -768,6 +768,44 @@ theorem sum_zero_prod_nonneg_iff_both_zero
 theorem mul_gt_zero_iff_sgn_same
     {a b : ℤ} : a * b > 0 ↔ sgn a ≃ sgn b ∧ a * b ≄ 0 := sorry
 
-theorem mul_preserves_nonneg {a b : ℤ} : a ≥ 0 → b ≥ 0 → a * b ≥ 0 := sorry
+/-- TODO -/
+theorem sgn_mul_diff_distribR
+    {a b c : ℤ} : sgn (a - b) * sgn c ≃ sgn (a * c - b * c)
+    := calc
+  _ = sgn (a - b) * sgn c := rfl
+  _ ≃ sgn ((a - b) * c)   := Rel.symm sgn_compat_mul
+  _ ≃ sgn (a * c - b * c) := sgn_subst AA.distribR
+
+/-- TODO -/
+theorem mul_substL_ge {a₁ a₂ b : ℤ} : b ≥ 0 → a₁ ≥ a₂ → a₁ * b ≥ a₂ * b := by
+  intro (_ : b ≥ 0) (_ : a₁ ≥ a₂)
+  show a₁ * b ≥ a₂ * b
+  have : b > 0 ∨ b ≃ 0 := ge_split.mp ‹b ≥ 0›
+  have : sgn (a₁ * b - a₂ * b) ≥ 0 := match ‹b > 0 ∨ b ≃ 0› with
+  | Or.inl (_ : b > 0) =>
+    calc
+      _ = sgn (a₁ * b - a₂ * b) := rfl
+      _ ≃ sgn (a₁ - a₂) * sgn b := Rel.symm sgn_mul_diff_distribR
+      _ ≃ sgn (a₁ - a₂) * 1     := AA.substR (gt_zero_sgn.mp ‹b > 0›)
+      _ ≃ sgn (a₁ - a₂)         := AA.identR
+      _ ≥ 0                     := sgn_diff_ge_zero.mp ‹a₁ ≥ a₂›
+  | Or.inr (_ : b ≃ 0) =>
+    calc
+      _ = sgn (a₁ * b - a₂ * b) := rfl
+      _ ≃ sgn (a₁ - a₂) * sgn b := Rel.symm sgn_mul_diff_distribR
+      _ ≃ sgn (a₁ - a₂) * 0     := AA.substR (sgn_zero.mp ‹b ≃ 0›)
+      _ ≃ 0                     := AA.absorbR
+      _ ≥ 0                     := le_refl
+  have : a₁ * b ≥ a₂ * b := sgn_diff_ge_zero.mpr ‹sgn (a₁ * b - a₂ * b) ≥ 0›
+  exact this
+
+/-- TODO -/
+theorem mul_preserves_nonneg {a b : ℤ} : a ≥ 0 → b ≥ 0 → a * b ≥ 0 := by
+  intro (_ : a ≥ 0) (_ : b ≥ 0)
+  show a * b ≥ 0
+  calc
+    _ = a * b := rfl
+    _ ≥ 0 * b := mul_substL_ge ‹b ≥ 0› ‹a ≥ 0›
+    _ ≃ 0     := AA.absorbL
 
 end Lean4Axiomatic.Integer
