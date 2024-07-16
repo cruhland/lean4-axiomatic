@@ -765,8 +765,37 @@ theorem sum_zero_prod_nonneg_iff_both_zero
     := by
   admit
 
+/-- TODO -/
 theorem mul_gt_zero_iff_sgn_same
-    {a b : ℤ} : a * b > 0 ↔ sgn a ≃ sgn b ∧ a * b ≄ 0 := sorry
+    {a b : ℤ} : a * b > 0 ↔ sgn a ≃ sgn b ∧ a * b ≄ 0 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a * b > 0)
+    show sgn a ≃ sgn b ∧ a * b ≄ 0
+    have : sgn a * sgn b ≃ 1 := calc
+      _ = sgn a * sgn b := rfl
+      _ ≃ sgn (a * b)   := Rel.symm sgn_compat_mul
+      _ ≃ 1             := gt_zero_sgn.mp ‹a * b > 0›
+    have (And.intro _ (_ : sgn a ≃ sgn b)) :=
+      mul_sqrt1_eqv.mp ‹sgn a * sgn b ≃ 1›
+    have : a * b ≄ 0 := by
+      intro (_ : a * b ≃ 0)
+      show False
+      have : a * b ≤ 0 := le_iff_lt_or_eqv.mpr (Or.inr ‹a * b ≃ 0›)
+      exact le_gt_false ‹a * b ≤ 0› ‹a * b > 0›
+    exact And.intro ‹sgn a ≃ sgn b› ‹a * b ≄ 0›
+  case mpr =>
+    intro (And.intro (_ : sgn a ≃ sgn b) (_ : a * b ≄ 0))
+    show a * b > 0
+    have : sgn (a * b) ≥ 0 := calc
+      _ = sgn (a * b)   := rfl
+      _ ≃ sgn a * sgn b := sgn_compat_mul
+      _ ≃ sgn b * sgn b := AA.substL ‹sgn a ≃ sgn b›
+      _ ≥ 0             := ge_zero_sgn.mpr nonneg_square
+    have : a * b ≥ 0 := sgn_preserves_ge_zero.mpr ‹sgn (a * b) ≥ 0›
+    have : 0 ≄ a * b := Rel.symm ‹a * b ≄ 0›
+    have : a * b > 0 := lt_iff_le_neqv.mpr (And.intro ‹a * b ≥ 0› ‹0 ≄ a * b›)
+    exact this
 
 /-- TODO -/
 theorem sgn_mul_diff_distribR
