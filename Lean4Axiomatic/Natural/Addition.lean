@@ -275,21 +275,31 @@ instance add_cancellative
 /--
 Both operands in a sum of natural numbers must be zero if the result is zero.
 -/
-theorem zero_sum_split {n m : ℕ} : n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0 := by
-  apply cases_on (motive := λ n => n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0) n
-  case zero =>
-    intro (_ : 0 + m ≃ 0)
-    show 0 ≃ 0 ∧ m ≃ 0
-    have : m ≃ 0 := Rel.trans (Rel.symm Addition.zero_add) ‹0 + m ≃ 0›
-    exact And.intro Rel.refl ‹m ≃ 0›
-  case step =>
-    intro n (_ : step n + m ≃ 0)
-    show step n ≃ 0 ∧ m ≃ 0
-    apply False.elim
-    show False
-    have : step (n + m) ≃ step n + m := Rel.symm Addition.step_add
-    have : step (n + m) ≃ 0 :=
-      Rel.trans ‹step (n + m) ≃ step n + m› ‹step n + m ≃ 0›
-    exact absurd ‹step (n + m) ≃ 0› step_neqv_zero
+theorem zero_sum_split {n m : ℕ} : n + m ≃ 0 ↔ n ≃ 0 ∧ m ≃ 0 := by
+  apply Iff.intro
+  case mp =>
+    apply cases_on (motive := λ n => n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0) n
+    case zero =>
+      intro (_ : 0 + m ≃ 0)
+      show 0 ≃ 0 ∧ m ≃ 0
+      have : m ≃ 0 := Rel.trans (Rel.symm Addition.zero_add) ‹0 + m ≃ 0›
+      exact And.intro Rel.refl ‹m ≃ 0›
+    case step =>
+      intro n (_ : step n + m ≃ 0)
+      show step n ≃ 0 ∧ m ≃ 0
+      apply False.elim
+      show False
+      have : step (n + m) ≃ step n + m := Rel.symm Addition.step_add
+      have : step (n + m) ≃ 0 :=
+        Rel.trans ‹step (n + m) ≃ step n + m› ‹step n + m ≃ 0›
+      exact absurd ‹step (n + m) ≃ 0› step_neqv_zero
+  case mpr =>
+    intro (And.intro (_ : n ≃ 0) (_ : m ≃ 0))
+    show n + m ≃ 0
+    calc
+      _ = n + m := rfl
+      _ ≃ 0 + m := AA.substL ‹n ≃ 0›
+      _ ≃ m     := AA.identL
+      _ ≃ 0     := ‹m ≃ 0›
 
 end Lean4Axiomatic.Natural

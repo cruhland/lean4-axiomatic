@@ -535,9 +535,8 @@ theorem sgn_diff_pow_pos
         have : sgn (a + b) ≃ 1 := gt_zero_sgn.mp ‹a + b > 0›
         Or.inr ‹sgn (a + b) ≃ 1›
       | Or.inr (_ : a + b ≃ 0) =>
-        have : a + b ≃ 0 ∧ a * b ≥ 0 := And.intro ‹a + b ≃ 0› ‹a * b ≥ 0›
         have (And.intro (_ : a ≃ 0) (_ : b ≃ 0)) :=
-          sum_zero_prod_nonneg_iff_both_zero.mp ‹a + b ≃ 0 ∧ a * b ≥ 0›
+          (zero_sum_split ‹a ≥ 0› ‹b ≥ 0›).mp ‹a + b ≃ 0›
         have : sgn (a - b) ≃ 0 := calc
           _ = sgn (a - b)     := rfl
           _ ≃ sgn (0 - b)     := sgn_subst (sub_substL ‹a ≃ 0›)

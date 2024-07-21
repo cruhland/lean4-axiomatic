@@ -326,7 +326,7 @@ theorem le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m := by
     n             ≃ _ := Rel.symm add_zero
     n + 0         ≃ _ := Rel.refl
   have : d₁ + d₂ ≃ 0 := AA.cancelL ‹n + (d₁ + d₂) ≃ n + 0›
-  have ⟨(_ : d₁ ≃ 0), _⟩ := zero_sum_split ‹d₁ + d₂ ≃ 0›
+  have ⟨(_ : d₁ ≃ 0), _⟩ := zero_sum_split.mp ‹d₁ + d₂ ≃ 0›
   calc
     n      ≃ _ := Rel.symm add_zero
     n + 0  ≃ _ := AA.substR (Rel.symm ‹d₁ ≃ 0›)

@@ -5,7 +5,7 @@ import Lean4Axiomatic.Integer.Subtraction
 namespace Lean4Axiomatic.Integer
 
 open Coe (coe)
-open Logic (AP)
+open Logic (AP and_mapL and_mapR iff_subst_covar)
 open Natural (step)
 open Signed (Negative Positive)
 
@@ -760,10 +760,35 @@ theorem sgn_preserves_ge_zero {a : ℤ} : a ≥ 0 ↔ sgn a ≥ 0 := sorry
 
 theorem sgn_diff_ge_zero {a b : ℤ} : a ≥ b ↔ sgn (a - b) ≥ 0 := sorry
 
-theorem sum_zero_prod_nonneg_iff_both_zero
-    {a b : ℤ} : a + b ≃ 0 ∧ a * b ≥ 0 ↔ a ≃ 0 ∧ b ≃ 0
+theorem ge_zero_eqv_nat {a : ℤ} : a ≥ 0 → ∃ (n : ℕ), a ≃ (n:ℤ) := sorry
+
+/-- TODO -/
+theorem zero_sum_split
+    {a b : ℤ} : a ≥ 0 → b ≥ 0 → (a + b ≃ 0 ↔ a ≃ 0 ∧ b ≃ 0)
     := by
-  admit
+  intro (_ : a ≥ 0) (_ : b ≥ 0)
+  have (Exists.intro (n : ℕ) (_ : a ≃ (n:ℤ))) := ge_zero_eqv_nat ‹a ≥ 0›
+  have (Exists.intro (m : ℕ) (_ : b ≃ (m:ℤ))) := ge_zero_eqv_nat ‹b ≥ 0›
+  have from_natural_eqv {k j : ℕ} : k ≃ j ↔ (k:ℤ) ≃ (j:ℤ) :=
+    Iff.intro AA.subst₁ AA.inject
+  have nat_int_eqvL {k j : ℕ} {c : ℤ} : c ≃ (k:ℤ) → (k ≃ j ↔ c ≃ (j:ℤ)) := by
+    intro (_ : c ≃ (k:ℤ))
+    show k ≃ j ↔ c ≃ (j:ℤ)
+    calc
+      _ ↔ k ≃ j         := Iff.rfl
+      _ ↔ (k:ℤ) ≃ (j:ℤ) := from_natural_eqv
+      _ ↔ c ≃ (j:ℤ)     := (AA.eqv_substL_iff ‹c ≃ (k:ℤ)›).symm
+  have : n ≃ 0 ↔ a ≃ 0 := nat_int_eqvL ‹a ≃ (n:ℤ)›
+  have : m ≃ 0 ↔ b ≃ 0 := nat_int_eqvL ‹b ≃ (m:ℤ)›
+  calc
+    _ ↔ a + b ≃ 0               := Iff.rfl
+    _ ↔ (n:ℤ) + b ≃ 0           := AA.eqv_substL_iff (AA.substL ‹a ≃ (n:ℤ)›)
+    _ ↔ (n:ℤ) + (m:ℤ) ≃ 0       := AA.eqv_substL_iff (AA.substR ‹b ≃ (m:ℤ)›)
+    _ ↔ ((n+m:ℕ):ℤ) ≃ ((0:ℕ):ℤ) := AA.eqv_substL_iff (Rel.symm AA.compat₂)
+    _ ↔ n + m ≃ 0               := from_natural_eqv.symm
+    _ ↔ n ≃ 0 ∧ m ≃ 0           := Natural.zero_sum_split
+    _ ↔ a ≃ 0 ∧ m ≃ 0           := iff_subst_covar and_mapL ‹n ≃ 0 ↔ a ≃ 0›
+    _ ↔ a ≃ 0 ∧ b ≃ 0           := iff_subst_covar and_mapR ‹m ≃ 0 ↔ b ≃ 0›
 
 /-- TODO -/
 theorem mul_gt_zero_iff_sgn_same
