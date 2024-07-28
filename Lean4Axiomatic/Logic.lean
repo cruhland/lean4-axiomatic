@@ -51,6 +51,9 @@ theorem and_mapR {p₁ p₂ q : Prop} (f : p₁ → p₂) : q ∧ p₁ → q ∧
   have : p₂ := f ‹p₁›
   exact And.intro ‹q› ‹p₂›
 
+theorem or_mapL {p₁ p₂ q : Prop} (f : p₁ → p₂) : p₁ ∨ q → p₂ ∨ q := sorry
+theorem or_mapR {p₁ p₂ q : Prop} (f : p₁ → p₂) : q ∨ p₁ → q ∨ p₂ := sorry
+
 /--
 Disjunction distributes over conjunction.
 

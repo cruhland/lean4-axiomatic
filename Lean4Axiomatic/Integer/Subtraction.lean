@@ -386,6 +386,8 @@ Multiplication by a nonzero value on the right is injective.
 theorem mul_cancelR {a b c : ℤ} : a ≄ 0 → b * a ≃ c * a → b ≃ c :=
   AA.cancelRC (C := (· ≄ 0))
 
+theorem eqv_sgn {a b : ℤ} : a ≃ b ↔ sgn (a - b) ≃ 0 := sorry
+
 /--
 Decidable equivalence for integers.
 

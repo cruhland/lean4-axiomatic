@@ -479,7 +479,7 @@ class Sgn.Props
       [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Signed.Ops ℤ] [Ops ℤ]
     :=
   /-- Zero is the only integer with sign value zero. -/
-  sgn_zero {a : ℤ} : a ≃ 0 ↔ sgn a ≃ (0 : ℤ)
+  sgn_zero {a : ℤ} : a ≃ 0 ↔ sgn a ≃ (0:ℤ)
 
   /-- Only positive integers have sign value one. -/
   sgn_positive {a : ℤ} : Positive a ↔ sgn a ≃ 1

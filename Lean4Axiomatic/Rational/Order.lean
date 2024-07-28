@@ -955,7 +955,7 @@ theorem sgn_max {p : ℚ} : sgn p ≤ 1 := by
   match this with
   | AA.OneOfThree.first (_ : sgn p ≃ 0) =>
     have : (0 : ℤ) < 1 := Integer.zero_lt_one
-    have : (0 : ℤ) ≤ 1 := Integer.le_iff_lt_or_eqv.mpr (Or.inl this)
+    have : (0 : ℤ) ≤ 1 := Integer.le_split.mpr (Or.inl this)
     have : sgn p ≤ 1 := Integer.le_substL_eqv (Rel.symm ‹sgn p ≃ 0›) this
     exact this
   | AA.OneOfThree.second (_ : sgn p ≃ 1) =>
@@ -966,7 +966,7 @@ theorem sgn_max {p : ℚ} : sgn p ≤ 1 := by
     have : (-1 : ℤ) < 0 := Integer.neg_one_lt_zero
     have : (0 : ℤ) < 1 := Integer.zero_lt_one
     have : (-1 : ℤ) < 1 := Integer.lt_trans ‹(-1 : ℤ) < 0› ‹(0 : ℤ) < 1›
-    have : (-1 : ℤ) ≤ 1 := Integer.le_iff_lt_or_eqv.mpr (Or.inl this)
+    have : (-1 : ℤ) ≤ 1 := Integer.le_split.mpr (Or.inl this)
     have : sgn p ≤ 1 := Integer.le_substL_eqv (Rel.symm ‹sgn p ≃ -1›) this
     exact this
 

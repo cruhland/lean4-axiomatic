@@ -144,25 +144,25 @@ theorem pow_preserves_ge_nonneg
     := by
   intro (_ : b ≥ 0) (_ : a ≥ b)
   show a^n ≥ b^n
-  have : a > b ∨ b ≃ a := le_iff_lt_or_eqv.mp ‹a ≥ b›
+  have : a > b ∨ b ≃ a := le_split.mp ‹a ≥ b›
   match this with
   | Or.inl (_ : a > b) =>
     have : n > 0 ∨ n ≃ 0 := Natural.ge_split Natural.ge_zero
     match this with
     | Or.inl (_ : n > 0) =>
       have : a^n > b^n := pow_pos_preserves_gt_pos ‹n > 0› ‹b ≥ 0› ‹a > b›
-      have : a^n ≥ b^n := le_iff_lt_or_eqv.mpr (Or.inl ‹a^n > b^n›)
+      have : a^n ≥ b^n := le_split.mpr (Or.inl ‹a^n > b^n›)
       exact this
     | Or.inr (_ : n ≃ 0) =>
       calc
         _ = a^n := rfl
         _ ≃ a^0 := Natural.pow_substR ‹n ≃ 0›
-        _ ≥ 1   := le_iff_lt_or_eqv.mpr (Or.inr (Rel.symm Natural.pow_zero))
+        _ ≥ 1   := le_split.mpr (Or.inr (Rel.symm Natural.pow_zero))
         _ ≃ b^0 := Rel.symm Natural.pow_zero
         _ ≃ b^n := Natural.pow_substR (Rel.symm ‹n ≃ 0›)
   | Or.inr (_ : b ≃ a) =>
     have : b^n ≃ a^n := Natural.pow_substL ‹b ≃ a›
-    have : a^n ≥ b^n := le_iff_lt_or_eqv.mpr (Or.inr ‹b^n ≃ a^n›)
+    have : a^n ≥ b^n := le_split.mpr (Or.inr ‹b^n ≃ a^n›)
     exact this
 
 /-- TODO -/
@@ -500,10 +500,10 @@ theorem sgn_diff_pow_pos
       let sam := sgn (a^m)
       let amab := a^m * (a - b)
       let abmb := (a^m - b^m) * b
-      have : a * b ≥ 0 := mul_preserves_ge_zero ‹a ≥ 0› ‹b ≥ 0›
+      have : a * b ≥ 0 := mul_preserves_nonneg ‹a ≥ 0› ‹b ≥ 0›
       have : sgn (a * b) ≥ 0 := sgn_preserves_ge_zero.mp ‹a * b ≥ 0›
       have : sab^2 * sgn (a * b) ≥ 0 :=
-        mul_preserves_ge_zero sgn_sqr_nonneg ‹sgn (a * b) ≥ 0›
+        mul_preserves_nonneg sgn_sqr_nonneg ‹sgn (a * b) ≥ 0›
       have : sgn (amab * abmb) ≥ 0 := calc
         _ = sgn (amab * abmb)           := rfl
         _ ≃ sgn amab * sgn abmb         := sgn_compat_mul
