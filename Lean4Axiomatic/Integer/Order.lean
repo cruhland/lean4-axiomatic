@@ -412,156 +412,6 @@ instance lt_injective_neg : AA.Injective (α := ℤ) (-·) (· < ·) (· > ·) :
 }
 
 /--
-The less-than relation is transitive.
-
-**Property intuition**: This is a fundamental property of total ordering
-relations: all elements of the ordered type are covered by the relation, and
-orderings of nearby elements can be chained to give orderings of distant
-elements.
-
-**Proof intuition**: Expanding the definition of less-than into a property of
-integer subtraction being positive, the result follows from adding the two
-smaller properties and using algebra to show that it produces the conclusion.
--/
-theorem lt_trans {a b c : ℤ} : a < b → b < c → a < c := by
-  intro (_ : a < b) (_ : b < c)
-  show a < c
-  have : Positive (b - a) := gt_iff_pos_diff.mp ‹a < b›
-  have : Positive (c - b) := gt_iff_pos_diff.mp ‹b < c›
-  apply gt_iff_pos_diff.mpr
-  show Positive (c - a)
-  have : Positive ((c - b) + (b - a)) :=
-    add_preserves_positive ‹Positive (c - b)› ‹Positive (b - a)›
-  have : (c - b) + (b - a) ≃ c - a := calc
-    (c - b) + (b - a)   ≃ _ := AA.substL sub_defn
-    (c + -b) + (b - a)  ≃ _ := AA.substR sub_defn
-    (c + -b) + (b + -a) ≃ _ := AA.assoc
-    c + (-b + (b + -a)) ≃ _ := AA.substR (Rel.symm AA.assoc)
-    c + ((-b + b) + -a) ≃ _ := AA.substR (AA.substL AA.inverseL)
-    c + (0 + -a)        ≃ _ := AA.substR AA.identL
-    c + -a              ≃ _ := Rel.symm sub_defn
-    c - a               ≃ _ := Rel.refl
-  have : Positive (c - a) :=
-    AA.substFn ‹(c - b) + (b - a) ≃ c - a› ‹Positive ((c - b) + (b - a))›
-  exact this
-
-instance lt_transitive : Relation.Transitive (α := ℤ) (· < ·) := {
-  trans := lt_trans
-}
-
-
-instance trans_eqv_lt_lt_inst : Trans (α := ℤ) (· ≃ ·) (· < ·) (· < ·) := {
-  trans := sorry
-}
-
-instance trans_lt_eqv_lt_inst : Trans (α := ℤ) (· < ·) (· ≃ ·) (· < ·) := {
-  trans := sorry
-}
-
-instance trans_le_lt_lt_inst : Trans (α := ℤ) (· ≤ ·) (· < ·) (· < ·) := {
-  trans := sorry
-}
-
-instance trans_lt_le_lt_inst : Trans (α := ℤ) (· < ·) (· ≤ ·) (· < ·) := {
-  trans := sorry
-}
-
-instance trans_le_le_le_inst : Trans (α := ℤ) (· ≤ ·) (· ≤ ·) (· ≤ ·) := {
-  trans := sorry
-}
-
-instance trans_eqv_le_le_inst : Trans (α := ℤ) (· ≃ ·) (· ≤ ·) (· ≤ ·) := {
-  trans := sorry
-}
-
-instance trans_le_eqv_le_inst : Trans (α := ℤ) (· ≤ ·) (· ≃ ·) (· ≤ ·) := {
-  trans := sorry
-}
-
-instance trans_gt_gt_gt_inst : Trans (α := ℤ) (· > ·) (· > ·) (· > ·) := {
-  trans := sorry
-}
-
-instance trans_eqv_gt_gt_inst : Trans (α := ℤ) (· ≃ ·) (· > ·) (· > ·) := {
-  trans := sorry
-}
-
-instance trans_gt_eqv_gt_inst : Trans (α := ℤ) (· > ·) (· ≃ ·) (· > ·) := {
-  trans := sorry
-}
-
-instance trans_ge_gt_gt_inst : Trans (α := ℤ) (· ≥ ·) (· > ·) (· > ·) := {
-  trans := sorry
-}
-
-instance trans_gt_ge_gt_inst : Trans (α := ℤ) (· > ·) (· ≥ ·) (· > ·) := {
-  trans := sorry
-}
-
-instance trans_ge_ge_ge_inst : Trans (α := ℤ) (· ≥ ·) (· ≥ ·) (· ≥ ·) := {
-  trans := sorry
-}
-
-instance trans_eqv_ge_ge_inst : Trans (α := ℤ) (· ≃ ·) (· ≥ ·) (· ≥ ·) := {
-  trans := sorry
-}
-
-instance trans_ge_eqv_ge_inst : Trans (α := ℤ) (· ≥ ·) (· ≃ ·) (· ≥ ·) := {
-  trans := sorry
-}
-
-/--
-Any pair of integers can only be in one of three relations: _less than_,
-_greater than_, or _equivalence_.
-
-**Property intuition**: We expect this to be true because we know the integers
-are totally ordered.
-
-**Proof intuition**: Convert into sign trichotomy on `a - b`.
--/
-theorem order_trichotomy
-    (a b : ℤ) : AA.ExactlyOneOfThree (a < b) (a ≃ b) (a > b)
-    := by
-  have abTri
-    : AA.ExactlyOneOfThree (a - b ≃ 0) (Positive (a - b)) (Negative (a - b))
-    := Signed.trichotomy (a - b)
-  apply AA.ExactlyOneOfThree.mk
-  case atLeastOne =>
-    show AA.OneOfThree (a < b) (a ≃ b) (a > b)
-    match abTri.atLeastOne with
-    | AA.OneOfThree.first (_ : a - b ≃ 0) =>
-      have : a ≃ b := zero_diff_iff_eqv.mp ‹a - b ≃ 0›
-      exact AA.OneOfThree.second ‹a ≃ b›
-    | AA.OneOfThree.second (_ : Positive (a - b)) =>
-      have : a > b := gt_iff_pos_diff.mpr ‹Positive (a - b)›
-      exact AA.OneOfThree.third ‹a > b›
-    | AA.OneOfThree.third (_ : Negative (a - b)) =>
-      have : a < b := lt_iff_neg_diff.mpr ‹Negative (a - b)›
-      exact AA.OneOfThree.first ‹a < b›
-  case atMostOne =>
-    intro (_ : AA.TwoOfThree (a < b) (a ≃ b) (a > b))
-    show False
-    let ab := a - b
-    have abTwo : AA.TwoOfThree (ab ≃ 0) (Positive ab) (Negative ab) :=
-      match ‹AA.TwoOfThree (a < b) (a ≃ b) (a > b)› with
-      | AA.TwoOfThree.oneAndTwo (_ : a < b) (_ : a ≃ b) =>
-        have : Negative ab := lt_iff_neg_diff.mp ‹a < b›
-        have : ab ≃ 0 := zero_diff_iff_eqv.mpr ‹a ≃ b›
-        AA.TwoOfThree.oneAndThree ‹ab ≃ 0› ‹Negative ab›
-      | AA.TwoOfThree.oneAndThree (_ : a < b) (_ : a > b) =>
-        have : Negative ab := lt_iff_neg_diff.mp ‹a < b›
-        have : Positive ab := gt_iff_pos_diff.mp ‹a > b›
-        AA.TwoOfThree.twoAndThree ‹Positive ab› ‹Negative ab›
-      | AA.TwoOfThree.twoAndThree (_ : a ≃ b) (_ : a > b) =>
-        have : ab ≃ 0 := zero_diff_iff_eqv.mpr ‹a ≃ b›
-        have : Positive ab := gt_iff_pos_diff.mp ‹a > b›
-        AA.TwoOfThree.oneAndTwo ‹ab ≃ 0› ‹Positive ab›
-    have abNotTwo
-      : ¬ AA.TwoOfThree (ab ≃ 0) (Positive ab) (Negative ab)
-      := abTri.atMostOne
-    exact absurd abTwo abNotTwo
-
-/--
 _Less than or equivalent to_ is reflexive.
 
 **Property intuition**: Equivalence is already reflexive.
@@ -617,6 +467,422 @@ theorem ge_split {a b : ℤ} : a ≥ b ↔ a > b ∨ a ≃ b := calc
   _ ↔ a ≥ b         := Iff.rfl
   _ ↔ b < a ∨ b ≃ a := le_split
   _ ↔ a > b ∨ a ≃ b := iff_subst_covar or_mapR Fn.swap
+
+/--
+Convert the _less than_ relation to and from its representation as the sign
+value of the difference of its operands.
+
+**Property intuition**: If a subtraction's result is negative, then its first
+operand must be less than its second.
+
+**Proof intuition**: Use `Negative` as an intermediate step in the conversion.
+-/
+theorem lt_sgn {a b : ℤ} : a < b ↔ sgn (a - b) ≃ -1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a < b)
+    show sgn (a - b) ≃ -1
+    have : Negative (a - b) := lt_iff_neg_diff.mp ‹a < b›
+    have : sgn (a - b) ≃ -1 := sgn_negative.mp this
+    exact this
+  case mpr =>
+    intro (_ : sgn (a - b) ≃ -1)
+    show a < b
+    have : Negative (a - b) := sgn_negative.mpr ‹sgn (a - b) ≃ -1›
+    have : a < b := lt_iff_neg_diff.mpr this
+    exact this
+
+/-- TODO -/
+theorem lt_zero_sgn {a : ℤ} : a < 0 ↔ sgn a ≃ -1 := calc
+  _ ↔ a < 0            := Iff.rfl
+  _ ↔ sgn (a - 0) ≃ -1 := lt_sgn
+  _ ↔ sgn a ≃ -1       := AA.eqv_substL_iff (sgn_subst sub_identR)
+
+/--
+Convert the _greater than_ relation to and from its representation as the sign
+value of the difference of its operands.
+
+**Property intuition**: If a subtraction's result is positive, then its first
+operand must be greater than its second.
+
+**Proof intuition**: Use `Positive` as an intermediate step in the conversion.
+-/
+theorem gt_sgn {a b : ℤ} : a > b ↔ sgn (a - b) ≃ 1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a > b)
+    show sgn (a - b) ≃ 1
+    have : Positive (a - b) := gt_iff_pos_diff.mp ‹a > b›
+    have : sgn (a - b) ≃ 1 := sgn_positive.mp this
+    exact this
+  case mpr =>
+    intro (_ : sgn (a - b) ≃ 1)
+    show a > b
+    have : Positive (a - b) := sgn_positive.mpr ‹sgn (a - b) ≃ 1›
+    have : a > b := gt_iff_pos_diff.mpr this
+    exact this
+
+/-- TODO -/
+theorem gt_zero_sgn {a : ℤ} : a > 0 ↔ sgn a ≃ 1 := calc
+  _ ↔ a > 0           := Iff.rfl
+  _ ↔ sgn (a - 0) ≃ 1 := gt_sgn
+  _ ↔ sgn a ≃ 1       := AA.eqv_substL_iff (sgn_subst sub_identR)
+
+/-- TODO -/
+theorem ge_sgn {a b : ℤ} : a ≥ b ↔ sgn (a - b) ≄ -1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a ≥ b) (_ : sgn (a - b) ≃ -1)
+    show False
+    have : a > b ∨ a ≃ b := ge_split.mp ‹a ≥ b›
+    let TwoSgns :=
+      AA.TwoOfThree (sgn (a - b) ≃ 0) (sgn (a - b) ≃ 1) (sgn (a - b) ≃ -1)
+    have : TwoSgns :=
+      match ‹a > b ∨ a ≃ b› with
+      | Or.inl (_ : a > b) =>
+        have : sgn (a - b) ≃ 1 := gt_sgn.mp ‹a > b›
+        twoAndThree ‹sgn (a - b) ≃ 1› ‹sgn (a - b) ≃ -1›
+      | Or.inr (_ : a ≃ b) =>
+        have : sgn (a - b) ≃ 0 := eqv_sgn.mp ‹a ≃ b›
+        oneAndThree ‹sgn (a - b) ≃ 0› ‹sgn (a - b) ≃ -1›
+    have : ¬TwoSgns := signs_distinct
+    exact absurd ‹TwoSgns› ‹¬TwoSgns›
+  case mpr =>
+    intro (_ : sgn (a - b) ≄ -1)
+    show a ≥ b
+    match sgn_trichotomy (a - b) with
+    | AA.OneOfThree₁.first (_ : sgn (a - b) ≃ 0) =>
+      have : a ≃ b := eqv_sgn.mpr ‹sgn (a - b) ≃ 0›
+      have : a ≥ b := ge_split.mpr (Or.inr ‹a ≃ b›)
+      exact this
+    | AA.OneOfThree₁.second (_ : sgn (a - b) ≃ 1) =>
+      have : a > b := gt_sgn.mpr ‹sgn (a - b) ≃ 1›
+      have : a ≥ b := ge_split.mpr (Or.inl ‹a > b›)
+      exact this
+    | AA.OneOfThree₁.third (_ : sgn (a - b) ≃ -1) =>
+      exact absurd ‹sgn (a - b) ≃ -1› ‹sgn (a - b) ≄ -1›
+
+theorem le_sgn {a b : ℤ} : a ≤ b ↔ sgn (a - b) ≄ 1 := sorry
+
+/-- TODO -/
+theorem ge_zero_sgn {a : ℤ} : a ≥ 0 ↔ sgn a ≄ -1 := by
+  have : sgn (a - 0) ≃ sgn a := sgn_subst sub_identR
+  have : sgn (a - 0) ≃ -1 ↔ sgn a ≃ -1 := AA.eqv_substL_iff this
+  calc
+    _ ↔ a ≥ 0            := Iff.rfl
+    _ ↔ sgn (a - 0) ≄ -1 := ge_sgn
+    _ ↔ sgn a ≄ -1       := iff_subst_contra mt ‹sgn (a - 0) ≃ -1 ↔ sgn a ≃ -1›
+
+/-- TODO -/
+theorem sgn_gt_zero_iff_pos {a : ℤ} : sgn a > 0 ↔ sgn a ≃ 1 := calc
+  _ ↔ sgn a > 0       := Iff.rfl
+  _ ↔ sgn (sgn a) ≃ 1 := gt_zero_sgn
+  _ ↔ sgn a ≃ 1       := AA.eqv_substL_iff sgn_idemp
+
+/-- TODO -/
+theorem sgn_ge_zero_iff_nonneg {a : ℤ} : sgn a ≥ 0 ↔ sgn a ≄ -1 := calc
+  _ ↔ sgn a ≥ 0        := Iff.rfl
+  _ ↔ sgn (sgn a) ≄ -1 := ge_zero_sgn
+  _ ↔ sgn a ≄ -1       := iff_subst_contra mt (AA.eqv_substL_iff sgn_idemp)
+
+/-- TODO -/
+theorem sgn_preserves_gt_zero {a : ℤ} : a > 0 ↔ sgn a > 0 := calc
+  _ ↔ a > 0     := Iff.rfl
+  _ ↔ sgn a ≃ 1 := gt_zero_sgn
+  _ ↔ sgn a > 0 := sgn_gt_zero_iff_pos.symm
+
+/-- TODO -/
+theorem sgn_preserves_ge_zero {a : ℤ} : a ≥ 0 ↔ sgn a ≥ 0 := calc
+  _ ↔ a ≥ 0                 := Iff.rfl
+  _ ↔ a > 0 ∨ a ≃ 0         := ge_split
+  _ ↔ sgn a > 0 ∨ a ≃ 0     := iff_subst_covar or_mapL sgn_preserves_gt_zero
+  _ ↔ sgn a > 0 ∨ sgn a ≃ 0 := iff_subst_covar or_mapR sgn_zero
+  _ ↔ sgn a ≥ 0             := ge_split.symm
+
+/-- TODO -/
+theorem sgn_diff_ge_zero {a b : ℤ} : a ≥ b ↔ sgn (a - b) ≥ 0 := calc
+  _ ↔ a ≥ b            := Iff.rfl
+  _ ↔ sgn (a - b) ≄ -1 := ge_sgn
+  _ ↔ sgn (a - b) ≥ 0  := sgn_ge_zero_iff_nonneg.symm
+
+/--
+The less-than relation is transitive.
+
+**Property intuition**: This is a fundamental property of total ordering
+relations: all elements of the ordered type are covered by the relation, and
+orderings of nearby elements can be chained to give orderings of distant
+elements.
+
+**Proof intuition**: Expanding the definition of less-than into a property of
+integer subtraction being positive, the result follows from adding the two
+smaller properties and using algebra to show that it produces the conclusion.
+-/
+theorem lt_trans {a b c : ℤ} : a < b → b < c → a < c := by
+  intro (_ : a < b) (_ : b < c)
+  show a < c
+  have : Positive (b - a) := gt_iff_pos_diff.mp ‹a < b›
+  have : Positive (c - b) := gt_iff_pos_diff.mp ‹b < c›
+  apply gt_iff_pos_diff.mpr
+  show Positive (c - a)
+  have : Positive ((c - b) + (b - a)) :=
+    add_preserves_positive ‹Positive (c - b)› ‹Positive (b - a)›
+  have : (c - b) + (b - a) ≃ c - a := calc
+    (c - b) + (b - a)   ≃ _ := AA.substL sub_defn
+    (c + -b) + (b - a)  ≃ _ := AA.substR sub_defn
+    (c + -b) + (b + -a) ≃ _ := AA.assoc
+    c + (-b + (b + -a)) ≃ _ := AA.substR (Rel.symm AA.assoc)
+    c + ((-b + b) + -a) ≃ _ := AA.substR (AA.substL AA.inverseL)
+    c + (0 + -a)        ≃ _ := AA.substR AA.identL
+    c + -a              ≃ _ := Rel.symm sub_defn
+    c - a               ≃ _ := Rel.refl
+  have : Positive (c - a) :=
+    AA.substFn ‹(c - b) + (b - a) ≃ c - a› ‹Positive ((c - b) + (b - a))›
+  exact this
+
+instance lt_transitive : Relation.Transitive (α := ℤ) (· < ·) := {
+  trans := lt_trans
+}
+
+theorem trans_eqv_lt_lt {a b c : ℤ} : a ≃ b → b < c → a < c := by
+  intro (_ : a ≃ b) (_ : b < c)
+  show a < c
+  exact lt_substL_eqv (Rel.symm ‹a ≃ b›) ‹b < c›
+
+instance trans_eqv_lt_lt_inst : Trans (α := ℤ) (· ≃ ·) (· < ·) (· < ·) := {
+  trans := trans_eqv_lt_lt
+}
+
+theorem trans_lt_eqv_lt {a b c : ℤ} : a < b → b ≃ c → a < c := by
+  intro (_ : a < b) (_ : b ≃ c)
+  show a < c
+  exact lt_substR_eqv ‹b ≃ c› ‹a < b›
+
+instance trans_lt_eqv_lt_inst : Trans (α := ℤ) (· < ·) (· ≃ ·) (· < ·) := {
+  trans := trans_lt_eqv_lt
+}
+
+theorem trans_le_lt_lt {a b c : ℤ} : a ≤ b → b < c → a < c := by
+  intro (_ : a ≤ b) (_ : b < c)
+  show a < c
+  have : a < b ∨ a ≃ b := le_split.mp ‹a ≤ b›
+  match ‹a < b ∨ a ≃ b› with
+  | Or.inl (_ : a < b) =>
+    have : a < c := lt_trans ‹a < b› ‹b < c›
+    exact this
+  | Or.inr (_ : a ≃ b) =>
+    have : a < c := trans_eqv_lt_lt ‹a ≃ b› ‹b < c›
+    exact this
+
+instance trans_le_lt_lt_inst : Trans (α := ℤ) (· ≤ ·) (· < ·) (· < ·) := {
+  trans := trans_le_lt_lt
+}
+
+theorem trans_lt_le_lt {a b c : ℤ} : a < b → b ≤ c → a < c := by
+  intro (_ : a < b) (_ : b ≤ c)
+  show a < c
+  have : b < c ∨ b ≃ c := le_split.mp ‹b ≤ c›
+  match ‹b < c ∨ b ≃ c› with
+  | Or.inl (_ : b < c) =>
+    have : a < c := lt_trans ‹a < b› ‹b < c›
+    exact this
+  | Or.inr (_ : b ≃ c) =>
+    have : a < c := trans_lt_eqv_lt ‹a < b› ‹b ≃ c›
+    exact this
+
+instance trans_lt_le_lt_inst : Trans (α := ℤ) (· < ·) (· ≤ ·) (· < ·) := {
+  trans := trans_lt_le_lt
+}
+
+/-- See the Rational version of this for the explanation. -/
+theorem trans_le_le_le {a b c : ℤ} : a ≤ b → b ≤ c → a ≤ c := by
+  intro (_ : a ≤ b) (_ : b ≤ c)
+  show a ≤ c
+  have : a < b ∨ a ≃ b := le_split.mp ‹a ≤ b›
+  have : b < c ∨ b ≃ c := le_split.mp ‹b ≤ c›
+  match And.intro ‹a < b ∨ a ≃ b› ‹b < c ∨ b ≃ c› with
+  | (And.intro (Or.inl (_ : a < b)) (Or.inl (_ : b < c))) =>
+    have : a < c := lt_trans ‹a < b› ‹b < c›
+    have : a ≤ c := le_split.mpr (Or.inl ‹a < c›)
+    exact this
+  | (And.intro (Or.inl (_ : a < b)) (Or.inr (_ : b ≃ c))) =>
+    have : a < c := trans_lt_eqv_lt ‹a < b› ‹b ≃ c›
+    have : a ≤ c := le_split.mpr (Or.inl ‹a < c›)
+    exact this
+  | (And.intro (Or.inr (_ : a ≃ b)) (Or.inl (_ : b < c))) =>
+    have : a < c := trans_eqv_lt_lt ‹a ≃ b› ‹b < c›
+    have : a ≤ c := le_split.mpr (Or.inl ‹a < c›)
+    exact this
+  | (And.intro (Or.inr (_ : a ≃ b)) (Or.inr (_ : b ≃ c))) =>
+    have : a ≃ c := Rel.trans ‹a ≃ b› ‹b ≃ c›
+    have : a ≤ c := le_split.mpr (Or.inr ‹a ≃ c›)
+    exact this
+
+instance trans_le_le_le_inst : Trans (α := ℤ) (· ≤ ·) (· ≤ ·) (· ≤ ·) := {
+  trans := trans_le_le_le
+}
+
+/-- TODO -/
+theorem trans_eqv_le_le {a b c : ℤ} : a ≃ b → b ≤ c → a ≤ c := by
+  intro (_ : a ≃ b) (_ : b ≤ c)
+  show a ≤ c
+  have : a ≤ b := le_split.mpr (Or.inr ‹a ≃ b›)
+  have : a ≤ c := trans_le_le_le ‹a ≤ b› ‹b ≤ c›
+  exact this
+
+instance trans_eqv_le_le_inst : Trans (α := ℤ) (· ≃ ·) (· ≤ ·) (· ≤ ·) := {
+  trans := trans_eqv_le_le
+}
+
+/-- TODO -/
+theorem trans_le_eqv_le {a b c : ℤ} : a ≤ b → b ≃ c → a ≤ c := by
+  intro (_ : a ≤ b) (_ : b ≃ c)
+  show a ≤ c
+  have : b ≤ c := le_split.mpr (Or.inr ‹b ≃ c›)
+  have : a ≤ c := trans_le_le_le ‹a ≤ b› ‹b ≤ c›
+  exact this
+
+instance trans_le_eqv_le_inst : Trans (α := ℤ) (· ≤ ·) (· ≃ ·) (· ≤ ·) := {
+  trans := trans_le_eqv_le
+}
+
+/-- TODO -/
+theorem trans_gt_gt_gt {a b c : ℤ} : a > b → b > c → a > c := by
+  intro (_ : a > b) (_ : b > c)
+  show a > c
+  have : c < a := lt_trans ‹c < b› ‹b < a›
+  exact this
+
+instance trans_gt_gt_gt_inst : Trans (α := ℤ) (· > ·) (· > ·) (· > ·) := {
+  trans := trans_gt_gt_gt
+}
+
+/-- TODO -/
+theorem trans_eqv_gt_gt {a b c : ℤ} : a ≃ b → b > c → a > c := by
+  intro (_ : a ≃ b) (_ : b > c)
+  show a > c
+  have : c < a := trans_lt_eqv_lt ‹c < b› (Rel.symm ‹a ≃ b›)
+  exact this
+
+instance trans_eqv_gt_gt_inst : Trans (α := ℤ) (· ≃ ·) (· > ·) (· > ·) := {
+  trans := trans_eqv_gt_gt
+}
+
+/-- TODO -/
+theorem trans_gt_eqv_gt {a b c : ℤ} : a > b → b ≃ c → a > c := by
+  intro (_ : a > b) (_ : b ≃ c)
+  show a > c
+  have : c < a := trans_eqv_lt_lt (Rel.symm ‹b ≃ c›) ‹b < a›
+  exact this
+
+instance trans_gt_eqv_gt_inst : Trans (α := ℤ) (· > ·) (· ≃ ·) (· > ·) := {
+  trans := trans_gt_eqv_gt
+}
+
+/-- TODO -/
+theorem trans_ge_gt_gt {a b c : ℤ} : a ≥ b → b > c → a > c := by
+  intro (_ : a ≥ b) (_ : b > c)
+  show a > c
+  have : c < a := trans_lt_le_lt ‹c < b› ‹b ≤ a›
+  exact this
+
+instance trans_ge_gt_gt_inst : Trans (α := ℤ) (· ≥ ·) (· > ·) (· > ·) := {
+  trans := trans_ge_gt_gt
+}
+
+/-- TODO -/
+theorem trans_gt_ge_gt {a b c : ℤ} : a > b → b ≥ c → a > c := by
+  intro (_ : a > b) (_ : b ≥ c)
+  show a > c
+  have : c < a := trans_le_lt_lt ‹c ≤ b› ‹b < a›
+  exact this
+
+instance trans_gt_ge_gt_inst : Trans (α := ℤ) (· > ·) (· ≥ ·) (· > ·) := {
+  trans := trans_gt_ge_gt
+}
+
+/-- TODO -/
+theorem trans_ge_ge_ge {a b c : ℤ} : a ≥ b → b ≥ c → a ≥ c := by
+  intro (_ : a ≥ b) (_ : b ≥ c)
+  show a ≥ c
+  have : c ≤ a := trans_le_le_le ‹c ≤ b› ‹b ≤ a›
+  exact this
+
+instance trans_ge_ge_ge_inst : Trans (α := ℤ) (· ≥ ·) (· ≥ ·) (· ≥ ·) := {
+  trans := trans_ge_ge_ge
+}
+
+/-- TODO -/
+theorem trans_eqv_ge_ge {a b c : ℤ} : a ≃ b → b ≥ c → a ≥ c := by
+  intro (_ : a ≃ b) (_ : b ≥ c)
+  show a ≥ c
+  have : c ≤ a := trans_le_eqv_le ‹c ≤ b› (Rel.symm ‹a ≃ b›)
+  exact this
+
+instance trans_eqv_ge_ge_inst : Trans (α := ℤ) (· ≃ ·) (· ≥ ·) (· ≥ ·) := {
+  trans := trans_eqv_ge_ge
+}
+
+/-- TODO -/
+theorem trans_ge_eqv_ge {a b c : ℤ} : a ≥ b → b ≃ c → a ≥ c := by
+  intro (_ : a ≥ b) (_ : b ≃ c)
+  show a ≥ c
+  have : c ≤ a := trans_eqv_le_le (Rel.symm ‹b ≃ c›) ‹b ≤ a›
+  exact this
+
+instance trans_ge_eqv_ge_inst : Trans (α := ℤ) (· ≥ ·) (· ≃ ·) (· ≥ ·) := {
+  trans := trans_ge_eqv_ge
+}
+
+/--
+Any pair of integers can only be in one of three relations: _less than_,
+_greater than_, or _equivalence_.
+
+**Property intuition**: We expect this to be true because we know the integers
+are totally ordered.
+
+**Proof intuition**: Convert into sign trichotomy on `a - b`.
+-/
+theorem order_trichotomy
+    (a b : ℤ) : AA.ExactlyOneOfThree (a < b) (a ≃ b) (a > b)
+    := by
+  have abTri
+    : AA.ExactlyOneOfThree (a - b ≃ 0) (Positive (a - b)) (Negative (a - b))
+    := Signed.trichotomy (a - b)
+  apply AA.ExactlyOneOfThree.mk
+  case atLeastOne =>
+    show AA.OneOfThree (a < b) (a ≃ b) (a > b)
+    match abTri.atLeastOne with
+    | AA.OneOfThree.first (_ : a - b ≃ 0) =>
+      have : a ≃ b := zero_diff_iff_eqv.mp ‹a - b ≃ 0›
+      exact AA.OneOfThree.second ‹a ≃ b›
+    | AA.OneOfThree.second (_ : Positive (a - b)) =>
+      have : a > b := gt_iff_pos_diff.mpr ‹Positive (a - b)›
+      exact AA.OneOfThree.third ‹a > b›
+    | AA.OneOfThree.third (_ : Negative (a - b)) =>
+      have : a < b := lt_iff_neg_diff.mpr ‹Negative (a - b)›
+      exact AA.OneOfThree.first ‹a < b›
+  case atMostOne =>
+    intro (_ : AA.TwoOfThree (a < b) (a ≃ b) (a > b))
+    show False
+    let ab := a - b
+    have abTwo : AA.TwoOfThree (ab ≃ 0) (Positive ab) (Negative ab) :=
+      match ‹AA.TwoOfThree (a < b) (a ≃ b) (a > b)› with
+      | AA.TwoOfThree.oneAndTwo (_ : a < b) (_ : a ≃ b) =>
+        have : Negative ab := lt_iff_neg_diff.mp ‹a < b›
+        have : ab ≃ 0 := zero_diff_iff_eqv.mpr ‹a ≃ b›
+        AA.TwoOfThree.oneAndThree ‹ab ≃ 0› ‹Negative ab›
+      | AA.TwoOfThree.oneAndThree (_ : a < b) (_ : a > b) =>
+        have : Negative ab := lt_iff_neg_diff.mp ‹a < b›
+        have : Positive ab := gt_iff_pos_diff.mp ‹a > b›
+        AA.TwoOfThree.twoAndThree ‹Positive ab› ‹Negative ab›
+      | AA.TwoOfThree.twoAndThree (_ : a ≃ b) (_ : a > b) =>
+        have : ab ≃ 0 := zero_diff_iff_eqv.mpr ‹a ≃ b›
+        have : Positive ab := gt_iff_pos_diff.mp ‹a > b›
+        AA.TwoOfThree.oneAndTwo ‹ab ≃ 0› ‹Positive ab›
+    have abNotTwo
+      : ¬ AA.TwoOfThree (ab ≃ 0) (Positive ab) (Negative ab)
+      := abTri.atMostOne
+    exact absurd abTwo abNotTwo
 
 /--
 The _less than or equivalent to_ relation is reversed with negated operands.
@@ -740,141 +1006,6 @@ theorem le_widen_lt {a b : ℤ} : a ≤ b → a < b + 1 := by
   | Or.inl (_ : a < b) => Rel.trans ‹a < b› ‹b < b + 1›
   | Or.inr (_ : a ≃ b) => AA.substLFn (Rel.symm ‹a ≃ b›) ‹b < b + 1›
   exact this
-
-/--
-Convert the _less than_ relation to and from its representation as the sign
-value of the difference of its operands.
-
-**Property intuition**: If a subtraction's result is negative, then its first
-operand must be less than its second.
-
-**Proof intuition**: Use `Negative` as an intermediate step in the conversion.
--/
-theorem lt_sgn {a b : ℤ} : a < b ↔ sgn (a - b) ≃ -1 := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : a < b)
-    show sgn (a - b) ≃ -1
-    have : Negative (a - b) := lt_iff_neg_diff.mp ‹a < b›
-    have : sgn (a - b) ≃ -1 := sgn_negative.mp this
-    exact this
-  case mpr =>
-    intro (_ : sgn (a - b) ≃ -1)
-    show a < b
-    have : Negative (a - b) := sgn_negative.mpr ‹sgn (a - b) ≃ -1›
-    have : a < b := lt_iff_neg_diff.mpr this
-    exact this
-
-/-- TODO -/
-theorem lt_zero_sgn {a : ℤ} : a < 0 ↔ sgn a ≃ -1 := calc
-  _ ↔ a < 0            := Iff.rfl
-  _ ↔ sgn (a - 0) ≃ -1 := lt_sgn
-  _ ↔ sgn a ≃ -1       := AA.eqv_substL_iff (sgn_subst sub_identR)
-
-/--
-Convert the _greater than_ relation to and from its representation as the sign
-value of the difference of its operands.
-
-**Property intuition**: If a subtraction's result is positive, then its first
-operand must be greater than its second.
-
-**Proof intuition**: Use `Positive` as an intermediate step in the conversion.
--/
-theorem gt_sgn {a b : ℤ} : a > b ↔ sgn (a - b) ≃ 1 := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : a > b)
-    show sgn (a - b) ≃ 1
-    have : Positive (a - b) := gt_iff_pos_diff.mp ‹a > b›
-    have : sgn (a - b) ≃ 1 := sgn_positive.mp this
-    exact this
-  case mpr =>
-    intro (_ : sgn (a - b) ≃ 1)
-    show a > b
-    have : Positive (a - b) := sgn_positive.mpr ‹sgn (a - b) ≃ 1›
-    have : a > b := gt_iff_pos_diff.mpr this
-    exact this
-
-/-- TODO -/
-theorem gt_zero_sgn {a : ℤ} : a > 0 ↔ sgn a ≃ 1 := calc
-  _ ↔ a > 0           := Iff.rfl
-  _ ↔ sgn (a - 0) ≃ 1 := gt_sgn
-  _ ↔ sgn a ≃ 1       := AA.eqv_substL_iff (sgn_subst sub_identR)
-
-/-- TODO -/
-theorem ge_sgn {a b : ℤ} : a ≥ b ↔ sgn (a - b) ≄ -1 := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : a ≥ b) (_ : sgn (a - b) ≃ -1)
-    show False
-    have : a > b ∨ a ≃ b := ge_split.mp ‹a ≥ b›
-    let TwoSgns :=
-      AA.TwoOfThree (sgn (a - b) ≃ 0) (sgn (a - b) ≃ 1) (sgn (a - b) ≃ -1)
-    have : TwoSgns :=
-      match ‹a > b ∨ a ≃ b› with
-      | Or.inl (_ : a > b) =>
-        have : sgn (a - b) ≃ 1 := gt_sgn.mp ‹a > b›
-        twoAndThree ‹sgn (a - b) ≃ 1› ‹sgn (a - b) ≃ -1›
-      | Or.inr (_ : a ≃ b) =>
-        have : sgn (a - b) ≃ 0 := eqv_sgn.mp ‹a ≃ b›
-        oneAndThree ‹sgn (a - b) ≃ 0› ‹sgn (a - b) ≃ -1›
-    have : ¬TwoSgns := signs_distinct
-    exact absurd ‹TwoSgns› ‹¬TwoSgns›
-  case mpr =>
-    intro (_ : sgn (a - b) ≄ -1)
-    show a ≥ b
-    match sgn_trichotomy (a - b) with
-    | AA.OneOfThree₁.first (_ : sgn (a - b) ≃ 0) =>
-      have : a ≃ b := eqv_sgn.mpr ‹sgn (a - b) ≃ 0›
-      have : a ≥ b := ge_split.mpr (Or.inr ‹a ≃ b›)
-      exact this
-    | AA.OneOfThree₁.second (_ : sgn (a - b) ≃ 1) =>
-      have : a > b := gt_sgn.mpr ‹sgn (a - b) ≃ 1›
-      have : a ≥ b := ge_split.mpr (Or.inl ‹a > b›)
-      exact this
-    | AA.OneOfThree₁.third (_ : sgn (a - b) ≃ -1) =>
-      exact absurd ‹sgn (a - b) ≃ -1› ‹sgn (a - b) ≄ -1›
-
-/-- TODO -/
-theorem ge_zero_sgn {a : ℤ} : a ≥ 0 ↔ sgn a ≄ -1 := by
-  have : sgn (a - 0) ≃ sgn a := sgn_subst sub_identR
-  have : sgn (a - 0) ≃ -1 ↔ sgn a ≃ -1 := AA.eqv_substL_iff this
-  calc
-    _ ↔ a ≥ 0            := Iff.rfl
-    _ ↔ sgn (a - 0) ≄ -1 := ge_sgn
-    _ ↔ sgn a ≄ -1       := iff_subst_contra mt ‹sgn (a - 0) ≃ -1 ↔ sgn a ≃ -1›
-
-/-- TODO -/
-theorem sgn_gt_zero_iff_pos {a : ℤ} : sgn a > 0 ↔ sgn a ≃ 1 := calc
-  _ ↔ sgn a > 0       := Iff.rfl
-  _ ↔ sgn (sgn a) ≃ 1 := gt_zero_sgn
-  _ ↔ sgn a ≃ 1       := AA.eqv_substL_iff sgn_idemp
-
-/-- TODO -/
-theorem sgn_ge_zero_iff_nonneg {a : ℤ} : sgn a ≥ 0 ↔ sgn a ≄ -1 := calc
-  _ ↔ sgn a ≥ 0        := Iff.rfl
-  _ ↔ sgn (sgn a) ≄ -1 := ge_zero_sgn
-  _ ↔ sgn a ≄ -1       := iff_subst_contra mt (AA.eqv_substL_iff sgn_idemp)
-
-/-- TODO -/
-theorem sgn_preserves_gt_zero {a : ℤ} : a > 0 ↔ sgn a > 0 := calc
-  _ ↔ a > 0     := Iff.rfl
-  _ ↔ sgn a ≃ 1 := gt_zero_sgn
-  _ ↔ sgn a > 0 := sgn_gt_zero_iff_pos.symm
-
-/-- TODO -/
-theorem sgn_preserves_ge_zero {a : ℤ} : a ≥ 0 ↔ sgn a ≥ 0 := calc
-  _ ↔ a ≥ 0                 := Iff.rfl
-  _ ↔ a > 0 ∨ a ≃ 0         := ge_split
-  _ ↔ sgn a > 0 ∨ a ≃ 0     := iff_subst_covar or_mapL sgn_preserves_gt_zero
-  _ ↔ sgn a > 0 ∨ sgn a ≃ 0 := iff_subst_covar or_mapR sgn_zero
-  _ ↔ sgn a ≥ 0             := ge_split.symm
-
-/-- TODO -/
-theorem sgn_diff_ge_zero {a b : ℤ} : a ≥ b ↔ sgn (a - b) ≥ 0 := calc
-  _ ↔ a ≥ b            := Iff.rfl
-  _ ↔ sgn (a - b) ≄ -1 := ge_sgn
-  _ ↔ sgn (a - b) ≥ 0  := sgn_ge_zero_iff_nonneg.symm
 
 /-- TODO -/
 theorem ge_zero_eqv_nat {a : ℤ} : a ≥ 0 → ∃ (n : ℕ), a ≃ (n:ℤ) := by
