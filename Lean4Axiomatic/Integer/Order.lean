@@ -89,7 +89,11 @@ theorem gt_iff_pos_diff {a b : ℤ} : a > b ↔ Positive (a - b) := by
     have : b ≄ a := Rel.symm (mt zero_diff_iff_eqv.mpr ‹a - b ≄ 0›)
     exact And.intro ‹b ≤ a› ‹b ≄ a›
 
-theorem gt_zero_iff_pos {a : ℤ} : a > 0 ↔ Positive a := sorry
+/-- TODO -/
+theorem gt_zero_iff_pos {a : ℤ} : a > 0 ↔ Positive a := calc
+  _ ↔ a > 0            := Iff.rfl
+  _ ↔ Positive (a - 0) := gt_iff_pos_diff
+  _ ↔ Positive a       := Rel.iff_subst_eqv AA.substFn sub_identR
 
 /--
 Equivalence between the _less than_ relation on integers and their
@@ -249,6 +253,9 @@ instance add_substitutive_lt
     AA.substR_from_substL_swap (rS := (· ≃ ·)) add_substitutiveL_lt
 }
 
+theorem add_substL_ge {a₁ a₂ b : ℤ} : a₁ ≥ a₂ → a₁ + b ≥ a₂ + b := sorry
+theorem add_substR_ge {a₁ a₂ b : ℤ} : a₁ ≥ a₂ → b + a₁ ≥ b + a₂ := sorry
+
 /--
 The `· < ·` relation on sums with the same left operand is preserved when that
 operand is removed from both.
@@ -285,8 +292,6 @@ instance add_cancellative_lt
   cancellativeL := add_cancellativeL_lt
   cancellativeR := AA.cancelR_from_cancelL add_cancellativeL_lt
 }
-
-theorem ge_add {a b c d : ℤ} : a ≥ b → c ≥ d → a + c ≥ b + d := sorry
 
 /--
 The `· < ·` relation is preserved when both sides are multiplied on the right
@@ -562,7 +567,18 @@ theorem ge_sgn {a b : ℤ} : a ≥ b ↔ sgn (a - b) ≄ -1 := by
     | AA.OneOfThree₁.third (_ : sgn (a - b) ≃ -1) =>
       exact absurd ‹sgn (a - b) ≃ -1› ‹sgn (a - b) ≄ -1›
 
-theorem le_sgn {a b : ℤ} : a ≤ b ↔ sgn (a - b) ≄ 1 := sorry
+/-- TODO -/
+theorem le_sgn {a b : ℤ} : a ≤ b ↔ sgn (a - b) ≄ 1 := by
+  have reduce_neg : -sgn (b - a) ≃ -(-1) ↔ sgn (a - b) ≃ 1 := calc
+    _ ↔ -sgn (b - a) ≃ -(-1)   := Iff.rfl
+    _ ↔ sgn (-(b - a)) ≃ -(-1) := AA.eqv_substL_iff (Rel.symm sgn_compat_neg)
+    _ ↔ sgn (a - b) ≃ -(-1)    := AA.eqv_substL_iff (sgn_subst sub_neg_flip)
+    _ ↔ sgn (a - b) ≃ 1        := AA.eqv_substR_iff neg_involutive
+  calc
+    _ ↔ a ≤ b                  := Iff.rfl
+    _ ↔ sgn (b - a) ≄ -1       := ge_sgn
+    _ ↔ -sgn (b - a) ≄ -(-1)   := Iff.intro AA.subst₁ AA.inject
+    _ ↔ sgn (a - b) ≄ 1        := iff_subst_contra mt reduce_neg
 
 /-- TODO -/
 theorem ge_zero_sgn {a : ℤ} : a ≥ 0 ↔ sgn a ≄ -1 := by
@@ -832,6 +848,15 @@ theorem trans_ge_eqv_ge {a b c : ℤ} : a ≥ b → b ≃ c → a ≥ c := by
 instance trans_ge_eqv_ge_inst : Trans (α := ℤ) (· ≥ ·) (· ≃ ·) (· ≥ ·) := {
   trans := trans_ge_eqv_ge
 }
+
+/-- TODO -/
+theorem ge_add {a b c d : ℤ} : a ≥ b → c ≥ d → a + c ≥ b + d := by
+  intro (_ : a ≥ b) (_ : c ≥ d)
+  show a + c ≥ b + d
+  calc
+    _ = a + c := rfl
+    _ ≥ b + c := add_substL_ge ‹a ≥ b›
+    _ ≥ b + d := add_substR_ge ‹c ≥ d›
 
 /--
 Any pair of integers can only be in one of three relations: _less than_,
