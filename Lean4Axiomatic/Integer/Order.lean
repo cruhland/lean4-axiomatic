@@ -253,9 +253,6 @@ instance add_substitutive_lt
     AA.substR_from_substL_swap (rS := (· ≃ ·)) add_substitutiveL_lt
 }
 
-theorem add_substL_ge {a₁ a₂ b : ℤ} : a₁ ≥ a₂ → a₁ + b ≥ a₂ + b := sorry
-theorem add_substR_ge {a₁ a₂ b : ℤ} : a₁ ≥ a₂ → b + a₁ ≥ b + a₂ := sorry
-
 /--
 The `· < ·` relation on sums with the same left operand is preserved when that
 operand is removed from both.
@@ -848,6 +845,33 @@ theorem trans_ge_eqv_ge {a b c : ℤ} : a ≥ b → b ≃ c → a ≥ c := by
 instance trans_ge_eqv_ge_inst : Trans (α := ℤ) (· ≥ ·) (· ≃ ·) (· ≥ ·) := {
   trans := trans_ge_eqv_ge
 }
+
+/-- TODO -/
+theorem ge_iff_diff_nonneg {a b : ℤ} : a ≥ b ↔ a - b ≥ 0 := calc
+  _ ↔ a ≥ b           := Iff.rfl
+  _ ↔ sgn (a - b) ≥ 0 := sgn_diff_ge_zero
+  _ ↔ a - b ≥ 0       := sgn_preserves_ge_zero.symm
+
+/-- TODO -/
+theorem add_substL_ge {a₁ a₂ b : ℤ} : a₁ ≥ a₂ → a₁ + b ≥ a₂ + b := by
+  intro (_ : a₁ ≥ a₂)
+  show a₁ + b ≥ a₂ + b
+  have : (a₁ + b) - (a₂ + b) ≥ 0 := calc
+    _ = (a₁ + b) - (a₂ + b) := rfl
+    _ ≃ a₁ - a₂             := sub_sums_sameR
+    _ ≥ 0                   := ge_iff_diff_nonneg.mp ‹a₁ ≥ a₂›
+  have : a₁ + b ≥ a₂ + b := ge_iff_diff_nonneg.mpr ‹(a₁ + b) - (a₂ + b) ≥ 0›
+  exact this
+
+/-- TODO -/
+theorem add_substR_ge {a₁ a₂ b : ℤ} : a₁ ≥ a₂ → b + a₁ ≥ b + a₂ := by
+  intro (_ : a₁ ≥ a₂)
+  show b + a₁ ≥ b + a₂
+  calc
+    _ = b + a₁ := rfl
+    _ ≃ a₁ + b := AA.comm
+    _ ≥ a₂ + b := add_substL_ge ‹a₁ ≥ a₂›
+    _ ≃ b + a₂ := AA.comm
 
 /-- TODO -/
 theorem ge_add {a b c d : ℤ} : a ≥ b → c ≥ d → a + c ≥ b + d := by
