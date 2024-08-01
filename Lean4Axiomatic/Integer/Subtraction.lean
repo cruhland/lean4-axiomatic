@@ -386,7 +386,11 @@ Multiplication by a nonzero value on the right is injective.
 theorem mul_cancelR {a b c : ℤ} : a ≄ 0 → b * a ≃ c * a → b ≃ c :=
   AA.cancelRC (C := (· ≄ 0))
 
-theorem eqv_sgn {a b : ℤ} : a ≃ b ↔ sgn (a - b) ≃ 0 := sorry
+/-- TODO -/
+theorem eqv_sgn {a b : ℤ} : a ≃ b ↔ sgn (a - b) ≃ 0 := calc
+  _ ↔ a ≃ b           := Iff.rfl
+  _ ↔ a - b ≃ 0       := zero_diff_iff_eqv.symm
+  _ ↔ sgn (a - b) ≃ 0 := sgn_zero
 
 /--
 Decidable equivalence for integers.
@@ -403,8 +407,7 @@ instance eqv? (a b : ℤ) : Decidable (a ≃ b) := by
   have : Sgn3 := sgn_trichotomy (a-b)
   match this with
   | AA.OneOfThree₁.first (_ : sgn (a-b) ≃ 0) =>
-    have : a-b ≃ 0 := sgn_zero.mpr ‹sgn (a-b) ≃ 0›
-    have : a ≃ b := zero_diff_iff_eqv.mp this
+    have : a ≃ b := eqv_sgn.mpr ‹sgn (a-b) ≃ 0›
     have : Decidable (a ≃ b) := isTrue this
     exact this
   | AA.OneOfThree₁.second (_ : sgn (a-b) ≃ 1) =>
