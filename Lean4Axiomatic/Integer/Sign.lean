@@ -1811,7 +1811,28 @@ theorem sgn_two_eqv_one : sgn (2:ℤ) ≃ 1 := by
     _ ≃ sgn (1 + 1 : ℤ) := sgn_subst (Rel.symm add_one_one)
     _ ≃ 1               := add_preserves_sign ‹sgn (1:ℤ) ≃ 1› ‹sgn (1:ℤ) ≃ 1›
 
-theorem as_size_with_sign (a : ℤ) : ∃ (n : ℕ), n > 0 ∧ a ≃ n * sgn a := sorry
+/-- TODO -/
+theorem as_size_with_sign (a : ℤ) : ∃ (n : ℕ), n > 0 ∧ a ≃ n * sgn a := by
+  have : a ≃ 0 ∨ Nonzero a := (zero? a).left
+  match ‹a ≃ 0 ∨ Nonzero a› with
+  | Or.inl (_ : a ≃ 0) =>
+    let n : ℕ := 1
+    have : n > 0 := Natural.lt_zero_pos.mp Natural.one_positive
+    have : a ≃ n * sgn a := calc
+      _ = a         := rfl
+      _ ≃ 0         := ‹a ≃ 0›
+      _ ≃ sgn a     := Rel.symm (sgn_zero.mp ‹a ≃ 0›)
+      _ ≃ 1 * sgn a := Rel.symm AA.identL
+      _ = n * sgn a := rfl
+    exact Exists.intro n (And.intro ‹n > 0› ‹a ≃ n * sgn a›)
+  | Or.inr (_ : Nonzero a) =>
+    have : Sqrt1 (sgn a) := sgn_nonzero.mp ‹Nonzero a›
+    have (NonzeroWithSign.intro (n : ℕ) (_ : Positive n) a_eqv) :=
+      sgn_nonzeroWithSign (a := a)
+    have : a ≃ sgn a * n := a_eqv
+    have : n > 0 := Natural.lt_zero_pos.mp ‹Positive n›
+    have : a ≃ n * sgn a := Rel.trans ‹a ≃ sgn a * n› AA.comm
+    exact Exists.intro n (And.intro ‹n > 0› ‹a ≃ n * sgn a›)
 
 /--
 The square of an integer is nonnegative.
