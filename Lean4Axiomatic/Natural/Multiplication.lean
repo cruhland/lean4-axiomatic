@@ -207,7 +207,7 @@ theorem mul_split_zero {n m : ℕ} : n * m ≃ 0 ↔ n ≃ 0 ∨ m ≃ 0 := by
         n * m + m  ≃ _ := Rel.symm step_mul
         step n * m ≃ _ := ‹step n * m ≃ 0›
         0          ≃ _ := Rel.refl
-      have ⟨_, (_ : m ≃ 0)⟩ := zero_sum_split.mp ‹n * m + m ≃ 0›
+      have (And.intro _ (_ : m ≃ 0)) := zero_sum_split.mp ‹n * m + m ≃ 0›
       exact ‹m ≃ 0›
   · intro (_ : n ≃ 0 ∨ m ≃ 0)
     show n * m ≃ 0
@@ -508,13 +508,21 @@ theorem sqrt1 {n : ℕ} : n * n ≃ 1 ↔ n ≃ 1 := by
     have : n * n ≃ 1 := factors_eqv_1.mpr (And.intro ‹n ≃ 1› ‹n ≃ 1›)
     exact this
 
-/-- TODO -/
+/--
+Three is an odd number.
+
+**Property intuition**: Odd numbers can be written in the form `2 * n + 1` for
+some natural number `n`.
+
+**Proof intuition**: Reverse the goal using symmetry of equivalence; then show
+that `2 * 1 + 1` evaluates to `3`.
+-/
 theorem three_odd : (3:ℕ) ≃ 2 * 1 + 1 := by
-  have : (2:ℕ) * 1 + 1 ≃ 3 := calc
+  apply Rel.symm
+  calc
     _ = (2:ℕ) * 1 + 1 := rfl
     _ ≃ 2 + 1         := AA.substL AA.identR
     _ ≃ step 2        := Natural.add_one_step
     _ ≃ 3             := Rel.symm Natural.literal_step
-  exact (Rel.symm this)
 
 end Lean4Axiomatic.Natural
