@@ -51,7 +51,12 @@ theorem and_mapR {p₁ p₂ q : Prop} (f : p₁ → p₂) : q ∧ p₁ → q ∧
   have : p₂ := f ‹p₁›
   exact And.intro ‹q› ‹p₂›
 
-/-- TODO -/
+/--
+Rewrite the left side of logical _or_ using the provided mapping function.
+
+**Property and proof intuition**: If we have the left side of the _or_, we can
+rewrite it; otherwise we leave it alone.
+-/
 theorem or_mapL {p₁ p₂ q : Prop} (f : p₁ → p₂) : p₁ ∨ q → p₂ ∨ q := by
   intro (_ : p₁ ∨ q)
   show p₂ ∨ q
@@ -59,7 +64,15 @@ theorem or_mapL {p₁ p₂ q : Prop} (f : p₁ → p₂) : p₁ ∨ q → p₂ �
   | Or.inl (_ : p₁) => have : p₂ := f ‹p₁›; Or.inl ‹p₂›
   | Or.inr (_ : q) => Or.inr ‹q›
 
-/-- TODO -/
+/--
+Rewrite the right side of logical _or_ using the provided mapping function.
+
+**Property intuition**: If we have the right side of the _or_, we can
+rewrite it; otherwise we leave it alone.
+
+**Proof intuition**: Reduces the problem to the left-handed version using the
+symmetry of logical _or_.
+-/
 theorem or_mapR {p₁ p₂ q : Prop} (f : p₁ → p₂) : q ∨ p₁ → q ∨ p₂ := by
   intro (_ : q ∨ p₁)
   show q ∨ p₂
