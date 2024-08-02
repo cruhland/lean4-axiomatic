@@ -51,8 +51,20 @@ theorem and_mapR {p₁ p₂ q : Prop} (f : p₁ → p₂) : q ∧ p₁ → q ∧
   have : p₂ := f ‹p₁›
   exact And.intro ‹q› ‹p₂›
 
-theorem or_mapL {p₁ p₂ q : Prop} (f : p₁ → p₂) : p₁ ∨ q → p₂ ∨ q := sorry
-theorem or_mapR {p₁ p₂ q : Prop} (f : p₁ → p₂) : q ∨ p₁ → q ∨ p₂ := sorry
+/-- TODO -/
+theorem or_mapL {p₁ p₂ q : Prop} (f : p₁ → p₂) : p₁ ∨ q → p₂ ∨ q := by
+  intro (_ : p₁ ∨ q)
+  show p₂ ∨ q
+  exact match ‹p₁ ∨ q› with
+  | Or.inl (_ : p₁) => have : p₂ := f ‹p₁›; Or.inl ‹p₂›
+  | Or.inr (_ : q) => Or.inr ‹q›
+
+/-- TODO -/
+theorem or_mapR {p₁ p₂ q : Prop} (f : p₁ → p₂) : q ∨ p₁ → q ∨ p₂ := by
+  intro (_ : q ∨ p₁)
+  show q ∨ p₂
+  have : p₂ ∨ q := or_mapL f ‹q ∨ p₁›.symm
+  exact ‹p₂ ∨ q›.symm
 
 /--
 Disjunction distributes over conjunction.

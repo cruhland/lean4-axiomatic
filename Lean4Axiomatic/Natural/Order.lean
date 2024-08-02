@@ -1,3 +1,4 @@
+import Lean4Axiomatic.Logic
 import Lean4Axiomatic.Natural.Sign
 
 /-!
@@ -6,6 +7,7 @@ import Lean4Axiomatic.Natural.Sign
 
 namespace Lean4Axiomatic.Natural
 
+open Logic (iff_subst_covar or_mapL)
 open Signed (Positive)
 
 /-!
@@ -50,7 +52,7 @@ export Order (le_defn leOp lt_defn ltOp)
 
 variable
   {ℕ : Type}
-    [Core ℕ] [Induction.{0} ℕ] [Addition ℕ] [Sign ℕ] [order_inst : Order ℕ]
+    [Core ℕ] [Induction ℕ] [Addition ℕ] [Sign ℕ] [order_inst : Order ℕ]
 
 /--
 The _less than or equal to_ relation is preserved when both sides are
@@ -569,36 +571,60 @@ As the name implies, if _less than or equal to_ holds between two natural
 numbers, then either _less than_ holds between them as well, or the numbers are
 equivalent.
 -/
-theorem le_split {n m : ℕ} : n ≤ m → n < m ∨ n ≃ m := by
-  intro (_ : n ≤ m)
-  show n < m ∨ n ≃ m
-  have ⟨d, (h : n + d ≃ m)⟩ := le_defn.mp ‹n ≤ m›
-  revert h
-  apply cases_on (motive := λ d => n + d ≃ m → n < m ∨ n ≃ m) d
-  case zero =>
-    intro (_ : n + 0 ≃ m)
-    apply Or.inr
-    show n ≃ m
-    calc
-      n     ≃ _ := Rel.symm add_zero
-      n + 0 ≃ _ := ‹n + 0 ≃ m›
-      m     ≃ _ := Rel.refl
-  case step =>
-    intro d (_ : n + step d ≃ m)
-    apply Or.inl
-    show n < m
-    apply lt_step_le.mpr
-    show step n ≤ m
-    apply le_defn.mpr
-    exists d
-    show step n + d ≃ m
-    calc
-      step n + d   ≃ _ := step_add
-      step (n + d) ≃ _ := Rel.symm add_step
-      n + step d   ≃ _ := ‹n + step d ≃ m›
-      m            ≃ _ := Rel.refl
+theorem le_split {n m : ℕ} : n ≤ m ↔ n < m ∨ n ≃ m := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : n ≤ m)
+    show n < m ∨ n ≃ m
+    have ⟨d, (h : n + d ≃ m)⟩ := le_defn.mp ‹n ≤ m›
+    revert h
+    apply cases_on (motive := λ d => n + d ≃ m → n < m ∨ n ≃ m) d
+    case zero =>
+      intro (_ : n + 0 ≃ m)
+      apply Or.inr
+      show n ≃ m
+      calc
+        n     ≃ _ := Rel.symm add_zero
+        n + 0 ≃ _ := ‹n + 0 ≃ m›
+        m     ≃ _ := Rel.refl
+    case step =>
+      intro d (_ : n + step d ≃ m)
+      apply Or.inl
+      show n < m
+      apply lt_step_le.mpr
+      show step n ≤ m
+      apply le_defn.mpr
+      exists d
+      show step n + d ≃ m
+      calc
+        step n + d   ≃ _ := step_add
+        step (n + d) ≃ _ := Rel.symm add_step
+        n + step d   ≃ _ := ‹n + step d ≃ m›
+        m            ≃ _ := Rel.refl
+  case mpr =>
+    intro (_ : n < m ∨ n ≃ m)
+    show n ≤ m
+    exact match ‹n < m ∨ n ≃ m› with
+    | Or.inl (_ : n < m) => le_from_lt ‹n < m›
+    | Or.inr (_ : n ≃ m) => le_from_eqv ‹n ≃ m›
 
-theorem ge_zero {n : ℕ} : n ≥ 0 := sorry
+/-- TODO -/
+theorem lt_narrow {n m : ℕ} : n < step m ↔ n ≤ m := calc
+  _ ↔ n < step m      := Iff.rfl
+  _ ↔ step n ≤ step m := lt_step_le
+  _ ↔ n ≤ m           := Iff.intro AA.inject AA.subst₁
+
+/-- TODO -/
+theorem le_reduce {n m : ℕ} : n ≤ step m ↔ n ≤ m ∨ n ≃ step m := calc
+  _ ↔ n ≤ step m              := Iff.rfl
+  _ ↔ n < step m ∨ n ≃ step m := le_split
+  _ ↔ n ≤ m ∨ n ≃ step m      := iff_subst_covar or_mapL lt_narrow
+
+/-- TODO -/
+theorem ge_zero {n : ℕ} : n ≥ 0 := by
+  have : 0 + n ≃ n := AA.identL
+  have : n ≥ 0 := le_defn.mpr (Exists.intro n ‹0 + n ≃ n›)
+  exact this
 
 /--
 Split _greater than or equivalent to_ into the relations implied by its name.
@@ -609,7 +635,7 @@ theorem ge_split {n m : ℕ} : n ≥ m → n > m ∨ n ≃ m := by
   intro (_ : n ≥ m)
   show n > m ∨ n ≃ m
   have : m ≤ n := ‹n ≥ m›
-  have : m < n ∨ m ≃ n := le_split this
+  have : m < n ∨ m ≃ n := le_split.mp this
   match this with
   | Or.inl (_ : m < n) =>
     have : n > m := ‹m < n›
@@ -649,9 +675,8 @@ relation.
 theorem lt_split {n m : ℕ} : n < step m → n < m ∨ n ≃ m := by
   intro (_ : n < step m)
   show n < m ∨ n ≃ m
-  have : step n ≤ step m := lt_step_le.mp ‹n < step m›
-  have : n ≤ m := AA.inject ‹step n ≤ step m›
-  exact le_split ‹n ≤ m›
+  have : n ≤ m := lt_narrow.mp ‹n < step m›
+  exact le_split.mp ‹n ≤ m›
 
 /--
 Useful result when needing to decrement the larger number in a _greater than_
@@ -700,7 +725,7 @@ existing transitivity property for each case.
 theorem trans_lt_le_lt {n m k : ℕ} : n < m → m ≤ k → n < k := by
   intro (_ : n < m) (_ : m ≤ k)
   show n < k
-  have : m < k ∨ m ≃ k := le_split ‹m ≤ k›
+  have : m < k ∨ m ≃ k := le_split.mp ‹m ≤ k›
   match this with
   | Or.inl (_ : m < k) =>
     have : n < k := lt_trans ‹n < m› ‹m < k›
@@ -728,7 +753,7 @@ existing transitivity property for each case.
 theorem trans_le_lt_lt {n m k : ℕ} : n ≤ m → m < k → n < k := by
   intro (_ : n ≤ m) (_ : m < k)
   show n < k
-  have : n < m ∨ n ≃ m := le_split ‹n ≤ m›
+  have : n < m ∨ n ≃ m := le_split.mp ‹n ≤ m›
   match this with
   | Or.inl (_ : n < m) =>
     have : n < k := lt_trans ‹n < m› ‹m < k›
@@ -816,7 +841,7 @@ theorem trichotomy (n m : ℕ)
       match ih with
       | AA.OneOfThree.first (_ : n < m) =>
         have : step n ≤ m := lt_step_le.mp ‹n < m›
-        have : step n < m ∨ step n ≃ m := le_split ‹step n ≤ m›
+        have : step n < m ∨ step n ≃ m := le_split.mp ‹step n ≤ m›
         match ‹step n < m ∨ step n ≃ m› with
         | Or.inl (_ : step n < m) => exact AA.OneOfThree.first ‹step n < m›
         | Or.inr (_ : step n ≃ m) => exact AA.OneOfThree.second ‹step n ≃ m›
@@ -849,11 +874,36 @@ theorem trichotomy (n m : ℕ)
       have ⟨_, (_ : m ≄ n)⟩ := lt_defn.mp ‹n > m›
       exact absurd ‹n ≃ m› (Rel.symm ‹m ≄ n›)
 
+/-- TODO -/
 def ind_from
-    {motive : ℕ → Sort u} {n m : ℕ} (n_ge_m : n ≥ m)
-    (base : motive m) (step : (k : ℕ) → motive k → motive (step k)) : motive n
+    {motive : ℕ → Prop}
+    (motive_subst : {k₁ k₂ : ℕ} → k₁ ≃ k₂ → motive k₁ → motive k₂)
+    {n m : ℕ} (n_ge_m : n ≥ m)
+    (base : motive m) (next : (k : ℕ) → motive k → motive (step k)) : motive n
     := by
-  admit
+  let motive' := λ x => x ≥ m → motive x
+  have z : motive' 0 := by
+    intro (_ : 0 ≥ m)
+    show motive 0
+    have : m ≥ 0 := ge_zero
+    have : m ≃ 0 := le_antisymm ‹m ≤ 0› ‹0 ≤ m›
+    have : motive 0 := motive_subst ‹m ≃ 0› ‹motive m›
+    exact this
+  have s : (k : ℕ) → motive' k → motive' (step k) := by
+    intro (k : ℕ) (ih : k ≥ m → motive k) (_ : step k ≥ m)
+    show motive (step k)
+    have : m ≤ k ∨ m ≃ step k := le_reduce.mp ‹m ≤ step k›
+    match ‹m ≤ k ∨ m ≃ step k› with
+    | Or.inl (_ : m ≤ k) =>
+      have : motive k := ih ‹k ≥ m›
+      have : motive (step k) := next k ‹motive k›
+      exact this
+    | Or.inr (_ : m ≃ step k) =>
+      have : motive (step k) := motive_subst ‹m ≃ step k› ‹motive m›
+      exact this
+  have : n ≥ m → motive n := ind_on n z s
+  have : motive n := this ‹n ≥ m›
+  exact this
 
 /--
 Defines `compare`, a comparison function on natural numbers, that determines

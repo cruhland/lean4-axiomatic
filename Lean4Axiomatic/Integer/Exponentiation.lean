@@ -216,13 +216,24 @@ theorem sgn_absorb_pow
     := by
   intro (_ : a ≥ 0) (_ : n > 0)
   show (sgn a)^n ≃ sgn a
+
+  let motive := λ (x : ℕ) => (sgn a)^x ≃ sgn a
+  have motive_subst {x₁ x₂ : ℕ} : x₁ ≃ x₂ → motive x₁ → motive x₂ := by
+    intro (_ : x₁ ≃ x₂) (_ : (sgn a)^x₁ ≃ sgn a)
+    show (sgn a)^x₂ ≃ sgn a
+    calc
+      _ = (sgn a)^x₂ := rfl
+      _ ≃ (sgn a)^x₁ := Natural.pow_substR (Rel.symm ‹x₁ ≃ x₂›)
+      _ ≃ sgn a      := ‹(sgn a)^x₁ ≃ sgn a›
+
   have : step 0 ≤ n := Natural.lt_step_le.mp ‹0 < n›
   have : 1 ≤ n := AA.substLFn (Rel.symm Natural.literal_step) ‹step 0 ≤ n›
-  apply Natural.ind_from ‹n ≥ 1›
+
+  apply Natural.ind_from motive_subst ‹n ≥ 1›
   case base =>
     show (sgn a)^1 ≃ sgn a
     exact Natural.pow_one
-  case step =>
+  case next =>
     intro (k : ℕ) (ih : (sgn a)^k ≃ sgn a)
     show (sgn a)^(step k) ≃ sgn a
     have : a > 0 ∨ a ≃ 0 := ge_split.mp ‹a ≥ 0›
