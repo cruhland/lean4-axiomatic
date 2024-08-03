@@ -354,7 +354,12 @@ instance pow_preserves_nonzero_base_inst
     :=
   ‹AP (x ≄ 0)›.map pow_preserves_nonzero_base
 
-/-- TODO -/
+/--
+A power of zero is either zero or one.
+
+**Property and proof intuition**: If the exponent is zero, the result is one.
+Otherwise, the exponent is positive, and any nonempty product of zeros is zero.
+-/
 theorem pow_of_zero
     [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) mul]
     [AA.Absorbing 0 mul] {n : ℕ} : (0:α)^n ≃ 0 ∨ (0:α)^n ≃ 1
@@ -386,13 +391,26 @@ theorem pow_one {x : α} [AA.Identity (1:α) (· * ·)] : x^1 ≃ x := calc
   _ ≃ 1 * x      := AA.substL pow_zero
   _ ≃ x          := AA.identL
 
-/-- TODO -/
+/--
+Convert between a square and its representation as a product.
+
+**Property intuition**: An exponent of two means two factors in the product.
+
+**Proof intuition**: Extend the proof of `pow_one` by another step.
+-/
 theorem pow_two {x : α} [AA.Identity (1:α) (· * ·)] : x^2 ≃ x * x := calc
   _ = x^2        := rfl
   _ ≃ x^(step 1) := pow_substR literal_step
   _ ≃ x^1 * x    := pow_step
   _ ≃ x * x      := AA.substL pow_one
 
+/--
+Any power of one is one.
+
+**Property and proof intuition**: With one being the multiplicative identity,
+and thus the value of the empty product, a product of all ones can always be
+reduced to it.
+-/
 theorem pow_absorbL {n : ℕ} [AA.Identity (1:α) (· * ·)] : (1:α)^n ≃ 1 := by
   apply ind_on n
   case zero =>
