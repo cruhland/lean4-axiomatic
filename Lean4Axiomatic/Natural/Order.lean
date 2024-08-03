@@ -319,8 +319,8 @@ instance le_cancellative_add
 theorem le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m := by
   intro (_ : n ≤ m) (_ : m ≤ n)
   show n ≃ m
-  have ⟨d₁, (_ : n + d₁ ≃ m)⟩ := le_defn.mp ‹n ≤ m›
-  have ⟨d₂, (_ : m + d₂ ≃ n)⟩ := le_defn.mp ‹m ≤ n›
+  have (Exists.intro (d₁ : ℕ) (_ : n + d₁ ≃ m)) := le_defn.mp ‹n ≤ m›
+  have (Exists.intro (d₂ : ℕ) (_ : m + d₂ ≃ n)) := le_defn.mp ‹m ≤ n›
   have : n + (d₁ + d₂) ≃ n + 0 := calc
     n + (d₁ + d₂) ≃ _ := Rel.symm AA.assoc
     (n + d₁) + d₂ ≃ _ := AA.substL ‹n + d₁ ≃ m›
@@ -328,7 +328,7 @@ theorem le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m := by
     n             ≃ _ := Rel.symm add_zero
     n + 0         ≃ _ := Rel.refl
   have : d₁ + d₂ ≃ 0 := AA.cancelL ‹n + (d₁ + d₂) ≃ n + 0›
-  have ⟨(_ : d₁ ≃ 0), _⟩ := zero_sum_split.mp ‹d₁ + d₂ ≃ 0›
+  have (And.intro (_ : d₁ ≃ 0) _) := zero_sum_split.mp ‹d₁ + d₂ ≃ 0›
   calc
     n      ≃ _ := Rel.symm add_zero
     n + 0  ≃ _ := AA.substR (Rel.symm ‹d₁ ≃ 0›)
@@ -552,61 +552,49 @@ theorem lt_zero_pos {n : ℕ} : Positive n ↔ n > 0 := by
     have : k ≃ n := Rel.symm (Rel.trans ‹n ≃ 0 + k› zero_add)
     exact AA.substFn ‹k ≃ n› ‹Positive k›
 
-/-- Weakens equivalence to _less than or equal to_. -/
-theorem le_from_eqv {n m : ℕ} : n ≃ m → n ≤ m := by
-  intro (_ : n ≃ m)
-  show n ≤ m
-  have : n ≤ n := Rel.refl
-  exact AA.substRFn ‹n ≃ m› ‹n ≤ n›
-
-/-- Weakens _less than_ to _less than or equal to_. -/
-theorem le_from_lt {n m : ℕ} : n < m → n ≤ m := by
-  intro (_ : n < m)
-  show n ≤ m
-  have ⟨(_ : n ≤ m), _⟩ := lt_defn.mp ‹n < m›
-  exact ‹n ≤ m›
-
 /--
-As the name implies, if _less than or equal to_ holds between two natural
-numbers, then either _less than_ holds between them as well, or the numbers are
-equivalent.
+The _less than or equivalent to_ relation can be formed from, or split into,
+the two relations in its name.
+
+**Proof intuition**: In the forward direction, expand the definition of `n ≤ m`
+into `∃ d, n + d ≃ m`. Case split on `d`: if it's zero, then `n ≃ m`; otherwise
+it's greater than zero and `n < m`. In the reverse direction, `n < m` includes
+`n ≤ m` in its definition, and if `n ≃ m` then `n ≤ n` implies `n ≤ m`.
 -/
 theorem le_split {n m : ℕ} : n ≤ m ↔ n < m ∨ n ≃ m := by
   apply Iff.intro
   case mp =>
     intro (_ : n ≤ m)
     show n < m ∨ n ≃ m
-    have ⟨d, (h : n + d ≃ m)⟩ := le_defn.mp ‹n ≤ m›
-    revert h
-    apply cases_on (motive := λ d => n + d ≃ m → n < m ∨ n ≃ m) d
-    case zero =>
-      intro (_ : n + 0 ≃ m)
-      apply Or.inr
-      show n ≃ m
-      calc
-        n     ≃ _ := Rel.symm add_zero
-        n + 0 ≃ _ := ‹n + 0 ≃ m›
-        m     ≃ _ := Rel.refl
-    case step =>
-      intro d (_ : n + step d ≃ m)
-      apply Or.inl
-      show n < m
-      apply lt_step_le.mpr
-      show step n ≤ m
-      apply le_defn.mpr
-      exists d
-      show step n + d ≃ m
-      calc
-        step n + d   ≃ _ := step_add
-        step (n + d) ≃ _ := Rel.symm add_step
-        n + step d   ≃ _ := ‹n + step d ≃ m›
-        m            ≃ _ := Rel.refl
+    have (Exists.intro (d : ℕ) (_ : n + d ≃ m)) := le_defn.mp ‹n ≤ m›
+    have : d ≃ 0 ∨ ∃ (d' : ℕ), d ≃ step d' := split_cases d
+    match this with
+    | Or.inl (_ : d ≃ 0) =>
+      have : n ≃ m := calc
+        _ = n     := rfl
+        _ ≃ n + 0 := Rel.symm add_zero
+        _ ≃ n + d := AA.substR (Rel.symm ‹d ≃ 0›)
+        _ ≃ m     := ‹n + d ≃ m›
+      exact Or.inr ‹n ≃ m›
+    | Or.inr (Exists.intro (d' : ℕ) (_ : d ≃ step d')) =>
+      have : step n + d' ≃ m := calc
+        _ = step n + d'   := rfl
+        _ ≃ n + step d'   := step_add_swap
+        _ ≃ n + d         := AA.substR (Rel.symm ‹d ≃ step d'›)
+        _ ≃ m             := ‹n + d ≃ m›
+      have : step n ≤ m := le_defn.mpr (Exists.intro d' ‹step n + d' ≃ m›)
+      have : n < m := lt_step_le.mpr ‹step n ≤ m›
+      exact Or.inl ‹n < m›
   case mpr =>
     intro (_ : n < m ∨ n ≃ m)
     show n ≤ m
-    exact match ‹n < m ∨ n ≃ m› with
-    | Or.inl (_ : n < m) => le_from_lt ‹n < m›
-    | Or.inr (_ : n ≃ m) => le_from_eqv ‹n ≃ m›
+    match ‹n < m ∨ n ≃ m› with
+    | Or.inl (_ : n < m) =>
+      have (And.intro (_ : n ≤ m) _) := lt_defn.mp ‹n < m›
+      exact ‹n ≤ m›
+    | Or.inr (_ : n ≃ m) =>
+      have : n ≤ n := Rel.refl
+      exact AA.substRFn ‹n ≃ m› ‹n ≤ n›
 
 /-- TODO -/
 theorem lt_narrow {n m : ℕ} : n < step m ↔ n ≤ m := calc
@@ -702,7 +690,7 @@ theorem lt_trans {n m k : ℕ} : n < m → m < k → n < k := by
   show step n ≤ k
   calc
     step n ≤ _ := lt_step_le.mp ‹n < m›
-    m      ≤ _ := le_from_lt lt_step
+    m      ≤ _ := le_split.mpr (Or.inl lt_step)
     step m ≤ _ := lt_step_le.mp ‹m < k›
     k      ≤ _ := Rel.refl
 
@@ -847,7 +835,7 @@ theorem trichotomy (n m : ℕ)
         | Or.inr (_ : step n ≃ m) => exact AA.OneOfThree.second ‹step n ≃ m›
       | AA.OneOfThree.second (_ : n ≃ m) =>
         have : m ≃ n := Rel.symm ‹n ≃ m›
-        have : m ≤ n := le_from_eqv ‹m ≃ n›
+        have : m ≤ n := le_split.mpr (Or.inr ‹m ≃ n›)
         have : step m ≤ step n := AA.subst₁ ‹m ≤ n›
         have : m < step n := lt_step_le.mpr ‹step m ≤ step n›
         apply AA.OneOfThree.third
