@@ -625,20 +625,6 @@ theorem le_split {n m : ℕ} : n ≤ m ↔ n < m ∨ n ≃ m := by
       exact AA.substRFn ‹n ≃ m› ‹n ≤ n›
 
 /--
-Add/remove `step` from the right-hand operand of _less than or equivalent to_.
-
-**Property intuition**: For the conversion to work, we need to account for the
-possibility that `n ≃ step m`.
-
-**Proof intuition**: Split `n ≤ step m` into its _less than_ or _equivalent to_
-cases, and transform the _less than_ case.
--/
-theorem le_stepR {n m : ℕ} : n ≤ step m ↔ n ≤ m ∨ n ≃ step m := calc
-  _ ↔ n ≤ step m              := Iff.rfl
-  _ ↔ n < step m ∨ n ≃ step m := le_split
-  _ ↔ n ≤ m ∨ n ≃ step m      := iff_subst_covar or_mapL lt_stepR
-
-/--
 Split _greater than or equivalent to_ into the relations implied by its name.
 
 **Proof intuition**: Flip the relation around and use `le_split`.
@@ -655,6 +641,66 @@ theorem ge_split {n m : ℕ} : n ≥ m → n > m ∨ n ≃ m := by
   | Or.inr (_ : m ≃ n) =>
     have : n ≃ m := Rel.symm ‹m ≃ n›
     exact Or.inr this
+
+/--
+Add/remove `step` from the right-hand operand of _less than or equivalent to_.
+
+**Property intuition**: For the conversion to work, we need to account for the
+possibility that `n ≃ step m`.
+
+**Proof intuition**: Split `n ≤ step m` into its _less than_ or _equivalent to_
+cases, and transform the _less than_ case.
+-/
+theorem le_stepR {n m : ℕ} : n ≤ step m ↔ n ≤ m ∨ n ≃ step m := calc
+  _ ↔ n ≤ step m              := Iff.rfl
+  _ ↔ n < step m ∨ n ≃ step m := le_split
+  _ ↔ n ≤ m ∨ n ≃ step m      := iff_subst_covar or_mapL lt_stepR
+
+/--
+Induction starting from an arbitrary natural number.
+
+**Property intuition**: Induction works fine with non-zero base cases, since
+the whole idea is to show that we can reach arbitrarily high by iterating the
+inductive step. As long as you don't care about proving the motive for values
+below your chosen starting point.
+
+**Proof intuition**: Uses standard induction, proving the origial motive
+restricted to inputs _greater than or equivalent to_ the chosen starting point.
+For the zero case, show that the starting point must be zero, and thus the
+result is given by the `motive m` base case. For the successor case, we have
+`step k ≥ m` which we can split into `k ≥ m` and `step k ≃ m`. The first option
+follows from the inductive hypothesis; the second option follows from the given
+base case `motive m`.
+-/
+def ind_from
+    {motive : ℕ → Prop}
+    (motive_subst : {k₁ k₂ : ℕ} → k₁ ≃ k₂ → motive k₁ → motive k₂)
+    {n m : ℕ} (n_ge_m : n ≥ m)
+    (base : motive m) (next : (k : ℕ) → motive k → motive (step k)) : motive n
+    := by
+  let motive' := λ x => x ≥ m → motive x
+  have z : motive' 0 := by
+    intro (_ : 0 ≥ m)
+    show motive 0
+    have : m ≥ 0 := ge_zero
+    have : m ≃ 0 := le_antisymm ‹m ≤ 0› ‹0 ≤ m›
+    have : motive 0 := motive_subst ‹m ≃ 0› ‹motive m›
+    exact this
+  have s : (k : ℕ) → motive' k → motive' (step k) := by
+    intro (k : ℕ) (ih : k ≥ m → motive k) (_ : step k ≥ m)
+    show motive (step k)
+    have : m ≤ k ∨ m ≃ step k := le_stepR.mp ‹m ≤ step k›
+    match ‹m ≤ k ∨ m ≃ step k› with
+    | Or.inl (_ : m ≤ k) =>
+      have : motive k := ih ‹k ≥ m›
+      have : motive (step k) := next k ‹motive k›
+      exact this
+    | Or.inr (_ : m ≃ step k) =>
+      have : motive (step k) := motive_subst ‹m ≃ step k› ‹motive m›
+      exact this
+  have : n ≥ m → motive n := ind_on n z s
+  have : motive n := this ‹n ≥ m›
+  exact this
 
 /--
 Positive natural numbers are exactly those that are greater than or equivalent
@@ -885,37 +931,6 @@ theorem trichotomy (n m : ℕ)
       show False
       have ⟨_, (_ : m ≄ n)⟩ := lt_defn.mp ‹n > m›
       exact absurd ‹n ≃ m› (Rel.symm ‹m ≄ n›)
-
-/-- TODO -/
-def ind_from
-    {motive : ℕ → Prop}
-    (motive_subst : {k₁ k₂ : ℕ} → k₁ ≃ k₂ → motive k₁ → motive k₂)
-    {n m : ℕ} (n_ge_m : n ≥ m)
-    (base : motive m) (next : (k : ℕ) → motive k → motive (step k)) : motive n
-    := by
-  let motive' := λ x => x ≥ m → motive x
-  have z : motive' 0 := by
-    intro (_ : 0 ≥ m)
-    show motive 0
-    have : m ≥ 0 := ge_zero
-    have : m ≃ 0 := le_antisymm ‹m ≤ 0› ‹0 ≤ m›
-    have : motive 0 := motive_subst ‹m ≃ 0› ‹motive m›
-    exact this
-  have s : (k : ℕ) → motive' k → motive' (step k) := by
-    intro (k : ℕ) (ih : k ≥ m → motive k) (_ : step k ≥ m)
-    show motive (step k)
-    have : m ≤ k ∨ m ≃ step k := le_stepR.mp ‹m ≤ step k›
-    match ‹m ≤ k ∨ m ≃ step k› with
-    | Or.inl (_ : m ≤ k) =>
-      have : motive k := ih ‹k ≥ m›
-      have : motive (step k) := next k ‹motive k›
-      exact this
-    | Or.inr (_ : m ≃ step k) =>
-      have : motive (step k) := motive_subst ‹m ≃ step k› ‹motive m›
-      exact this
-  have : n ≥ m → motive n := ind_on n z s
-  have : motive n := this ‹n ≥ m›
-  exact this
 
 /--
 Defines `compare`, a comparison function on natural numbers, that determines
