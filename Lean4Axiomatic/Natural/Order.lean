@@ -182,6 +182,19 @@ instance le_reflexive : Relation.Reflexive (α := ℕ) (· ≤ ·) := {
   refl := le_refl
 }
 
+/--
+All natural numbers are _greater than or equivalent to_ zero.
+
+**Property intuition**: Zero is the "starting point" for the natural numbers.
+
+**Proof intuition**: Follows directly from the definition of _less than or
+equivalent to_, and zero being the additive identity.
+-/
+theorem ge_zero {n : ℕ} : n ≥ 0 := by
+  have : 0 + n ≃ n := AA.identL
+  have : n ≥ 0 := le_defn.mpr (Exists.intro n ‹0 + n ≃ n›)
+  exact this
+
 theorem le_step_split {n m : ℕ} : n ≤ step m → n ≤ m ∨ n ≃ step m := by
   intro (_ : n ≤ step m)
   show n ≤ m ∨ n ≃ step m
@@ -474,6 +487,21 @@ theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
     exact ⟨‹n ≤ m›, ‹n ≄ m›⟩
 
 /--
+Convert between _less than_ and _less than or equivalent to_ by adding or
+removing `step` from the right-hand operand.
+
+**Property intuition**: Even if `n ≃ m`, we must have `n < step m` because
+`m < step m`.
+
+**Proof intuition**: Use previous results to convert mechanically between the
+expressions.
+-/
+theorem lt_stepR {n m : ℕ} : n < step m ↔ n ≤ m := calc
+  _ ↔ n < step m      := Iff.rfl
+  _ ↔ step n ≤ step m := lt_step_le
+  _ ↔ n ≤ m           := Iff.intro AA.inject AA.subst₁
+
+/--
 The _less than_ relation between two natural numbers `n` and `m` is
 equivalent to there being a positive natural number -- the _difference_
 between `n` and `m` -- that, when added to `n`, results in `m`.
@@ -596,23 +624,19 @@ theorem le_split {n m : ℕ} : n ≤ m ↔ n < m ∨ n ≃ m := by
       have : n ≤ n := Rel.refl
       exact AA.substRFn ‹n ≃ m› ‹n ≤ n›
 
-/-- TODO -/
-theorem lt_narrow {n m : ℕ} : n < step m ↔ n ≤ m := calc
-  _ ↔ n < step m      := Iff.rfl
-  _ ↔ step n ≤ step m := lt_step_le
-  _ ↔ n ≤ m           := Iff.intro AA.inject AA.subst₁
+/--
+Add/remove `step` from the right-hand operand of _less than or equivalent to_.
 
-/-- TODO -/
-theorem le_reduce {n m : ℕ} : n ≤ step m ↔ n ≤ m ∨ n ≃ step m := calc
+**Property intuition**: For the conversion to work, we need to account for the
+possibility that `n ≃ step m`.
+
+**Proof intuition**: Split `n ≤ step m` into its _less than_ or _equivalent to_
+cases, and transform the _less than_ case.
+-/
+theorem le_stepR {n m : ℕ} : n ≤ step m ↔ n ≤ m ∨ n ≃ step m := calc
   _ ↔ n ≤ step m              := Iff.rfl
   _ ↔ n < step m ∨ n ≃ step m := le_split
-  _ ↔ n ≤ m ∨ n ≃ step m      := iff_subst_covar or_mapL lt_narrow
-
-/-- TODO -/
-theorem ge_zero {n : ℕ} : n ≥ 0 := by
-  have : 0 + n ≃ n := AA.identL
-  have : n ≥ 0 := le_defn.mpr (Exists.intro n ‹0 + n ≃ n›)
-  exact this
+  _ ↔ n ≤ m ∨ n ≃ step m      := iff_subst_covar or_mapL lt_stepR
 
 /--
 Split _greater than or equivalent to_ into the relations implied by its name.
@@ -663,7 +687,7 @@ relation.
 theorem lt_split {n m : ℕ} : n < step m → n < m ∨ n ≃ m := by
   intro (_ : n < step m)
   show n < m ∨ n ≃ m
-  have : n ≤ m := lt_narrow.mp ‹n < step m›
+  have : n ≤ m := lt_stepR.mp ‹n < step m›
   exact le_split.mp ‹n ≤ m›
 
 /--
@@ -880,7 +904,7 @@ def ind_from
   have s : (k : ℕ) → motive' k → motive' (step k) := by
     intro (k : ℕ) (ih : k ≥ m → motive k) (_ : step k ≥ m)
     show motive (step k)
-    have : m ≤ k ∨ m ≃ step k := le_reduce.mp ‹m ≤ step k›
+    have : m ≤ k ∨ m ≃ step k := le_stepR.mp ‹m ≤ step k›
     match ‹m ≤ k ∨ m ≃ step k› with
     | Or.inl (_ : m ≤ k) =>
       have : motive k := ih ‹k ≥ m›
