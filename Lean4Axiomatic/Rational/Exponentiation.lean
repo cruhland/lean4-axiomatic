@@ -789,17 +789,15 @@ theorem sgn_diff_pow
   have : q > 0 := ‹AP (q > 0)›.ev
   have : p ≥ 0 := ge_cases.mpr (Or.inl ‹p > 0›)
   have : q ≥ 0 := ge_cases.mpr (Or.inl ‹q > 0›)
-  have (Exists.intro (n : ℕ) (And.intro (_ : n > 0) (_ : a ≃ n * sgn a))) :=
-    Integer.as_size_with_sign a
-  have : AA.OneOfThree₁ (sgn a ≃ 0) (sgn a ≃ 1) (sgn a ≃ -1) :=
-    Integer.sgn_trichotomy a
-  match ‹AA.OneOfThree₁ (sgn a ≃ 0) (sgn a ≃ 1) (sgn a ≃ -1)› with
-  | AA.OneOfThree₁.first (_ : sgn a ≃ 0) =>
+  have : a ≃ 0 ∨ Integer.Nonzero a := (Integer.zero? a).left
+  match this with
+  | Or.inl (_ : a ≃ 0) =>
     have pow_a_simp {x : ℚ} [AP (x ≄ 0)] : x^a ≃ 1 := calc
       _ = x^a     := rfl
-      _ ≃ x^(0:ℤ) := pow_substR (Integer.sgn_zero.mpr ‹sgn a ≃ 0›)
+      _ ≃ x^(0:ℤ) := pow_substR ‹a ≃ 0›
       _ ≃ x^(0:ℕ) := pow_nonneg
       _ ≃ 1       := Natural.pow_zero
+    have : sgn a ≃ 0 := Integer.sgn_zero.mp ‹a ≃ 0›
     calc
       _ = sgn (p^a - q^a)     := rfl
       _ ≃ sgn (1 - q^a)       := sgn_subst (sub_substL pow_a_simp)
@@ -808,42 +806,49 @@ theorem sgn_diff_pow
       _ ≃ 0                   := sgn_zero.mp eqv_refl
       _ ≃ sgn (p - q) * 0     := Rel.symm AA.absorbR
       _ ≃ sgn (p - q) * sgn a := AA.substR (Rel.symm ‹sgn a ≃ 0›)
-  | AA.OneOfThree₁.second (_ : sgn a ≃ 1) =>
-    have pow_a_simp {x : ℚ} [AP (x ≄ 0)] : x^a ≃ x^n := calc
-      _ = x^a               := rfl
-      _ ≃ x^((n:ℤ) * sgn a) := pow_substR ‹a ≃ n * sgn a›
-      _ ≃ x^((n:ℤ) * 1)     := pow_substR (AA.substR ‹sgn a ≃ 1›)
-      _ ≃ x^(n:ℤ)           := pow_substR AA.identR
-      _ ≃ x^n               := pow_nonneg
-    calc
-      _ = sgn (p^a - q^a)     := rfl
-      _ ≃ sgn (p^n - q^a)     := sgn_subst (sub_substL pow_a_simp)
-      _ ≃ sgn (p^n - q^n)     := sgn_subst (sub_substR pow_a_simp)
-      _ ≃ sgn (p - q)         := sgn_diff_pow_pos ‹p ≥ 0› ‹q ≥ 0› ‹n > 0›
-      _ ≃ sgn (p - q) * 1     := Rel.symm AA.identR
-      _ ≃ sgn (p - q) * sgn a := AA.substR (Rel.symm ‹sgn a ≃ 1›)
-  | AA.OneOfThree₁.third (_ : sgn a ≃ -1) =>
-    have pow_a_simp {x : ℚ} [AP (x ≄ 0)] : x^a ≃ (x^n)⁻¹ := calc
-      _ = x^a               := rfl
-      _ ≃ x^((n:ℤ) * sgn a) := pow_substR ‹a ≃ n * sgn a›
-      _ ≃ x^((n:ℤ) * -1)    := pow_substR (AA.substR ‹sgn a ≃ -1›)
-      _ ≃ (x^(n:ℤ))^(-1:ℤ)  := eqv_symm pow_flatten
-      _ ≃ (x^(n:ℤ))⁻¹       := pow_neg_one
-      _ ≃ (x^n)⁻¹           := recip_subst pow_nonneg
-    have : p^n > 0 := pow_preserves_pos ‹p > 0›
-    have : q^n > 0 := pow_preserves_pos ‹q > 0›
-    have : p^n * q^n > 0 := mul_preserves_pos ‹p^n > 0› ‹q^n > 0›
-    calc
-      _ = sgn (p^a - q^a)         := rfl
-      _ ≃ sgn ((p^n)⁻¹ - q^a)     := sgn_subst (sub_substL pow_a_simp)
-      _ ≃ sgn ((p^n)⁻¹ - (q^n)⁻¹) := sgn_subst (sub_substR pow_a_simp)
-      _ ≃ sgn (q^n - p^n)         := sgn_sub_recip ‹p^n * q^n > 0›
-      _ ≃ sgn (q - p)             := sgn_diff_pow_pos ‹q ≥ 0› ‹p ≥ 0› ‹n > 0›
-      _ ≃ sgn (-(p - q))          := sgn_subst (eqv_symm neg_sub)
-      _ ≃ -sgn (p - q)            := sgn_compat_neg
-      _ ≃ -1 * sgn (p - q)        := Rel.symm Integer.mul_neg_one
-      _ ≃ sgn (p - q) * -1        := AA.comm
-      _ ≃ sgn (p - q) * sgn a     := AA.substR (Rel.symm ‹sgn a ≃ -1›)
+  | Or.inr (_ : Integer.Nonzero a) =>
+    have (Exists.intro (n:ℕ) (And.intro (_ : n > 0) (_ : a ≃ n * sgn a))) :=
+      Integer.as_size_with_sign ‹Integer.Nonzero a›
+    have : Integer.Sqrt1 (sgn a) := Integer.sgn_nonzero.mp ‹Integer.Nonzero a›
+    have : sgn a ≃ 1 ∨ sgn a ≃ -1 :=
+      Integer.sqrt1_cases.mp ‹Integer.Sqrt1 (sgn a)›
+    match ‹sgn a ≃ 1 ∨ sgn a ≃ -1› with
+    | Or.inl (_ : sgn a ≃ 1) =>
+      have pow_a_simp {x : ℚ} [AP (x ≄ 0)] : x^a ≃ x^n := calc
+        _ = x^a               := rfl
+        _ ≃ x^((n:ℤ) * sgn a) := pow_substR ‹a ≃ n * sgn a›
+        _ ≃ x^((n:ℤ) * 1)     := pow_substR (AA.substR ‹sgn a ≃ 1›)
+        _ ≃ x^(n:ℤ)           := pow_substR AA.identR
+        _ ≃ x^n               := pow_nonneg
+      calc
+        _ = sgn (p^a - q^a)     := rfl
+        _ ≃ sgn (p^n - q^a)     := sgn_subst (sub_substL pow_a_simp)
+        _ ≃ sgn (p^n - q^n)     := sgn_subst (sub_substR pow_a_simp)
+        _ ≃ sgn (p - q)         := sgn_diff_pow_pos ‹p ≥ 0› ‹q ≥ 0› ‹n > 0›
+        _ ≃ sgn (p - q) * 1     := Rel.symm AA.identR
+        _ ≃ sgn (p - q) * sgn a := AA.substR (Rel.symm ‹sgn a ≃ 1›)
+    | Or.inr (_ : sgn a ≃ -1) =>
+      have pow_a_simp {x : ℚ} [AP (x ≄ 0)] : x^a ≃ (x^n)⁻¹ := calc
+        _ = x^a               := rfl
+        _ ≃ x^((n:ℤ) * sgn a) := pow_substR ‹a ≃ n * sgn a›
+        _ ≃ x^((n:ℤ) * -1)    := pow_substR (AA.substR ‹sgn a ≃ -1›)
+        _ ≃ (x^(n:ℤ))^(-1:ℤ)  := eqv_symm pow_flatten
+        _ ≃ (x^(n:ℤ))⁻¹       := pow_neg_one
+        _ ≃ (x^n)⁻¹           := recip_subst pow_nonneg
+      have : p^n > 0 := pow_preserves_pos ‹p > 0›
+      have : q^n > 0 := pow_preserves_pos ‹q > 0›
+      have : p^n * q^n > 0 := mul_preserves_pos ‹p^n > 0› ‹q^n > 0›
+      calc
+        _ = sgn (p^a - q^a)         := rfl
+        _ ≃ sgn ((p^n)⁻¹ - q^a)     := sgn_subst (sub_substL pow_a_simp)
+        _ ≃ sgn ((p^n)⁻¹ - (q^n)⁻¹) := sgn_subst (sub_substR pow_a_simp)
+        _ ≃ sgn (q^n - p^n)         := sgn_sub_recip ‹p^n * q^n > 0›
+        _ ≃ sgn (q - p)             := sgn_diff_pow_pos ‹q ≥ 0› ‹p ≥ 0› ‹n > 0›
+        _ ≃ sgn (-(p - q))          := sgn_subst (eqv_symm neg_sub)
+        _ ≃ -sgn (p - q)            := sgn_compat_neg
+        _ ≃ -1 * sgn (p - q)        := Rel.symm Integer.mul_neg_one
+        _ ≃ sgn (p - q) * -1        := AA.comm
+        _ ≃ sgn (p - q) * sgn a     := AA.substR (Rel.symm ‹sgn a ≃ -1›)
 
 /-- TODO -/
 theorem pow_pos_preserves_ge_pos

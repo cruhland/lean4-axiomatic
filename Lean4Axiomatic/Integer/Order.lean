@@ -1170,4 +1170,17 @@ theorem mul_preserves_nonneg {a b : ℤ} : a ≥ 0 → b ≥ 0 → a * b ≥ 0 :
     _ ≥ 0 * b := mul_substL_ge ‹b ≥ 0› ‹a ≥ 0›
     _ ≃ 0     := AA.absorbL
 
+/-- TODO -/
+theorem as_size_with_sign
+    {a : ℤ} : Nonzero a → ∃ (n : ℕ), n > 0 ∧ a ≃ n * sgn a
+    := by
+  intro (_ : Nonzero a)
+  show ∃ (n : ℕ), n > 0 ∧ a ≃ n * sgn a
+  have : Sqrt1 (sgn a) := sgn_nonzero.mp ‹Nonzero a›
+  have (NonzeroWithSign.intro (n : ℕ) (_ : Positive n) (_ : a ≃ sgn a * n)) :=
+    sgn_nonzeroWithSign (a := a)
+  have : n > 0 := Natural.lt_zero_pos.mp ‹Positive n›
+  have : a ≃ n * sgn a := Rel.trans ‹a ≃ sgn a * n› AA.comm
+  exact Exists.intro n (And.intro ‹n > 0› ‹a ≃ n * sgn a›)
+
 end Lean4Axiomatic.Integer
