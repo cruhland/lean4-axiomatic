@@ -89,7 +89,11 @@ theorem gt_iff_pos_diff {a b : ℤ} : a > b ↔ Positive (a - b) := by
     have : b ≄ a := Rel.symm (mt zero_diff_iff_eqv.mpr ‹a - b ≄ 0›)
     exact And.intro ‹b ≤ a› ‹b ≄ a›
 
-/-- TODO -/
+/--
+Integers greater than zero are positive.
+
+**Proof intuition**: Follows directly from `gt_iff_pos_diff`.
+-/
 theorem gt_zero_iff_pos {a : ℤ} : a > 0 ↔ Positive a := calc
   _ ↔ a > 0            := Iff.rfl
   _ ↔ Positive (a - 0) := gt_iff_pos_diff
@@ -464,7 +468,12 @@ theorem le_split {a b : ℤ} : a ≤ b ↔ a < b ∨ a ≃ b := by
       ‹a ≤ b›
     exact this
 
-/-- TODO -/
+/--
+The _greater than or equivalent to_ relation can be formed from, or split into,
+the two relations in its name.
+
+**Proof intuition**: Follows directly from `le_split`.
+-/
 theorem ge_split {a b : ℤ} : a ≥ b ↔ a > b ∨ a ≃ b := calc
   _ ↔ a ≥ b         := Iff.rfl
   _ ↔ b < a ∨ b ≃ a := le_split
@@ -494,7 +503,11 @@ theorem lt_sgn {a b : ℤ} : a < b ↔ sgn (a - b) ≃ -1 := by
     have : a < b := lt_iff_neg_diff.mpr this
     exact this
 
-/-- TODO -/
+/--
+Integers are less than zero iff they have sign `-1`.
+
+**Proof intuition**: Follows directly from `lt_sgn`.
+-/
 theorem lt_zero_sgn {a : ℤ} : a < 0 ↔ sgn a ≃ -1 := calc
   _ ↔ a < 0            := Iff.rfl
   _ ↔ sgn (a - 0) ≃ -1 := lt_sgn
@@ -524,13 +537,30 @@ theorem gt_sgn {a b : ℤ} : a > b ↔ sgn (a - b) ≃ 1 := by
     have : a > b := gt_iff_pos_diff.mpr this
     exact this
 
-/-- TODO -/
+/--
+Integers are greater than zero iff they have sign `1`.
+
+**Proof intuition**: Follows directly from `gt_sgn`.
+-/
 theorem gt_zero_sgn {a : ℤ} : a > 0 ↔ sgn a ≃ 1 := calc
   _ ↔ a > 0           := Iff.rfl
   _ ↔ sgn (a - 0) ≃ 1 := gt_sgn
   _ ↔ sgn a ≃ 1       := AA.eqv_substL_iff (sgn_subst sub_identR)
 
-/-- TODO -/
+/--
+Converts the _greater than or equivalent to_ relation on integers to and from
+its _signum_ function representation.
+
+**Property intuition**: The result of subtracting a smaller (or equivalent)
+value from a larger one will never be negative.
+
+**Proof intuition**: In the forward direction, assume the sign of the
+difference _is_ `-1` and attempt to reach a contradiction. Split `a ≥ b` into
+`a > b` and `a ≃ b`. In either case, the sign of `a - b` is different from `-1`
+which is impossible. In the reverse direction, consider the three `sgn` values
+of `a - b`: zero and one both imply `a ≥ b`, while negative one contradicts the
+assumption that `sgn (a - b) ≄ -1`.
+-/
 theorem ge_sgn {a b : ℤ} : a ≥ b ↔ sgn (a - b) ≄ -1 := by
   apply Iff.intro
   case mp =>
@@ -564,7 +594,15 @@ theorem ge_sgn {a b : ℤ} : a ≥ b ↔ sgn (a - b) ≄ -1 := by
     | AA.OneOfThree₁.third (_ : sgn (a - b) ≃ -1) =>
       exact absurd ‹sgn (a - b) ≃ -1› ‹sgn (a - b) ≄ -1›
 
-/-- TODO -/
+/--
+Converts the _less than or equivalent to_ relation on integers to and from
+its _signum_ function representation.
+
+**Property intuition**: The result of subtracting a larger (or equivalent)
+value from a smaller one will never be positive.
+
+**Proof intuition**: Follows from `ge_sgn` and properties of negation.
+-/
 theorem le_sgn {a b : ℤ} : a ≤ b ↔ sgn (a - b) ≄ 1 := by
   have reduce_neg : -sgn (b - a) ≃ -(-1) ↔ sgn (a - b) ≃ 1 := calc
     _ ↔ -sgn (b - a) ≃ -(-1)   := Iff.rfl
@@ -577,7 +615,11 @@ theorem le_sgn {a b : ℤ} : a ≤ b ↔ sgn (a - b) ≄ 1 := by
     _ ↔ -sgn (b - a) ≄ -(-1)   := Iff.intro AA.subst₁ AA.inject
     _ ↔ sgn (a - b) ≄ 1        := iff_subst_contra mt reduce_neg
 
-/-- TODO -/
+/--
+Integers are greater than or equivalent to zero iff they don't have sign `-1`.
+
+**Proof intuition**: Follows directly from `ge_sgn`.
+-/
 theorem ge_zero_sgn {a : ℤ} : a ≥ 0 ↔ sgn a ≄ -1 := by
   have : sgn (a - 0) ≃ sgn a := sgn_subst sub_identR
   have : sgn (a - 0) ≃ -1 ↔ sgn a ≃ -1 := AA.eqv_substL_iff this
