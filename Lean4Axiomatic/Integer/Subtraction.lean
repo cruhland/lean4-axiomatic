@@ -386,7 +386,14 @@ Multiplication by a nonzero value on the right is injective.
 theorem mul_cancelR {a b c : ℤ} : a ≄ 0 → b * a ≃ c * a → b ≃ c :=
   AA.cancelRC (C := (· ≄ 0))
 
-/-- TODO -/
+/--
+Two integers are equivalent iff the sign of their difference is zero.
+
+This lemma can save some lines in proofs of sign or order trichotomy.
+
+**Property and proof intution**: Follows directly from `zero_diff_iff_eqv` and
+`sgn_zero`.
+-/
 theorem eqv_sgn {a b : ℤ} : a ≃ b ↔ sgn (a - b) ≃ 0 := calc
   _ ↔ a ≃ b           := Iff.rfl
   _ ↔ a - b ≃ 0       := zero_diff_iff_eqv.symm
