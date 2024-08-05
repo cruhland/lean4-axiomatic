@@ -628,25 +628,56 @@ theorem ge_zero_sgn {a : ℤ} : a ≥ 0 ↔ sgn a ≄ -1 := by
     _ ↔ sgn (a - 0) ≄ -1 := ge_sgn
     _ ↔ sgn a ≄ -1       := iff_subst_contra mt ‹sgn (a - 0) ≃ -1 ↔ sgn a ≃ -1›
 
-/-- TODO -/
+/--
+The only sign value greater than zero, is one.
+
+**Property intuition**: The only sign values are `1`, `0`, and `-1`.
+
+**Proof intuition**: The sign of any number greater than zero is one; taking
+the sign of a sign leaves it unchanged.
+-/
 theorem sgn_gt_zero_iff_pos {a : ℤ} : sgn a > 0 ↔ sgn a ≃ 1 := calc
   _ ↔ sgn a > 0       := Iff.rfl
   _ ↔ sgn (sgn a) ≃ 1 := gt_zero_sgn
   _ ↔ sgn a ≃ 1       := AA.eqv_substL_iff sgn_idemp
 
-/-- TODO -/
+/--
+Negative one is the only sign value that's not greater than or equivalent to
+zero.
+
+**Property intuition**: The only sign values are `1`, `0`, and `-1`.
+
+**Proof intuition**: The sign of any number greater than or equivalent to zero
+is not `-1`; taking the sign of a sign leaves it unchanged.
+-/
 theorem sgn_ge_zero_iff_nonneg {a : ℤ} : sgn a ≥ 0 ↔ sgn a ≄ -1 := calc
   _ ↔ sgn a ≥ 0        := Iff.rfl
   _ ↔ sgn (sgn a) ≄ -1 := ge_zero_sgn
   _ ↔ sgn a ≄ -1       := iff_subst_contra mt (AA.eqv_substL_iff sgn_idemp)
 
-/-- TODO -/
+/--
+An integer is greater than zero iff its sign is greater than zero.
+
+**Property and proof intuition**: Integers greater than zero have sign value
+`1`; this is the only sign value that's greater than zero.
+-/
 theorem sgn_preserves_gt_zero {a : ℤ} : a > 0 ↔ sgn a > 0 := calc
   _ ↔ a > 0     := Iff.rfl
   _ ↔ sgn a ≃ 1 := gt_zero_sgn
   _ ↔ sgn a > 0 := sgn_gt_zero_iff_pos.symm
 
-/-- TODO -/
+/--
+An integer is greater than or equivalent to zero iff its sign is greater than
+or equivalent to zero.
+
+**Property intuition**: Integers greater than or equivalent to zero have sign
+values of `1` and `0`, which are the only ones that are also greater than or
+equivalent to zero.
+
+**Proof intuition**: Split the _greater than or equivalent to_ relation into
+_greater than_ or _equivalent to_. The theorem `sgn_preserves_gt_zero` covers
+the _greater than_ relation, while `sgn_zero` covers _equivalent to_.
+-/
 theorem sgn_preserves_ge_zero {a : ℤ} : a ≥ 0 ↔ sgn a ≥ 0 := calc
   _ ↔ a ≥ 0                 := Iff.rfl
   _ ↔ a > 0 ∨ a ≃ 0         := ge_split
@@ -654,7 +685,17 @@ theorem sgn_preserves_ge_zero {a : ℤ} : a ≥ 0 ↔ sgn a ≥ 0 := calc
   _ ↔ sgn a > 0 ∨ sgn a ≃ 0 := iff_subst_covar or_mapR sgn_zero
   _ ↔ sgn a ≥ 0             := ge_split.symm
 
-/-- TODO -/
+/--
+Expresses _greater than or equivalent to_ in terms of the sign value of a
+difference being nonnegative.
+
+This is a fairly specific lemma that's helpful in several proofs.
+
+**Property intuition**: If `a ≥ b`, then their difference is `≥ 0`, and so is
+the sign value of that difference.
+
+**Proof intuition**: By previous lemmas for `sgn`.
+-/
 theorem sgn_diff_ge_zero {a b : ℤ} : a ≥ b ↔ sgn (a - b) ≥ 0 := calc
   _ ↔ a ≥ b            := Iff.rfl
   _ ↔ sgn (a - b) ≄ -1 := ge_sgn
@@ -672,7 +713,7 @@ elements.
 integer subtraction being positive, the result follows from adding the two
 smaller properties and using algebra to show that it produces the conclusion.
 -/
-theorem lt_trans {a b c : ℤ} : a < b → b < c → a < c := by
+theorem trans_lt_lt_lt {a b c : ℤ} : a < b → b < c → a < c := by
   intro (_ : a < b) (_ : b < c)
   show a < c
   have : Positive (b - a) := gt_iff_pos_diff.mp ‹a < b›
@@ -681,21 +722,13 @@ theorem lt_trans {a b c : ℤ} : a < b → b < c → a < c := by
   show Positive (c - a)
   have : Positive ((c - b) + (b - a)) :=
     add_preserves_positive ‹Positive (c - b)› ‹Positive (b - a)›
-  have : (c - b) + (b - a) ≃ c - a := calc
-    (c - b) + (b - a)   ≃ _ := AA.substL sub_defn
-    (c + -b) + (b - a)  ≃ _ := AA.substR sub_defn
-    (c + -b) + (b + -a) ≃ _ := AA.assoc
-    c + (-b + (b + -a)) ≃ _ := AA.substR (Rel.symm AA.assoc)
-    c + ((-b + b) + -a) ≃ _ := AA.substR (AA.substL AA.inverseL)
-    c + (0 + -a)        ≃ _ := AA.substR AA.identL
-    c + -a              ≃ _ := Rel.symm sub_defn
-    c - a               ≃ _ := Rel.refl
+  have : (c - b) + (b - a) ≃ c - a := add_sub_telescope
   have : Positive (c - a) :=
     AA.substFn ‹(c - b) + (b - a) ≃ c - a› ‹Positive ((c - b) + (b - a))›
   exact this
 
 instance lt_transitive : Relation.Transitive (α := ℤ) (· < ·) := {
-  trans := lt_trans
+  trans := trans_lt_lt_lt
 }
 
 theorem trans_eqv_lt_lt {a b c : ℤ} : a ≃ b → b < c → a < c := by
@@ -722,7 +755,7 @@ theorem trans_le_lt_lt {a b c : ℤ} : a ≤ b → b < c → a < c := by
   have : a < b ∨ a ≃ b := le_split.mp ‹a ≤ b›
   match ‹a < b ∨ a ≃ b› with
   | Or.inl (_ : a < b) =>
-    have : a < c := lt_trans ‹a < b› ‹b < c›
+    have : a < c := trans_lt_lt_lt ‹a < b› ‹b < c›
     exact this
   | Or.inr (_ : a ≃ b) =>
     have : a < c := trans_eqv_lt_lt ‹a ≃ b› ‹b < c›
@@ -738,7 +771,7 @@ theorem trans_lt_le_lt {a b c : ℤ} : a < b → b ≤ c → a < c := by
   have : b < c ∨ b ≃ c := le_split.mp ‹b ≤ c›
   match ‹b < c ∨ b ≃ c› with
   | Or.inl (_ : b < c) =>
-    have : a < c := lt_trans ‹a < b› ‹b < c›
+    have : a < c := trans_lt_lt_lt ‹a < b› ‹b < c›
     exact this
   | Or.inr (_ : b ≃ c) =>
     have : a < c := trans_lt_eqv_lt ‹a < b› ‹b ≃ c›
@@ -756,7 +789,7 @@ theorem trans_le_le_le {a b c : ℤ} : a ≤ b → b ≤ c → a ≤ c := by
   have : b < c ∨ b ≃ c := le_split.mp ‹b ≤ c›
   match And.intro ‹a < b ∨ a ≃ b› ‹b < c ∨ b ≃ c› with
   | (And.intro (Or.inl (_ : a < b)) (Or.inl (_ : b < c))) =>
-    have : a < c := lt_trans ‹a < b› ‹b < c›
+    have : a < c := trans_lt_lt_lt ‹a < b› ‹b < c›
     have : a ≤ c := le_split.mpr (Or.inl ‹a < c›)
     exact this
   | (And.intro (Or.inl (_ : a < b)) (Or.inr (_ : b ≃ c))) =>
@@ -804,7 +837,7 @@ instance trans_le_eqv_le_inst : Trans (α := ℤ) (· ≤ ·) (· ≃ ·) (· �
 theorem trans_gt_gt_gt {a b c : ℤ} : a > b → b > c → a > c := by
   intro (_ : a > b) (_ : b > c)
   show a > c
-  have : c < a := lt_trans ‹c < b› ‹b < a›
+  have : c < a := trans_lt_lt_lt ‹c < b› ‹b < a›
   exact this
 
 instance trans_gt_gt_gt_inst : Trans (α := ℤ) (· > ·) (· > ·) (· > ·) := {
