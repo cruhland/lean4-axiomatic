@@ -298,20 +298,20 @@ theorem zero_sum_split {n m : ℕ} : n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0 := by
 Example showing that naturals numbers with addition form a Monoid and use
 that fact to prove something.
 -/
-
 local instance add_monoid_ops :  CA.Monoid.Ops ℕ := {
   binop := (· + ·)
   ident := 0
 }
 
-def subst_addR {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m + n₁ ≃ m + n₂ := AA.substR
-
-def add_monoid_props : CA.Monoid.Props ℕ := {
-  substL   := subst_add
-  substR   := subst_addR
-  assoc    := add_associative.assoc
-  identL := add_identity.identityL.ident
-  identR := add_identity.identityR.ident
+def add_monoid_props : CA.Monoid.Props (α := ℕ) (zz := add_monoid_ops) :=
+  let subst_addL {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m := AA.substL;
+  let subst_addR {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m + n₁ ≃ m + n₂ := AA.substR;
+{
+  substL  := subst_addL
+  substR  := subst_addR
+  assoc   := add_associative.assoc
+  identL  := add_identity.identityL.ident
+  identR  := add_identity.identityR.ident
 }
 
 instance add_monoid : CA.Monoid.Monoid (α := ℕ) := {
