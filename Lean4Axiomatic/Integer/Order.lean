@@ -727,28 +727,50 @@ theorem trans_lt_lt_lt {a b c : ℤ} : a < b → b < c → a < c := by
     AA.substFn ‹(c - b) + (b - a) ≃ c - a› ‹Positive ((c - b) + (b - a))›
   exact this
 
-instance lt_transitive : Relation.Transitive (α := ℤ) (· < ·) := {
+/-- Enable `trans_lt_lt_lt` use by `calc` tactics. -/
+instance trans_lt_lt_lt_inst : Relation.Transitive (α := ℤ) (· < ·) := {
   trans := trans_lt_lt_lt
 }
 
+/--
+Transitivity of _less than_ with equivalence on the left.
+
+**Property and proof intuition**: Follows from the substituitive property of
+equivalence on _less than_.
+-/
 theorem trans_eqv_lt_lt {a b c : ℤ} : a ≃ b → b < c → a < c := by
   intro (_ : a ≃ b) (_ : b < c)
   show a < c
   exact lt_substL_eqv (Rel.symm ‹a ≃ b›) ‹b < c›
 
+/-- Enable `trans_eqv_lt_lt` use by `calc` tactics. -/
 instance trans_eqv_lt_lt_inst : Trans (α := ℤ) (· ≃ ·) (· < ·) (· < ·) := {
   trans := trans_eqv_lt_lt
 }
 
+/--
+Transitivity of _less than_ with equivalence on the right.
+
+**Property and proof intuition**: Follows from the substituitive property of
+equivalence on _less than_.
+-/
 theorem trans_lt_eqv_lt {a b c : ℤ} : a < b → b ≃ c → a < c := by
   intro (_ : a < b) (_ : b ≃ c)
   show a < c
   exact lt_substR_eqv ‹b ≃ c› ‹a < b›
 
+/-- Enable `trans_lt_eqv_lt` use by `calc` tactics. -/
 instance trans_lt_eqv_lt_inst : Trans (α := ℤ) (· < ·) (· ≃ ·) (· < ·) := {
   trans := trans_lt_eqv_lt
 }
 
+/--
+Transitivity of _less than_ with _less than or equivalent to_ on the left.
+
+**Property and proof intuition**: Split _less than or equivalent to_ into
+_less than_ or _equivalent to_. Transitivity holds for both of those simpler
+relations, so it holds for this one as well.
+-/
 theorem trans_le_lt_lt {a b c : ℤ} : a ≤ b → b < c → a < c := by
   intro (_ : a ≤ b) (_ : b < c)
   show a < c
@@ -761,10 +783,18 @@ theorem trans_le_lt_lt {a b c : ℤ} : a ≤ b → b < c → a < c := by
     have : a < c := trans_eqv_lt_lt ‹a ≃ b› ‹b < c›
     exact this
 
+/-- Enable `trans_le_lt_lt` use by `calc` tactics. -/
 instance trans_le_lt_lt_inst : Trans (α := ℤ) (· ≤ ·) (· < ·) (· < ·) := {
   trans := trans_le_lt_lt
 }
 
+/--
+Transitivity of _less than_ with _less than or equivalent to_ on the right.
+
+**Property and proof intuition**: Split _less than or equivalent to_ into
+_less than_ or _equivalent to_. Transitivity holds for both of those simpler
+relations, so it holds for this one as well.
+-/
 theorem trans_lt_le_lt {a b c : ℤ} : a < b → b ≤ c → a < c := by
   intro (_ : a < b) (_ : b ≤ c)
   show a < c
@@ -777,11 +807,20 @@ theorem trans_lt_le_lt {a b c : ℤ} : a < b → b ≤ c → a < c := by
     have : a < c := trans_lt_eqv_lt ‹a < b› ‹b ≃ c›
     exact this
 
+/-- Enable `trans_lt_le_lt` use by `calc` tactics. -/
 instance trans_lt_le_lt_inst : Trans (α := ℤ) (· < ·) (· ≤ ·) (· < ·) := {
   trans := trans_lt_le_lt
 }
 
-/-- See the Rational version of this for the explanation. -/
+/--
+Transitivity of _less than or equivalent to_.
+
+**Property and proof intuition**: Split each input relation into its
+_less than_ case and its equivalence case. Delegate to a previous transitivity
+result for each combination of cases. Note that this turns out to be easier
+than expanding the relation into its `sgn`-based definition, because that
+involves a `· ≄ ·` operation which is more difficult to deal with.
+-/
 theorem trans_le_le_le {a b c : ℤ} : a ≤ b → b ≤ c → a ≤ c := by
   intro (_ : a ≤ b) (_ : b ≤ c)
   show a ≤ c
@@ -805,11 +844,17 @@ theorem trans_le_le_le {a b c : ℤ} : a ≤ b → b ≤ c → a ≤ c := by
     have : a ≤ c := le_split.mpr (Or.inr ‹a ≃ c›)
     exact this
 
+/-- Enable `trans_le_le_le` use by `calc` tactics. -/
 instance trans_le_le_le_inst : Trans (α := ℤ) (· ≤ ·) (· ≤ ·) (· ≤ ·) := {
   trans := trans_le_le_le
 }
 
-/-- TODO -/
+/--
+Transitivity of _less than or equivalent to_ with equivalence on the left.
+
+**Property and proof intuition**: Convert equivalence to _less than or
+equivalent to_; follows from transitivity of that relation.
+-/
 theorem trans_eqv_le_le {a b c : ℤ} : a ≃ b → b ≤ c → a ≤ c := by
   intro (_ : a ≃ b) (_ : b ≤ c)
   show a ≤ c
@@ -817,11 +862,17 @@ theorem trans_eqv_le_le {a b c : ℤ} : a ≃ b → b ≤ c → a ≤ c := by
   have : a ≤ c := trans_le_le_le ‹a ≤ b› ‹b ≤ c›
   exact this
 
+/-- Enable `trans_eqv_le_le` use by `calc` tactics. -/
 instance trans_eqv_le_le_inst : Trans (α := ℤ) (· ≃ ·) (· ≤ ·) (· ≤ ·) := {
   trans := trans_eqv_le_le
 }
 
-/-- TODO -/
+/--
+Transitivity of _less than or equivalent to_ with equivalence on the right.
+
+**Property and proof intuition**: Convert equivalence to _less than or
+equivalent to_; follows from transitivity of that relation.
+-/
 theorem trans_le_eqv_le {a b c : ℤ} : a ≤ b → b ≃ c → a ≤ c := by
   intro (_ : a ≤ b) (_ : b ≃ c)
   show a ≤ c
@@ -829,94 +880,144 @@ theorem trans_le_eqv_le {a b c : ℤ} : a ≤ b → b ≃ c → a ≤ c := by
   have : a ≤ c := trans_le_le_le ‹a ≤ b› ‹b ≤ c›
   exact this
 
+/-- Enable `trans_le_eqv_le` use by `calc` tactics. -/
 instance trans_le_eqv_le_inst : Trans (α := ℤ) (· ≤ ·) (· ≃ ·) (· ≤ ·) := {
   trans := trans_le_eqv_le
 }
 
-/-- TODO -/
+/--
+Transitivity of the _greater than_ relation.
+
+**Property and proof intuition**: Follows from _less than_ transitivity.
+-/
 theorem trans_gt_gt_gt {a b c : ℤ} : a > b → b > c → a > c := by
   intro (_ : a > b) (_ : b > c)
   show a > c
   have : c < a := trans_lt_lt_lt ‹c < b› ‹b < a›
   exact this
 
+/-- Enable `trans_gt_gt_gt` use by `calc` tactics. -/
 instance trans_gt_gt_gt_inst : Trans (α := ℤ) (· > ·) (· > ·) (· > ·) := {
   trans := trans_gt_gt_gt
 }
 
-/-- TODO -/
+/--
+Transitivity of _greater than_ with equivalence on the left.
+
+**Property and proof intuition**: Follows from transitivity of _less than_ and
+equivalence.
+-/
 theorem trans_eqv_gt_gt {a b c : ℤ} : a ≃ b → b > c → a > c := by
   intro (_ : a ≃ b) (_ : b > c)
   show a > c
   have : c < a := trans_lt_eqv_lt ‹c < b› (Rel.symm ‹a ≃ b›)
   exact this
 
+/-- Enable `trans_eqv_gt_gt` use by `calc` tactics. -/
 instance trans_eqv_gt_gt_inst : Trans (α := ℤ) (· ≃ ·) (· > ·) (· > ·) := {
   trans := trans_eqv_gt_gt
 }
 
-/-- TODO -/
+/--
+Transitivity of _greater than_ with equivalence on the left.
+
+**Property and proof intuition**: Follows from transitivity of _less than_ and
+equivalence.
+-/
 theorem trans_gt_eqv_gt {a b c : ℤ} : a > b → b ≃ c → a > c := by
   intro (_ : a > b) (_ : b ≃ c)
   show a > c
   have : c < a := trans_eqv_lt_lt (Rel.symm ‹b ≃ c›) ‹b < a›
   exact this
 
+/-- Enable `trans_gt_eqv_gt` use by `calc` tactics. -/
 instance trans_gt_eqv_gt_inst : Trans (α := ℤ) (· > ·) (· ≃ ·) (· > ·) := {
   trans := trans_gt_eqv_gt
 }
 
-/-- TODO -/
+/--
+Transitivity of _greater than_ with _greater than or equivalent to_ on the
+left.
+
+**Property and proof intuition**: Follows from transitivity of _less than_ and
+_less than or equivalent to_.
+-/
 theorem trans_ge_gt_gt {a b c : ℤ} : a ≥ b → b > c → a > c := by
   intro (_ : a ≥ b) (_ : b > c)
   show a > c
   have : c < a := trans_lt_le_lt ‹c < b› ‹b ≤ a›
   exact this
 
+/-- Enable `trans_ge_gt_gt` use by `calc` tactics. -/
 instance trans_ge_gt_gt_inst : Trans (α := ℤ) (· ≥ ·) (· > ·) (· > ·) := {
   trans := trans_ge_gt_gt
 }
 
-/-- TODO -/
+/--
+Transitivity of _greater than_ with _greater than or equivalent to_ on the
+right.
+
+**Property and proof intuition**: Follows from transitivity of _less than_ and
+_less than or equivalent to_.
+-/
 theorem trans_gt_ge_gt {a b c : ℤ} : a > b → b ≥ c → a > c := by
   intro (_ : a > b) (_ : b ≥ c)
   show a > c
   have : c < a := trans_le_lt_lt ‹c ≤ b› ‹b < a›
   exact this
 
+/-- Enable `trans_gt_ge_gt` use by `calc` tactics. -/
 instance trans_gt_ge_gt_inst : Trans (α := ℤ) (· > ·) (· ≥ ·) (· > ·) := {
   trans := trans_gt_ge_gt
 }
 
-/-- TODO -/
+/--
+Transitivity of _greater than or equivalent to_.
+
+**Property and proof intuition**: Follows from transitivity of _less than or
+equivalent to_.
+-/
 theorem trans_ge_ge_ge {a b c : ℤ} : a ≥ b → b ≥ c → a ≥ c := by
   intro (_ : a ≥ b) (_ : b ≥ c)
   show a ≥ c
   have : c ≤ a := trans_le_le_le ‹c ≤ b› ‹b ≤ a›
   exact this
 
+/-- Enable `trans_ge_ge_ge` use by `calc` tactics. -/
 instance trans_ge_ge_ge_inst : Trans (α := ℤ) (· ≥ ·) (· ≥ ·) (· ≥ ·) := {
   trans := trans_ge_ge_ge
 }
 
-/-- TODO -/
+/--
+Transitivity of _greater than or equivalent to_ with equivalence on the left.
+
+**Property and proof intuition**: Follows from transitivity of _less than or
+equivalent to_ with equivalence.
+-/
 theorem trans_eqv_ge_ge {a b c : ℤ} : a ≃ b → b ≥ c → a ≥ c := by
   intro (_ : a ≃ b) (_ : b ≥ c)
   show a ≥ c
   have : c ≤ a := trans_le_eqv_le ‹c ≤ b› (Rel.symm ‹a ≃ b›)
   exact this
 
+/-- Enable `trans_eqv_ge_ge` use by `calc` tactics. -/
 instance trans_eqv_ge_ge_inst : Trans (α := ℤ) (· ≃ ·) (· ≥ ·) (· ≥ ·) := {
   trans := trans_eqv_ge_ge
 }
 
-/-- TODO -/
+/--
+Transitivity of _greater than or equivalent to_ with equivalence on the right.
+
+**Property and proof intuition**: Follows from transitivity of _less than or
+equivalent to_ with equivalence.
+-/
 theorem trans_ge_eqv_ge {a b c : ℤ} : a ≥ b → b ≃ c → a ≥ c := by
   intro (_ : a ≥ b) (_ : b ≃ c)
   show a ≥ c
   have : c ≤ a := trans_eqv_le_le (Rel.symm ‹b ≃ c›) ‹b ≤ a›
   exact this
 
+/-- Enable `trans_ge_eqv_ge` use by `calc` tactics. -/
 instance trans_ge_eqv_ge_inst : Trans (α := ℤ) (· ≥ ·) (· ≃ ·) (· ≥ ·) := {
   trans := trans_ge_eqv_ge
 }
