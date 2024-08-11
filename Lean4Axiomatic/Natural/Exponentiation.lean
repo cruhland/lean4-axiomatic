@@ -60,7 +60,7 @@ attribute [instance] Exponentiation.toProps
 
 variable
   {ℕ : Type}
-    [Core ℕ] [Induction.{0} ℕ] [Addition ℕ] [Sign ℕ] [Multiplication ℕ]
+    [Core ℕ] [Induction.{0} ℕ] [Addition ℕ] /-[Sign ℕ]-/ [Multiplication ℕ]
 
 section general
 
@@ -73,6 +73,73 @@ variable
 local instance mul_inst [Exponentiation ℕ mul] : Mul α := {
   mul := mul
 }
+
+/--
+If an exponentiation to a natural number evaluates to zero, then the base must
+be zero and the exponent must be nonzero.
+
+**Property and proof intuition**: The only products that evaluate to zero are
+those that have zero as a factor (if the zero-product property holds); thus the
+base must be zero. By definition, exponentiation gives one if the exponent is
+zero; thus it must be nonzero in this case.
+-/
+theorem pow_inputs_for_output_zero
+    [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) (· * ·)]
+    {x : α} {n : ℕ} : x^n ≃ 0 → x ≃ 0 ∧ n ≄ 0
+    := by
+  apply ind_on (motive := λ m => x^m ≃ 0 → x ≃ 0 ∧ m ≄ 0) n
+  case zero =>
+    intro (_ : x^(0:ℕ) ≃ 0)
+    show x ≃ 0 ∧ 0 ≄ 0
+    have : (1:α) ≃ 0 := calc
+      _ ≃ 1   := Rel.refl
+      _ ≃ x^0 := Rel.symm pow_zero
+      _ ≃ 0   := ‹x^(0:ℕ) ≃ 0›
+    exact absurd ‹(1:α) ≃ 0› ‹AP ((1:α) ≄ 0)›.ev
+  case step =>
+    intro (n' : ℕ) (ih : x^n' ≃ 0 → x ≃ 0 ∧ n' ≄ 0) (_ : x^(step n') ≃ 0)
+    show x ≃ 0 ∧ step n' ≄ 0
+    have : x^n' * x ≃ 0 := AA.eqv_substL pow_step ‹x^(step n') ≃ 0›
+    have : x^n' ≃ 0 ∨ x ≃ 0 := AA.zero_prod this
+    have : x ≃ 0 :=
+      match this with
+      | Or.inl (_ : x^n' ≃ 0) => (ih ‹x^n' ≃ 0›).left
+      | Or.inr (_ : x ≃ 0) => ‹x ≃ 0›
+    have : step n' ≄ 0 := step_neqv_zero
+    exact And.intro ‹x ≃ 0› ‹step n' ≄ 0›
+
+/--
+Raising a nonzero number to any natural number power always gives a nonzero
+result.
+
+**Property intuition**: The empty product is `1` (raising to the zero power),
+and any product of nonzero numbers is always nonzero (higher powers).
+
+**Proof intuition**: Follows from `pow_inputs_for_output_zero` by logic alone.
+-/
+theorem pow_preserves_nonzero_base
+    [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) (· * ·)]
+    {x : α} {n : ℕ} : x ≄ 0 → x^n ≄ 0
+    := by
+  intro (_ : x ≄ 0)
+  show x^n ≄ 0
+  have : ¬(x ≃ 0 ∧ n ≄ 0) := by
+    intro (And.intro (_ : x ≃ 0) (_ : n ≄ 0))
+    show False
+    exact absurd ‹x ≃ 0› ‹x ≄ 0›
+  have : x^n ≄ 0 := mt pow_inputs_for_output_zero this
+  exact this
+
+/--
+Instance version of `pow_preserves_nonzero_base`.
+
+Enables clean syntax when dividing by an exponentiation expression.
+-/
+instance pow_preserves_nonzero_base_inst
+    [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) mul]
+    {x : α} {n : ℕ} [AP (x ≄ 0)] : AP (x^n ≄ 0)
+    :=
+  ‹AP (x ≄ 0)›.map pow_preserves_nonzero_base
 
 variable [AA.Substitutive₂ (β := α) (· * ·) AA.tc (· ≃ ·) (· ≃ ·)]
 
@@ -255,38 +322,21 @@ theorem pow_distribR_mul
       _ ≃ x^(step n') * y^(step n') := AA.substR (Rel.symm pow_step)
 
 /--
-If an exponentiation to a natural number evaluates to zero, then the base must
-be zero and the exponent must be nonzero.
+Raising a number to the natural number one leaves the number unchanged.
 
-**Property and proof intuition**: The only products that evaluate to zero are
-those that have zero as a factor (if the zero-product property holds); thus the
-base must be zero. By definition, exponentiation gives one if the exponent is
-zero; thus it must be nonzero in this case.
+**Property intuition**: If there's only one copy of the number in the
+multiplication, then that's just the original number.
+
+**Proof intuition**: Exapansion of definitions and simplification.
 -/
-theorem pow_inputs_for_output_zero
-    [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) (· * ·)]
-    {x : α} {n : ℕ} : x^n ≃ 0 → x ≃ 0 ∧ n ≄ 0
-    := by
-  apply ind_on (motive := λ m => x^m ≃ 0 → x ≃ 0 ∧ m ≄ 0) n
-  case zero =>
-    intro (_ : x^(0:ℕ) ≃ 0)
-    show x ≃ 0 ∧ 0 ≄ 0
-    have : (1:α) ≃ 0 := calc
-      _ ≃ 1   := Rel.refl
-      _ ≃ x^0 := Rel.symm pow_zero
-      _ ≃ 0   := ‹x^(0:ℕ) ≃ 0›
-    exact absurd ‹(1:α) ≃ 0› ‹AP ((1:α) ≄ 0)›.ev
-  case step =>
-    intro (n' : ℕ) (ih : x^n' ≃ 0 → x ≃ 0 ∧ n' ≄ 0) (_ : x^(step n') ≃ 0)
-    show x ≃ 0 ∧ step n' ≄ 0
-    have : x^n' * x ≃ 0 := AA.eqv_substL pow_step ‹x^(step n') ≃ 0›
-    have : x^n' ≃ 0 ∨ x ≃ 0 := AA.zero_prod this
-    have : x ≃ 0 :=
-      match this with
-      | Or.inl (_ : x^n' ≃ 0) => (ih ‹x^n' ≃ 0›).left
-      | Or.inr (_ : x ≃ 0) => ‹x ≃ 0›
-    have : step n' ≄ 0 := step_neqv_zero
-    exact And.intro ‹x ≃ 0› ‹step n' ≄ 0›
+theorem pow_one {x : α} [AA.Identity (1:α) (· * ·)] : x^1 ≃ x := calc
+  _ = x^1        := rfl
+  _ ≃ x^(step 0) := pow_substR literal_step
+  _ ≃ x^0 * x    := pow_step
+  _ ≃ 1 * x      := AA.substL pow_zero
+  _ ≃ x          := AA.identL
+
+variable [Sign ℕ]
 
 /--
 Describes the exact conditions on exponentiation's inputs that cause it to
@@ -320,54 +370,6 @@ theorem pow_eqv_zero
       _ ≃ x^n' * x    := pow_step
       _ ≃ x^n' * 0    := AA.substR ‹x ≃ 0›
       _ ≃ 0           := AA.absorbR
-
-/--
-Raising a nonzero number to any natural number power always gives a nonzero
-result.
-
-**Property intuition**: The empty product is `1` (raising to the zero power),
-and any product of nonzero numbers is always nonzero (higher powers).
-
-**Proof intuition**: Follows from `pow_inputs_for_output_zero` by logic alone.
--/
-theorem pow_preserves_nonzero_base
-    [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) (· * ·)]
-    {x : α} {n : ℕ} : x ≄ 0 → x^n ≄ 0
-    := by
-  intro (_ : x ≄ 0)
-  show x^n ≄ 0
-  have : ¬(x ≃ 0 ∧ n ≄ 0) := by
-    intro (And.intro (_ : x ≃ 0) (_ : n ≄ 0))
-    show False
-    exact absurd ‹x ≃ 0› ‹x ≄ 0›
-  have : x^n ≄ 0 := mt pow_inputs_for_output_zero this
-  exact this
-
-/--
-Instance version of `pow_preserves_nonzero_base`.
-
-Enables clean syntax when dividing by an exponentiation expression.
--/
-instance pow_preserves_nonzero_base_inst
-    [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) mul]
-    {x : α} {n : ℕ} [AP (x ≄ 0)] : AP (x^n ≄ 0)
-    :=
-  ‹AP (x ≄ 0)›.map pow_preserves_nonzero_base
-
-/--
-Raising a number to the natural number one leaves the number unchanged.
-
-**Property intuition**: If there's only one copy of the number in the
-multiplication, then that's just the original number.
-
-**Proof intuition**: Exapansion of definitions and simplification.
--/
-theorem pow_one {x : α} [AA.Identity (1:α) (· * ·)] : x^1 ≃ x := calc
-  _ = x^1        := rfl
-  _ ≃ x^(step 0) := pow_substR literal_step
-  _ ≃ x^0 * x    := pow_step
-  _ ≃ 1 * x      := AA.substL pow_zero
-  _ ≃ x          := AA.identL
 
 end general
 

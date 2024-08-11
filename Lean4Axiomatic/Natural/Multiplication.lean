@@ -40,10 +40,7 @@ export Multiplication (mulOp step_mul zero_mul)
 ## Derived properties
 -/
 
-variable
-  {ℕ : Type}
-    [Core ℕ] [Induction.{0} ℕ] [Addition ℕ]
-    [Sign ℕ] [Order ℕ] [Multiplication ℕ]
+variable {ℕ : Type} [Core ℕ] [Induction ℕ] [Addition ℕ] [Multiplication ℕ]
 
 /--
 Multiplying by zero on the right always gives zero.
@@ -182,6 +179,72 @@ instance mul_substitutive_eq
 }
 
 /--
+Multiplication on the left distributes over addition.
+
+**Intuition**: Viewing `a * b` as the sum of `a` copies of `b`, this theorem
+says that the sum of `n` copies of `m + k` is the same as the sum of `n` copies
+of `m` added to the sum of `n` copies of `k`. Using the commutativity and
+associativity of addition to rearrange the sums shows this is clearly true.
+-/
+theorem mul_distribL_add {n m k : ℕ} : n * (m + k) ≃ n * m + n * k := by
+  apply ind_on (motive := λ x => x * (m + k) ≃ x * m + x * k) n
+  case zero =>
+    show 0 * (m + k) ≃ 0 * m + 0 * k
+    calc
+      0 * (m + k)   ≃ _ := zero_mul
+      0             ≃ _ := Rel.symm Addition.zero_add
+      0 + 0         ≃ _ := AA.substL (Rel.symm zero_mul)
+      0 * m + 0     ≃ _ := AA.substR (Rel.symm zero_mul)
+      0 * m + 0 * k ≃ _ := Rel.refl
+  case step =>
+    intro n (ih : n * (m + k) ≃ n * m + n * k)
+    show step n * (m + k) ≃ step n * m + step n * k
+    calc
+      step n * (m + k)          ≃ _ := step_mul
+      n * (m + k) + (m + k)     ≃ _ := AA.substL ih
+      n * m + n * k + (m + k)   ≃ _ := AA.assoc
+      n * m + (n * k + (m + k)) ≃ _ := AA.substR (Rel.symm AA.assoc)
+      n * m + ((n * k + m) + k) ≃ _ := AA.substR (AA.substL AA.comm)
+      n * m + ((m + n * k) + k) ≃ _ := AA.substR AA.assoc
+      n * m + (m + (n * k + k)) ≃ _ := Rel.symm AA.assoc
+      (n * m + m) + (n * k + k) ≃ _ := AA.substL (Rel.symm step_mul)
+      step n * m + (n * k + k)  ≃ _ := AA.substR (Rel.symm step_mul)
+      step n * m + step n * k   ≃ _ := Rel.refl
+
+def mul_distributiveL : AA.DistributiveOn Hand.L (α := ℕ) (· * ·) (· + ·) :=
+  AA.DistributiveOn.mk mul_distribL_add
+
+instance mul_distributive : AA.Distributive (α := ℕ) (· * ·) (· + ·) := {
+  distributiveL := mul_distributiveL
+  distributiveR := AA.distributiveR_from_distributiveL mul_distributiveL
+}
+
+/--
+The natural number `1` is a left multiplicative identity element.
+
+**Property intuition**: A sum of a single instance of a number should be equal
+to that number.
+
+**Proof intuition**: Expand the definition of multiplication into addition to
+see that multiplying by one is the same as adding zero.
+-/
+theorem mul_identL {n : ℕ} : 1 * n ≃ n := calc
+  1 * n      ≃ _ := AA.substL Literals.literal_step
+  step 0 * n ≃ _ := step_mul
+  0 * n + n  ≃ _ := AA.substL zero_mul
+  0 + n      ≃ _ := AA.identL
+  n          ≃ _ := Rel.refl
+
+def mul_identityL : AA.IdentityOn Hand.L (α := ℕ) 1 (· * ·) := {
+  ident := mul_identL
+}
+
+instance mul_identity : AA.Identity (α := ℕ) 1 (· * ·) := {
+  identityL := mul_identityL
+  identityR := AA.identityR_from_identityL mul_identityL
+}
+
+/--
 A product is zero iff at least one of its factors is zero.
 
 Intuition
@@ -230,6 +293,8 @@ instance zero_product_inst : AA.ZeroProduct (α := ℕ) (· * ·) := {
   zero_prod := mul_split_zero.mp
 }
 
+variable [Sign ℕ]
+
 /--
 A product is positive iff both of its factors are positive.
 
@@ -273,46 +338,7 @@ theorem mul_positive {n m : ℕ}
   show Positive (n * m)
   exact mul_preserves_positive.mpr (And.intro ‹Positive n› ‹Positive m›)
 
-/--
-Multiplication on the left distributes over addition.
-
-**Intuition**: Viewing `a * b` as the sum of `a` copies of `b`, this theorem
-says that the sum of `n` copies of `m + k` is the same as the sum of `n` copies
-of `m` added to the sum of `n` copies of `k`. Using the commutativity and
-associativity of addition to rearrange the sums shows this is clearly true.
--/
-theorem mul_distribL_add {n m k : ℕ} : n * (m + k) ≃ n * m + n * k := by
-  apply ind_on (motive := λ x => x * (m + k) ≃ x * m + x * k) n
-  case zero =>
-    show 0 * (m + k) ≃ 0 * m + 0 * k
-    calc
-      0 * (m + k)   ≃ _ := zero_mul
-      0             ≃ _ := Rel.symm Addition.zero_add
-      0 + 0         ≃ _ := AA.substL (Rel.symm zero_mul)
-      0 * m + 0     ≃ _ := AA.substR (Rel.symm zero_mul)
-      0 * m + 0 * k ≃ _ := Rel.refl
-  case step =>
-    intro n (ih : n * (m + k) ≃ n * m + n * k)
-    show step n * (m + k) ≃ step n * m + step n * k
-    calc
-      step n * (m + k)          ≃ _ := step_mul
-      n * (m + k) + (m + k)     ≃ _ := AA.substL ih
-      n * m + n * k + (m + k)   ≃ _ := AA.assoc
-      n * m + (n * k + (m + k)) ≃ _ := AA.substR (Rel.symm AA.assoc)
-      n * m + ((n * k + m) + k) ≃ _ := AA.substR (AA.substL AA.comm)
-      n * m + ((m + n * k) + k) ≃ _ := AA.substR AA.assoc
-      n * m + (m + (n * k + k)) ≃ _ := Rel.symm AA.assoc
-      (n * m + m) + (n * k + k) ≃ _ := AA.substL (Rel.symm step_mul)
-      step n * m + (n * k + k)  ≃ _ := AA.substR (Rel.symm step_mul)
-      step n * m + step n * k   ≃ _ := Rel.refl
-
-def mul_distributiveL : AA.DistributiveOn Hand.L (α := ℕ) (· * ·) (· + ·) :=
-  AA.DistributiveOn.mk mul_distribL_add
-
-instance mul_distributive : AA.Distributive (α := ℕ) (· * ·) (· + ·) := {
-  distributiveL := mul_distributiveL
-  distributiveR := AA.distributiveR_from_distributiveL mul_distributiveL
-}
+variable [Order ℕ]
 
 /--
 The grouping of the factors in a product doesn't matter.
@@ -417,31 +443,6 @@ instance mul_cancellative
     := {
   cancellativeL := mul_cancelL
   cancellativeR := AA.cancelR_from_cancelL mul_cancelL
-}
-
-/--
-The natural number `1` is a left multiplicative identity element.
-
-**Property intuition**: A sum of a single instance of a number should be equal
-to that number.
-
-**Proof intuition**: Expand the definition of multiplication into addition to
-see that multiplying by one is the same as adding zero.
--/
-theorem mul_identL {n : ℕ} : 1 * n ≃ n := calc
-  1 * n      ≃ _ := AA.substL Literals.literal_step
-  step 0 * n ≃ _ := step_mul
-  0 * n + n  ≃ _ := AA.substL zero_mul
-  0 + n      ≃ _ := AA.identL
-  n          ≃ _ := Rel.refl
-
-def mul_identityL : AA.IdentityOn Hand.L (α := ℕ) 1 (· * ·) := {
-  ident := mul_identL
-}
-
-instance mul_identity : AA.Identity (α := ℕ) 1 (· * ·) := {
-  identityL := mul_identityL
-  identityR := AA.identityR_from_identityL mul_identityL
 }
 
 /--

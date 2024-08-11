@@ -48,9 +48,14 @@ export Order (le_defn leOp lt_defn ltOp)
 ## Derived properties
 -/
 
-variable
-  {ℕ : Type}
-    [Core ℕ] [Induction.{0} ℕ] [Addition ℕ] [Sign ℕ] [order_inst : Order ℕ]
+variable {ℕ : Type} [Core ℕ] [Addition ℕ] [order_inst : Order ℕ]
+
+/-- Weakens _less than_ to _less than or equal to_. -/
+theorem le_from_lt {n m : ℕ} : n < m → n ≤ m := by
+  intro (_ : n < m)
+  show n ≤ m
+  have ⟨(_ : n ≤ m), _⟩ := lt_defn.mp ‹n < m›
+  exact ‹n ≤ m›
 
 /--
 The _less than or equal to_ relation is preserved when both sides are
@@ -96,6 +101,34 @@ instance le_injective_step : AA.Injective (α := ℕ) step (· ≤ ·) (· ≤ �
 }
 
 /--
+Equal natural numbers can be substituted on the right side of
+_less than or equal to_.
+-/
+theorem le_eqv_subst {n m₁ m₂ : ℕ} : m₁ ≃ m₂ → n ≤ m₁ → n ≤ m₂ := by
+  intro (_ : m₁ ≃ m₂) (_ : n ≤ m₁)
+  show n ≤ m₂
+  have ⟨d, (_ : n + d ≃ m₁)⟩ := le_defn.mp ‹n ≤ m₁›
+  apply le_defn.mpr
+  exists d
+  show n + d ≃ m₂
+  exact Rel.trans ‹n + d ≃ m₁› ‹m₁ ≃ m₂›
+
+/--
+Corollary of `le_eqv_subst` to support transitivity of _less than or equivalent
+to_ and equivalence.
+-/
+theorem trans_le_eqv_le {n m k : ℕ} : n ≤ m → m ≃ k → n ≤ k := by
+  intro (_ : n ≤ m) (_ : m ≃ k)
+  show n ≤ k
+  exact le_eqv_subst ‹m ≃ k› ‹n ≤ m›
+
+instance trans_le_eqv_le_inst : Trans (α := ℕ) (· ≤ ·) (· ≃ ·) (· ≤ ·) := {
+  trans := trans_le_eqv_le
+}
+
+variable [Induction ℕ]
+
+/--
 Equal natural numbers can be substituted on the left side of
 _less than or equal to_.
 -/
@@ -130,31 +163,18 @@ def le_substL_eqv
   subst₂ := λ (_ : True) => le_subst_eqv
 }
 
-/--
-Equal natural numbers can be substituted on the right side of
-_less than or equal to_.
--/
-theorem le_eqv_subst {n m₁ m₂ : ℕ} : m₁ ≃ m₂ → n ≤ m₁ → n ≤ m₂ := by
-  intro (_ : m₁ ≃ m₂) (_ : n ≤ m₁)
-  show n ≤ m₂
-  have ⟨d, (_ : n + d ≃ m₁)⟩ := le_defn.mp ‹n ≤ m₁›
-  apply le_defn.mpr
-  exists d
-  show n + d ≃ m₂
-  exact Rel.trans ‹n + d ≃ m₁› ‹m₁ ≃ m₂›
-
-/--
-Corollary of `le_eqv_subst` to support transitivity of _less than or equivalent
-to_ and equivalence.
--/
-theorem trans_le_eqv_le {n m k : ℕ} : n ≤ m → m ≃ k → n ≤ k := by
-  intro (_ : n ≤ m) (_ : m ≃ k)
-  show n ≤ k
-  exact le_eqv_subst ‹m ≃ k› ‹n ≤ m›
-
-instance trans_le_eqv_le_inst : Trans (α := ℕ) (· ≤ ·) (· ≃ ·) (· ≤ ·) := {
-  trans := trans_le_eqv_le
-}
+/-- A natural number is always less than its successor. -/
+theorem lt_step {n : ℕ} : n < step n := by
+  show n < step n
+  apply lt_defn.mpr
+  apply And.intro
+  · show n ≤ step n
+    apply le_defn.mpr
+    exists (1 : ℕ)
+    show n + 1 ≃ step n
+    exact add_one_step
+  · show n ≄ step n
+    exact Rel.symm step_neqv
 
 def le_substR_eqv
     : AA.SubstitutiveOn Hand.R (α := ℕ) (· ≤ ·) AA.tc (· ≃ ·) (· → ·)
@@ -179,6 +199,13 @@ theorem le_refl {n : ℕ} : n ≤ n := by
 instance le_reflexive : Relation.Reflexive (α := ℕ) (· ≤ ·) := {
   refl := le_refl
 }
+
+/-- Weakens equivalence to _less than or equal to_. -/
+theorem le_from_eqv {n m : ℕ} : n ≃ m → n ≤ m := by
+  intro (_ : n ≃ m)
+  show n ≤ m
+  have : n ≤ n := Rel.refl
+  exact AA.substRFn ‹n ≃ m› ‹n ≤ n›
 
 theorem le_step_split {n m : ℕ} : n ≤ step m → n ≤ m ∨ n ≃ step m := by
   intro (_ : n ≤ step m)
@@ -221,39 +248,6 @@ theorem le_step {n m : ℕ} : n ≤ m → n ≤ step m := by
     step m       ≃ _ := Rel.refl
 
 /--
-The _less than or equal to_ relation can be extended through intermediate
-values.
--/
-theorem le_trans {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k := by
-  intro (_ : n ≤ m)
-  have ⟨d, (_ : n + d ≃ m)⟩ := le_defn.mp ‹n ≤ m›
-  apply ind_on (motive := λ k => m ≤ k → n ≤ k) k
-  case zero =>
-    intro (_ : m ≤ 0)
-    have ⟨e, (_ : m + e ≃ 0)⟩ := le_defn.mp ‹m ≤ 0›
-    show n ≤ 0
-    apply le_defn.mpr
-    exists d + e
-    show n + (d + e) ≃ 0
-    calc
-      n + (d + e) ≃ _ := Rel.symm AA.assoc
-      (n + d) + e ≃ _ := AA.substL ‹n + d ≃ m›
-      m + e       ≃ _ := ‹m + e ≃ 0›
-      0           ≃ _ := Rel.refl
-  case step =>
-    intro k (ih : m ≤ k → n ≤ k) (_ : m ≤ step k)
-    show n ≤ step k
-    match le_step_split ‹m ≤ step k› with
-    | Or.inl (_ : m ≤ k) =>
-      exact le_step (ih ‹m ≤ k›)
-    | Or.inr (_ : m ≃ step k) =>
-      exact AA.substRFn ‹m ≃ step k› ‹n ≤ m›
-
-instance trans_le_le_le : Trans (α := ℕ) (· ≤ ·) (· ≤ ·) (· ≤ ·) := {
-  trans := le_trans
-}
-
-/--
 The _less than or equal to_ relation is preserved when the same value is
 added on the left to both sides.
 -/
@@ -283,6 +277,27 @@ instance le_substitutive_add
   substitutiveL := le_substL_add
   substitutiveR := AA.substR_from_substL_swap (rS := (· ≃ ·)) le_substL_add
 }
+
+/--
+The same number can be added (on the right) to both sides of a _less than_
+relation, preserving the ordering of the left operands.
+
+**Property intuition**: Increasing two numbers by the same amount keeps them
+the same distance apart.
+
+**Proof intuition**: Split _less than_ into _less than or equivalent to_ and
+_not equivalent to_. Show that both of them are preserved under addition. Put
+them back together.
+-/
+theorem lt_substL_add {n₁ n₂ m : ℕ} : n₁ < n₂ → n₁ + m < n₂ + m := by
+  intro (_ : n₁ < n₂)
+  show n₁ + m < n₂ + m
+  have (And.intro (_ : n₁ ≤ n₂) (_ : n₁ ≄ n₂)) := lt_defn.mp ‹n₁ < n₂›
+  have : n₁ + m ≤ n₂ + m := AA.substL ‹n₁ ≤ n₂›
+  have : n₁ + m ≄ n₂ + m := mt AA.cancelR ‹n₁ ≄ n₂›
+  have : n₁ + m < n₂ + m :=
+    lt_defn.mpr (And.intro ‹n₁ + m ≤ n₂ + m› ‹n₁ + m ≄ n₂ + m›)
+  exact this
 
 /--
 The _less than or equal to_ relation is preserved when the same value is
@@ -332,6 +347,39 @@ theorem le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m := by
     n + 0  ≃ _ := AA.substR (Rel.symm ‹d₁ ≃ 0›)
     n + d₁ ≃ _ := ‹n + d₁ ≃ m›
     m      ≃ _ := Rel.refl
+
+/--
+The _less than or equal to_ relation can be extended through intermediate
+values.
+-/
+theorem le_trans {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k := by
+  intro (_ : n ≤ m)
+  have ⟨d, (_ : n + d ≃ m)⟩ := le_defn.mp ‹n ≤ m›
+  apply ind_on (motive := λ k => m ≤ k → n ≤ k) k
+  case zero =>
+    intro (_ : m ≤ 0)
+    have ⟨e, (_ : m + e ≃ 0)⟩ := le_defn.mp ‹m ≤ 0›
+    show n ≤ 0
+    apply le_defn.mpr
+    exists d + e
+    show n + (d + e) ≃ 0
+    calc
+      n + (d + e) ≃ _ := Rel.symm AA.assoc
+      (n + d) + e ≃ _ := AA.substL ‹n + d ≃ m›
+      m + e       ≃ _ := ‹m + e ≃ 0›
+      0           ≃ _ := Rel.refl
+  case step =>
+    intro k (ih : m ≤ k → n ≤ k) (_ : m ≤ step k)
+    show n ≤ step k
+    match le_step_split ‹m ≤ step k› with
+    | Or.inl (_ : m ≤ k) =>
+      exact le_step (ih ‹m ≤ k›)
+    | Or.inr (_ : m ≃ step k) =>
+      exact AA.substRFn ‹m ≃ step k› ‹n ≤ m›
+
+instance trans_le_le_le : Trans (α := ℕ) (· ≤ ·) (· ≤ ·) (· ≤ ·) := {
+  trans := le_trans
+}
 
 /--
 Equivalent natural numbers can be substituted on the left side of _less than_.
@@ -402,18 +450,25 @@ instance lt_substitutive_eqv
   substitutiveR := lt_substR_eqv
 }
 
-/-- A natural number is always less than its successor. -/
-theorem lt_step {n : ℕ} : n < step n := by
-  show n < step n
-  apply lt_defn.mpr
-  apply And.intro
-  · show n ≤ step n
-    apply le_defn.mpr
-    exists (1 : ℕ)
-    show n + 1 ≃ step n
-    exact add_one_step
-  · show n ≄ step n
-    exact Rel.symm step_neqv
+/--
+The same number can be added (on the left) to both sides of a _less than_
+relation, preserving the ordering of the right operands.
+
+**Property intuition**: Increasing two numbers by the same amount keeps them
+the same distance apart.
+
+**Proof intuition**: Use commutativity of addition with the opposite-hand
+version of this theorem.
+-/
+theorem lt_substR_add {n₁ n₂ m : ℕ} : n₁ < n₂ → m + n₁ < m + n₂ := by
+  intro (_ : n₁ < n₂)
+  show m + n₁ < m + n₂
+  have : n₁ + m < n₂ + m := lt_substL_add ‹n₁ < n₂›
+  have : m + n₁ < n₂ + m := AA.substLFn AA.comm ‹n₁ + m < n₂ + m›
+  have : m + n₁ < m + n₂ := AA.substRFn AA.comm ‹m + n₁ < n₂ + m›
+  exact this
+
+variable [Sign ℕ]
 
 /--
 A useful way to convert between _less than_ and _less than or equal to_ while
@@ -549,20 +604,6 @@ theorem lt_zero_pos {n : ℕ} : Positive n ↔ n > 0 := by
     have ⟨k, ⟨(_ : Positive k), (_ : n ≃ 0 + k)⟩⟩ := lt_defn_add.mp ‹0 < n›
     have : k ≃ n := Rel.symm (Rel.trans ‹n ≃ 0 + k› zero_add)
     exact AA.substFn ‹k ≃ n› ‹Positive k›
-
-/-- Weakens equivalence to _less than or equal to_. -/
-theorem le_from_eqv {n m : ℕ} : n ≃ m → n ≤ m := by
-  intro (_ : n ≃ m)
-  show n ≤ m
-  have : n ≤ n := Rel.refl
-  exact AA.substRFn ‹n ≃ m› ‹n ≤ n›
-
-/-- Weakens _less than_ to _less than or equal to_. -/
-theorem le_from_lt {n m : ℕ} : n < m → n ≤ m := by
-  intro (_ : n < m)
-  show n ≤ m
-  have ⟨(_ : n ≤ m), _⟩ := lt_defn.mp ‹n < m›
-  exact ‹n ≤ m›
 
 /--
 As the name implies, if _less than or equal to_ holds between two natural
@@ -738,45 +779,6 @@ theorem trans_le_lt_lt {n m k : ℕ} : n ≤ m → m < k → n < k := by
 instance trans_le_lt_lt_inst : Trans (α := ℕ) (· ≤ ·) (· < ·) (· < ·) := {
   trans := trans_le_lt_lt
 }
-
-/--
-The same number can be added (on the right) to both sides of a _less than_
-relation, preserving the ordering of the left operands.
-
-**Property intuition**: Increasing two numbers by the same amount keeps them
-the same distance apart.
-
-**Proof intuition**: Split _less than_ into _less than or equivalent to_ and
-_not equivalent to_. Show that both of them are preserved under addition. Put
-them back together.
--/
-theorem lt_substL_add {n₁ n₂ m : ℕ} : n₁ < n₂ → n₁ + m < n₂ + m := by
-  intro (_ : n₁ < n₂)
-  show n₁ + m < n₂ + m
-  have (And.intro (_ : n₁ ≤ n₂) (_ : n₁ ≄ n₂)) := lt_defn.mp ‹n₁ < n₂›
-  have : n₁ + m ≤ n₂ + m := AA.substL ‹n₁ ≤ n₂›
-  have : n₁ + m ≄ n₂ + m := mt AA.cancelR ‹n₁ ≄ n₂›
-  have : n₁ + m < n₂ + m :=
-    lt_defn.mpr (And.intro ‹n₁ + m ≤ n₂ + m› ‹n₁ + m ≄ n₂ + m›)
-  exact this
-
-/--
-The same number can be added (on the left) to both sides of a _less than_
-relation, preserving the ordering of the right operands.
-
-**Property intuition**: Increasing two numbers by the same amount keeps them
-the same distance apart.
-
-**Proof intuition**: Use commutativity of addition with the opposite-hand
-version of this theorem.
--/
-theorem lt_substR_add {n₁ n₂ m : ℕ} : n₁ < n₂ → m + n₁ < m + n₂ := by
-  intro (_ : n₁ < n₂)
-  show m + n₁ < m + n₂
-  have : n₁ + m < n₂ + m := lt_substL_add ‹n₁ < n₂›
-  have : m + n₁ < n₂ + m := AA.substLFn AA.comm ‹n₁ + m < n₂ + m›
-  have : m + n₁ < m + n₂ := AA.substRFn AA.comm ‹m + n₁ < n₂ + m›
-  exact this
 
 /--
 Very general property about ordering which often simplifies proofs that would
