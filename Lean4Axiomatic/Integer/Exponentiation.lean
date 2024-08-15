@@ -538,7 +538,8 @@ theorem sgn_diff_pow_pos
 
       have : a + b ≥ 0 := calc
         _ = a + b := rfl
-        _ ≥ 0 + 0 := ge_add ‹a ≥ 0› ‹b ≥ 0›
+        _ ≥ 0 + b := ge_addR.mp ‹a ≥ 0›
+        _ ≥ 0 + 0 := ge_addL.mp ‹b ≥ 0›
         _ ≃ 0     := AA.identL
       have : a + b > 0 ∨ a + b ≃ 0 := ge_split.mp ‹a + b ≥ 0›
       have : sgn (a - b) ≃ 0 ∨ sgn (a + b) ≃ 1 := match this with

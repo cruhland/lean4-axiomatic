@@ -689,7 +689,8 @@ theorem sgn_preserves_ge_zero {a : ℤ} : a ≥ 0 ↔ sgn a ≥ 0 := calc
 Expresses _greater than or equivalent to_ in terms of the sign value of a
 difference being nonnegative.
 
-This is a fairly specific lemma that's helpful in several proofs.
+This is a useful lemma because it enables adding or removing usage of `sgn`
+while staying in the context of the _greater than or equivalent to_ relation.
 
 **Property intuition**: If `a ≥ b`, then their difference is `≥ 0`, and so is
 the sign value of that difference.
@@ -1022,41 +1023,52 @@ instance trans_ge_eqv_ge_inst : Trans (α := ℤ) (· ≥ ·) (· ≃ ·) (· �
   trans := trans_ge_eqv_ge
 }
 
-/-- TODO -/
+/--
+An integer is _greater than or equivalent to_ another iff the larger minus the
+smaller is nonnegative.
+
+**Proof intuition**: Converts through an intermediate expression involving
+`sgn`. It's more obscure than a proof via substitution of subtraction on both
+sides of the relation, but that's because it uses more primitive theorems.
+-/
 theorem ge_iff_diff_nonneg {a b : ℤ} : a ≥ b ↔ a - b ≥ 0 := calc
   _ ↔ a ≥ b           := Iff.rfl
   _ ↔ sgn (a - b) ≥ 0 := sgn_diff_ge_zero
   _ ↔ a - b ≥ 0       := sgn_preserves_ge_zero.symm
 
-/-- TODO -/
-theorem add_substL_ge {a₁ a₂ b : ℤ} : a₁ ≥ a₂ → a₁ + b ≥ a₂ + b := by
-  intro (_ : a₁ ≥ a₂)
-  show a₁ + b ≥ a₂ + b
-  have : (a₁ + b) - (a₂ + b) ≥ 0 := calc
-    _ = (a₁ + b) - (a₂ + b) := rfl
-    _ ≃ a₁ - a₂             := sub_sums_sameR
-    _ ≥ 0                   := ge_iff_diff_nonneg.mp ‹a₁ ≥ a₂›
-  have : a₁ + b ≥ a₂ + b := ge_iff_diff_nonneg.mpr ‹(a₁ + b) - (a₂ + b) ≥ 0›
-  exact this
+/--
+A common term can be added to or removed from the right-hand side of both
+operands of _greater than or equivalent to_.
 
-/-- TODO -/
-theorem add_substR_ge {a₁ a₂ b : ℤ} : a₁ ≥ a₂ → b + a₁ ≥ b + a₂ := by
-  intro (_ : a₁ ≥ a₂)
-  show b + a₁ ≥ b + a₂
-  calc
-    _ = b + a₁ := rfl
-    _ ≃ a₁ + b := AA.comm
-    _ ≥ a₂ + b := add_substL_ge ‹a₁ ≥ a₂›
-    _ ≃ b + a₂ := AA.comm
+**Property intuition**: Adjusting two values by the same amount doesn't affect
+their relative ordering.
 
-/-- TODO -/
-theorem ge_add {a b c d : ℤ} : a ≥ b → c ≥ d → a + c ≥ b + d := by
-  intro (_ : a ≥ b) (_ : c ≥ d)
-  show a + c ≥ b + d
+**Proof intuition**: Move both operands to the same side of the relation, then
+use algebra.
+-/
+theorem ge_addR {a₁ a₂ b : ℤ} : a₁ ≥ a₂ ↔ a₁ + b ≥ a₂ + b := by
+  have expand_sub : a₁ - a₂ ≃ (a₁ + b) - (a₂ + b) := Rel.symm sub_sums_sameR
   calc
-    _ = a + c := rfl
-    _ ≥ b + c := add_substL_ge ‹a ≥ b›
-    _ ≥ b + d := add_substR_ge ‹c ≥ d›
+    _ ↔ a₁ ≥ a₂                 := Iff.rfl
+    _ ↔ a₁ - a₂ ≥ 0             := ge_iff_diff_nonneg
+    _ ↔ (a₁ + b) - (a₂ + b) ≥ 0 := Rel.iff_subst_eqv le_substR_eqv expand_sub
+    _ ↔ a₁ + b ≥ a₂ + b         := ge_iff_diff_nonneg.symm
+
+/--
+A common term can be added to or removed from the left-hand side of both
+operands of _greater than or equivalent to_.
+
+**Property intuition**: Adjusting two values by the same amount doesn't affect
+their relative ordering.
+
+**Proof intuition**: Use the right-hand version of this theorem, then use
+commutativity to swap the operands to addition.
+-/
+theorem ge_addL {a₁ a₂ b : ℤ} : a₁ ≥ a₂ ↔ b + a₁ ≥ b + a₂ := calc
+  _ ↔ a₁ ≥ a₂         := Iff.rfl
+  _ ↔ a₁ + b ≥ a₂ + b := ge_addR
+  _ ↔ b + a₁ ≥ a₂ + b := Rel.iff_subst_eqv le_substR_eqv AA.comm
+  _ ↔ b + a₁ ≥ b + a₂ := Rel.iff_subst_eqv le_substL_eqv AA.comm
 
 /--
 Any pair of integers can only be in one of three relations: _less than_,
