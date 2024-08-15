@@ -234,7 +234,7 @@ theorem sgn_absorb_pow
     show (sgn a)^1 ≃ sgn a
     exact Natural.pow_one
   case next =>
-    intro (k : ℕ) (ih : (sgn a)^k ≃ sgn a)
+    intro (k : ℕ) (_ : k ≥ 1) (ih : (sgn a)^k ≃ sgn a)
     show (sgn a)^(step k) ≃ sgn a
     have : a > 0 ∨ a ≃ 0 := ge_split.mp ‹a ≥ 0›
     have : sgn a ≃ 0 ∨ sgn a ≃ 1 := match ‹a > 0 ∨ a ≃ 0› with

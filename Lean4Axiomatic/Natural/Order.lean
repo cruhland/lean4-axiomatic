@@ -676,7 +676,8 @@ def ind_from
     {motive : ℕ → Prop}
     (motive_subst : {k₁ k₂ : ℕ} → k₁ ≃ k₂ → motive k₁ → motive k₂)
     {n m : ℕ} (n_ge_m : n ≥ m)
-    (base : motive m) (next : (k : ℕ) → motive k → motive (step k)) : motive n
+    (base : motive m) (next : {k : ℕ} → k ≥ m → motive k → motive (step k))
+    : motive n
     := by
   let motive' := λ x => x ≥ m → motive x
   have z : motive' 0 := by
@@ -693,7 +694,7 @@ def ind_from
     match ‹m ≤ k ∨ m ≃ step k› with
     | Or.inl (_ : m ≤ k) =>
       have : motive k := ih ‹k ≥ m›
-      have : motive (step k) := next k ‹motive k›
+      have : motive (step k) := next ‹k ≥ m› ‹motive k›
       exact this
     | Or.inr (_ : m ≃ step k) =>
       have : motive (step k) := motive_subst ‹m ≃ step k› ‹motive m›
