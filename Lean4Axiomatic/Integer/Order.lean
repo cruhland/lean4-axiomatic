@@ -1244,7 +1244,13 @@ theorem le_widen_lt {a b : ℤ} : a ≤ b → a < b + 1 := by
   | Or.inr (_ : a ≃ b) => AA.substLFn (Rel.symm ‹a ≃ b›) ‹b < b + 1›
   exact this
 
-/-- TODO -/
+/--
+Every nonnegative integer is equivalent to a natural number.
+
+**Proof intuition**: Split the nonnegative condition into positive and zero
+cases. The zero case is trivial; the positive case follows from the theorem
+`positive_elim_nat`.
+-/
 theorem ge_zero_eqv_nat {a : ℤ} : a ≥ 0 → ∃ (n : ℕ), a ≃ (n:ℤ) := by
   intro (_ : a ≥ 0)
   show ∃ (n : ℕ), a ≃ (n:ℤ)
@@ -1258,7 +1264,12 @@ theorem ge_zero_eqv_nat {a : ℤ} : a ≥ 0 → ∃ (n : ℕ), a ≃ (n:ℤ) := 
   | Or.inr (_ : a ≃ 0) =>
     exact Exists.intro 0 ‹a ≃ 0›
 
-/-- TODO -/
+/--
+The sum of two nonnegative integers is zero iff they are both zero as well.
+
+**Property and proof intuition**: There is an identical result for natural
+numbers, and nonnegative integers are equivalent to natural numbers.
+-/
 theorem zero_sum_split
     {a b : ℤ} : a ≥ 0 → b ≥ 0 → (a + b ≃ 0 ↔ a ≃ 0 ∧ b ≃ 0)
     := by
