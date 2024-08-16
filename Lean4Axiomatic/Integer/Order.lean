@@ -1297,7 +1297,20 @@ theorem zero_sum_split
     _ ↔ a ≃ 0 ∧ m ≃ 0           := iff_subst_covar and_mapL ‹n ≃ 0 ↔ a ≃ 0›
     _ ↔ a ≃ 0 ∧ b ≃ 0           := iff_subst_covar and_mapR ‹m ≃ 0 ↔ b ≃ 0›
 
-/-- TODO -/
+/--
+The product of two integers is positive iff their product is nonzero and they
+have the same sign.
+
+**Property intuition**: The product cannot be negative, because the product of
+like signs is always positive.
+
+**Proof intuition**: In the forward direction, use `mul_sqrt1_eqv` to show the
+signs are equivalent. Assume the product is zero and reach a contradiction with
+`a * b > 0`. In the reverse direction, use the assumption that the integers'
+signs are equivalent, along with `nonneg_square`, to show that their product is
+nonnegative. Use the assumption that the product is nonzero to conclude it's
+strictly positive.
+-/
 theorem mul_gt_zero_iff_sgn_same
     {a b : ℤ} : a * b > 0 ↔ sgn a ≃ sgn b ∧ a * b ≄ 0 := by
   apply Iff.intro
