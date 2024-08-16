@@ -1343,7 +1343,7 @@ theorem mul_gt_zero_iff_sgn_same
     exact this
 
 /-- TODO -/
-theorem mul_substL_ge {a₁ a₂ b : ℤ} : b ≥ 0 → a₁ ≥ a₂ → a₁ * b ≥ a₂ * b := by
+theorem ge_mulR_nonneg {a₁ a₂ b : ℤ} : b ≥ 0 → a₁ ≥ a₂ → a₁ * b ≥ a₂ * b := by
   intro (_ : b ≥ 0) (_ : a₁ ≥ a₂)
   show a₁ * b ≥ a₂ * b
   have : b > 0 ∨ b ≃ 0 := ge_split.mp ‹b ≥ 0›
@@ -1374,7 +1374,7 @@ theorem mul_preserves_nonneg {a b : ℤ} : a ≥ 0 → b ≥ 0 → a * b ≥ 0 :
   show a * b ≥ 0
   calc
     _ = a * b := rfl
-    _ ≥ 0 * b := mul_substL_ge ‹b ≥ 0› ‹a ≥ 0›
+    _ ≥ 0 * b := ge_mulR_nonneg ‹b ≥ 0› ‹a ≥ 0›
     _ ≃ 0     := AA.absorbL
 
 /-- TODO -/
