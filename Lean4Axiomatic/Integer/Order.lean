@@ -1343,33 +1343,28 @@ theorem mul_gt_zero_iff_sgn_same
     exact this
 
 /-- TODO -/
-theorem sgn_mul_diff_distribR
-    {a b c : ℤ} : sgn (a - b) * sgn c ≃ sgn (a * c - b * c)
-    := calc
-  _ = sgn (a - b) * sgn c := rfl
-  _ ≃ sgn ((a - b) * c)   := Rel.symm sgn_compat_mul
-  _ ≃ sgn (a * c - b * c) := sgn_subst AA.distribR
-
-/-- TODO -/
 theorem mul_substL_ge {a₁ a₂ b : ℤ} : b ≥ 0 → a₁ ≥ a₂ → a₁ * b ≥ a₂ * b := by
   intro (_ : b ≥ 0) (_ : a₁ ≥ a₂)
   show a₁ * b ≥ a₂ * b
   have : b > 0 ∨ b ≃ 0 := ge_split.mp ‹b ≥ 0›
-  have : sgn (a₁ * b - a₂ * b) ≥ 0 := match ‹b > 0 ∨ b ≃ 0› with
+  have : sgn (a₁ - a₂) * sgn b ≥ 0 := match ‹b > 0 ∨ b ≃ 0› with
   | Or.inl (_ : b > 0) =>
     calc
-      _ = sgn (a₁ * b - a₂ * b) := rfl
-      _ ≃ sgn (a₁ - a₂) * sgn b := Rel.symm sgn_mul_diff_distribR
+      _ = sgn (a₁ - a₂) * sgn b := rfl
       _ ≃ sgn (a₁ - a₂) * 1     := AA.substR (gt_zero_sgn.mp ‹b > 0›)
       _ ≃ sgn (a₁ - a₂)         := AA.identR
       _ ≥ 0                     := sgn_diff_ge_zero.mp ‹a₁ ≥ a₂›
   | Or.inr (_ : b ≃ 0) =>
     calc
-      _ = sgn (a₁ * b - a₂ * b) := rfl
-      _ ≃ sgn (a₁ - a₂) * sgn b := Rel.symm sgn_mul_diff_distribR
+      _ = sgn (a₁ - a₂) * sgn b := rfl
       _ ≃ sgn (a₁ - a₂) * 0     := AA.substR (sgn_zero.mp ‹b ≃ 0›)
       _ ≃ 0                     := AA.absorbR
       _ ≥ 0                     := le_refl
+  have : sgn (a₁ * b - a₂ * b) ≥ 0 := calc
+    _ = sgn (a₁ * b - a₂ * b) := rfl
+    _ ≃ sgn ((a₁ - a₂) * b)   := sgn_subst (Rel.symm AA.distribR)
+    _ ≃ sgn (a₁ - a₂) * sgn b := sgn_compat_mul
+    _ ≥ 0                     := ‹sgn (a₁ - a₂) * sgn b ≥ 0›
   have : a₁ * b ≥ a₂ * b := sgn_diff_ge_zero.mpr ‹sgn (a₁ * b - a₂ * b) ≥ 0›
   exact this
 
