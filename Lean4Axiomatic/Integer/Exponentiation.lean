@@ -21,7 +21,14 @@ variable
   [Negation ℤ] [Subtraction ℤ] [Sign ℤ] [Order ℤ]
   [Natural.Exponentiation ℕ ℤ (· * ·)]
 
-/-- TODO -/
+/--
+The operations of `sgn` and `·^n` (i.e. raising to a natural number power) give
+the same result when applied to an integer in either order.
+
+**Property and proof intuition**: Take the property that `sgn` is compatible
+with multiplication (`sgn (a * b) ≃ sgn a * sgn b`) and repeatedly apply it to
+the product formed by `a^n`.
+-/
 theorem sgn_pow {a : ℤ} {n : ℕ} : sgn (a^n) ≃ (sgn a)^n := by
   apply Natural.ind_on n
   case zero =>
