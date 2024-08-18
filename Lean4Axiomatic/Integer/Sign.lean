@@ -1797,6 +1797,27 @@ instance positive_mul_sgn_self_inst
   AP.mk (positive_mul_sgn_self ‹Nonzero a›)
 
 /--
+Extract a positive natural number "magnitude" from a nonzero integer, such that
+the integer's sign times its magnitude is equivalent to the integer.
+
+**Property intuition**: This captures the idea that a (nonzero) integer is a
+natural number with a sign attached.
+
+**Proof intuition**: By various properties of `sgn` and `Nonzero`.
+-/
+theorem as_size_with_sign
+    {a : ℤ} : Nonzero a → ∃ (n : ℕ), n > 0 ∧ a ≃ n * sgn a
+    := by
+  intro (_ : Nonzero a)
+  show ∃ (n : ℕ), n > 0 ∧ a ≃ n * sgn a
+  have : Sqrt1 (sgn a) := sgn_nonzero.mp ‹Nonzero a›
+  have (NonzeroWithSign.intro (n : ℕ) (_ : Positive n) (_ : a ≃ sgn a * n)) :=
+    sgn_nonzeroWithSign (a := a)
+  have : n > 0 := Natural.lt_zero_pos.mp ‹Positive n›
+  have : a ≃ n * sgn a := Rel.trans ‹a ≃ sgn a * n› AA.comm
+  exact Exists.intro n (And.intro ‹n > 0› ‹a ≃ n * sgn a›)
+
+/--
 The integer two's sign is one.
 
 **Property intution**: Two is positive.

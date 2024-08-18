@@ -1342,7 +1342,18 @@ theorem mul_gt_zero_iff_sgn_same
     have : a * b > 0 := lt_iff_le_neqv.mpr (And.intro ‹a * b ≥ 0› ‹0 ≄ a * b›)
     exact this
 
-/-- TODO -/
+/--
+The _greater than or equivalent to_ relation between two integers is preserved
+when both are multiplied by a nonnegative integer on the right.
+
+**Property intuition**: Multiplication scales the integers by the same amount,
+so their location relative to each other doesn't change.
+
+**Proof intuition**: Convert the ordering relations into their `sgn`-based
+equivalents. The goal becomes showing that `sgn (a₁ - a₂) * sgn b ≥ 0`. If `b`
+is zero, this is trivially true; if `b` is positive then this follows by the
+`a₁ ≥ a₂` assumption.
+-/
 theorem ge_mulR_nonneg {a₁ a₂ b : ℤ} : b ≥ 0 → a₁ ≥ a₂ → a₁ * b ≥ a₂ * b := by
   intro (_ : b ≥ 0) (_ : a₁ ≥ a₂)
   show a₁ * b ≥ a₂ * b
@@ -1368,7 +1379,14 @@ theorem ge_mulR_nonneg {a₁ a₂ b : ℤ} : b ≥ 0 → a₁ ≥ a₂ → a₁ 
   have : a₁ * b ≥ a₂ * b := sgn_diff_ge_zero.mpr ‹sgn (a₁ * b - a₂ * b) ≥ 0›
   exact this
 
-/-- TODO -/
+/--
+The product of two nonnegative integers is also nonnegative.
+
+**Property intuition**: The worst that can happen is one factor is zero, making
+the product zero.
+
+**Proof intuition**: Trivial corollary of `ge_mulR_nonneg`.
+-/
 theorem mul_preserves_nonneg {a b : ℤ} : a ≥ 0 → b ≥ 0 → a * b ≥ 0 := by
   intro (_ : a ≥ 0) (_ : b ≥ 0)
   show a * b ≥ 0
@@ -1376,18 +1394,5 @@ theorem mul_preserves_nonneg {a b : ℤ} : a ≥ 0 → b ≥ 0 → a * b ≥ 0 :
     _ = a * b := rfl
     _ ≥ 0 * b := ge_mulR_nonneg ‹b ≥ 0› ‹a ≥ 0›
     _ ≃ 0     := AA.absorbL
-
-/-- TODO -/
-theorem as_size_with_sign
-    {a : ℤ} : Nonzero a → ∃ (n : ℕ), n > 0 ∧ a ≃ n * sgn a
-    := by
-  intro (_ : Nonzero a)
-  show ∃ (n : ℕ), n > 0 ∧ a ≃ n * sgn a
-  have : Sqrt1 (sgn a) := sgn_nonzero.mp ‹Nonzero a›
-  have (NonzeroWithSign.intro (n : ℕ) (_ : Positive n) (_ : a ≃ sgn a * n)) :=
-    sgn_nonzeroWithSign (a := a)
-  have : n > 0 := Natural.lt_zero_pos.mp ‹Positive n›
-  have : a ≃ n * sgn a := Rel.trans ‹a ≃ sgn a * n› AA.comm
-  exact Exists.intro n (And.intro ‹n > 0› ‹a ≃ n * sgn a›)
 
 end Lean4Axiomatic.Integer
