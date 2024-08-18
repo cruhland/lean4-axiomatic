@@ -10,7 +10,7 @@ derived properties.
 
 namespace Lean4Axiomatic.Integer
 
-open Logic (AP)
+open Logic (AP iff_subst_covar or_mapR)
 open Natural (step)
 open Signed (Positive)
 
@@ -48,40 +48,25 @@ theorem sgn_pow {a : ℤ} {n : ℕ} : sgn (a^n) ≃ (sgn a)^n := by
       _ ≃ (sgn a)^n' * sgn a := AA.substL ih
       _ ≃ (sgn a)^(step n')  := Rel.symm Natural.pow_step
 
-/-- TODO -/
-theorem mul_identR_reasons {a b : ℤ} : a * b ≃ a ↔ a ≃ 0 ∨ b ≃ 1 := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : a * b ≃ a)
-    show a ≃ 0 ∨ b ≃ 1
-    have : a * (b - 1) ≃ 0 := calc
-      _ = a * (b - 1)   := rfl
-      _ ≃ a * b - a * 1 := mul_distribL_sub
-      _ ≃ a - a * 1     := sub_substL ‹a * b ≃ a›
-      _ ≃ a - a         := sub_substR AA.identR
-      _ ≃ 0             := sub_same
-    have : a ≃ 0 ∨ b - 1 ≃ 0 := mul_split_zero.mp ‹a * (b - 1) ≃ 0›
-    match ‹a ≃ 0 ∨ b - 1 ≃ 0› with
-    | Or.inl (_ : a ≃ 0) =>
-      exact Or.inl ‹a ≃ 0›
-    | Or.inr (_ : b - 1 ≃ 0) =>
-      have : b ≃ 1 := zero_diff_iff_eqv.mp ‹b - 1 ≃ 0›
-      exact Or.inr ‹b ≃ 1›
-  case mpr =>
-    intro (_ : a ≃ 0 ∨ b ≃ 1)
-    show a * b ≃ a
-    match ‹a ≃ 0 ∨ b ≃ 1› with
-    | Or.inl (_ : a ≃ 0) =>
-      calc
-        _ = a * b := rfl
-        _ ≃ 0 * b := AA.substL ‹a ≃ 0›
-        _ ≃ 0     := AA.absorbL
-        _ ≃ a     := Rel.symm ‹a ≃ 0›
-    | Or.inr (_ : b ≃ 1) =>
-      calc
-        _ = a * b := rfl
-        _ ≃ a * 1 := AA.substR ‹b ≃ 1›
-        _ ≃ a     := AA.identR
+/--
+The only way for multiplication on the right to have no effect on the left
+value, is if the left value is zero or the right value is one.
+
+**Property intuition**: The reverse direction is trivial. The forward direction
+makes sense because multiplication by any values that are not zero or one will
+change the magnitude of the result or the sign of the result.
+
+**Proof intuition**: Rewrite the equivalence into `a * (b - 1) ≃ 0` using
+algebra. Then `mul_split_zero` implies at least one of the factors is zero, and
+with trivial algebra this gives the result.
+-/
+theorem mul_identR_reasons {a b : ℤ} : a * b ≃ a ↔ a ≃ 0 ∨ b ≃ 1 := calc
+  _ ↔ a * b ≃ a         := Iff.rfl
+  _ ↔ a * b ≃ a * 1     := AA.eqv_substR_iff (Rel.symm AA.identR)
+  _ ↔ a * b - a * 1 ≃ 0 := zero_diff_iff_eqv.symm
+  _ ↔ a * (b - 1) ≃ 0   := AA.eqv_substL_iff (Rel.symm mul_distribL_sub)
+  _ ↔ a ≃ 0 ∨ b - 1 ≃ 0 := mul_split_zero
+  _ ↔ a ≃ 0 ∨ b ≃ 1     := iff_subst_covar or_mapR zero_diff_iff_eqv
 
 /-- TODO -/
 theorem sgn_sqr_nonneg {a : ℤ} : (sgn a)^2 ≥ 0 := by
