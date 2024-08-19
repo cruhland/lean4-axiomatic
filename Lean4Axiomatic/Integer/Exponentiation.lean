@@ -48,15 +48,19 @@ theorem sgn_pow {a : ℤ} {n : ℕ} : sgn (a^n) ≃ (sgn a)^n := by
       _ ≃ (sgn a)^n' * sgn a := AA.substL ih
       _ ≃ (sgn a)^(step n')  := Rel.symm Natural.pow_step
 
-/-- TODO -/
-theorem sgn_sqr_nonneg {a : ℤ} : (sgn a)^2 ≥ 0 := by
+/--
+All integer squares are nonnegative.
+
+**Property intuition**: A negative times a negative is positive.
+
+**Proof intuition**: Direct corollary of `nonneg_square`.
+-/
+theorem sqr_nonneg {a : ℤ} : a^2 ≥ 0 := by
   have : sgn (a * a) ≄ -1 := nonneg_square
-  have : a * a ≥ 0 := ge_zero_sgn.mpr ‹sgn (a * a) ≄ -1›
   calc
-    _ = (sgn a)^2   := rfl
-    _ ≃ sgn (a^2)   := Rel.symm sgn_pow
-    _ ≃ sgn (a * a) := sgn_subst Natural.pow_two
-    _ ≥ 0           := sgn_preserves_ge_zero.mp ‹a * a ≥ 0›
+    _ = a^2   := rfl
+    _ ≃ a * a := Natural.pow_two
+    _ ≥ 0     := ge_zero_sgn.mpr ‹sgn (a * a) ≄ -1›
 
 /-- TODO -/
 theorem sgn_absorb_pow
@@ -107,13 +111,13 @@ theorem pow_sgn_even
     _ = (sgn a)^(2 * n)     := rfl
     _ ≃ ((sgn a)^2)^n       := Rel.symm Natural.pow_flatten
     _ ≃ (sgn ((sgn a)^2))^n := Natural.pow_substL ‹(sgn a)^2 ≃ sgn ((sgn a)^2)›
-    _ ≃ sgn ((sgn a)^2)     := sgn_absorb_pow sgn_sqr_nonneg ‹n > 0›
+    _ ≃ sgn ((sgn a)^2)     := sgn_absorb_pow sqr_nonneg ‹n > 0›
     _ ≃ (sgn (sgn a))^2     := sgn_pow
     _ ≃ (sgn a)^2           := Natural.pow_substL sgn_idemp
 
 /-- TODO -/
 theorem pow_sgn_odd {a : ℤ} {n : ℕ} : (sgn a)^(2 * n + 1) ≃ sgn a := by
-  have : (sgn a)^2 ≥ 0 := sgn_sqr_nonneg
+  have : (sgn a)^2 ≥ 0 := sqr_nonneg
   have : (sgn a)^2 > 0 ∨ (sgn a)^2 ≃ 0 := ge_split.mp ‹(sgn a)^2 ≥ 0›
   have zero_or_one : sgn a ≃ 0 ∨ (sgn a)^(2 * n) ≃ 1 :=
     match ‹(sgn a)^2 > 0 ∨ (sgn a)^2 ≃ 0› with
@@ -362,7 +366,7 @@ theorem sgn_diff_pow_pos
       have : a * b ≥ 0 := mul_preserves_nonneg ‹a ≥ 0› ‹b ≥ 0›
       have : sgn (a * b) ≥ 0 := sgn_preserves_ge_zero.mp ‹a * b ≥ 0›
       have : sab^2 * sgn (a * b) ≥ 0 :=
-        mul_preserves_nonneg sgn_sqr_nonneg ‹sgn (a * b) ≥ 0›
+        mul_preserves_nonneg sqr_nonneg ‹sgn (a * b) ≥ 0›
       have : sgn (amab * abmb) ≥ 0 := calc
         _ = sgn (amab * abmb)           := rfl
         _ ≃ sgn amab * sgn abmb         := sgn_compat_mul
