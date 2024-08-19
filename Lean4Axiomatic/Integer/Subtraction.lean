@@ -4,6 +4,8 @@ import Lean4Axiomatic.Integer.Sign
 
 namespace Lean4Axiomatic.Integer
 
+open Logic (iff_subst_covar or_mapR)
+
 /-! ## Axioms -/
 
 /-- Operations pertaining to integer subtraction. -/
@@ -307,6 +309,26 @@ instance mul_distributive_sub : AA.Distributive (α := ℤ) (· * ·) (· - ·) 
   distributiveL := mul_distributiveL_sub
   distributiveR := AA.distributiveR_from_distributiveL mul_distributiveL_sub
 }
+
+/--
+The only way for multiplication on the right to have no effect on the left
+value, is if the left value is zero or the right value is one.
+
+**Property intuition**: The reverse direction is trivial. The forward direction
+makes sense because multiplication by any values that are not zero or one will
+change the magnitude of the result or the sign of the result.
+
+**Proof intuition**: Rewrite the equivalence into `a * (b - 1) ≃ 0` using
+algebra. Then `mul_split_zero` implies at least one of the factors is zero, and
+with trivial algebra this gives the result.
+-/
+theorem mul_identR_reasons {a b : ℤ} : a * b ≃ a ↔ a ≃ 0 ∨ b ≃ 1 := calc
+  _ ↔ a * b ≃ a         := Iff.rfl
+  _ ↔ a * b ≃ a * 1     := AA.eqv_substR_iff (Rel.symm AA.identR)
+  _ ↔ a * b - a * 1 ≃ 0 := zero_diff_iff_eqv.symm
+  _ ↔ a * (b - 1) ≃ 0   := AA.eqv_substL_iff (Rel.symm mul_distribL_sub)
+  _ ↔ a ≃ 0 ∨ b - 1 ≃ 0 := mul_split_zero
+  _ ↔ a ≃ 0 ∨ b ≃ 1     := iff_subst_covar or_mapR zero_diff_iff_eqv
 
 /--
 When subtracting two sums, if they both have the same right-hand operand, it
