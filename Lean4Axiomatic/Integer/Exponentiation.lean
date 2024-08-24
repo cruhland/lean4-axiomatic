@@ -62,13 +62,26 @@ theorem sqr_nonneg {a : ℤ} : a^2 ≥ 0 := by
     _ ≃ a * a := Natural.pow_two
     _ ≥ 0     := ge_zero_sgn.mpr ‹sgn (a * a) ≄ -1›
 
-/-- TODO -/
+/--
+Zero and one are the only two integers that are identical to their squares.
+
+**Property intuition**: Negative integers become positive when squared, and all
+integers greater than one increase in magnitude.
+
+**Proof intuition**: Corollary of `mul_identR_reasons`.
+-/
 theorem sqr_idemp_reasons {a : ℤ} : a^2 ≃ a ↔ a ≃ 0 ∨ a ≃ 1 := calc
   _ ↔ a^2 ≃ a       := Iff.rfl
   _ ↔ a * a ≃ a     := AA.eqv_substL_iff Natural.pow_two
   _ ↔ a ≃ 0 ∨ a ≃ 1 := mul_identR_reasons
 
-/-- TODO -/
+/--
+Squaring the sign of an integer leaves it the same iff the integer is
+nonnegative.
+
+**Property and proof intuition**: Only zero and one stay the same when squared,
+and those are the two sign values of nonnegative integers.
+-/
 theorem sgn_sqr_nonneg {a : ℤ} : (sgn a)^2 ≃ sgn a ↔ a ≥ 0 := calc
   _ ↔ (sgn a)^2 ≃ sgn a     := Iff.rfl
   _ ↔ sgn a ≃ 0 ∨ sgn a ≃ 1 := sqr_idemp_reasons
@@ -77,7 +90,13 @@ theorem sgn_sqr_nonneg {a : ℤ} : (sgn a)^2 ≃ sgn a ↔ a ≥ 0 := calc
   _ ↔ a > 0 ∨ a ≃ 0         := Or.comm
   _ ↔ a ≥ 0                 := ge_split.symm
 
-/-- TODO -/
+/--
+Raising an integer to _any_ positive natural number power has no effect if
+just squaring the integer has no effect.
+
+**Property and proof intuition**: By induction, any power greater than two can
+be reduced to the squaring case.
+-/
 theorem pow_absorbL {a : ℤ} {n : ℕ} : n ≥ 1 → a^2 ≃ a → a^n ≃ a := by
   intro (_ : n ≥ 1) (_ : a^2 ≃ a)
   show a^n ≃ a

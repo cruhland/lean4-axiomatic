@@ -727,7 +727,14 @@ theorem positive_ge {n : ℕ} : Positive n ↔ n ≥ 1 := by
     have : Positive n := lt_zero_pos.mpr this
     exact this
 
-/-- TODO -/
+/--
+Integers greater than zero are exactly those that are greater than or
+equivalent to one.
+
+**Property intuition**: There's no integer between zero and one.
+
+**Proof intuition**: Follows from `lt_zero_pos` and `positive_ge`.
+-/
 theorem gt_zero_iff_ge_one {n : ℕ} : n > 0 ↔ n ≥ 1 := calc
   _ ↔ n > 0      := Iff.rfl
   _ ↔ Positive n := lt_zero_pos.symm

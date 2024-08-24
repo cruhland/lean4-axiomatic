@@ -263,11 +263,8 @@ theorem sgn_diff_pow_pos
     _ = sgn (b * d)   := rfl
     _ ≃ sgn d         := sgn_mul_absorbL ‹b > 0›
     _ ≃ 1             := Integer.gt_zero_sgn.mp ‹d > 0›
-  have bd_sgn_sqr_idemp : (sgn (b * d))^2 ≃ sgn (b * d) := calc
-    _ = (sgn (b * d))^2 := rfl
-    _ ≃ 1^2             := Natural.pow_substL ‹sgn (b * d) ≃ 1›
-    _ ≃ 1               := Natural.pow_absorbL
-    _ ≃ sgn (b * d)     := Rel.symm ‹sgn (b * d) ≃ 1›
+  have sqr_sgn_bd_idemp : (sgn (b * d))^2 ≃ sgn (b * d) :=
+    Integer.sqr_idemp_reasons.mpr (Or.inr ‹sgn (b * d) ≃ 1›)
   have sgn_bd_pow {k : ℕ} : sgn ((b * d)^k) ≃ 1 := calc
     _ = sgn ((b * d)^k) := rfl
     _ ≃ (sgn (b * d))^k := Integer.sgn_pow
@@ -337,7 +334,7 @@ theorem sgn_diff_pow_pos
   have sgn_bd_drop_pow : sgn ((b * d)^n) ≃ sgn (b * d) := calc
     _ = sgn ((b * d)^n) := rfl
     _ ≃ (sgn (b * d))^n := Integer.sgn_pow
-    _ ≃ sgn (b * d)     := Integer.pow_absorbL ‹n ≥ 1› bd_sgn_sqr_idemp
+    _ ≃ sgn (b * d)     := Integer.pow_absorbL ‹n ≥ 1› sqr_sgn_bd_idemp
 
   have drop_pow_ones_ℚ : p^1 - q^1 ≃ p - q := calc
     _ = p^1 - q^1 := rfl
