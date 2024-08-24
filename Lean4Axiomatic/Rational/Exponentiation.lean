@@ -238,9 +238,9 @@ theorem as_nonneg_ratio {p : ℚ} : p ≥ 0 → NonnegRatio p := by
 
 /-- TODO -/
 theorem sgn_diff_pow_pos
-    {p q : ℚ} {n : ℕ} : p ≥ 0 → q ≥ 0 → n > 0 → sgn (p^n - q^n) ≃ sgn (p - q)
+    {p q : ℚ} {n : ℕ} : p ≥ 0 → q ≥ 0 → n ≥ 1 → sgn (p^n - q^n) ≃ sgn (p - q)
     := by
-  intro (_ : p ≥ 0) (_ : q ≥ 0) (_ : n > 0)
+  intro (_ : p ≥ 0) (_ : q ≥ 0) (_ : n ≥ 1)
   show sgn (p^n - q^n) ≃ sgn (p - q)
   have (NonnegRatio.intro (a : ℤ) (b : ℤ) (_ : a ≥ 0) (_ : b > 0) p_eqv) :=
     as_nonneg_ratio ‹p ≥ 0›
@@ -263,8 +263,11 @@ theorem sgn_diff_pow_pos
     _ = sgn (b * d)   := rfl
     _ ≃ sgn d         := sgn_mul_absorbL ‹b > 0›
     _ ≃ 1             := Integer.gt_zero_sgn.mp ‹d > 0›
-  have : b * d > 0 := Integer.gt_zero_sgn.mpr ‹sgn (b * d) ≃ 1›
-  have : b * d ≥ 0 := Integer.ge_split.mpr (Or.inl ‹b * d > 0›)
+  have bd_sgn_sqr_idemp : (sgn (b * d))^2 ≃ sgn (b * d) := calc
+    _ = (sgn (b * d))^2 := rfl
+    _ ≃ 1^2             := Natural.pow_substL ‹sgn (b * d) ≃ 1›
+    _ ≃ 1               := Natural.pow_absorbL
+    _ ≃ sgn (b * d)     := Rel.symm ‹sgn (b * d) ≃ 1›
   have sgn_bd_pow {k : ℕ} : sgn ((b * d)^k) ≃ 1 := calc
     _ = sgn ((b * d)^k) := rfl
     _ ≃ (sgn (b * d))^k := Integer.sgn_pow
@@ -330,11 +333,11 @@ theorem sgn_diff_pow_pos
     _ ≃ sgn ((((a*d)^n-(b*c)^n:ℤ):ℚ)/(((b*d)^n:ℤ):ℚ)) := sgn_subst sub_pow_frac
     _ ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n)         := sgn_div_integers
   have sgn_diff_int_pow : sgn ((a * d)^n - (b * c)^n) ≃ sgn (a * d - b * c) :=
-    Integer.sgn_diff_pow_pos ‹a * d ≥ 0› ‹b * c ≥ 0› ‹n > 0›
+    Integer.sgn_diff_pow_pos ‹a * d ≥ 0› ‹b * c ≥ 0› ‹n ≥ 1›
   have sgn_bd_drop_pow : sgn ((b * d)^n) ≃ sgn (b * d) := calc
     _ = sgn ((b * d)^n) := rfl
     _ ≃ (sgn (b * d))^n := Integer.sgn_pow
-    _ ≃ sgn (b * d)     := Integer.sgn_absorb_pow ‹b * d ≥ 0› ‹n > 0›
+    _ ≃ sgn (b * d)     := Integer.pow_absorbL ‹n ≥ 1› bd_sgn_sqr_idemp
 
   have drop_pow_ones_ℚ : p^1 - q^1 ≃ p - q := calc
     _ = p^1 - q^1 := rfl
@@ -363,15 +366,15 @@ theorem sgn_diff_pow_pos
 
 /-- TODO -/
 theorem pow_pos_preserves_gt_nonneg
-    {p q : ℚ} {n : ℕ} : n > 0 → q ≥ 0 → p > q → p^n > q^n
+    {p q : ℚ} {n : ℕ} : n ≥ 1 → q ≥ 0 → p > q → p^n > q^n
     := by
-  intro (_ : n > 0) (_ : q ≥ 0) (_ : p > q)
+  intro (_ : n ≥ 1) (_ : q ≥ 0) (_ : p > q)
   show p^n > q^n
   have : p ≥ q := ge_cases.mpr (Or.inl ‹p > q›)
   have : p ≥ 0 := ge_trans ‹p ≥ q› ‹q ≥ 0›
   have : sgn (p^n - q^n) ≃ 1 := calc
     _ = sgn (p^n - q^n) := rfl
-    _ ≃ sgn (p - q)     := sgn_diff_pow_pos ‹p ≥ 0› ‹q ≥ 0› ‹n > 0›
+    _ ≃ sgn (p - q)     := sgn_diff_pow_pos ‹p ≥ 0› ‹q ≥ 0› ‹n ≥ 1›
     _ ≃ 1               := gt_sgn.mp ‹p > q›
   have : p^n > q^n := gt_sgn.mpr ‹sgn (p^n - q^n) ≃ 1›
   exact this
@@ -386,10 +389,11 @@ theorem pow_preserves_ge_nonneg
   have : n > 0 ∨ n ≃ 0 := Natural.ge_split ‹n ≥ 0›
   match ‹n > 0 ∨ n ≃ 0› with
   | Or.inl (_ : n > 0) =>
+    have : n ≥ 1 := Natural.gt_zero_iff_ge_one.mp ‹n > 0›
     have : p ≥ 0 := ge_trans ‹p ≥ q› ‹q ≥ 0›
     have : sgn (p^n - q^n) ≥ 0 := calc
       _ = sgn (p^n - q^n) := rfl
-      _ ≃ sgn (p - q)     := sgn_diff_pow_pos ‹p ≥ 0› ‹q ≥ 0› ‹n > 0›
+      _ ≃ sgn (p - q)     := sgn_diff_pow_pos ‹p ≥ 0› ‹q ≥ 0› ‹n ≥ 1›
       _ ≥ 0               := ge_sgn_ge_zero.mp ‹p ≥ q›
     have : p^n ≥ q^n := ge_sgn_ge_zero.mpr ‹sgn (p^n - q^n) ≥ 0›
     exact this
@@ -807,7 +811,7 @@ theorem sgn_diff_pow
       _ ≃ sgn (p - q) * 0     := Rel.symm AA.absorbR
       _ ≃ sgn (p - q) * sgn a := AA.substR (Rel.symm ‹sgn a ≃ 0›)
   | Or.inr (_ : Integer.Nonzero a) =>
-    have (Exists.intro (n:ℕ) (And.intro (_ : n > 0) (_ : a ≃ n * sgn a))) :=
+    have (Exists.intro (n:ℕ) (And.intro (_ : n ≥ 1) (_ : a ≃ n * sgn a))) :=
       Integer.as_size_with_sign ‹Integer.Nonzero a›
     have : Integer.Sqrt1 (sgn a) := Integer.sgn_nonzero.mp ‹Integer.Nonzero a›
     have : sgn a ≃ 1 ∨ sgn a ≃ -1 :=
@@ -824,7 +828,7 @@ theorem sgn_diff_pow
         _ = sgn (p^a - q^a)     := rfl
         _ ≃ sgn (p^n - q^a)     := sgn_subst (sub_substL pow_a_simp)
         _ ≃ sgn (p^n - q^n)     := sgn_subst (sub_substR pow_a_simp)
-        _ ≃ sgn (p - q)         := sgn_diff_pow_pos ‹p ≥ 0› ‹q ≥ 0› ‹n > 0›
+        _ ≃ sgn (p - q)         := sgn_diff_pow_pos ‹p ≥ 0› ‹q ≥ 0› ‹n ≥ 1›
         _ ≃ sgn (p - q) * 1     := Rel.symm AA.identR
         _ ≃ sgn (p - q) * sgn a := AA.substR (Rel.symm ‹sgn a ≃ 1›)
     | Or.inr (_ : sgn a ≃ -1) =>
@@ -843,7 +847,7 @@ theorem sgn_diff_pow
         _ ≃ sgn ((p^n)⁻¹ - q^a)     := sgn_subst (sub_substL pow_a_simp)
         _ ≃ sgn ((p^n)⁻¹ - (q^n)⁻¹) := sgn_subst (sub_substR pow_a_simp)
         _ ≃ sgn (q^n - p^n)         := sgn_sub_recip ‹p^n * q^n > 0›
-        _ ≃ sgn (q - p)             := sgn_diff_pow_pos ‹q ≥ 0› ‹p ≥ 0› ‹n > 0›
+        _ ≃ sgn (q - p)             := sgn_diff_pow_pos ‹q ≥ 0› ‹p ≥ 0› ‹n ≥ 1›
         _ ≃ sgn (-(p - q))          := sgn_subst (eqv_symm neg_sub)
         _ ≃ -sgn (p - q)            := sgn_compat_neg
         _ ≃ -1 * sgn (p - q)        := Rel.symm Integer.mul_neg_one

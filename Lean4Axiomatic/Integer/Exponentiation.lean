@@ -10,7 +10,7 @@ derived properties.
 
 namespace Lean4Axiomatic.Integer
 
-open Logic (AP iff_subst_covar or_mapR)
+open Logic (AP iff_subst_covar or_mapL or_mapR)
 open Natural (step)
 open Signed (Positive)
 
@@ -63,55 +63,65 @@ theorem sqr_nonneg {a : ℤ} : a^2 ≥ 0 := by
     _ ≥ 0     := ge_zero_sgn.mpr ‹sgn (a * a) ≄ -1›
 
 /-- TODO -/
-theorem sgn_absorb_pow
-    {a : ℤ} {n : ℕ} : a ≥ 0 → n > 0 → (sgn a)^n ≃ sgn a
-    := by
-  intro (_ : a ≥ 0) (_ : n > 0)
-  show (sgn a)^n ≃ sgn a
+theorem sqr_idemp_reasons {a : ℤ} : a^2 ≃ a ↔ a ≃ 0 ∨ a ≃ 1 := calc
+  _ ↔ a^2 ≃ a       := Iff.rfl
+  _ ↔ a * a ≃ a     := AA.eqv_substL_iff Natural.pow_two
+  _ ↔ a ≃ 0 ∨ a ≃ 1 := mul_identR_reasons
 
-  let motive := λ (x : ℕ) => (sgn a)^x ≃ sgn a
+/-- TODO -/
+theorem sgn_sqr_nonneg {a : ℤ} : (sgn a)^2 ≃ sgn a ↔ a ≥ 0 := calc
+  _ ↔ (sgn a)^2 ≃ sgn a     := Iff.rfl
+  _ ↔ sgn a ≃ 0 ∨ sgn a ≃ 1 := sqr_idemp_reasons
+  _ ↔ a ≃ 0 ∨ sgn a ≃ 1     := iff_subst_covar or_mapL sgn_zero.symm
+  _ ↔ a ≃ 0 ∨ a > 0         := iff_subst_covar or_mapR gt_zero_sgn.symm
+  _ ↔ a > 0 ∨ a ≃ 0         := Or.comm
+  _ ↔ a ≥ 0                 := ge_split.symm
+
+/-- TODO -/
+theorem pow_absorbL {a : ℤ} {n : ℕ} : n ≥ 1 → a^2 ≃ a → a^n ≃ a := by
+  intro (_ : n ≥ 1) (_ : a^2 ≃ a)
+  show a^n ≃ a
+
+  let motive := λ (x : ℕ) => a^x ≃ a
   have motive_subst {x₁ x₂ : ℕ} : x₁ ≃ x₂ → motive x₁ → motive x₂ := by
-    intro (_ : x₁ ≃ x₂) (_ : (sgn a)^x₁ ≃ sgn a)
-    show (sgn a)^x₂ ≃ sgn a
+    intro (_ : x₁ ≃ x₂) (_ : a^x₁ ≃ a)
+    show a^x₂ ≃ a
     calc
-      _ = (sgn a)^x₂ := rfl
-      _ ≃ (sgn a)^x₁ := Natural.pow_substR (Rel.symm ‹x₁ ≃ x₂›)
-      _ ≃ sgn a      := ‹(sgn a)^x₁ ≃ sgn a›
-
-  have : step 0 ≤ n := Natural.lt_step_le.mp ‹0 < n›
-  have : 1 ≤ n := AA.substLFn (Rel.symm Natural.literal_step) ‹step 0 ≤ n›
+      _ = a^x₂ := rfl
+      _ ≃ a^x₁ := Natural.pow_substR (Rel.symm ‹x₁ ≃ x₂›)
+      _ ≃ a    := ‹a^x₁ ≃ a›
 
   apply Natural.ind_from motive_subst ‹n ≥ 1›
   case base =>
-    show (sgn a)^1 ≃ sgn a
+    show a^1 ≃ a
     exact Natural.pow_one
   case next =>
-    intro (k : ℕ) (_ : k ≥ 1) (ih : (sgn a)^k ≃ sgn a)
-    show (sgn a)^(step k) ≃ sgn a
-    have : a > 0 ∨ a ≃ 0 := ge_split.mp ‹a ≥ 0›
-    have : sgn a ≃ 0 ∨ sgn a ≃ 1 := match ‹a > 0 ∨ a ≃ 0› with
-    | Or.inl (_ : a > 0) => Or.inr (gt_zero_sgn.mp ‹a > 0›)
-    | Or.inr (_ : a ≃ 0) => Or.inl (sgn_zero.mp ‹a ≃ 0›)
+    intro (k : ℕ) (_ : k ≥ 1) (ih : a^k ≃ a)
+    show a^(step k) ≃ a
     calc
-      _ = (sgn a)^(step k)  := rfl
-      _ ≃ (sgn a)^k * sgn a := Natural.pow_step
-      _ ≃ sgn a * sgn a     := AA.substL ih
-      _ ≃ sgn a             := mul_identR_reasons.mpr ‹sgn a ≃ 0 ∨ sgn a ≃ 1›
+      _ = a^(step k) := rfl
+      _ ≃ a^k * a    := Natural.pow_step
+      _ ≃ a * a      := AA.substL ih
+      _ ≃ a^2        := Rel.symm Natural.pow_two
+      _ ≃ a          := ‹a^2 ≃ a›
 
 /-- TODO -/
 theorem pow_sgn_even
-    {a : ℤ} {n : ℕ} : n > 0 → (sgn a)^(2 * n) ≃ (sgn a)^2 := by
-  intro (_ : n > 0)
+    {a : ℤ} {n : ℕ} : n ≥ 1 → (sgn a)^(2 * n) ≃ (sgn a)^2 := by
+  intro (_ : n ≥ 1)
   show (sgn a)^(2 * n) ≃ (sgn a)^2
   have : (sgn a)^2 ≃ sgn ((sgn a)^2) := calc
     _ = (sgn a)^2       := rfl
     _ ≃ (sgn (sgn a))^2 := Natural.pow_substL (Rel.symm sgn_idemp)
     _ ≃ sgn ((sgn a)^2) := Rel.symm sgn_pow
+  have : (sgn a)^2 ≥ 0 := sqr_nonneg
+  have sgn_sqr_idemp : (sgn ((sgn a)^2))^2 ≃ sgn ((sgn a)^2) :=
+    sgn_sqr_nonneg.mpr ‹(sgn a)^2 ≥ 0›
   calc
     _ = (sgn a)^(2 * n)     := rfl
     _ ≃ ((sgn a)^2)^n       := Rel.symm Natural.pow_flatten
     _ ≃ (sgn ((sgn a)^2))^n := Natural.pow_substL ‹(sgn a)^2 ≃ sgn ((sgn a)^2)›
-    _ ≃ sgn ((sgn a)^2)     := sgn_absorb_pow sqr_nonneg ‹n > 0›
+    _ ≃ sgn ((sgn a)^2)     := pow_absorbL ‹n ≥ 1› sgn_sqr_idemp
     _ ≃ (sgn (sgn a))^2     := sgn_pow
     _ ≃ (sgn a)^2           := Natural.pow_substL sgn_idemp
 
@@ -127,6 +137,7 @@ theorem pow_sgn_odd {a : ℤ} {n : ℕ} : (sgn a)^(2 * n + 1) ≃ sgn a := by
       have : (sgn a)^(2 * n) ≃ 1 :=
         match ‹n > 0 ∨ n ≃ 0› with
         | Or.inl (_ : n > 0) =>
+          have : n ≥ 1 := Natural.gt_zero_iff_ge_one.mp ‹n > 0›
           have : sgn (a^2) > 0 := calc
             _ = sgn (a^2) := rfl
             _ ≃ (sgn a)^2 := sgn_pow
@@ -134,7 +145,7 @@ theorem pow_sgn_odd {a : ℤ} {n : ℕ} : (sgn a)^(2 * n + 1) ≃ sgn a := by
           have : a^2 > 0 := sgn_preserves_gt_zero.mpr ‹sgn (a^2) > 0›
           calc
             _ = (sgn a)^(2 * n) := rfl
-            _ ≃ (sgn a)^2       := pow_sgn_even ‹n > 0›
+            _ ≃ (sgn a)^2       := pow_sgn_even ‹n ≥ 1›
             _ ≃ sgn (a^2)       := Rel.symm sgn_pow
             _ ≃ 1               := gt_zero_sgn.mp ‹a^2 > 0›
         | Or.inr (_ : n ≃ 0) =>
@@ -311,127 +322,123 @@ theorem sse_compat_mul
 
 /-- TODO -/
 theorem sgn_diff_pow_pos
-    {a b : ℤ} {n : ℕ} : a ≥ 0 → b ≥ 0 → n > 0 → sgn (a^n - b^n) ≃ sgn (a - b)
+    {a b : ℤ} {n : ℕ} : a ≥ 0 → b ≥ 0 → n ≥ 1 → sgn (a^n - b^n) ≃ sgn (a - b)
     := by
-  intro (_ : a ≥ 0) (_ : b ≥ 0)
-  show n > 0 → sgn (a^n - b^n) ≃ sgn (a - b)
-  apply Natural.ind_on n
-  case zero =>
-    intro (_ : (0:ℕ) > 0)
-    show sgn (a^0 - b^0) ≃ sgn (a - b)
-    have : (0:ℕ) ≯ 0 := Natural.lt_zero
-    exact absurd ‹(0:ℕ) > 0› ‹(0:ℕ) ≯ 0›
-  case step =>
-    intro (m : ℕ) (ih : m > 0 → sgn (a^m - b^m) ≃ sgn (a - b)) (_ : step m > 0)
+  intro (_ : a ≥ 0) (_ : b ≥ 0) (_ : n ≥ 1)
+  show sgn (a^n - b^n) ≃ sgn (a - b)
+
+  let motive := λ (x : ℕ) => sgn (a^x - b^x) ≃ sgn (a - b)
+  have motive_subst {x₁ x₂ : ℕ} : x₁ ≃ x₂ → motive x₁ → motive x₂ := by
+    intro (_ : x₁ ≃ x₂) (_ : sgn (a^x₁ - b^x₁) ≃ sgn (a - b))
+    show sgn (a^x₂ - b^x₂) ≃ sgn (a - b)
+    have pow_substR {c : ℤ} : c^x₂ ≃ c^x₁ :=
+      Natural.pow_substR (Rel.symm ‹x₁ ≃ x₂›)
+    calc
+      _ = sgn (a^x₂ - b^x₂) := rfl
+      _ ≃ sgn (a^x₁ - b^x₂) := sgn_subst (sub_substL pow_substR)
+      _ ≃ sgn (a^x₁ - b^x₁) := sgn_subst (sub_substR pow_substR)
+      _ ≃ sgn (a - b)       := ‹sgn (a^x₁ - b^x₁) ≃ sgn (a - b)›
+
+  apply Natural.ind_from motive_subst ‹n ≥ 1›
+  case base =>
+    show sgn (a^1 - b^1) ≃ sgn (a - b)
+    calc
+      _ = sgn (a^1 - b^1) := rfl
+      _ ≃ sgn (a - b^1)   := sgn_subst (sub_substL Natural.pow_one)
+      _ ≃ sgn (a - b)     := sgn_subst (sub_substR Natural.pow_one)
+  case next =>
+    intro (m : ℕ) (_ : m ≥ 1) (ih : sgn (a^m - b^m) ≃ sgn (a - b))
     show sgn (a^(step m) - b^(step m)) ≃ sgn (a - b)
-    have : m ≥ 0 := Natural.ge_zero
-    have : m > 0 ∨ m ≃ 0 := Natural.ge_split ‹m ≥ 0›
-    match this.symm with
-    | Or.inl (_ : m ≃ 0) =>
-      have drop_pow {x : ℤ} : x^(step m) ≃ x := calc
-        _ = x^(step m) := rfl
-        _ ≃ x^(step 0) := Natural.pow_substR (AA.subst₁ ‹m ≃ 0›)
-        _ ≃ x^1        := Natural.pow_substR (Rel.symm Natural.literal_step)
-        _ ≃ x          := Natural.pow_one
-      calc
-        _ = sgn (a^(step m) - b^(step m)) := rfl
-        _ ≃ sgn (a - b^(step m))          := sgn_subst (sub_substL drop_pow)
-        _ ≃ sgn (a - b)                   := sgn_subst (sub_substR drop_pow)
-    | Or.inr (_ : m > 0) =>
-      have sub_to_sum
-          {w x y z : ℤ} : w*x - y*z ≃ w * (x - z) + (w - y) * z
-          := calc
-        _ = w*x - y*z                 := rfl
-        _ ≃ (w*x - w*z) + (w*z - y*z) := Rel.symm add_sub_telescope
-        _ ≃ w * (x - z) + (w*z - y*z) := AA.substL (Rel.symm AA.distribL)
-        _ ≃ w * (x - z) + (w - y) * z := AA.substR (Rel.symm AA.distribR)
 
-      have factor_sumL : sgn (a^m * (a - b)) ≃ sgn (a - b) * sgn (a^m) := calc
-        _ = sgn (a^m * (a - b))     := rfl
-        _ ≃ sgn (a^m) * sgn (a - b) := sgn_compat_mul
-        _ ≃ sgn (a - b) * sgn (a^m) := AA.comm
-      have factor_sumR : sgn ((a^m - b^m) * b) ≃ sgn (a - b) * sgn b := calc
-        _ = sgn ((a^m - b^m) * b)   := rfl
-        _ ≃ sgn (a^m - b^m) * sgn b := sgn_compat_mul
-        _ ≃ sgn (a - b) * sgn b     := AA.substL (ih ‹m > 0›)
-      have : sgn (a^m) ≃ sgn a := calc
-        _ = sgn (a^m) := rfl
-        _ ≃ (sgn a)^m := sgn_pow
-        _ ≃ sgn a     := sgn_absorb_pow ‹a ≥ 0› ‹m > 0›
-
-      let sab := sgn (a - b)
-      let sam := sgn (a^m)
-      let amab := a^m * (a - b)
-      let abmb := (a^m - b^m) * b
-      have : a * b ≥ 0 := mul_preserves_nonneg ‹a ≥ 0› ‹b ≥ 0›
-      have : sgn (a * b) ≥ 0 := sgn_preserves_ge_zero.mp ‹a * b ≥ 0›
-      have : sab^2 * sgn (a * b) ≥ 0 :=
-        mul_preserves_nonneg sqr_nonneg ‹sgn (a * b) ≥ 0›
-      have : sgn (amab * abmb) ≥ 0 := calc
-        _ = sgn (amab * abmb)           := rfl
-        _ ≃ sgn amab * sgn abmb         := sgn_compat_mul
-        _ ≃ (sab * sam) * sgn abmb      := AA.substL factor_sumL
-        _ ≃ (sab * sam) * (sab * sgn b) := AA.substR factor_sumR
-        _ ≃ (sab * sab) * (sam * sgn b) := AA.expr_xxfxxff_lr_swap_rl
-        _ ≃ sab^2 * (sam * sgn b)       := AA.substL (Rel.symm Natural.pow_two)
-        _ ≃ sab^2 * (sgn a * sgn b)     := AA.substR (AA.substL ‹sam ≃ sgn a›)
-        _ ≃ sab^2 * sgn (a * b)         := AA.substR (Rel.symm sgn_compat_mul)
-        _ ≥ 0                           := ‹sab^2 * sgn (a * b) ≥ 0›
-      have terms_mul_nonneg : amab * abmb ≥ 0 := sgn_preserves_ge_zero.mpr this
-
-      have sgn_cubed {x : ℤ} : (sgn x)^3 ≃ sgn x := calc
-        _ = (sgn x)^3           := rfl
-        _ ≃ (sgn x)^(2 * 1 + 1) := Natural.pow_substR Natural.three_odd
-        _ ≃ sgn x               := pow_sgn_odd
-      have reduce : sum_sub_err (sgn (a^m)) (sgn b) ≃ sgn (a + b) := calc
-        _ = sum_sub_err (sgn (a^m)) (sgn b) := rfl
-        _ ≃ sum_sub_err (sgn a) (sgn b)     := sse_substL ‹sgn (a^m) ≃ sgn a›
-        _ ≃ sgn (a + b)                     := Rel.symm (sgn_sum ‹a * b ≥ 0›)
-
-      have : a + b ≥ 0 := calc
-        _ = a + b := rfl
-        _ ≥ 0 + b := ge_addR.mp ‹a ≥ 0›
-        _ ≥ 0 + 0 := ge_addL.mp ‹b ≥ 0›
-        _ ≃ 0     := AA.identL
-      have : a + b > 0 ∨ a + b ≃ 0 := ge_split.mp ‹a + b ≥ 0›
-      have : sgn (a - b) ≃ 0 ∨ sgn (a + b) ≃ 1 := match this with
-      | Or.inl (_ : a + b > 0) =>
-        have : sgn (a + b) ≃ 1 := gt_zero_sgn.mp ‹a + b > 0›
-        Or.inr ‹sgn (a + b) ≃ 1›
-      | Or.inr (_ : a + b ≃ 0) =>
-        have (And.intro (_ : a ≃ 0) (_ : b ≃ 0)) :=
-          (zero_sum_split ‹a ≥ 0› ‹b ≥ 0›).mp ‹a + b ≃ 0›
-        have : sgn (a - b) ≃ 0 := calc
-          _ = sgn (a - b)     := rfl
-          _ ≃ sgn (0 - b)     := sgn_subst (sub_substL ‹a ≃ 0›)
-          _ ≃ sgn ((0:ℤ) - 0) := sgn_subst (sub_substR ‹b ≃ 0›)
-          _ ≃ sgn (0:ℤ)       := sgn_subst sub_same
-          _ ≃ 0               := sgn_zero.mp Rel.refl
-        Or.inl ‹sgn (a - b) ≃ 0›
-
-      have expand
-          : a^(step m) - b^(step m) ≃ a^m * (a - b) + (a^m - b^m) * b
-          := calc
-        _ = a^(step m) - b^(step m)         := rfl
-        _ ≃ a^m * a - b^(step m)            := sub_substL Natural.pow_step
-        _ ≃ a^m * a - b^m * b               := sub_substR Natural.pow_step
-        _ ≃ a^m * (a - b) + (a^m - b^m) * b := sub_to_sum
-      have factor_sgn_sum : sgn (amab + abmb) ≃ sgn (a-b) * sgn (a+b) := calc
-        _ = sgn (amab + abmb)                     := rfl
-        _ ≃ sum_sub_err (sgn amab) (sgn abmb)     := sgn_sum terms_mul_nonneg
-        _ ≃ sum_sub_err (sab * sam) (sgn abmb)    := sse_substL factor_sumL
-        _ ≃ sum_sub_err (sab * sam) (sab * sgn b) := sse_substR factor_sumR
-        _ ≃ sab * sum_sub_err sam (sgn b)         := sse_compat_mul sgn_cubed
-        _ = sgn (a-b) * sum_sub_err sam (sgn b)   := rfl
-        _ ≃ sgn (a-b) * sgn (a+b)                 := AA.substR reduce
-      have drop_sgn_sum : sgn (a - b) * sgn (a + b) ≃ sgn (a - b) :=
-        mul_identR_reasons.mpr ‹sgn (a - b) ≃ 0 ∨ sgn (a + b) ≃ 1›
-
-      calc
-        _ = sgn (a^(step m) - b^(step m))         := rfl
-        _ ≃ sgn (a^m * (a - b) + (a^m - b^m) * b) := sgn_subst expand
-        _ ≃ sgn (a - b) * sgn (a + b)             := factor_sgn_sum
-        _ ≃ sgn (a - b)                           := drop_sgn_sum
+    have sub_to_sum
+        {w x y z : ℤ} : w*x - y*z ≃ w * (x - z) + (w - y) * z
+        := calc
+      _ = w*x - y*z                 := rfl
+      _ ≃ (w*x - w*z) + (w*z - y*z) := Rel.symm add_sub_telescope
+      _ ≃ w * (x - z) + (w*z - y*z) := AA.substL (Rel.symm AA.distribL)
+      _ ≃ w * (x - z) + (w - y) * z := AA.substR (Rel.symm AA.distribR)
+    have factor_sumL : sgn (a^m * (a - b)) ≃ sgn (a - b) * sgn (a^m) := calc
+      _ = sgn (a^m * (a - b))     := rfl
+      _ ≃ sgn (a^m) * sgn (a - b) := sgn_compat_mul
+      _ ≃ sgn (a - b) * sgn (a^m) := AA.comm
+    have factor_sumR : sgn ((a^m - b^m) * b) ≃ sgn (a - b) * sgn b := calc
+      _ = sgn ((a^m - b^m) * b)   := rfl
+      _ ≃ sgn (a^m - b^m) * sgn b := sgn_compat_mul
+      _ ≃ sgn (a - b) * sgn b     := AA.substL ih
+    have : (sgn a)^2 ≃ sgn a := sgn_sqr_nonneg.mpr ‹a ≥ 0›
+    have : sgn (a^m) ≃ sgn a := calc
+      _ = sgn (a^m) := rfl
+      _ ≃ (sgn a)^m := sgn_pow
+      _ ≃ sgn a     := pow_absorbL ‹m ≥ 1› ‹(sgn a)^2 ≃ sgn a›
+    let sab := sgn (a - b)
+    let sam := sgn (a^m)
+    let amab := a^m * (a - b)
+    let abmb := (a^m - b^m) * b
+    have : a * b ≥ 0 := mul_preserves_nonneg ‹a ≥ 0› ‹b ≥ 0›
+    have : sgn (a * b) ≥ 0 := sgn_preserves_ge_zero.mp ‹a * b ≥ 0›
+    have : sab^2 * sgn (a * b) ≥ 0 :=
+      mul_preserves_nonneg sqr_nonneg ‹sgn (a * b) ≥ 0›
+    have : sgn (amab * abmb) ≥ 0 := calc
+      _ = sgn (amab * abmb)           := rfl
+      _ ≃ sgn amab * sgn abmb         := sgn_compat_mul
+      _ ≃ (sab * sam) * sgn abmb      := AA.substL factor_sumL
+      _ ≃ (sab * sam) * (sab * sgn b) := AA.substR factor_sumR
+      _ ≃ (sab * sab) * (sam * sgn b) := AA.expr_xxfxxff_lr_swap_rl
+      _ ≃ sab^2 * (sam * sgn b)       := AA.substL (Rel.symm Natural.pow_two)
+      _ ≃ sab^2 * (sgn a * sgn b)     := AA.substR (AA.substL ‹sam ≃ sgn a›)
+      _ ≃ sab^2 * sgn (a * b)         := AA.substR (Rel.symm sgn_compat_mul)
+      _ ≥ 0                           := ‹sab^2 * sgn (a * b) ≥ 0›
+    have terms_mul_nonneg : amab * abmb ≥ 0 := sgn_preserves_ge_zero.mpr this
+    have sgn_cubed {x : ℤ} : (sgn x)^3 ≃ sgn x := calc
+      _ = (sgn x)^3           := rfl
+      _ ≃ (sgn x)^(2 * 1 + 1) := Natural.pow_substR Natural.three_odd
+      _ ≃ sgn x               := pow_sgn_odd
+    have reduce : sum_sub_err (sgn (a^m)) (sgn b) ≃ sgn (a + b) := calc
+      _ = sum_sub_err (sgn (a^m)) (sgn b) := rfl
+      _ ≃ sum_sub_err (sgn a) (sgn b)     := sse_substL ‹sgn (a^m) ≃ sgn a›
+      _ ≃ sgn (a + b)                     := Rel.symm (sgn_sum ‹a * b ≥ 0›)
+    have : a + b ≥ 0 := calc
+      _ = a + b := rfl
+      _ ≥ 0 + b := ge_addR.mp ‹a ≥ 0›
+      _ ≥ 0 + 0 := ge_addL.mp ‹b ≥ 0›
+      _ ≃ 0     := AA.identL
+    have : a + b > 0 ∨ a + b ≃ 0 := ge_split.mp ‹a + b ≥ 0›
+    have : sgn (a - b) ≃ 0 ∨ sgn (a + b) ≃ 1 := match this with
+    | Or.inl (_ : a + b > 0) =>
+      have : sgn (a + b) ≃ 1 := gt_zero_sgn.mp ‹a + b > 0›
+      Or.inr ‹sgn (a + b) ≃ 1›
+    | Or.inr (_ : a + b ≃ 0) =>
+      have (And.intro (_ : a ≃ 0) (_ : b ≃ 0)) :=
+        (zero_sum_split ‹a ≥ 0› ‹b ≥ 0›).mp ‹a + b ≃ 0›
+      have : sgn (a - b) ≃ 0 := calc
+        _ = sgn (a - b)     := rfl
+        _ ≃ sgn (0 - b)     := sgn_subst (sub_substL ‹a ≃ 0›)
+        _ ≃ sgn ((0:ℤ) - 0) := sgn_subst (sub_substR ‹b ≃ 0›)
+        _ ≃ sgn (0:ℤ)       := sgn_subst sub_same
+        _ ≃ 0               := sgn_zero.mp Rel.refl
+      Or.inl ‹sgn (a - b) ≃ 0›
+    have expand
+        : a^(step m) - b^(step m) ≃ a^m * (a - b) + (a^m - b^m) * b
+        := calc
+      _ = a^(step m) - b^(step m)         := rfl
+      _ ≃ a^m * a - b^(step m)            := sub_substL Natural.pow_step
+      _ ≃ a^m * a - b^m * b               := sub_substR Natural.pow_step
+      _ ≃ a^m * (a - b) + (a^m - b^m) * b := sub_to_sum
+    have factor_sgn_sum : sgn (amab + abmb) ≃ sgn (a-b) * sgn (a+b) := calc
+      _ = sgn (amab + abmb)                     := rfl
+      _ ≃ sum_sub_err (sgn amab) (sgn abmb)     := sgn_sum terms_mul_nonneg
+      _ ≃ sum_sub_err (sab * sam) (sgn abmb)    := sse_substL factor_sumL
+      _ ≃ sum_sub_err (sab * sam) (sab * sgn b) := sse_substR factor_sumR
+      _ ≃ sab * sum_sub_err sam (sgn b)         := sse_compat_mul sgn_cubed
+      _ = sgn (a-b) * sum_sub_err sam (sgn b)   := rfl
+      _ ≃ sgn (a-b) * sgn (a+b)                 := AA.substR reduce
+    have drop_sgn_sum : sgn (a - b) * sgn (a + b) ≃ sgn (a - b) :=
+      mul_identR_reasons.mpr ‹sgn (a - b) ≃ 0 ∨ sgn (a + b) ≃ 1›
+    calc
+      _ = sgn (a^(step m) - b^(step m))         := rfl
+      _ ≃ sgn (a^m * (a - b) + (a^m - b^m) * b) := sgn_subst expand
+      _ ≃ sgn (a - b) * sgn (a + b)             := factor_sgn_sum
+      _ ≃ sgn (a - b)                           := drop_sgn_sum
 
 /-- TODO -/
 theorem sgn_diff_pow
@@ -464,11 +471,12 @@ theorem sgn_diff_pow
       _ ≃ sgn (a - b) * sgn (n:ℤ) := AA.substR (Rel.symm ‹sgn (n:ℤ) ≃ 0›)
   | Or.inr (_ : n > 0) =>
     have : Positive n := Natural.lt_zero_pos.mpr ‹n > 0›
+    have : n ≥ 1 := Natural.positive_ge.mp ‹Positive n›
     have : Positive (n:ℤ) := positive_intro_nat ‹Positive n› Rel.refl
     have : sgn (n:ℤ) ≃ 1 := sgn_positive.mp ‹Positive (n:ℤ)›
     calc
       _ = sgn (a^n - b^n)         := rfl
-      _ ≃ sgn (a - b)             := sgn_diff_pow_pos ‹a ≥ 0› ‹b ≥ 0› ‹n > 0›
+      _ ≃ sgn (a - b)             := sgn_diff_pow_pos ‹a ≥ 0› ‹b ≥ 0› ‹n ≥ 1›
       _ ≃ sgn (a - b) * 1         := Rel.symm AA.identR
       _ ≃ sgn (a - b) * sgn (n:ℤ) := AA.substR (Rel.symm ‹sgn (n:ℤ) ≃ 1›)
 

@@ -727,6 +727,12 @@ theorem positive_ge {n : ℕ} : Positive n ↔ n ≥ 1 := by
     have : Positive n := lt_zero_pos.mpr this
     exact this
 
+/-- TODO -/
+theorem gt_zero_iff_ge_one {n : ℕ} : n > 0 ↔ n ≥ 1 := calc
+  _ ↔ n > 0      := Iff.rfl
+  _ ↔ Positive n := lt_zero_pos.symm
+  _ ↔ n ≥ 1      := positive_ge
+
 /--
 Useful result when needing to decrement the larger number in a _less than_
 relation.
