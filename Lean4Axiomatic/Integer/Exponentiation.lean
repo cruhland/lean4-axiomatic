@@ -230,12 +230,11 @@ theorem sgn_sum_pos_prod
     := by
   intro (_ : a * b > 0)
   show sgn (a + b) ≃ sgn a + sgn b - (sgn a) * (sgn b)^2
-  let sum_formula (x y : ℤ) : ℤ := x + y - x * y^2
   have (And.intro (_ : sgn a ≃ sgn b) _) :=
     mul_gt_zero_iff_sgn_same.mp ‹a * b > 0›
-  have sum_same {x y : ℤ} : x ≃ y → sum_formula x y ≃ y + y - y^3 := by
+  have sum_same {x y : ℤ} : x ≃ y → sum_sub_err x y ≃ y + y - y^3 := by
     intro (_ : x ≃ y)
-    show sum_formula x y ≃ y + y - y^3
+    show sum_sub_err x y ≃ y + y - y^3
     have : x * y^2 ≃ y^3 := calc
       _ = x * y^2    := rfl
       _ ≃ y * y^2    := AA.substL ‹x ≃ y›
@@ -243,11 +242,11 @@ theorem sgn_sum_pos_prod
       _ ≃ y^(step 2) := Rel.symm Natural.pow_step
       _ ≃ y^3        := Natural.pow_substR (Rel.symm Natural.literal_step)
     calc
-      _ = sum_formula x y := rfl
+      _ = sum_sub_err x y := rfl
       _ = x + y - x * y^2 := rfl
       _ ≃ y + y - x * y^2 := sub_substL (AA.substL ‹x ≃ y›)
       _ ≃ y + y - y^3     := sub_substR ‹x * y^2 ≃ y^3›
-  let s := sum_formula (sgn a) (sgn b)
+  let s := sum_sub_err (sgn a) (sgn b)
   have : s ≃ sgn b := calc
     _ = s                                   := rfl
     _ = sgn a + sgn b - (sgn a) * (sgn b)^2 := rfl
@@ -487,7 +486,16 @@ theorem sgn_diff_pow_pos
       _ ≃ sgn (a - b) * sgn (a + b)             := factor_sgn_sum
       _ ≃ sgn (a - b)                           := drop_sgn_sum
 
-/-- TODO -/
+/--
+The ordering of two nonnegative integers, each raised to the same natural
+number power (`sgn (a^n - b^n)`), is exactly the product of the ordering of the
+original integers with the sign of the power.
+
+**Property and proof intuition**: The power is either zero or positive. If it's
+zero, then both sides of the equivalence are zero. If it's positive, then by
+`sgn_diff_pow_pos` the powers can be dropped, and `sgn (n:ℤ)` can be included
+because it's equivalent to one.
+-/
 theorem sgn_diff_pow
     {a b : ℤ} {n : ℕ}
     : a ≥ 0 → b ≥ 0 → sgn (a^n - b^n) ≃ sgn (a - b) * sgn (n:ℤ)
@@ -498,22 +506,21 @@ theorem sgn_diff_pow
   have : n > 0 ∨ n ≃ 0 := Natural.ge_split ‹n ≥ 0›
   match this.symm with
   | Or.inl (_ : n ≃ 0) =>
-    have : a^n - b^n ≃ (n:ℤ) := calc
+    have : a^n - b^n ≃ 0 := calc
       _ = a^n - b^n := rfl
       _ ≃ a^0 - b^n := sub_substL (Natural.pow_substR ‹n ≃ 0›)
       _ ≃ a^0 - b^0 := sub_substR (Natural.pow_substR ‹n ≃ 0›)
       _ ≃ 1 - b^0   := sub_substL Natural.pow_zero
       _ ≃ (1:ℤ) - 1 := sub_substR Natural.pow_zero
-      _ ≃ 0         := zero_diff_iff_eqv.mpr Rel.refl
-      _ ≃ (n:ℤ)     := AA.subst₁ (Rel.symm ‹n ≃ 0›)
+      _ ≃ 0         := sub_same
     have : sgn (n:ℤ) ≃ 0 := calc
       _ = sgn (n:ℤ)     := rfl
       _ ≃ sgn ((0:ℕ):ℤ) := sgn_subst (AA.subst₁ ‹n ≃ 0›)
       _ ≃ 0             := sgn_zero.mp Rel.refl
     calc
       _ = sgn (a^n - b^n)         := rfl
-      _ ≃ sgn (n:ℤ)               := sgn_subst ‹a^n - b^n ≃ (n:ℤ)›
-      _ ≃ 0                       := ‹sgn (n:ℤ) ≃ 0›
+      _ ≃ sgn (0:ℤ)               := sgn_subst ‹a^n - b^n ≃ 0›
+      _ ≃ 0                       := sgn_zero.mp Rel.refl
       _ ≃ sgn (a - b) * 0         := Rel.symm AA.absorbR
       _ ≃ sgn (a - b) * sgn (n:ℤ) := AA.substR (Rel.symm ‹sgn (n:ℤ) ≃ 0›)
   | Or.inr (_ : n > 0) =>
