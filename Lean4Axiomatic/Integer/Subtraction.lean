@@ -194,6 +194,22 @@ theorem sub_assoc_addR {a b c : ℤ} : (a - b) + c ≃ a + (c - b) := calc
   _ ≃ a + (c - b)  := AA.substR (Rel.symm sub_defn)
 
 /--
+Subtraction "associates" with subtraction to its right.
+
+**Property intuition**: Subtracting `b` from `a`, and then `c` from the result,
+is equivalent to subtracting `b` and `c` from `a` together.
+
+**Proof intuition**: Expand subtraction into addition; rearrange.
+-/
+theorem sub_assoc_subR {a b c : ℤ} : (a - b) - c ≃ a - (b + c) := calc
+  _ = (a - b) - c   := rfl
+  _ ≃ (a - b) + -c  := sub_defn
+  _ ≃ (a + -b) + -c := AA.substL sub_defn
+  _ ≃ a + (-b + -c) := AA.assoc
+  _ ≃ a + -(b + c)  := AA.substR (Rel.symm neg_compat_add)
+  _ ≃ a - (b + c)   := Rel.symm sub_defn
+
+/--
 Move a subtraction's right operand to an addition's right operand, from left to
 right across an equivalence (or the reverse).
 
