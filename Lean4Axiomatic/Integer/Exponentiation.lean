@@ -371,6 +371,38 @@ theorem sse_compat_mul
     _ = a * sum_sub_err b c                 := rfl
 
 /-- TODO -/
+theorem sgn_diff_sqr
+    {a b : ℤ} : a ≥ 0 → b ≥ 0 → sgn (a^2 - b^2) ≃ sgn (a - b)
+    := by
+  intro (_ : a ≥ 0) (_ : b ≥ 0)
+  show sgn (a^2 - b^2) ≃ sgn (a - b)
+  have : a + b ≥ 0 := calc
+    _ = a + b := rfl
+    _ ≥ 0 + b := ge_addR.mp ‹a ≥ 0›
+    _ ≥ 0 + 0 := ge_addL.mp ‹b ≥ 0›
+    _ ≃ 0     := AA.identL
+  have : a + b > 0 ∨ a + b ≃ 0 := ge_split.mp ‹a + b ≥ 0›
+  have diff_zero_sum_one : sgn (a - b) ≃ 0 ∨ sgn (a + b) ≃ 1 := match this with
+  | Or.inl (_ : a + b > 0) =>
+    have : sgn (a + b) ≃ 1 := gt_zero_sgn.mp ‹a + b > 0›
+    Or.inr ‹sgn (a + b) ≃ 1›
+  | Or.inr (_ : a + b ≃ 0) =>
+    have (And.intro (_ : a ≃ 0) (_ : b ≃ 0)) :=
+      (zero_sum_split ‹a ≥ 0› ‹b ≥ 0›).mp ‹a + b ≃ 0›
+    have : sgn (a - b) ≃ 0 := calc
+      _ = sgn (a - b)     := rfl
+      _ ≃ sgn (0 - b)     := sgn_subst (sub_substL ‹a ≃ 0›)
+      _ ≃ sgn ((0:ℤ) - 0) := sgn_subst (sub_substR ‹b ≃ 0›)
+      _ ≃ sgn (0:ℤ)       := sgn_subst sub_same
+      _ ≃ 0               := sgn_zero.mp Rel.refl
+    Or.inl ‹sgn (a - b) ≃ 0›
+  calc
+    _ = sgn (a^2 - b^2)           := rfl
+    _ ≃ sgn ((a - b) * (a + b))   := sgn_subst factor_diff_squares
+    _ ≃ sgn (a - b) * sgn (a + b) := sgn_compat_mul
+    _ ≃ sgn (a - b)               := mul_identR_reasons.mpr diff_zero_sum_one
+
+/-- TODO -/
 theorem sgn_diff_pow_pos
     {a b : ℤ} {n : ℕ} : a ≥ 0 → b ≥ 0 → n ≥ 1 → sgn (a^n - b^n) ≃ sgn (a - b)
     := by
@@ -443,26 +475,6 @@ theorem sgn_diff_pow_pos
       _ = sum_sub_err (sgn (a^m)) (sgn b) := rfl
       _ ≃ sum_sub_err (sgn a) (sgn b)     := sse_substL ‹sgn (a^m) ≃ sgn a›
       _ ≃ sgn (a + b)                     := Rel.symm (sgn_sum ‹a * b ≥ 0›)
-    have : a + b ≥ 0 := calc
-      _ = a + b := rfl
-      _ ≥ 0 + b := ge_addR.mp ‹a ≥ 0›
-      _ ≥ 0 + 0 := ge_addL.mp ‹b ≥ 0›
-      _ ≃ 0     := AA.identL
-    have : a + b > 0 ∨ a + b ≃ 0 := ge_split.mp ‹a + b ≥ 0›
-    have : sgn (a - b) ≃ 0 ∨ sgn (a + b) ≃ 1 := match this with
-    | Or.inl (_ : a + b > 0) =>
-      have : sgn (a + b) ≃ 1 := gt_zero_sgn.mp ‹a + b > 0›
-      Or.inr ‹sgn (a + b) ≃ 1›
-    | Or.inr (_ : a + b ≃ 0) =>
-      have (And.intro (_ : a ≃ 0) (_ : b ≃ 0)) :=
-        (zero_sum_split ‹a ≥ 0› ‹b ≥ 0›).mp ‹a + b ≃ 0›
-      have : sgn (a - b) ≃ 0 := calc
-        _ = sgn (a - b)     := rfl
-        _ ≃ sgn (0 - b)     := sgn_subst (sub_substL ‹a ≃ 0›)
-        _ ≃ sgn ((0:ℤ) - 0) := sgn_subst (sub_substR ‹b ≃ 0›)
-        _ ≃ sgn (0:ℤ)       := sgn_subst sub_same
-        _ ≃ 0               := sgn_zero.mp Rel.refl
-      Or.inl ‹sgn (a - b) ≃ 0›
     have expand
         : a^(step m) - b^(step m) ≃ a^m * (a - b) + (a^m - b^m) * b
         := calc
@@ -478,13 +490,15 @@ theorem sgn_diff_pow_pos
       _ ≃ sab * sum_sub_err sam (sgn b)         := sse_compat_mul sgn_cubed
       _ = sgn (a-b) * sum_sub_err sam (sgn b)   := rfl
       _ ≃ sgn (a-b) * sgn (a+b)                 := AA.substR reduce
-    have drop_sgn_sum : sgn (a - b) * sgn (a + b) ≃ sgn (a - b) :=
-      mul_identR_reasons.mpr ‹sgn (a - b) ≃ 0 ∨ sgn (a + b) ≃ 1›
+    have to_diff_sqr : (a - b) * (a + b) ≃ a^2 - b^2 :=
+      Rel.symm factor_diff_squares
     calc
       _ = sgn (a^(step m) - b^(step m))         := rfl
       _ ≃ sgn (a^m * (a - b) + (a^m - b^m) * b) := sgn_subst expand
       _ ≃ sgn (a - b) * sgn (a + b)             := factor_sgn_sum
-      _ ≃ sgn (a - b)                           := drop_sgn_sum
+      _ ≃ sgn ((a - b) * (a + b))               := Rel.symm sgn_compat_mul
+      _ ≃ sgn (a^2 - b^2)                       := sgn_subst to_diff_sqr
+      _ ≃ sgn (a - b)                           := sgn_diff_sqr ‹a ≥ 0› ‹b ≥ 0›
 
 /--
 The ordering of two nonnegative integers, each raised to the same natural
