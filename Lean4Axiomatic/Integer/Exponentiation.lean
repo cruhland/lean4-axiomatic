@@ -411,7 +411,20 @@ theorem sse_compat_mul
     _ ≃ a * (b + c - b * c^2)               := Rel.symm AA.distribL
     _ = a * sum_sub_err b c                 := rfl
 
-/-- TODO -/
+/--
+Raising two nonnegative integers to the same positive natural number power
+preserves their ordering.
+
+**Property intuition**: Raising a nonnegative integer to a positive power
+increases it or leaves it the same. And since the integers are being raised to
+the _same_ power, they will be scaled proportionally, as occurs with
+`sgn_diff_sqr`.
+
+**Proof intuition**: By induction on `n ≥ 1`. The base case of `n ≃ 1` is
+trivial. The inductive case, for `n > 1`, proceeds by first reducing
+`a^(step n) - b^(step n)` to `a^2 - b^2` using algebra and properties of `sgn`
+and ordering. Then the conclusion is reached via `sgn_diff_sqr`.
+-/
 theorem sgn_diff_pow_pos
     {a b : ℤ} {n : ℕ} : a ≥ 0 → b ≥ 0 → n ≥ 1 → sgn (a^n - b^n) ≃ sgn (a - b)
     := by
