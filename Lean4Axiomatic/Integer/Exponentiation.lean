@@ -293,6 +293,24 @@ theorem sse_substR
     _ = sum_sub_err a b₂  := rfl
 
 /-- TODO -/
+theorem sse_same {a : ℤ} : a^3 ≃ a → sum_sub_err a a ≃ a := by
+  intro (_ : a^3 ≃ a)
+  show sum_sub_err a a ≃ a
+  have : a * a^2 ≃ a := calc
+    _ = a * a^2    := rfl
+    _ ≃ a^2 * a    := AA.comm
+    _ ≃ a^(step 2) := Rel.symm Natural.pow_step
+    _ ≃ a^3        := Natural.pow_substR (Rel.symm Natural.literal_step)
+    _ ≃ a          := ‹a^3 ≃ a›
+  calc
+    _ = sum_sub_err a a := rfl
+    _ = a + a - a * a^2 := rfl
+    _ ≃ a + a - a       := sub_substR ‹a * a^2 ≃ a›
+    _ ≃ a + (a - a)     := sub_assoc_addL
+    _ ≃ a + 0           := AA.substR sub_same
+    _ ≃ a               := AA.identR
+
+/-- TODO -/
 theorem sse_compat_mul
     {a b c : ℤ}
     : a^3 ≃ a → sum_sub_err (a * b) (a * c) ≃ a * sum_sub_err b c
@@ -319,39 +337,20 @@ theorem sse_compat_mul
     _ = a * sum_sub_err b c                 := rfl
 
 /-- TODO -/
-theorem sgn_sum_pos_prod
-    {a b : ℤ} : a * b > 0 → sgn (a + b) ≃ sum_sub_err (sgn a) (sgn b)
+theorem sgn_sum_eqv
+    {a b : ℤ} : sgn a ≃ sgn b → sgn (a + b) ≃ sum_sub_err (sgn a) (sgn b)
     := by
-  intro (_ : a * b > 0)
-  show sgn (a + b) ≃ sgn a + sgn b - (sgn a) * (sgn b)^2
-  have (And.intro (_ : sgn a ≃ sgn b) _) :=
-    mul_gt_zero_iff_sgn_same.mp ‹a * b > 0›
-  have sum_same {x y : ℤ} : x ≃ y → sum_sub_err x y ≃ y + y - y^3 := by
-    intro (_ : x ≃ y)
-    show sum_sub_err x y ≃ y + y - y^3
-    have : x * y^2 ≃ y^3 := calc
-      _ = x * y^2    := rfl
-      _ ≃ y * y^2    := AA.substL ‹x ≃ y›
-      _ ≃ y^2 * y    := AA.comm
-      _ ≃ y^(step 2) := Rel.symm Natural.pow_step
-      _ ≃ y^3        := Natural.pow_substR (Rel.symm Natural.literal_step)
-    calc
-      _ = sum_sub_err x y := rfl
-      _ = x + y - x * y^2 := rfl
-      _ ≃ y + y - x * y^2 := sub_substL (AA.substL ‹x ≃ y›)
-      _ ≃ y + y - y^3     := sub_substR ‹x * y^2 ≃ y^3›
+  intro (_ : sgn a ≃ sgn b)
+  show sgn (a + b) ≃ sum_sub_err (sgn a) (sgn b)
   let s := sum_sub_err (sgn a) (sgn b)
-  have : s ≃ sgn b := calc
+  have : sgn b ≃ s := Rel.symm $ calc
     _ = s                                   := rfl
-    _ = sgn a + sgn b - (sgn a) * (sgn b)^2 := rfl
-    _ ≃ sgn b + sgn b - (sgn b)^3           := sum_same ‹sgn a ≃ sgn b›
-    _ ≃ sgn b + sgn b - sgn b               := sub_substR sgn_cubed
-    _ ≃ sgn b + (sgn b - sgn b)             := sub_assoc_addL
-    _ ≃ sgn b + 0                           := AA.substR sub_same
-    _ ≃ sgn b                               := AA.identR
-  have : sgn b ≃ s := Rel.symm ‹s ≃ sgn b›
+    _ = sum_sub_err (sgn a) (sgn b)         := rfl
+    _ ≃ sum_sub_err (sgn b) (sgn b)         := sse_substL ‹sgn a ≃ sgn b›
+    _ ≃ sgn b                               := sse_same sgn_cubed
   have : sgn a ≃ s := Rel.trans ‹sgn a ≃ sgn b› ‹sgn b ≃ s›
   have : sgn (a + b) ≃ s := add_preserves_sign ‹sgn a ≃ s› ‹sgn b ≃ s›
+  have : sgn (a + b) ≃ sum_sub_err (sgn a) (sgn b) := ‹sgn (a + b) ≃ s›
   exact this
 
 /-- TODO -/
@@ -359,11 +358,15 @@ theorem sgn_sum
     {a b : ℤ} : a * b ≥ 0 → sgn (a + b) ≃ sum_sub_err (sgn a) (sgn b)
     := by
   intro (_ : a * b ≥ 0)
-  show sgn (a + b) ≃ sgn a + sgn b - (sgn a) * (sgn b)^2
+  show sgn (a + b) ≃ sum_sub_err (sgn a) (sgn b)
   have : a * b > 0 ∨ a * b ≃ 0 := ge_split.mp ‹a * b ≥ 0›
-  exact match this with
+  match this with
   | Or.inl (_ : a * b > 0) =>
-    sgn_sum_pos_prod ‹a * b > 0›
+    have (And.intro (_ : sgn a ≃ sgn b) _) :=
+      mul_gt_zero_iff_sgn_same.mp ‹a * b > 0›
+    have : sgn (a + b) ≃ sum_sub_err (sgn a) (sgn b) :=
+      sgn_sum_eqv ‹sgn a ≃ sgn b›
+    exact this
   | Or.inr (_ : a * b ≃ 0) =>
     have : a ≃ 0 ∨ b ≃ 0 := mul_split_zero.mp ‹a * b ≃ 0›
     have : sgn (a + b) ≃ sgn a + sgn b := sgn_sum_zero_term ‹a ≃ 0 ∨ b ≃ 0›
@@ -381,6 +384,7 @@ theorem sgn_sum
       _ ≃ sgn a + sgn b                       := ‹sgn (a + b) ≃ sgn a + sgn b›
       _ ≃ sgn a + sgn b - 0                   := Rel.symm sub_identR
       _ ≃ sgn a + sgn b - (sgn a) * (sgn b)^2 := sub_substR zero_eqv_sgn_prod
+      _ = sum_sub_err (sgn a) (sgn b)         := rfl
 
 /--
 Raising two nonnegative integers to the same positive natural number power
