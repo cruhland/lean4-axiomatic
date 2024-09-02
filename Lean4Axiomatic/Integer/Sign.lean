@@ -1860,4 +1860,37 @@ theorem nonneg_square {a : ℤ} : sgn (a * a) ≄ -1 := by
   have : sgn a ≄ sgn a := mul_sqrt1_neqv.mp ‹sgn a * sgn a ≃ -1›
   exact absurd Rel.refl this
 
+/--
+The signum function is compatible with addition if one of the operands is zero.
+
+**Property and proof intuition**: Zero is the additive identity, and its sign
+is also zero, so the zero terms drop out of the equivalence.
+-/
+theorem sgn_sum_zero_term
+    {a b : ℤ} : a ≃ 0 ∨ b ≃ 0 → sgn (a + b) ≃ sgn a + sgn b
+    := by
+  intro (_ : a ≃ 0 ∨ b ≃ 0)
+  show sgn (a + b) ≃ sgn a + sgn b
+
+  have sgn_sum_zeroL {x y : ℤ} : x ≃ 0 → sgn (x + y) ≃ sgn x + sgn y := by
+    intro (_ : x ≃ 0)
+    show sgn (x + y) ≃ sgn x + sgn y
+    calc
+      _ = sgn (x + y)   := rfl
+      _ ≃ sgn (0 + y)   := sgn_subst (AA.substL ‹x ≃ 0›)
+      _ ≃ sgn y         := sgn_subst AA.identL
+      _ ≃ 0 + sgn y     := Rel.symm AA.identL
+      _ ≃ sgn x + sgn y := AA.substL (Rel.symm (sgn_zero.mp ‹x ≃ 0›))
+
+  match ‹a ≃ 0 ∨ b ≃ 0› with
+  | Or.inl (_ : a ≃ 0) =>
+    have : sgn (a + b) ≃ sgn a + sgn b := sgn_sum_zeroL ‹a ≃ 0›
+    exact this
+  | Or.inr (_ : b ≃ 0) =>
+    calc
+      _ = sgn (a + b)   := rfl
+      _ ≃ sgn (b + a)   := sgn_subst AA.comm
+      _ ≃ sgn b + sgn a := sgn_sum_zeroL ‹b ≃ 0›
+      _ ≃ sgn a + sgn b := AA.comm
+
 end Lean4Axiomatic.Integer
