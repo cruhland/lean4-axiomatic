@@ -263,9 +263,24 @@ theorem sgn_cubed {a : ℤ} : (sgn a)^3 ≃ sgn a := by
   have : (sgn a)^3 ≃ sgn a := cube_idemp_reasons.mpr this
   exact this
 
+/--
+A binary operation that sums its operands, then subtracts an "error term".
+
+An auxiliary definition that's useful in the proof of `sgn_diff_pow_pos` and
+related lemmas. The "error term" only really lives up to its name when the
+operands are sign values, i.e. are `0`, `1`, or `-1`. See `sgn_sum`.
+-/
 def sum_sub_err (a b : ℤ) : ℤ := a + b - a * b^2
 
-/-- TODO -/
+/--
+The function `sum_sub_err` respects equivalence of its left operand.
+
+**Property intuition**: For `sum_sub_err` to be a function on integers, it must
+obey this property.
+
+**Proof intuition**: Substitute the left operand in the expression defining
+`sum_sub_err`; this is possible because it uses substitutive operations.
+-/
 theorem sse_substL
     {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → sum_sub_err a₁ b ≃ sum_sub_err a₂ b
     := by
@@ -278,7 +293,15 @@ theorem sse_substL
     _ ≃ a₂ + b - a₂ * b^2 := sub_substR (AA.substL ‹a₁ ≃ a₂›)
     _ = sum_sub_err a₂ b  := rfl
 
-/-- TODO -/
+/--
+The function `sum_sub_err` respects equivalence of its right operand.
+
+**Property intuition**: For `sum_sub_err` to be a function on integers, it must
+obey this property.
+
+**Proof intuition**: Substitute the right operand in the expression defining
+`sum_sub_err`; this is possible because it uses substitutive operations.
+-/
 theorem sse_substR
     {a b₁ b₂ : ℤ} : b₁ ≃ b₂ → sum_sub_err a b₁ ≃ sum_sub_err a b₂
     := by
@@ -292,7 +315,14 @@ theorem sse_substR
     _ ≃ a + b₂ - a * b₂^2 := sub_substR (AA.substR ‹b₁^2 ≃ b₂^2›)
     _ = sum_sub_err a b₂  := rfl
 
-/-- TODO -/
+/--
+When invoked on the same sign value (anything satisfying `a^3 ≃ a`) for both
+operands, `sum_sub_err` evaluates to that value as well.
+
+**Property and proof intuition**: Due to the sign value constraint `a^3 ≃ a`,
+the "error term" reduces to `a`. Subtracting it from the `a + a` sum value
+gives the result.
+-/
 theorem sse_same {a : ℤ} : a^3 ≃ a → sum_sub_err a a ≃ a := by
   intro (_ : a^3 ≃ a)
   show sum_sub_err a a ≃ a
