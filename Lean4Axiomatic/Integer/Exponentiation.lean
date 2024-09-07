@@ -398,7 +398,20 @@ theorem sse_compat_mul
     _ ≃ a * (b + c - b * c^2)               := Rel.symm AA.distribL
     _ = a * sum_sub_err b c                 := rfl
 
-/-- TODO -/
+/--
+Express the sign of the sum of two integers in terms of their individual signs.
+
+The integers must have a nonnegative product; i.e. their signs must be nonzero
+and identical, or at least one of them must be zero.
+
+**Proof intuition**: Split the assumption into two cases: positive product or
+zero product. A positive product implies that `a` and `b` have the same sign,
+which is also the sign of their sum by `add_preserves_sign`. The goal is found
+with an application of `sse_same`. In the zero product case, one of the values
+must be zero, so `sgn (a + b) ≃ sgn a + sgn b` holds, by `sgn_sum_zero_term`.
+The result follows because the remaining term in `sum_sub_err (sgn a) (sgn b)`
+is zero when either of the inputs is zero.
+-/
 theorem sgn_sum
     {a b : ℤ} : a * b ≥ 0 → sgn (a + b) ≃ sum_sub_err (sgn a) (sgn b)
     := by
@@ -407,18 +420,15 @@ theorem sgn_sum
   have : a * b > 0 ∨ a * b ≃ 0 := ge_split.mp ‹a * b ≥ 0›
   match this with
   | Or.inl (_ : a * b > 0) =>
-    let s := sum_sub_err (sgn a) (sgn b)
     have (And.intro (_ : sgn a ≃ sgn b) _) :=
       mul_gt_zero_iff_sgn_same.mp ‹a * b > 0›
-    have : sgn b ≃ s := Rel.symm $ calc
-      _ = s                           := rfl
-      _ = sum_sub_err (sgn a) (sgn b) := rfl
-      _ ≃ sum_sub_err (sgn b) (sgn b) := sse_substL ‹sgn a ≃ sgn b›
-      _ ≃ sgn b                       := sse_same sgn_cubed
-    have : sgn a ≃ s := Rel.trans ‹sgn a ≃ sgn b› ‹sgn b ≃ s›
-    have : sgn (a + b) ≃ s := add_preserves_sign ‹sgn a ≃ s› ‹sgn b ≃ s›
-    have : sgn (a + b) ≃ sum_sub_err (sgn a) (sgn b) := ‹sgn (a + b) ≃ s›
-    exact this
+    have : sgn (a + b) ≃ sgn a :=
+      add_preserves_sign Rel.refl (Rel.symm ‹sgn a ≃ sgn b›)
+    calc
+      _ = sgn (a + b)                 := rfl
+      _ ≃ sgn a                       := ‹sgn (a + b) ≃ sgn a›
+      _ ≃ sum_sub_err (sgn a) (sgn a) := Rel.symm (sse_same sgn_cubed)
+      _ ≃ sum_sub_err (sgn a) (sgn b) := sse_substR ‹sgn a ≃ sgn b›
   | Or.inr (_ : a * b ≃ 0) =>
     have : a ≃ 0 ∨ b ≃ 0 := mul_split_zero.mp ‹a * b ≃ 0›
     have : sgn (a + b) ≃ sgn a + sgn b := sgn_sum_zero_term ‹a ≃ 0 ∨ b ≃ 0›
@@ -450,7 +460,8 @@ the _same_ power, they will be scaled proportionally, as occurs with
 **Proof intuition**: By induction on `n ≥ 1`. The base case of `n ≃ 1` is
 trivial. The inductive case, for `n > 1`, proceeds by first reducing
 `a^(step n) - b^(step n)` to `a^2 - b^2` using algebra and properties of `sgn`
-and ordering. Then the conclusion is reached via `sgn_diff_sqr`.
+and ordering, in particular `sgn_sum` and `sse_compat_mul`. Then the conclusion
+is reached via `sgn_diff_sqr`.
 -/
 theorem sgn_diff_pow_pos
     {a b : ℤ} {n : ℕ} : a ≥ 0 → b ≥ 0 → n ≥ 1 → sgn (a^n - b^n) ≃ sgn (a - b)
