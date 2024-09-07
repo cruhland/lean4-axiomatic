@@ -1552,40 +1552,73 @@ theorem sgn_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → sgn a₁ ≃ sgn a₂ :=
       sgn a₂ ≃ _ := Rel.refl
 
 /--
+The only values for which `sgn` leaves its input unchanged are zero, one, and
+negative one.
+
+**Property intuition**: We already know that zero, one, and negative one are
+the only possible outputs of `sgn`. But they are also all fixed points because
+`sgn` does not change the sign of its input.
+
+**Proof intuition**: The forward direction follows immediately from trichotomy.
+In the reverse direction, the three values of `a` correspond with zero,
+positive, and negative. The `sgn` of zero is zero, the `sgn` of a positive
+value is one, and the `sgn` of a negative value is negative one.
+-/
+theorem sgn_fixed_points {a : ℤ} : sgn a ≃ a ↔ a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : sgn a ≃ a)
+    show a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1
+    have : a ≃ sgn a := Rel.symm ‹sgn a ≃ a›
+    have : AA.OneOfThree₁ (sgn a ≃ 0) (sgn a ≃ 1) (sgn a ≃ -1) :=
+      sgn_trichotomy a
+    exact match this with
+    | AA.OneOfThree₁.first (_ : sgn a ≃ 0) =>
+      Or.inl (Rel.trans ‹a ≃ sgn a› ‹sgn a ≃ 0›)
+    | AA.OneOfThree₁.second (_ : sgn a ≃ 1) =>
+      Or.inr (Or.inl (Rel.trans ‹a ≃ sgn a› ‹sgn a ≃ 1›))
+    | AA.OneOfThree₁.third (_ : sgn a ≃ -1) =>
+      Or.inr (Or.inr (Rel.trans ‹a ≃ sgn a› ‹sgn a ≃ -1›))
+  case mpr =>
+    intro (_ : a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1)
+    show sgn a ≃ a
+    match ‹a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1› with
+    | Or.inl (_ : a ≃ 0) =>
+      calc
+        _ = sgn a := rfl
+        _ ≃ 0     := sgn_zero.mp ‹a ≃ 0›
+        _ ≃ a     := Rel.symm ‹a ≃ 0›
+    | Or.inr (Or.inl (_ : a ≃ 1)) =>
+      have : Positive a := AA.substFn (Rel.symm ‹a ≃ 1›) one_positive
+      calc
+        _ = sgn a := rfl
+        _ ≃ 1     := sgn_positive.mp ‹Positive a›
+        _ ≃ a     := Rel.symm ‹a ≃ 1›
+    | Or.inr (Or.inr (_ : a ≃ -1)) =>
+      have : Negative a := AA.substFn (Rel.symm ‹a ≃ -1›) neg_one_negative
+      calc
+        _ = sgn a := rfl
+        _ ≃ -1    := sgn_negative.mp ‹Negative a›
+        _ ≃ a     := Rel.symm ‹a ≃ -1›
+
+/--
 The `sgn` function is idempotent.
 
 **Property intuition**: The `sgn` function returns a canonical representative
 of the states zero, positive, and negative. The sign value of this
 representative is of course the same number.
 
-**Proof intuition**: Split `a` into zero, positive, and negative states. Use
-the definition of `sgn` and its substitutive property to show that `sgn a` and
-`sgn (sgn a)` give the same result in each case.
+**Proof intuition**: Follows directly from `sgn_trichotomy` and
+`sgn_fixed_points`.
 -/
 theorem sgn_idemp {a : ℤ} : sgn (sgn a) ≃ sgn a := by
-  have : AA.OneOfThree (a ≃ 0) (Positive a) (Negative a) :=
-    (sign_trichotomy a).atLeastOne
-  match this with
-  | AA.OneOfThree.first (_ : a ≃ 0) =>
-    have : sgn a ≃ 0 := sgn_zero.mp ‹a ≃ 0›
-    calc
-      sgn (sgn a) ≃ _ := sgn_subst ‹sgn a ≃ 0›
-      sgn (0 : ℤ) ≃ _ := sgn_subst (Rel.symm ‹a ≃ 0›)
-      sgn a       ≃ _ := Rel.refl
-  | AA.OneOfThree.second (_ : Positive a) =>
-    have : sgn a ≃ 1 := sgn_positive.mp ‹Positive a›
-    calc
-      sgn (sgn a) ≃ _ := sgn_subst ‹sgn a ≃ 1›
-      sgn (1 : ℤ) ≃ _ := sgn_positive.mp one_positive
-      1           ≃ _ := Rel.symm ‹sgn a ≃ 1›
-      sgn a       ≃ _ := Rel.refl
-  | AA.OneOfThree.third (_ : Negative a) =>
-    have : sgn a ≃ -1 := sgn_negative.mp ‹Negative a›
-    calc
-      sgn (sgn a)  ≃ _ := sgn_subst ‹sgn a ≃ -1›
-      sgn (-1 : ℤ) ≃ _ := sgn_negative.mp neg_one_negative
-      (-1)         ≃ _ := Rel.symm ‹sgn a ≃ -1›
-      sgn a        ≃ _ := Rel.refl
+  have : AA.OneOfThree₁ (sgn a ≃ 0) (sgn a ≃ 1) (sgn a ≃ -1) := sgn_trichotomy a
+  have : sgn a ≃ 0 ∨ sgn a ≃ 1 ∨ sgn a ≃ -1 := match this with
+  | AA.OneOfThree₁.first (_ : sgn a ≃ 0) => Or.inl ‹sgn a ≃ 0›
+  | AA.OneOfThree₁.second (_ : sgn a ≃ 1) => Or.inr (Or.inl ‹sgn a ≃ 1›)
+  | AA.OneOfThree₁.third (_ : sgn a ≃ -1) => Or.inr (Or.inr ‹sgn a ≃ -1›)
+  have : sgn (sgn a) ≃ sgn a := sgn_fixed_points.mpr this
+  exact this
 
 /--
 Both factors in a nonzero product have sign values that are square roots of

@@ -201,6 +201,22 @@ theorem sgn_diff_sqr
     _ ≃ sgn (a - b)               := mul_identR_reasons.mpr diff_zero_sum_one
 
 /--
+The factors of `a^3` can be arranged as `a * a^2`.
+
+This trivial lemma is useful for several integer exponentiation theorems.
+
+**Property intuition**: `a^3 ≃ a * a * a ≃ a * (a * a) ≃ a * a^2`
+
+**Proof intuition**: Convert `3` to `step 2` so that `pow_step` can be used to
+separate a factor of `a`.
+-/
+theorem cube_splitL {a : ℤ} : a^3 ≃ a * a^2 := calc
+  _ = a^3        := rfl
+  _ ≃ a^(step 2) := Natural.pow_substR Natural.literal_step
+  _ ≃ a^2 * a    := Natural.pow_step
+  _ ≃ a * a^2    := AA.comm
+
+/--
 Zero, one, and negative one are the only integers that are identical to their
 cubes.
 
@@ -214,11 +230,6 @@ side into `a * (a - 1) * (a + 1)` using algebra and `factor_diff_squares`. Then
 apply `mul_split_zero` twice and rearrange to get the result.
 -/
 theorem cube_idemp_reasons {a : ℤ} : a^3 ≃ a ↔ a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1 := by
-  have : a^3 ≃ a * a^2 := calc
-    _ = a^3        := rfl
-    _ ≃ a^(step 2) := Natural.pow_substR Natural.literal_step
-    _ ≃ a^2 * a    := Natural.pow_step
-    _ ≃ a * a^2    := AA.comm
   have : a ≃ a * 1^2 := calc
     _ = a       := rfl
     _ ≃ a * 1   := Rel.symm AA.identR
@@ -238,7 +249,7 @@ theorem cube_idemp_reasons {a : ℤ} : a^3 ≃ a ↔ a ≃ 0 ∨ a ≃ 1 ∨ a �
     _ ↔ a ≃ 1 ∨ a ≃ -1        := iff_subst_covar or_mapR ‹a + 1 ≃ 0 ↔ a ≃ -1›
   calc
     _ ↔ a^3 ≃ a                       := Iff.rfl
-    _ ↔ a * a^2 ≃ a                   := AA.eqv_substL_iff ‹a^3 ≃ a * a^2›
+    _ ↔ a * a^2 ≃ a                   := AA.eqv_substL_iff cube_splitL
     _ ↔ a * a^2 ≃ a * 1^2             := AA.eqv_substR_iff ‹a ≃ a * 1^2›
     _ ↔ a * a^2 - a * 1^2 ≃ 0         := zero_diff_iff_eqv.symm
     _ ↔ a * ((a - 1) * (a + 1)) ≃ 0   := AA.eqv_substL_iff factor
@@ -262,6 +273,30 @@ theorem sgn_cubed {a : ℤ} : (sgn a)^3 ≃ sgn a := by
     Or.inr (Or.inr ‹sgn a ≃ -1›)
   have : (sgn a)^3 ≃ sgn a := cube_idemp_reasons.mpr this
   exact this
+
+/--
+The only values that are identical to their cube are the outputs of `sgn`.
+
+**Property and proof intuition**: From `sgn_cubed`, we know that the outputs of
+`sgn` are identical to their cube. And from `cube_idemp_reasons`, we know that
+the values identical to their cube are the outputs of `sgn`.
+-/
+theorem cube_idemp_iff_sgn {a : ℤ} : a^3 ≃ a ↔ ∃ (b : ℤ), a ≃ sgn b := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a^3 ≃ a)
+    show ∃ (b : ℤ), a ≃ sgn b
+    have : a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1 := cube_idemp_reasons.mp ‹a^3 ≃ a›
+    have : sgn a ≃ a := sgn_fixed_points.mpr ‹a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1›
+    exact Exists.intro a (Rel.symm ‹sgn a ≃ a›)
+  case mpr =>
+    intro (Exists.intro (b : ℤ) (_ : a ≃ sgn b))
+    show a^3 ≃ a
+    calc
+      _ = a^3       := rfl
+      _ ≃ (sgn b)^3 := Natural.pow_substL ‹a ≃ sgn b›
+      _ ≃ sgn b     := sgn_cubed
+      _ ≃ a         := Rel.symm ‹a ≃ sgn b›
 
 /--
 A binary operation that sums its operands, then subtracts an "error term".
@@ -316,8 +351,9 @@ theorem sse_substR
     _ = sum_sub_err a b₂  := rfl
 
 /--
-When invoked on the same sign value (anything satisfying `a^3 ≃ a`) for both
-operands, `sum_sub_err` evaluates to that value as well.
+When invoked on the same value for both operands, where the value must be a
+result of `sgn` (satisfying `a^3 ≃ a`), then `sum_sub_err` evaluates to that
+value as well.
 
 **Property and proof intuition**: Due to the sign value constraint `a^3 ≃ a`,
 the "error term" reduces to `a`. Subtracting it from the `a + a` sum value
@@ -326,38 +362,34 @@ gives the result.
 theorem sse_same {a : ℤ} : a^3 ≃ a → sum_sub_err a a ≃ a := by
   intro (_ : a^3 ≃ a)
   show sum_sub_err a a ≃ a
-  have : a * a^2 ≃ a := calc
-    _ = a * a^2    := rfl
-    _ ≃ a^2 * a    := AA.comm
-    _ ≃ a^(step 2) := Rel.symm Natural.pow_step
-    _ ≃ a^3        := Natural.pow_substR (Rel.symm Natural.literal_step)
-    _ ≃ a          := ‹a^3 ≃ a›
   calc
     _ = sum_sub_err a a := rfl
     _ = a + a - a * a^2 := rfl
-    _ ≃ a + a - a       := sub_substR ‹a * a^2 ≃ a›
+    _ ≃ a + a - a^3     := sub_substR (Rel.symm cube_splitL)
+    _ ≃ a + a - a       := sub_substR ‹a^3 ≃ a›
     _ ≃ a + (a - a)     := sub_assoc_addL
     _ ≃ a + 0           := AA.substR sub_same
     _ ≃ a               := AA.identR
 
-/-- TODO -/
+/--
+A factor can be moved between the arguments of `sum_sub_err` and its result, if
+that factor is equivalent to its own cube.
+
+**Proof intuition**: Direct simplification using algebra. The assumption
+`a^3 ≃ a` is only used once.
+-/
 theorem sse_compat_mul
     {a b c : ℤ}
     : a^3 ≃ a → sum_sub_err (a * b) (a * c) ≃ a * sum_sub_err b c
     := by
   intro (_ : a^3 ≃ a)
   show sum_sub_err (a * b) (a * c) ≃ a * sum_sub_err b c
-  have : a * a^2 ≃ a := calc
-    _ = a * a^2    := rfl
-    _ ≃ a^2 * a    := AA.comm
-    _ ≃ a^(step 2) := Rel.symm Natural.pow_step
-    _ ≃ a^3        := Natural.pow_substR (Rel.symm Natural.literal_step)
-    _ ≃ a          := ‹a^3 ≃ a›
   have pull_out_a : (a * b) * (a * c)^2 ≃ a * (b * c^2) := calc
     _ = (a * b) * (a * c)^2   := rfl
     _ ≃ (a * b) * (a^2 * c^2) := AA.substR Natural.pow_distribR_mul
     _ ≃ (a * a^2) * (b * c^2) := AA.expr_xxfxxff_lr_swap_rl
-    _ ≃ a * (b * c^2)         := AA.substL ‹a * a^2 ≃ a›
+    _ ≃ a^3 * (b * c^2)       := AA.substL (Rel.symm cube_splitL)
+    _ ≃ a * (b * c^2)         := AA.substL ‹a^3 ≃ a›
   calc
     _ = sum_sub_err (a * b) (a * c)         := rfl
     _ = a * b + a * c - (a * b) * (a * c)^2 := rfl
@@ -365,23 +397,6 @@ theorem sse_compat_mul
     _ ≃ a * (b + c) - a * (b * c^2)         := sub_substR pull_out_a
     _ ≃ a * (b + c - b * c^2)               := Rel.symm AA.distribL
     _ = a * sum_sub_err b c                 := rfl
-
-/-- TODO -/
-theorem sgn_sum_eqv
-    {a b : ℤ} : sgn a ≃ sgn b → sgn (a + b) ≃ sum_sub_err (sgn a) (sgn b)
-    := by
-  intro (_ : sgn a ≃ sgn b)
-  show sgn (a + b) ≃ sum_sub_err (sgn a) (sgn b)
-  let s := sum_sub_err (sgn a) (sgn b)
-  have : sgn b ≃ s := Rel.symm $ calc
-    _ = s                                   := rfl
-    _ = sum_sub_err (sgn a) (sgn b)         := rfl
-    _ ≃ sum_sub_err (sgn b) (sgn b)         := sse_substL ‹sgn a ≃ sgn b›
-    _ ≃ sgn b                               := sse_same sgn_cubed
-  have : sgn a ≃ s := Rel.trans ‹sgn a ≃ sgn b› ‹sgn b ≃ s›
-  have : sgn (a + b) ≃ s := add_preserves_sign ‹sgn a ≃ s› ‹sgn b ≃ s›
-  have : sgn (a + b) ≃ sum_sub_err (sgn a) (sgn b) := ‹sgn (a + b) ≃ s›
-  exact this
 
 /-- TODO -/
 theorem sgn_sum
@@ -392,10 +407,17 @@ theorem sgn_sum
   have : a * b > 0 ∨ a * b ≃ 0 := ge_split.mp ‹a * b ≥ 0›
   match this with
   | Or.inl (_ : a * b > 0) =>
+    let s := sum_sub_err (sgn a) (sgn b)
     have (And.intro (_ : sgn a ≃ sgn b) _) :=
       mul_gt_zero_iff_sgn_same.mp ‹a * b > 0›
-    have : sgn (a + b) ≃ sum_sub_err (sgn a) (sgn b) :=
-      sgn_sum_eqv ‹sgn a ≃ sgn b›
+    have : sgn b ≃ s := Rel.symm $ calc
+      _ = s                           := rfl
+      _ = sum_sub_err (sgn a) (sgn b) := rfl
+      _ ≃ sum_sub_err (sgn b) (sgn b) := sse_substL ‹sgn a ≃ sgn b›
+      _ ≃ sgn b                       := sse_same sgn_cubed
+    have : sgn a ≃ s := Rel.trans ‹sgn a ≃ sgn b› ‹sgn b ≃ s›
+    have : sgn (a + b) ≃ s := add_preserves_sign ‹sgn a ≃ s› ‹sgn b ≃ s›
+    have : sgn (a + b) ≃ sum_sub_err (sgn a) (sgn b) := ‹sgn (a + b) ≃ s›
     exact this
   | Or.inr (_ : a * b ≃ 0) =>
     have : a ≃ 0 ∨ b ≃ 0 := mul_split_zero.mp ‹a * b ≃ 0›
