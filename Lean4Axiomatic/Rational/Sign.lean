@@ -331,7 +331,16 @@ theorem sgn_recip {p : ℚ} [AP (p ≄ 0)] : sgn (p⁻¹) ≃ sgn p := by
     sgn (1 * p)                 ≃ _ := sgn_subst mul_identL
     sgn p                       ≃ _ := Rel.refl
 
-/-- TODO -/
+/--
+The sign of a division is the product of the signs of its operands.
+
+**Property intuition**: Signs can be viewed as multiplicative factors on their
+underlying number. The factors from the numerator and the denominator can be
+pulled out into factors of the division's result.
+
+**Proof intuition**: Expand the division into multiplication by a reciprocal,
+then apply `sgn_compat_mul` and `sgn_recip`.
+-/
 theorem sgn_div {p q : ℚ} [AP (q ≄ 0)] : sgn (p / q) ≃ sgn p * sgn q := calc
   _ = sgn (p / q)       := rfl
   _ ≃ sgn (p * q⁻¹)     := sgn_subst div_mul_recip
@@ -342,10 +351,7 @@ theorem sgn_div {p q : ℚ} [AP (q ≄ 0)] : sgn (p / q) ≃ sgn p * sgn q := ca
 The sign of a fraction formed from integers is the product of the integers'
 signs.
 
-TODO update
-
-**Property and proof intuition**: Division is multiplication by a reciprocal,
-and since reciprocal preserves signs, it can be ignored.
+**Property and proof intuition**: By `sgn_div` and `sgn_from_integer`.
 -/
 theorem sgn_div_integers
     {a b : ℤ} [Integer.Nonzero b] : sgn ((a:ℚ) / (b:ℚ)) ≃ sgn a * sgn b
@@ -481,9 +487,12 @@ theorem sgn_sub_cancelR_div_neg
 The square of a rational number is nonnegative.
 
 **Property intuition**: The product of two negative numbers is positive, and
-zero times anything is zero, so this must be true.
+zero times anything is zero.
 
-**Proof intuition**: TODO
+**Proof intuition**: An equivalent expression for the sign of the squared
+rational is `sgn (sgn p * sgn p)`, because `sgn` is idempotent. That new
+expression is nonnegative, by `Integer.nonneg_square`, and thus the original
+expression is too.
 -/
 theorem nonneg_square {p : ℚ} : sgn (p * p) ≄ -1 := by
   have : sgn (sgn p * sgn p) ≃ sgn (p * p) := calc
@@ -939,7 +948,16 @@ theorem add_preserves_sign
       ≃ _ := Rel.refl
   exact this
 
-/-- TODO -/
+/--
+Division by a rational number distributes over addition of rational numbers.
+
+**Property intuition**: The result of the division is the same, whether the
+numbers are added before dividing them or after.
+
+**Proof intuition**: Expand division into multiplication by a reciprocal. The
+reciprocal factor distributes over addition. Then convert the two terms back to
+division.
+-/
 theorem div_distribR {p q r : ℚ} [AP (r ≄ 0)] : (p + q)/r ≃ p/r + q/r := calc
   _ = (p + q)/r         := rfl
   _ ≃ (p + q) * r⁻¹     := div_mul_recip
@@ -947,7 +965,14 @@ theorem div_distribR {p q r : ℚ} [AP (r ≄ 0)] : (p + q)/r ≃ p/r + q/r := c
   _ ≃ p/r + q * r⁻¹     := add_substL (eqv_symm div_mul_recip)
   _ ≃ p/r + q/r         := add_substR (eqv_symm div_mul_recip)
 
-/-- TODO -/
+/--
+The result of adding two ratios of rational numbers can be written as a single
+ratio.
+
+**Property and proof intuition**: Multiply both terms by ratios of factors that
+cancel to `1`, so that a common denominator value can be reached. Then directly
+add the numerators via `div_distribR`.
+-/
 theorem add_fractions
     {p q r s : ℚ} [AP (q ≄ 0)] [AP (s ≄ 0)]
     : p/q + r/s ≃ (p * s + q * r)/(q * s)
@@ -961,7 +986,15 @@ theorem add_fractions
   _ ≃ (p*s)/(q*s) + (q*r)/(q*s) := add_substR div_mul_swap
   _ ≃ (p*s + q*r)/(q*s)         := eqv_symm div_distribR
 
-/-- TODO -/
+/--
+The result of subtracting two ratios of rational numbers can be written as a
+single ratio.
+
+**Property and proof intuition**: Convert subtraction into addition of a
+negated value. Move the negation to the numerator of the ratio, then add the
+ratios via `add_fractions`. Move the negation in the result to cover an entire
+additive term, then convert back to subtraction.
+-/
 theorem sub_fractions
     {p q r s : ℚ} [AP (q ≄ 0)] [AP (s ≄ 0)]
     : p/q - r/s ≃ (p * s - q * r)/(q * s)
