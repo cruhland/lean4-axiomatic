@@ -1,4 +1,4 @@
-import Lean4Axiomatic.AbstractAlgebra.Substitutive
+import Lean4Axiomatic.AbstractAlgebra
 
 namespace Lean4Axiomatic.CA.Monoid
 
@@ -23,7 +23,7 @@ Operations for Monoid, namely the binary operation and identity element.
 class Ops (α : Type) :=
   binop : α → α → α
   ident : α
-export Ops (ident)
+export Ops (ident binop)
 
 /-- Enables the use of the `· * ·` operator for binop. -/
 local instance monoid_mul_op_inst {α : Type} [Monoid.Ops α] : Mul α := {
@@ -31,7 +31,7 @@ local instance monoid_mul_op_inst {α : Type} [Monoid.Ops α] : Mul α := {
 }
 
 /-- Properties of Monoid. -/
-class Props (α : Type) [evop : EqvOp α] [zz : Ops α] :=
+class Props (α : Type) [evop : EqvOp α] [Ops α] :=
   substL {x y z : α} : x ≃ y → x * z ≃ y * z
   substR {x y z : α} : x ≃ y → z * x ≃ z * y
   assoc {x y z : α} : (x * y) * z ≃ x * (y * z)
@@ -53,11 +53,16 @@ attribute [instance] Monoid.toProps
 variable {α : Type} [EqvOp α] [m : Monoid α]
 
 /-- Enables the use of `AA.substL`, `AA.substR`, etc. -/
-local instance monoid_subst_inst
-    : AA.Substitutive₂ (α := α) (· * ·) AA.tc (· ≃ ·) (· ≃ ·)
+instance monoid_subst_inst
+    : AA.Substitutive₂ (α := α) (β := α) (· * ·) AA.tc (· ≃ ·) (· ≃ ·)
     := {
   substitutiveL := { subst₂ := λ (_ : True) => substL }
   substitutiveR := { subst₂ := λ (_ : True) => substR }
+}
+
+/-- Enables the use of AA.assoc. -/
+instance monoid_assoc_inst : AA.Associative (α := α) (· * ·) := {
+    assoc := assoc
 }
 
 /--
