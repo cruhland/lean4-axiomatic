@@ -38,12 +38,11 @@ def of_scientific
     (mantissa : Nat) (exponentIsNegative : Bool) (decimalExponent : Nat) : ℚ
     :=
   let naturalMantissa : ℕ := OfNat.ofNat mantissa
-  let naturalDecimalExponent : ℕ := OfNat.ofNat decimalExponent
+  let naturalDecimalExponent : ℕ := OfNat.ofNat decimalExponent 
   let powTen := (10:ℕ) ^ naturalDecimalExponent
 
-  have : Natural.step 0 ≄ 0 := Natural.step_neqv_zero
-  have : (1:ℕ) ≄ 0 := AA.neqv_substL (Rel.symm Natural.literal_step) this
-  have : AP ((1:ℕ) ≄ 0) := AP.mk this
+  have : Natural.mul_monoid.toOps.ident ≄ 0 := Natural.one_neqv_zero
+  have : AP (Natural.mul_monoid.toOps.ident ≄ 0) := AP.mk this
 
   have : Natural.step 9 ≄ 0 := Natural.step_neqv_zero
   have : (10:ℕ) ≄ 0 := AA.neqv_substL (Rel.symm Natural.literal_step) this

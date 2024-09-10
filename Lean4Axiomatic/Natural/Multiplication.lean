@@ -1,6 +1,7 @@
 import Lean4Axiomatic.AbstractAlgebra
 import Lean4Axiomatic.Logic
 import Lean4Axiomatic.Natural.Order
+import Lean4Axiomatic.ClassicalAlgebra.Monoid
 
 /-!
 # Natural number multiplication
@@ -507,5 +508,47 @@ theorem sqrt1 {n : ℕ} : n * n ≃ 1 ↔ n ≃ 1 := by
     show n * n ≃ 1
     have : n * n ≃ 1 := factors_eqv_1.mpr (And.intro ‹n ≃ 1› ‹n ≃ 1›)
     exact this
+
+local instance mul_monoid_ops :  CA.Monoid.Ops ℕ := {
+  binop := (· * ·)
+  ident := 1
+}
+
+def mul_monoid_props : CA.Monoid.Props (α := ℕ) :=
+{
+  substL  := AA.substL
+  substR  := AA.substR
+  assoc   := mul_associative.assoc
+  identL  := AA.identL
+  identR  := AA.identR
+}
+
+/--
+Naturals numbers with multiplication form a monoid.  This allow us to avoid
+reproving basic facts about naturals that are true of all monoids.
+TODO: instead of monoid, show the naturals form a commutative ring.
+-/
+instance mul_monoid : CA.Monoid.Monoid (α := ℕ) := {
+  toOps   := mul_monoid_ops
+  toProps := mul_monoid_props
+}
+
+/--
+The natural 1 is not equal to 0.
+-/
+theorem one_neqv_zero : (1 : ℕ) ≄ 0 := by
+  intro (_ : (1 : ℕ) ≃ 0)
+  show False
+  have : (1 : ℕ) ≃ (0 : ℕ) := ‹(1 : ℕ) ≃ 0›
+  have : Natural.step (0 : ℕ) ≃ 0 :=
+    Rel.trans (Rel.symm Natural.literal_step) ‹(1 : ℕ) ≃ 0›
+  exact absurd ‹Natural.step (0 : ℕ) ≃ 0› Natural.step_neqv_zero
+
+/--
+The multiplicative identity for naturals is not the same as 0.
+-/
+theorem mul_ident_not_zero : mul_monoid.toOps.ident ≄ 0 := by
+  show mul_monoid.toOps.ident ≄ 0
+  exact one_neqv_zero
 
 end Lean4Axiomatic.Natural

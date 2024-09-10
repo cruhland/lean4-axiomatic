@@ -25,7 +25,7 @@ variable
   {ℚ : Type}
     [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
     [Negation ℚ] [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ]
-    [Sign ℚ] [Order ℚ] [Metric ℚ] [Natural.Exponentiation ℕ (α := ℚ) (· * ·)]
+    [Sign ℚ] [Order ℚ] [Metric ℚ] [Natural.Exponentiation ℕ (α := ℚ)]
 
 /--
 Raising two ordered, nonnegative values to the same natural number power
@@ -237,7 +237,7 @@ infixr:80 " ^ " => Exponentiation.Ops._pow
 class Exponentiation.Props
     {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
-    [Reciprocation ℚ] [Division ℚ] [Natural.Exponentiation ℕ (α := ℚ) (· * ·)]
+    [Reciprocation ℚ] [Division ℚ] [Natural.Exponentiation ℕ (α := ℚ)]
     [Negation ℚ] [Sign ℚ] [Ops ℚ ℤ]
     :=
   /--
@@ -268,7 +268,7 @@ export Exponentiation.Props (pow_diff pow_substR)
 class Exponentiation
     {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
-    [Reciprocation ℚ] [Division ℚ] [Natural.Exponentiation ℕ (α := ℚ) (· * ·)]
+    [Reciprocation ℚ] [Division ℚ] [Natural.Exponentiation ℕ (α := ℚ)]
     [Negation ℚ] [Sign ℚ]
     :=
   toOps : Exponentiation.Ops ℚ ℤ
@@ -284,7 +284,7 @@ variable
   {ℚ : Type}
     [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
     [Negation ℚ] [Reciprocation ℚ] [Division ℚ] [Sign ℚ]
-    [Natural.Exponentiation ℕ (α := ℚ) (· * ·)] [Exponentiation ℚ]
+    [Natural.Exponentiation ℕ (α := ℚ) ] [Exponentiation ℚ]
 
 /--
 Rational number exponentiation to an integer respects equivalence of the base

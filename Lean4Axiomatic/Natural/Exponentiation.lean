@@ -6,6 +6,7 @@ import Lean4Axiomatic.Natural.Multiplication
 
 namespace Lean4Axiomatic.Natural
 
+open CA.Monoid (ident binop identL identR)
 open Logic (AP)
 open Relation.Equivalence (EqvOp)
 open Signed (Positive)
@@ -32,26 +33,28 @@ instance (priority := default+1) pow_inst
   pow := Exponentiation.Ops._pow
 }
 
-/-- Properties of exponentiation to a natural number. -/
+/-- Properties of exponentiation for a monoid type α to a natural number. -/
 class Exponentiation.Props
-    {α : Type} {ℕ : outParam Type} (mul : outParam (α → α → α))
-    [Core ℕ] [Addition ℕ] [Multiplication ℕ] [EqvOp α] [OfNat α 1] [Ops α ℕ]
+    {α : Type} {ℕ : outParam Type}
+    [Core ℕ] [Addition ℕ] [Multiplication ℕ] [EqvOp α] [Ops α ℕ]
+    [isMonoid : CA.Monoid.Monoid α]
     :=
-  /-- Any number raised to the power zero, is one. -/
-  pow_zero {x : α} : x ^ (0:ℕ) ≃ 1
-
+  /- TODO: replace requirement of being a monoid with being a commutative ring. -/
+  /-- Any number raised to the power zero is the multiplicative identity of α. -/
+  pow_zero {x : α} : x ^ (0:ℕ) ≃ ident
   /-- Adding one to the exponent multiplies the result by the base. -/
-  pow_step {x : α} {n : ℕ} : x ^ step n ≃ mul (x ^ n) x
+  pow_step {x : α} {n : ℕ} : x ^ step n ≃ binop (x ^ n) x
 
 export Exponentiation.Props (pow_step pow_zero)
 
 /-- All exponentiation axioms. -/
 class Exponentiation
-    (ℕ : semiOutParam Type) {α : Type} (mul : semiOutParam (α → α → α))
-    [Core ℕ] [Addition ℕ] [Multiplication ℕ] [EqvOp α] [OfNat α 1]
+    (ℕ : semiOutParam Type) {α : Type}
+    [Core ℕ] [Addition ℕ] [Multiplication ℕ] [eqvop : EqvOp α]
+    [isMonoid : CA.Monoid.Monoid α]
     :=
   toOps : Exponentiation.Ops α ℕ
-  toProps : Exponentiation.Props mul
+  toProps : Exponentiation.Props (α := α)
 
 attribute [instance] Exponentiation.toOps
 attribute [instance] Exponentiation.toProps
@@ -67,16 +70,15 @@ section general
 /-! ### General properties for any base type -/
 
 variable
-  {α : Type} {mul : α → α → α} [EqvOp α] [OfNat α 1] [Exponentiation ℕ mul]
+  {α : Type} [EqvOp α] [isMonoid : CA.Monoid.Monoid α]
+  [Exponentiation ℕ (α := α)]
 
 /-- Enables the use of `· * ·` syntax for `α`'s multiplication function. -/
-local instance mul_inst [Exponentiation ℕ mul] : Mul α := {
-  mul := mul
+local instance mul_inst [Exponentiation ℕ (α := α)] : Mul α := {
+  mul := binop
 }
 
-variable [AA.Substitutive₂ (β := α) (· * ·) AA.tc (· ≃ ·) (· ≃ ·)]
-
-/--
+/-
 Equivalent values can be substituted for the base (left operand) in an
 exponentiation.
 
@@ -95,7 +97,7 @@ theorem pow_substL {x₁ x₂ : α} {m : ℕ} : x₁ ≃ x₂ → x₁ ^ m ≃ x
     show x₁ ^ 0 ≃ x₂ ^ 0
     calc
       _ ≃ x₁ ^ 0 := Rel.refl
-      _ ≃ 1      := pow_zero
+      _ ≃ ident  := pow_zero
       _ ≃ x₂ ^ 0 := Rel.symm pow_zero
   case step =>
     intro (m' : ℕ) (ih : x₁ ^ m' ≃ x₂ ^ m')
@@ -164,8 +166,7 @@ is the count of repeats; counts are combined by adding.
 **Proof intuition**: Induction and algebra.
 -/
 theorem pow_compatL_add
-    [AA.Associative (α := α) (· * ·)] [AA.Commutative (α := α) (· * ·)]
-    [AA.Identity (1:α) (· * ·)]
+    [AA.Commutative (α := α) (· * ·)]
     {x : α} {n m : ℕ} : x^(n + m) ≃ x^n * x^m
     := by
   apply ind_on n
@@ -174,7 +175,7 @@ theorem pow_compatL_add
     calc
       _ ≃ x^(0 + m)     := Rel.refl
       _ ≃ x^m           := pow_substR AA.identL
-      _ ≃ 1 * x^m       := Rel.symm AA.identL
+      _ ≃ ident * x^m   := Rel.symm identL
       _ ≃ x^(0:ℕ) * x^m := AA.substL (Rel.symm pow_zero)
   case step =>
     intro n' (ih : x^(n' + m) ≃ x^n' * x^m)
@@ -199,16 +200,14 @@ repeating that expression `m` times, gives `n * m` repetitions in total.
 **Proof intuition**: Induction and algebra.
 -/
 theorem pow_flatten
-    [AA.Associative (α := α) (· * ·)] [AA.Commutative (α := α) (· * ·)]
-    [AA.Identity (1:α) (· * ·)]
-    {x : α} {n m : ℕ} : (x^n)^m ≃ x^(n * m)
+    [AA.Commutative (α := α) (· * ·)] {x : α} {n m : ℕ} : (x^n)^m ≃ x^(n * m)
     := by
   apply ind_on m
   case zero =>
     show (x^n)^0 ≃ x^(n * 0)
     calc
       _ ≃ (x^n)^0   := Rel.refl
-      _ ≃ 1         := pow_zero
+      _ ≃ ident     := pow_zero
       _ ≃ x^0       := Rel.symm pow_zero
       _ ≃ x^(n * 0) := pow_substR (Rel.symm mul_zero)
   case step =>
@@ -230,8 +229,7 @@ associativity and commutativity of multiplication.
 **Proof intuition**: Induction and algebra.
 -/
 theorem pow_distribR_mul
-    [AA.Associative (α := α) (· * ·)] [AA.Commutative (α := α) (· * ·)]
-    [AA.Identity (1:α) (· * ·)]
+    [AA.Commutative (α := α) (· * ·)]
     {x y : α} {n : ℕ} : (x * y)^n ≃ x^n * y^n
     := by
   apply ind_on n
@@ -239,10 +237,10 @@ theorem pow_distribR_mul
     show (x * y)^0 ≃ x^0 * y^0
     calc
       _ ≃ (x * y)^0 := Rel.refl
-      _ ≃ 1         := pow_zero
-      _ ≃ 1 * 1     := Rel.symm AA.identR
-      _ ≃ x^0 * 1   := AA.substL (Rel.symm pow_zero)
-      _ ≃ x^0 * y^0 := AA.substR (Rel.symm pow_zero)
+      _ ≃ ident         := pow_zero
+      _ ≃ ident * ident := Rel.symm identR
+      _ ≃ x^0 * ident   := AA.substL (Rel.symm pow_zero)
+      _ ≃ x^0 * y^0     := AA.substR (Rel.symm pow_zero)
   case step =>
     intro n' (ih : (x * y)^n' ≃ x^n' * y^n')
     show (x * y)^(step n') ≃ x^(step n') * y^(step n')
@@ -264,18 +262,18 @@ base must be zero. By definition, exponentiation gives one if the exponent is
 zero; thus it must be nonzero in this case.
 -/
 theorem pow_inputs_for_output_zero
-    [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) (· * ·)]
+    [OfNat α 0] [AP ((ident:α) ≄ 0)] [AA.ZeroProduct (α := α) (· * ·)]
     {x : α} {n : ℕ} : x^n ≃ 0 → x ≃ 0 ∧ n ≄ 0
     := by
   apply ind_on (motive := λ m => x^m ≃ 0 → x ≃ 0 ∧ m ≄ 0) n
   case zero =>
     intro (_ : x^(0:ℕ) ≃ 0)
     show x ≃ 0 ∧ 0 ≄ 0
-    have : (1:α) ≃ 0 := calc
-      _ ≃ 1   := Rel.refl
-      _ ≃ x^0 := Rel.symm pow_zero
-      _ ≃ 0   := ‹x^(0:ℕ) ≃ 0›
-    exact absurd ‹(1:α) ≃ 0› ‹AP ((1:α) ≄ 0)›.ev
+    have : (ident : α) ≃ 0 := calc
+      _ ≃ ident := Rel.refl
+      _ ≃ x^0   := Rel.symm pow_zero
+      _ ≃ 0     := ‹x^(0:ℕ) ≃ 0›
+    exact absurd ‹(ident:α) ≃ 0› ‹AP ((ident:α) ≄ 0)›.ev
   case step =>
     intro (n' : ℕ) (ih : x^n' ≃ 0 → x ≃ 0 ∧ n' ≄ 0) (_ : x^(step n') ≃ 0)
     show x ≃ 0 ∧ step n' ≄ 0
@@ -301,7 +299,7 @@ one factor (because the exponent is nonzero), and since that factor is zero,
 the result is zero by absorption.
 -/
 theorem pow_eqv_zero
-    [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) (· * ·)]
+    [OfNat α 0] [AP ((ident:α) ≄ 0)] [AA.ZeroProduct (α := α) (· * ·)]
     [AA.Absorbing (0:α) (· * ·)]
     {x : α} {n : ℕ} : x^n ≃ 0 ↔ x ≃ 0 ∧ n ≄ 0
     := by
@@ -325,13 +323,13 @@ theorem pow_eqv_zero
 Raising a nonzero number to any natural number power always gives a nonzero
 result.
 
-**Property intuition**: The empty product is `1` (raising to the zero power),
+**Property intuition**: The empty product is `ident` (raising to the zero power),
 and any product of nonzero numbers is always nonzero (higher powers).
 
 **Proof intuition**: Follows from `pow_inputs_for_output_zero` by logic alone.
 -/
 theorem pow_preserves_nonzero_base
-    [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) (· * ·)]
+    [OfNat α 0] [AP ((ident:α) ≄ 0)] [AA.ZeroProduct (α := α) (· * ·)]
     {x : α} {n : ℕ} : x ≄ 0 → x^n ≄ 0
     := by
   intro (_ : x ≄ 0)
@@ -349,7 +347,7 @@ Instance version of `pow_preserves_nonzero_base`.
 Enables clean syntax when dividing by an exponentiation expression.
 -/
 instance pow_preserves_nonzero_base_inst
-    [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) mul]
+    [OfNat α 0] [AP ((ident:α) ≄ 0)] [AA.ZeroProduct (α := α) (· * ·)]
     {x : α} {n : ℕ} [AP (x ≄ 0)] : AP (x^n ≄ 0)
     :=
   ‹AP (x ≄ 0)›.map pow_preserves_nonzero_base
@@ -362,12 +360,12 @@ multiplication, then that's just the original number.
 
 **Proof intuition**: Exapansion of definitions and simplification.
 -/
-theorem pow_one {x : α} [AA.Identity (1:α) (· * ·)] : x^1 ≃ x := calc
-  _ = x^1        := rfl
-  _ ≃ x^(step 0) := pow_substR literal_step
-  _ ≃ x^0 * x    := pow_step
-  _ ≃ 1 * x      := AA.substL pow_zero
-  _ ≃ x          := AA.identL
+theorem pow_one {x : α} : x^1 ≃ x := calc
+  _ = x^1         := rfl
+  _ ≃ x^(step 0)  := pow_substR literal_step
+  _ ≃ x^(0:ℕ) * x := pow_step
+  _ ≃ ident * x   := AA.substL pow_zero
+  _ ≃ x           := isMonoid.toProps.identL
 
 end general
 
