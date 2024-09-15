@@ -183,9 +183,6 @@ theorem gt_zero_sgn {p : ℚ} : p > 0 ↔ sgn p ≃ 1 := by
     have : p > 0 := gt_sgn.mpr ‹sgn (p - 0) ≃ 1›
     exact this
 
-instance gt_zero_sgn_inst {p : ℚ} [AP (p > 0)] : AP (sgn p ≃ 1) :=
-  ‹AP (p > 0)›.map gt_zero_sgn.mp
-
 /--
 A rational number is greater than or equivalent to another when subtracting the
 latter from the former gives a non-negative result, i.e. its sign is not minus
