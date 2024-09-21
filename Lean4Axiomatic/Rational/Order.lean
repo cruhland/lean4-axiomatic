@@ -1382,12 +1382,14 @@ via their `sgn`-based definitions. Show that they are equivalent using algebra
 and substitution.
 -/
 theorem lt_substN_div_pos
-    {p q r : ℚ} [AP (sgn r ≃ 1)] : p < q → p/r < q/r
+    {p q r : ℚ} (r_pos : sgn r ≃ 1)
+    : have : AP (r ≄ 0) := AP.mk (nonzero_if_pos ‹sgn r ≃ 1›)
+      p < q → p/r < q/r
     := by
-  intro (_ : p < q)
+  intro (_ : AP (r ≄ 0)) (_ : p < q)
   show p/r < q/r
   have : sgn (p - q) ≃ -1 := lt_sgn.mp ‹p < q›
-  have : sgn (p/r - q/r) ≃ sgn (p - q) := sgn_sub_cancelR_div_pos
+  have : sgn (p/r - q/r) ≃ sgn (p - q) := sgn_sub_cancelR_div_pos ‹sgn r ≃ 1›
   have : sgn (p/r - q/r) ≃ -1 :=
     AA.eqv_substL (Rel.symm this) ‹sgn (p - q) ≃ -1›
   have : p/r < q/r := lt_sgn.mpr this
@@ -1405,12 +1407,14 @@ via their `sgn`-based definitions. Show that they are equivalent using algebra
 and substitution.
 -/
 theorem lt_substD_div_neg
-    {p q r : ℚ} [AP (sgn r ≃ -1)] : p < q → q/r < p/r
+    {p q r : ℚ} (r_neg : sgn r ≃ -1)
+    : have : AP (r ≄ 0) := AP.mk (nonzero_if_neg ‹sgn r ≃ -1›)
+      p < q → q/r < p/r
     := by
-  intro (_ : p < q)
+  intro (_ : AP (r ≄ 0)) (_ : p < q)
   show q/r < p/r
   have : sgn (p - q) ≃ -1 := lt_sgn.mp ‹p < q›
-  have : sgn (q/r - p/r) ≃ sgn (p - q) := sgn_sub_cancelR_div_neg
+  have : sgn (q/r - p/r) ≃ sgn (p - q) := sgn_sub_cancelR_div_neg ‹sgn r ≃ -1›
   have : sgn (q/r - p/r) ≃ -1 :=
     AA.eqv_substL (Rel.symm this) ‹sgn (p - q) ≃ -1›
   have : q/r < p/r := lt_sgn.mpr this
@@ -1428,17 +1432,21 @@ number.
 `p` is less than one half of `p` and one half of `q`, by substitution on
 `p < q`. Similarly, two halves of `q` is greater than the average value.
 -/
-theorem average {p q : ℚ} : p < q → p < (p + q)/2 ∧ (p + q)/2 < q := by
-  intro (_ : p < q)
+theorem average
+    {p q : ℚ}
+    : have : AP ((2:ℚ) ≄ 0) := AP.mk (nonzero_if_pos sgn_two)
+      p < q → p < (p + q)/2 ∧ (p + q)/2 < q
+    := by
+  intro (_ : AP ((2:ℚ) ≄ 0)) (_ : p < q)
   show p < (p + q)/2 ∧ (p + q)/2 < q
   have : p < (p + q)/2 := calc
     _ ≃ p         := eqv_refl
     _ ≃ (2 * p)/2 := eqv_symm mulL_div_same
     _ ≃ (p + p)/2 := div_substL mul_two_add
-    _ < (p + q)/2 := lt_substN_div_pos (lt_substR_add ‹p < q›)
+    _ < (p + q)/2 := lt_substN_div_pos sgn_two (lt_substR_add ‹p < q›)
   have : (p + q)/2 < q := calc
     _ ≃ (p + q)/2 := eqv_refl
-    _ < (q + q)/2 := lt_substN_div_pos (lt_substL_add ‹p < q›)
+    _ < (q + q)/2 := lt_substN_div_pos sgn_two (lt_substL_add ‹p < q›)
     _ ≃ (2 * q)/2 := div_substL (eqv_symm mul_two_add)
     _ ≃ q         := mulL_div_same
   exact And.intro ‹p < (p + q)/2› ‹(p + q)/2 < q›
@@ -1449,8 +1457,12 @@ that number and zero.
 
 **Proof intuition**: Follows directly from taking the average of zero and `p`.
 -/
-theorem halve {p : ℚ} : p > 0 → p > p/2 ∧ p/2 > 0 := by
-  intro (_ : p > 0)
+theorem halve
+    {p : ℚ}
+    : have : AP ((2:ℚ) ≄ 0) := AP.mk (nonzero_if_pos sgn_two)
+      p > 0 → p > p/2 ∧ p/2 > 0
+    := by
+  intro (_ : AP ((2:ℚ) ≄ 0)) (_ : p > 0)
   show p > p/2 ∧ p/2 > 0
   have (And.intro (_ : 0 < (0 + p)/2) (_ : (0 + p)/2 < p)) := average ‹0 < p›
   have : p > p/2 := calc

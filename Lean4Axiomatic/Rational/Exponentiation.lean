@@ -164,14 +164,14 @@ theorem pow_preserves_nonneg {p : ℚ} {n : ℕ} : p ≥ 0 → p^n ≥ 0 := by
         _ ≥ 0   := one_ge_zero
 
 /-- TODO -/
-theorem from_integer_preserves_gt_zero {a : ℤ} : a > 0 → (a:ℚ) > 0 := by
+theorem nonzero_from_pos_int {a : ℤ} : a > 0 → (a:ℚ) ≄ 0 := by
   intro (_ : a > 0)
-  show (a:ℚ) > 0
+  show (a:ℚ) ≄ 0
   have : sgn (a:ℚ) ≃ 1 := calc
     _ = sgn (a:ℚ) := rfl
     _ ≃ sgn a     := sgn_from_integer
     _ ≃ 1         := Integer.gt_zero_sgn.mp ‹a > 0›
-  have : (a:ℚ) > 0 := gt_zero_sgn.mpr ‹sgn (a:ℚ) ≃ 1›
+  have : (a:ℚ) ≄ 0 := nonzero_if_pos ‹sgn (a:ℚ) ≃ 1›
   exact this
 
 /-- TODO -/
@@ -181,8 +181,7 @@ inductive NonnegRatio (p : ℚ) : Prop :=
     (a_nneg : a ≥ 0)
     (b_pos : b > 0)
     (p_eqv :
-      have : (b:ℚ) > 0 := from_integer_preserves_gt_zero ‹b > 0›
-      have : AP (sgn (b:ℚ) ≃ 1) := AP.mk (gt_zero_sgn.mp ‹(b:ℚ) > 0›)
+      have : AP ((b:ℚ) ≄ 0) := AP.mk (nonzero_from_pos_int ‹b > 0›)
       p ≃ a / b
     )
   : NonnegRatio p
@@ -224,7 +223,6 @@ theorem as_nonneg_ratio {p : ℚ} : p ≥ 0 → NonnegRatio p := by
     _ = (y:ℚ) * sgn y       := rfl
     _ ≃ ((y * sgn y : ℤ):ℚ) := eqv_symm mul_compat_from_integer
     _ ≃ (b:ℚ)               := from_integer_subst Rel.refl
-  have : AP ((b:ℚ) > 0) := AP.mk (from_integer_preserves_gt_zero ‹b > 0›)
   have : p ≃ a/b := calc
     _ = p                                   := rfl
     _ ≃ x/y                                 := ‹p ≃ x/y›
@@ -245,13 +243,11 @@ theorem sgn_diff_pow_pos
   show sgn (p^n - q^n) ≃ sgn (p - q)
   have (NonnegRatio.intro (a : ℤ) (b : ℤ) (_ : a ≥ 0) (_ : b > 0) p_eqv) :=
     as_nonneg_ratio ‹p ≥ 0›
-  have : (b:ℚ) > 0 := from_integer_preserves_gt_zero ‹b > 0›
-  have : AP (sgn (b:ℚ) ≃ 1) := AP.mk (gt_zero_sgn.mp ‹(b:ℚ) > 0›)
+  have : AP ((b:ℚ) ≄ 0) := AP.mk (nonzero_from_pos_int ‹b > 0›)
   have : p ≃ a/b := p_eqv
   have (NonnegRatio.intro (c : ℤ) (d : ℤ) (_ : c ≥ 0) (_ : d > 0) q_eqv) :=
     as_nonneg_ratio ‹q ≥ 0›
-  have : (d:ℚ) > 0 := from_integer_preserves_gt_zero ‹d > 0›
-  have : AP (sgn (d:ℚ) ≃ 1) := AP.mk (gt_zero_sgn.mp ‹(d:ℚ) > 0›)
+  have : AP ((d:ℚ) ≄ 0) := AP.mk (nonzero_from_pos_int ‹d > 0›)
   have : q ≃ c/d := q_eqv
 
   have sgn_mul_absorbL {x y : ℤ} : x > 0 → sgn (x * y) ≃ sgn y := by
@@ -562,7 +558,6 @@ theorem pow_preserves_nonzero {p : ℚ} {a : ℤ} [AP (p ≄ 0)] : p^a ≄ 0 := 
   have : p^n ≄ 0 := Natural.pow_preserves_nonzero_base ‹AP (p ≄ 0)›.ev
   exact absurd ‹p^n ≃ 0› ‹p^n ≄ 0›
 
--- TODO: Consider not using this and creating the AP version as needed
 /-- Instance version of `pow_preserves_nonzero`. -/
 instance pow_preserves_nonzero_inst
     {p : ℚ} {a : ℤ} [AP (p ≄ 0)] : AP (p^a ≄ 0)
@@ -764,13 +759,14 @@ theorem pow_distribR_mul
 /-- TODO -/
 theorem pow_preserves_pos_base
     {p : ℚ} {a : ℤ} (p_pos : p > 0)
-    : have : AP (sgn p ≃ 1) := AP.mk (gt_zero_sgn.mp ‹p > 0›)
+    : have : AP (p ≄ 0) := AP.mk (pos_nonzero ‹p > 0›)
       p^a > 0
     := by
+  intro (_ : AP (p ≄ 0))
+  show p^a > 0
+
   have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : a ≃ n - m)) :=
     Integer.as_diff a
-
-  have : AP (sgn p ≃ 1) := AP.mk (gt_zero_sgn.mp ‹p > 0›)
   have : sgn (p^a) ≃ 1 := calc
     _ = sgn (p^a)             := rfl
     _ ≃ sgn (p^((n:ℤ) - m))   := sgn_subst (pow_substR ‹a ≃ n - m›)
@@ -787,14 +783,18 @@ theorem pow_preserves_pos_base
 /-- TODO -/
 theorem sgn_diff_pow
     {p q : ℚ} {a : ℤ} (p_pos : p > 0) (q_pos : q > 0)
-    : have : AP (sgn p ≃ 1) := AP.mk (gt_zero_sgn.mp ‹p > 0›)
-      have : AP (sgn q ≃ 1) := AP.mk (gt_zero_sgn.mp ‹q > 0›)
+    : have : p ≄ 0 := pos_nonzero ‹p > 0›
+      have : q ≄ 0 := pos_nonzero ‹q > 0›
+      have : AP (p ≄ 0) := AP.mk ‹p ≄ 0›
+      have : AP (q ≄ 0) := AP.mk ‹q ≄ 0›
       sgn (p^a - q^a) ≃ sgn (p - q) * sgn a
     := by
-  have : AP (sgn p ≃ 1) := AP.mk (gt_zero_sgn.mp ‹p > 0›)
-  have : AP (sgn q ≃ 1) := AP.mk (gt_zero_sgn.mp ‹q > 0›)
+  intro (_ : p ≄ 0) (_ : q ≄ 0) (_ : AP (p ≄ 0)) (_ : AP (q ≄ 0))
+  show sgn (p^a - q^a) ≃ sgn (p - q) * sgn a
+
   have : p ≥ 0 := ge_cases.mpr (Or.inl ‹p > 0›)
   have : q ≥ 0 := ge_cases.mpr (Or.inl ‹q > 0›)
+
   have : a ≃ 0 ∨ Integer.Nonzero a := (Integer.zero? a).left
   match this with
   | Or.inl (_ : a ≃ 0) =>
@@ -859,13 +859,14 @@ theorem sgn_diff_pow
 /-- TODO -/
 theorem pow_pos_preserves_ge_pos
     {p q : ℚ} {a : ℤ} (q_pos : q > 0) (a_pos : a > 0) (p_ge_q : p ≥ q)
-    : have : AP (sgn p ≃ 1) := AP.mk (gt_zero_sgn.mp (trans ‹p ≥ q› ‹q > 0›))
-      have : AP (sgn q ≃ 1) := AP.mk (gt_zero_sgn.mp ‹q > 0›)
+    : have : p > 0 := trans ‹p ≥ q› ‹q > 0›
+      have : AP (p ≄ 0) := AP.mk (pos_nonzero ‹p > 0›)
+      have : AP (q ≄ 0) := AP.mk (pos_nonzero ‹q > 0›)
       p^a ≥ q^a
     := by
-  have : p > 0 := trans ‹p ≥ q› ‹q > 0›
-  have : AP (sgn p ≃ 1) := AP.mk (gt_zero_sgn.mp ‹p > 0›)
-  have : AP (sgn q ≃ 1) := AP.mk (gt_zero_sgn.mp ‹q > 0›)
+  intro (_ : p > 0) (_ : AP (p ≄ 0)) (_ : AP (q ≄ 0))
+  show p^a ≥ q^a
+
   have : sgn (p^a - q^a) ≥ 0 := calc
     _ = sgn (p^a - q^a)     := rfl
     _ ≃ sgn (p - q) * sgn a := sgn_diff_pow ‹p > 0› ‹q > 0›
@@ -878,13 +879,14 @@ theorem pow_pos_preserves_ge_pos
 /-- TODO -/
 theorem pow_neg_reverses_ge_pos
     {p q : ℚ} {a : ℤ} (q_pos : q > 0) (a_neg : a < 0) (p_ge_q : p ≥ q)
-    : have : AP (sgn p ≃ 1) := AP.mk (gt_zero_sgn.mp (trans ‹p ≥ q› ‹q > 0›))
-      have : AP (sgn q ≃ 1) := AP.mk (gt_zero_sgn.mp ‹q > 0›)
+    : have : p > 0 := trans ‹p ≥ q› ‹q > 0›
+      have : AP (p ≄ 0) := AP.mk (pos_nonzero ‹p > 0›)
+      have : AP (q ≄ 0) := AP.mk (pos_nonzero ‹q > 0›)
       p^a ≤ q^a
     := by
-  have : p > 0 := trans ‹p ≥ q› ‹q > 0›
-  have : AP (sgn p ≃ 1) := AP.mk (gt_zero_sgn.mp ‹p > 0›)
-  have : AP (sgn q ≃ 1) := AP.mk (gt_zero_sgn.mp ‹q > 0›)
+  intro (_ : p > 0) (_ : AP (p ≄ 0)) (_ : AP (q ≄ 0))
+  show p^a ≤ q^a
+
   have : sgn (q^a - p^a) ≥ 0 := calc
     _ = sgn (q^a - p^a)     := rfl
     _ ≃ sgn (q - p) * sgn a := sgn_diff_pow ‹q > 0› ‹p > 0›
