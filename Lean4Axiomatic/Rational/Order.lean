@@ -5,7 +5,7 @@ import Lean4Axiomatic.Rational.Sign
 
 namespace Lean4Axiomatic.Rational
 
-open Logic (AP)
+open Logic (AP iff_subst_covar or_mapL or_mapR)
 open Signed (sgn)
 
 /-! ## Axioms -/
@@ -451,6 +451,52 @@ theorem ge_cases {p q : ℚ} : p ≥ q ↔ p > q ∨ p ≃ q := by
     have : q ≤ p := le_cases.mpr this
     have : p ≥ q := this
     exact this
+
+/--
+TODO
+The only sign value greater than zero, is one.
+
+**Property intuition**: The only sign values are `1`, `0`, and `-1`.
+
+**Proof intuition**: The sign of any number greater than zero is one; taking
+the sign of a sign leaves it unchanged.
+-/
+theorem sgn_gt_zero_iff_pos {p : ℚ} : sgn p > 0 ↔ sgn p ≃ 1 := calc
+  _ ↔ sgn p > 0       := Iff.rfl
+  _ ↔ sgn (sgn p) ≃ 1 := Integer.gt_zero_sgn
+  _ ↔ sgn p ≃ 1       := AA.eqv_substL_iff sgn_idemp
+
+/--
+TODO
+An integer is greater than zero iff its sign is greater than zero.
+
+**Property and proof intuition**: Integers greater than zero have sign value
+`1`; this is the only sign value that's greater than zero.
+-/
+theorem sgn_preserves_gt_zero {p : ℚ} : p > 0 ↔ sgn p > 0 := calc
+  _ ↔ p > 0     := Iff.rfl
+  _ ↔ sgn p ≃ 1 := gt_zero_sgn
+  _ ↔ sgn p > 0 := sgn_gt_zero_iff_pos.symm
+
+/--
+TODO
+An integer is greater than or equivalent to zero iff its sign is greater than
+or equivalent to zero.
+
+**Property intuition**: Integers greater than or equivalent to zero have sign
+values of `1` and `0`, which are the only ones that are also greater than or
+equivalent to zero.
+
+**Proof intuition**: Split the _greater than or equivalent to_ relation into
+_greater than_ or _equivalent to_. The theorem `sgn_preserves_gt_zero` covers
+the _greater than_ relation, while `sgn_zero` covers _equivalent to_.
+-/
+theorem sgn_preserves_ge_zero {p : ℚ} : p ≥ 0 ↔ sgn p ≥ 0 := calc
+  _ ↔ p ≥ 0                 := Iff.rfl
+  _ ↔ p > 0 ∨ p ≃ 0         := ge_cases
+  _ ↔ sgn p > 0 ∨ p ≃ 0     := iff_subst_covar or_mapL sgn_preserves_gt_zero
+  _ ↔ sgn p > 0 ∨ sgn p ≃ 0 := iff_subst_covar or_mapR sgn_zero
+  _ ↔ sgn p ≥ 0             := Integer.ge_split.symm
 
 /--
 Two rational numbers cannot be both _less than or equivalent to_ and _greater
@@ -1559,19 +1605,6 @@ theorem le_diff_upper {ε p q : ℚ} : q - p ≤ ε ↔ q ≤ p + ε := by
       _ ≃ ε              := add_identR
 
 /-- TODO -/
-theorem sgn_preserves_ge_zero {p : ℚ} : p ≥ 0 ↔ sgn p ≥ 0 := by
-  have inner_sgn : sgn (p - 0) ≃ sgn (sgn p - 0) := calc
-    _ = sgn (p - 0)     := rfl
-    _ ≃ sgn p           := sgn_subst sub_zero
-    _ ≃ sgn (sgn p)     := Rel.symm sgn_idemp
-    _ ≃ sgn (sgn p - 0) := Integer.sgn_subst (Rel.symm Integer.sub_identR)
-  calc
-    _ ↔ p ≥ 0                := Rel.refl
-    _ ↔ sgn (p - 0) ≄ -1     := ge_sgn
-    _ ↔ sgn (sgn p - 0) ≄ -1 := Rel.iff_subst_eqv AA.neqv_substL inner_sgn
-    _ ↔ sgn p ≥ 0            := Integer.ge_sgn.symm
-
-/-- TODO -/
 theorem ge_sgn_ge_zero {p q : ℚ} : p ≥ q ↔ sgn (p - q) ≥ 0 := calc
   _ ↔ p ≥ q            := Rel.refl
   _ ↔ sgn (p - q) ≄ -1 := ge_sgn
@@ -1587,12 +1620,6 @@ theorem pos_nonzero {p : ℚ} : p > 0 → p ≄ 0 := by
   have : sgn p ≄ 0 := AA.neqv_substL (Rel.symm ‹sgn p ≃ 1›) ‹(1:ℤ) ≄ 0›
   have : p ≄ 0 := mt sgn_zero.mp ‹sgn p ≄ 0›
   exact this
-
-/-- TODO -/
-theorem mul_nonzero {p q : ℚ} : p * q ≄ 0 ↔ p ≄ 0 ∧ q ≄ 0 := calc
-  _ ↔ p * q ≄ 0        := Rel.refl
-  _ ↔ ¬(p ≃ 0 ∨ q ≃ 0) := Logic.iff_subst_contra mt mul_split_zero
-  _ ↔ p ≄ 0 ∧ q ≄ 0    := Logic.not_or_iff_and_not
 
 /-- TODO -/
 theorem mul_preserves_pos {p q : ℚ} : p > 0 → q > 0 → p * q > 0 := by
@@ -1611,15 +1638,12 @@ theorem mul_preserves_pos {p q : ℚ} : p > 0 → q > 0 → p * q > 0 := by
 theorem sgn_sub_recip
     {p q : ℚ} (pq_pos : p * q > 0)
     : have : p * q ≄ 0 := pos_nonzero ‹p * q > 0›
-      have : p ≄ 0 ∧ q ≄ 0 := mul_nonzero.mp ‹p * q ≄ 0›
+      have : p ≄ 0 ∧ q ≄ 0 := mul_split_nonzero.mp ‹p * q ≄ 0›
       have : AP (p ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.1
       have : AP (q ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.2
       sgn (p⁻¹ - q⁻¹) ≃ sgn (q - p)
     := by
-  have : p * q ≄ 0 := pos_nonzero ‹p * q > 0›
-  have : p ≄ 0 ∧ q ≄ 0 := mul_nonzero.mp ‹p * q ≄ 0›
-  have : AP (p ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.1
-  have : AP (q ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.2
+  intro _ _ (_ : AP (p ≄ 0)) (_ : AP (q ≄ 0))
   show sgn (p⁻¹ - q⁻¹) ≃ sgn (q - p)
 
   have sub_recips : p⁻¹ - q⁻¹ ≃ (q - p)/(p * q) := calc

@@ -167,11 +167,8 @@ theorem pow_preserves_nonneg {p : ℚ} {n : ℕ} : p ≥ 0 → p^n ≥ 0 := by
 theorem nonzero_from_pos_int {a : ℤ} : a > 0 → (a:ℚ) ≄ 0 := by
   intro (_ : a > 0)
   show (a:ℚ) ≄ 0
-  have : sgn (a:ℚ) ≃ 1 := calc
-    _ = sgn (a:ℚ) := rfl
-    _ ≃ sgn a     := sgn_from_integer
-    _ ≃ 1         := Integer.gt_zero_sgn.mp ‹a > 0›
-  have : (a:ℚ) ≄ 0 := nonzero_if_pos ‹sgn (a:ℚ) ≃ 1›
+  have : (a:ℚ) > 0 := lt_subst_from_integer ‹a > 0›
+  have : (a:ℚ) ≄ 0 := pos_nonzero ‹(a:ℚ) > 0›
   exact this
 
 /-- TODO -/
