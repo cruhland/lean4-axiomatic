@@ -387,8 +387,8 @@ theorem pow_preserves_ge_nonneg
     have : sgn (p^n - q^n) ≥ 0 := calc
       _ = sgn (p^n - q^n) := rfl
       _ ≃ sgn (p - q)     := sgn_diff_pow_pos ‹p ≥ 0› ‹q ≥ 0› ‹n ≥ 1›
-      _ ≥ 0               := ge_sgn_ge_zero.mp ‹p ≥ q›
-    have : p^n ≥ q^n := ge_sgn_ge_zero.mpr ‹sgn (p^n - q^n) ≥ 0›
+      _ ≥ 0               := ge_iff_sub_sgn_nonneg.mp ‹p ≥ q›
+    have : p^n ≥ q^n := ge_iff_sub_sgn_nonneg.mpr ‹sgn (p^n - q^n) ≥ 0›
     exact this
   | Or.inr (_ : n ≃ 0) =>
     have : p^n ≃ q^n := calc
@@ -869,8 +869,8 @@ theorem pow_pos_preserves_ge_pos
     _ ≃ sgn (p - q) * sgn a := sgn_diff_pow ‹p > 0› ‹q > 0›
     _ ≃ sgn (p - q) * 1     := AA.substR (Integer.gt_zero_sgn.mp ‹a > 0›)
     _ ≃ sgn (p - q)         := AA.identR
-    _ ≥ 0                   := ge_sgn_ge_zero.mp ‹p ≥ q›
-  have : p^a ≥ q^a := ge_sgn_ge_zero.mpr ‹sgn (p^a - q^a) ≥ 0›
+    _ ≥ 0                   := ge_iff_sub_sgn_nonneg.mp ‹p ≥ q›
+  have : p^a ≥ q^a := ge_iff_sub_sgn_nonneg.mpr ‹sgn (p^a - q^a) ≥ 0›
   exact this
 
 /-- TODO -/
@@ -892,8 +892,8 @@ theorem pow_neg_reverses_ge_pos
     _ ≃ -sgn (q - p)        := Integer.mul_neg_one
     _ ≃ sgn (-(q - p))      := Rel.symm sgn_compat_neg
     _ ≃ sgn (p - q)         := sgn_subst neg_sub
-    _ ≥ 0                   := ge_sgn_ge_zero.mp ‹p ≥ q›
-  have : p^a ≤ q^a := ge_sgn_ge_zero.mpr ‹sgn (q^a - p^a) ≥ 0›
+    _ ≥ 0                   := ge_iff_sub_sgn_nonneg.mp ‹p ≥ q›
+  have : p^a ≤ q^a := ge_iff_sub_sgn_nonneg.mpr ‹sgn (q^a - p^a) ≥ 0›
   exact this
 
 end Lean4Axiomatic.Rational

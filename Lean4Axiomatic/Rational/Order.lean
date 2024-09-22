@@ -183,6 +183,53 @@ theorem gt_zero_sgn {p : ℚ} : p > 0 ↔ sgn p ≃ 1 := by
     have : p > 0 := gt_sgn.mpr ‹sgn (p - 0) ≃ 1›
     exact this
 
+/-- TODO -/
+theorem pos_nonzero {p : ℚ} : p > 0 → p ≄ 0 := by
+  intro (_ : p > 0)
+  show p ≄ 0
+  have : sgn p ≃ 1 := gt_zero_sgn.mp ‹p > 0›
+  have : (1:ℤ) ≄ 0 := Integer.one_neqv_zero
+  have : sgn p ≄ 0 := AA.neqv_substL (Rel.symm ‹sgn p ≃ 1›) ‹(1:ℤ) ≄ 0›
+  have : p ≄ 0 := mt sgn_zero.mp ‹sgn p ≄ 0›
+  exact this
+
+/--
+The only sign value greater than zero, is one.
+
+**Property intuition**: The only sign values are `1`, `0`, and `-1`.
+
+**Proof intuition**: The sign of any number greater than zero is one; taking
+the sign of a sign leaves it unchanged.
+-/
+theorem sgn_gt_zero_iff_pos {p : ℚ} : sgn p > 0 ↔ sgn p ≃ 1 := calc
+  _ ↔ sgn p > 0       := Iff.rfl
+  _ ↔ sgn (sgn p) ≃ 1 := Integer.gt_zero_sgn
+  _ ↔ sgn p ≃ 1       := AA.eqv_substL_iff sgn_idemp
+
+/--
+A rational number is greater than zero iff its sign is greater than zero.
+
+**Property and proof intuition**: Rationals greater than zero have sign value
+`1`; this is the only sign value that's greater than zero.
+-/
+theorem sgn_preserves_gt_zero {p : ℚ} : p > 0 ↔ sgn p > 0 := calc
+  _ ↔ p > 0     := Iff.rfl
+  _ ↔ sgn p ≃ 1 := gt_zero_sgn
+  _ ↔ sgn p > 0 := sgn_gt_zero_iff_pos.symm
+
+/-- TODO -/
+theorem mul_preserves_pos {p q : ℚ} : p > 0 → q > 0 → p * q > 0 := by
+  intro (_ : p > 0) (_ : q > 0)
+  show p * q > 0
+  have : sgn (p * q) ≃ 1 := calc
+    _ = sgn (p * q)   := rfl
+    _ ≃ sgn p * sgn q := sgn_compat_mul
+    _ ≃ 1 * sgn q     := AA.substL (gt_zero_sgn.mp ‹p > 0›)
+    _ ≃ sgn q         := AA.identL
+    _ ≃ 1             := gt_zero_sgn.mp ‹q > 0›
+  have : p * q > 0 := gt_zero_sgn.mpr ‹sgn (p * q) ≃ 1›
+  exact this
+
 /--
 A rational number is greater than or equivalent to another when subtracting the
 latter from the former gives a non-negative result, i.e. its sign is not minus
@@ -453,37 +500,10 @@ theorem ge_cases {p q : ℚ} : p ≥ q ↔ p > q ∨ p ≃ q := by
     exact this
 
 /--
-TODO
-The only sign value greater than zero, is one.
+A rational number is greater than or equivalent to zero iff its sign is greater
+than or equivalent to zero.
 
-**Property intuition**: The only sign values are `1`, `0`, and `-1`.
-
-**Proof intuition**: The sign of any number greater than zero is one; taking
-the sign of a sign leaves it unchanged.
--/
-theorem sgn_gt_zero_iff_pos {p : ℚ} : sgn p > 0 ↔ sgn p ≃ 1 := calc
-  _ ↔ sgn p > 0       := Iff.rfl
-  _ ↔ sgn (sgn p) ≃ 1 := Integer.gt_zero_sgn
-  _ ↔ sgn p ≃ 1       := AA.eqv_substL_iff sgn_idemp
-
-/--
-TODO
-An integer is greater than zero iff its sign is greater than zero.
-
-**Property and proof intuition**: Integers greater than zero have sign value
-`1`; this is the only sign value that's greater than zero.
--/
-theorem sgn_preserves_gt_zero {p : ℚ} : p > 0 ↔ sgn p > 0 := calc
-  _ ↔ p > 0     := Iff.rfl
-  _ ↔ sgn p ≃ 1 := gt_zero_sgn
-  _ ↔ sgn p > 0 := sgn_gt_zero_iff_pos.symm
-
-/--
-TODO
-An integer is greater than or equivalent to zero iff its sign is greater than
-or equivalent to zero.
-
-**Property intuition**: Integers greater than or equivalent to zero have sign
+**Property intuition**: Rationals greater than or equivalent to zero have sign
 values of `1` and `0`, which are the only ones that are also greater than or
 equivalent to zero.
 
@@ -497,6 +517,13 @@ theorem sgn_preserves_ge_zero {p : ℚ} : p ≥ 0 ↔ sgn p ≥ 0 := calc
   _ ↔ sgn p > 0 ∨ p ≃ 0     := iff_subst_covar or_mapL sgn_preserves_gt_zero
   _ ↔ sgn p > 0 ∨ sgn p ≃ 0 := iff_subst_covar or_mapR sgn_zero
   _ ↔ sgn p ≥ 0             := Integer.ge_split.symm
+
+/-- TODO -/
+theorem ge_iff_sub_sgn_nonneg {p q : ℚ} : p ≥ q ↔ sgn (p - q) ≥ 0 := calc
+  _ ↔ p ≥ q            := Rel.refl
+  _ ↔ sgn (p - q) ≄ -1 := ge_sgn
+  _ ↔ p - q ≥ 0        := ge_zero_sgn.symm
+  _ ↔ sgn (p - q) ≥ 0  := sgn_preserves_ge_zero
 
 /--
 Two rational numbers cannot be both _less than or equivalent to_ and _greater
@@ -1466,6 +1493,32 @@ theorem lt_substD_div_neg
   have : q/r < p/r := lt_sgn.mpr this
   exact this
 
+/-- TODO -/
+theorem sgn_sub_recip
+    {p q : ℚ} (pq_pos : p * q > 0)
+    : have : p * q ≄ 0 := pos_nonzero ‹p * q > 0›
+      have : p ≄ 0 ∧ q ≄ 0 := mul_split_nonzero.mp ‹p * q ≄ 0›
+      have : AP (p ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.1
+      have : AP (q ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.2
+      sgn (p⁻¹ - q⁻¹) ≃ sgn (q - p)
+    := by
+  intro _ _ (_ : AP (p ≄ 0)) (_ : AP (q ≄ 0))
+  show sgn (p⁻¹ - q⁻¹) ≃ sgn (q - p)
+
+  have sub_recips : p⁻¹ - q⁻¹ ≃ (q - p)/(p * q) := calc
+    _ = p⁻¹ - q⁻¹               := rfl
+    _ ≃ 1/p - q⁻¹               := sub_substL (eqv_symm div_identL)
+    _ ≃ 1/p - 1/q               := sub_substR (eqv_symm div_identL)
+    _ ≃ (1 * q - p * 1)/(p * q) := sub_fractions
+    _ ≃ (q - p * 1)/(p * q)     := div_substL (sub_substL mul_identL)
+    _ ≃ (q - p)/(p * q)         := div_substL (sub_substR mul_identR)
+  calc
+    _ = sgn (p⁻¹ - q⁻¹)           := rfl
+    _ ≃ sgn ((q - p)/(p * q))     := sgn_subst sub_recips
+    _ ≃ sgn (q - p) * sgn (p * q) := sgn_div
+    _ ≃ sgn (q - p) * 1           := AA.substR (gt_zero_sgn.mp ‹p * q > 0›)
+    _ ≃ sgn (q - p)               := AA.identR
+
 /--
 The average of two nonequivalent rational numbers lies strictly between them.
 
@@ -1603,61 +1656,5 @@ theorem le_diff_upper {ε p q : ℚ} : q - p ≤ ε ↔ q ≤ p + ε := by
       _ ≃ ε + (p + (-p)) := add_assoc
       _ ≃ ε + 0          := add_substR add_inverseR
       _ ≃ ε              := add_identR
-
-/-- TODO -/
-theorem ge_sgn_ge_zero {p q : ℚ} : p ≥ q ↔ sgn (p - q) ≥ 0 := calc
-  _ ↔ p ≥ q            := Rel.refl
-  _ ↔ sgn (p - q) ≄ -1 := ge_sgn
-  _ ↔ p - q ≥ 0        := ge_zero_sgn.symm
-  _ ↔ sgn (p - q) ≥ 0  := sgn_preserves_ge_zero
-
-/-- TODO -/
-theorem pos_nonzero {p : ℚ} : p > 0 → p ≄ 0 := by
-  intro (_ : p > 0)
-  show p ≄ 0
-  have : sgn p ≃ 1 := gt_zero_sgn.mp ‹p > 0›
-  have : (1:ℤ) ≄ 0 := Integer.one_neqv_zero
-  have : sgn p ≄ 0 := AA.neqv_substL (Rel.symm ‹sgn p ≃ 1›) ‹(1:ℤ) ≄ 0›
-  have : p ≄ 0 := mt sgn_zero.mp ‹sgn p ≄ 0›
-  exact this
-
-/-- TODO -/
-theorem mul_preserves_pos {p q : ℚ} : p > 0 → q > 0 → p * q > 0 := by
-  intro (_ : p > 0) (_ : q > 0)
-  show p * q > 0
-  have : sgn (p * q) ≃ 1 := calc
-    _ = sgn (p * q)   := rfl
-    _ ≃ sgn p * sgn q := sgn_compat_mul
-    _ ≃ 1 * sgn q     := AA.substL (gt_zero_sgn.mp ‹p > 0›)
-    _ ≃ sgn q         := AA.identL
-    _ ≃ 1             := gt_zero_sgn.mp ‹q > 0›
-  have : p * q > 0 := gt_zero_sgn.mpr ‹sgn (p * q) ≃ 1›
-  exact this
-
-/-- TODO -/
-theorem sgn_sub_recip
-    {p q : ℚ} (pq_pos : p * q > 0)
-    : have : p * q ≄ 0 := pos_nonzero ‹p * q > 0›
-      have : p ≄ 0 ∧ q ≄ 0 := mul_split_nonzero.mp ‹p * q ≄ 0›
-      have : AP (p ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.1
-      have : AP (q ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.2
-      sgn (p⁻¹ - q⁻¹) ≃ sgn (q - p)
-    := by
-  intro _ _ (_ : AP (p ≄ 0)) (_ : AP (q ≄ 0))
-  show sgn (p⁻¹ - q⁻¹) ≃ sgn (q - p)
-
-  have sub_recips : p⁻¹ - q⁻¹ ≃ (q - p)/(p * q) := calc
-    _ = p⁻¹ - q⁻¹               := rfl
-    _ ≃ 1/p - q⁻¹               := sub_substL (eqv_symm div_identL)
-    _ ≃ 1/p - 1/q               := sub_substR (eqv_symm div_identL)
-    _ ≃ (1 * q - p * 1)/(p * q) := sub_fractions
-    _ ≃ (q - p * 1)/(p * q)     := div_substL (sub_substL mul_identL)
-    _ ≃ (q - p)/(p * q)         := div_substL (sub_substR mul_identR)
-  calc
-    _ = sgn (p⁻¹ - q⁻¹)           := rfl
-    _ ≃ sgn ((q - p)/(p * q))     := sgn_subst sub_recips
-    _ ≃ sgn (q - p) * sgn (p * q) := sgn_div
-    _ ≃ sgn (q - p) * 1           := AA.substR (gt_zero_sgn.mp ‹p * q > 0›)
-    _ ≃ sgn (q - p)               := AA.identR
 
 end Lean4Axiomatic.Rational
