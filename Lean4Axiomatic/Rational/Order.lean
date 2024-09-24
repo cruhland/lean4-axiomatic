@@ -183,7 +183,13 @@ theorem gt_zero_sgn {p : ℚ} : p > 0 ↔ sgn p ≃ 1 := by
     have : p > 0 := gt_sgn.mpr ‹sgn (p - 0) ≃ 1›
     exact this
 
-/-- TODO -/
+/--
+Positive rationals are nonzero.
+
+**Proof intuition**: Any nonzero rational has a nonzero sign, by the
+contrapositive of `sgn_zero`. In particular, positive rationals have a sign of
+`1`, thus they are nonzero.
+-/
 theorem pos_nonzero {p : ℚ} : p > 0 → p ≄ 0 := by
   intro (_ : p > 0)
   show p ≄ 0
@@ -217,7 +223,18 @@ theorem sgn_preserves_gt_zero {p : ℚ} : p > 0 ↔ sgn p > 0 := calc
   _ ↔ sgn p ≃ 1 := gt_zero_sgn
   _ ↔ sgn p > 0 := sgn_gt_zero_iff_pos.symm
 
-/-- TODO -/
+/--
+The product of two positive rational numbers is also positive.
+
+**Property intuition**: Multiplying a positive value by another positive value
+can shrink it towards zero or grow it towards infinity, but it can't make it
+zero or negative.
+
+**Proof intuition**: Express the greater-than relations using `sgn`; we need to
+show that `sgn (p * q)` is equivalent to `1` when both `sgn p` and `sgn q` are
+equivalent to `1`. Use `sgn_compat_mul` to factor `sgn (p * q)` into
+`sgn p * sgn q`; this is equivalent to one because both factors are.
+-/
 theorem mul_preserves_pos {p q : ℚ} : p > 0 → q > 0 → p * q > 0 := by
   intro (_ : p > 0) (_ : q > 0)
   show p * q > 0
@@ -518,7 +535,13 @@ theorem sgn_preserves_ge_zero {p : ℚ} : p ≥ 0 ↔ sgn p ≥ 0 := calc
   _ ↔ sgn p > 0 ∨ sgn p ≃ 0 := iff_subst_covar or_mapR sgn_zero
   _ ↔ sgn p ≥ 0             := Integer.ge_split.symm
 
-/-- TODO -/
+/--
+A rational is greater than or equivalent to another exactly when the sign of
+their difference is also greater than or equivalent to zero.
+
+**Property and proof intuition**: The simpler property `p ≥ q ↔ p - q ≥ 0` is
+already obvious using algebra. Add `sgn` on both sides and simplify.
+-/
 theorem ge_iff_sub_sgn_nonneg {p q : ℚ} : p ≥ q ↔ sgn (p - q) ≥ 0 := calc
   _ ↔ p ≥ q            := Rel.refl
   _ ↔ sgn (p - q) ≄ -1 := ge_sgn
@@ -1493,7 +1516,18 @@ theorem lt_substD_div_neg
   have : q/r < p/r := lt_sgn.mpr this
   exact this
 
-/-- TODO -/
+/--
+The comparison of reciprocals of two rational numbers gives the opposite result
+as comparison of the original numbers, when both numbers have the same nonzero
+sign.
+
+**Property intuition**: `2 < 3`, but `1/2 > 1/3`.
+
+**Proof intuition**: Simplify the subtraction of reciprocals into an expression
+with a single division. Computing its sign converts the division into
+multiplication. The former denominator is positive and drops out, leaving the
+former numerator which gives the result.
+-/
 theorem sgn_sub_recip
     {p q : ℚ} (pq_pos : p * q > 0)
     : have : p * q ≄ 0 := pos_nonzero ‹p * q > 0›
