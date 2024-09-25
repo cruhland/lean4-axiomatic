@@ -27,7 +27,21 @@ variable
     [Negation ℚ] [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ]
     [Sign ℚ] [Order ℚ] [Metric ℚ] [Natural.Exponentiation ℕ ℚ (· * ·)]
 
-/-- TODO -/
+/--
+Casting an integer to a rational number is left-semicompatible with natural
+number exponentiation.
+
+In other words, starting from an integer value, the operations of (i) raising a
+value to a natural number power, and (ii) converting an integer to a rational
+number, can be done in either order and produce the same result.
+
+**Property intuition**: Multiplication is compatible with integer-to-rational
+conversion, so the base of exponentiation should also be compatible.
+
+**Proof intuition**: By induction on the exponent. The zero case is trivial:
+both sides reduce to `1` via `pow_zero`. The step case follows from `pow_step`
+and `mul_compat_from_integer`.
+-/
 theorem pow_scompatL_from_integer {a : ℤ} {n : ℕ} : ((a^n:ℤ):ℚ) ≃ (a:ℚ)^n := by
   apply Natural.ind_on n
   case zero =>
