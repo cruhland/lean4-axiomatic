@@ -526,7 +526,6 @@ def mul_monoid_props : CA.Monoid.Props (α := ℕ) :=
 /--
 Naturals numbers with multiplication form a monoid.  This allow us to avoid
 reproving basic facts about naturals that are true of all monoids.
-TODO: instead of monoid, show the naturals form a commutative ring.
 -/
 instance mul_monoid : CA.Monoid.Monoid (α := ℕ) := {
   toOps   := mul_monoid_ops

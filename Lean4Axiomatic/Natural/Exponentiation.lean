@@ -47,8 +47,7 @@ instance ofNatIdent [EqvOp α] [CA.Monoid.Monoid α] : OfNat α 1 := {
 /-- Properties of exponentiation for a monoid type α to a natural number. -/
 class Exponentiation.Props
     {α : Type} {ℕ : outParam Type}
-    [Core ℕ] [Addition ℕ] [Multiplication ℕ] [EqvOp α] [Ops α ℕ]
-    [CA.Monoid.Monoid α]
+    [Core ℕ] [Addition ℕ] [Multiplication ℕ] [EqvOp α] [Ops α ℕ] [CA.Monoid.Monoid α]
     :=
   /-- Any number raised to the power zero is the monoid identity of α. -/
   pow_zero {x : α} : x ^ (0:ℕ) ≃ 1
