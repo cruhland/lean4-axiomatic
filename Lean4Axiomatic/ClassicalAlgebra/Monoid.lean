@@ -53,15 +53,15 @@ attribute [instance] Monoid.toProps
 variable {α : Type} [EqvOp α] [m : Monoid α]
 
 /-- Enables the use of `AA.substL`, `AA.substR`, etc. -/
-instance monoid_subst_inst
-    : AA.Substitutive₂ (α := α) (β := α) (· * ·) AA.tc (· ≃ ·) (· ≃ ·)
+scoped instance monoid_subst_inst
+    : AA.Substitutive₂ (α := α) (· * ·) AA.tc (· ≃ ·) (· ≃ ·)
     := {
   substitutiveL := { subst₂ := λ (_ : True) => substL }
   substitutiveR := { subst₂ := λ (_ : True) => substR }
 }
 
 /-- Enables the use of AA.assoc. -/
-instance monoid_assoc_inst : AA.Associative (α := α) (· * ·) := {
+scoped instance monoid_assoc_inst : AA.Associative (α := α) (· * ·) := {
     assoc := assoc
 }
 
