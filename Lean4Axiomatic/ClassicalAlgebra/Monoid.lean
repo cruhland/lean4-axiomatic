@@ -31,7 +31,7 @@ local instance monoid_mul_op_inst {α : Type} [Monoid.Ops α] : Mul α := {
 }
 
 /-- Properties of Monoid. -/
-class Props (α : Type) [evop : EqvOp α] [Ops α] :=
+class Props (α : Type) [EqvOp α] [Ops α] :=
   substL {x y z : α} : x ≃ y → x * z ≃ y * z
   substR {x y z : α} : x ≃ y → z * x ≃ z * y
   assoc {x y z : α} : (x * y) * z ≃ x * (y * z)

@@ -273,7 +273,7 @@ theorem pow_inputs_for_output_zero
   case zero =>
     intro (_ : x^(0:ℕ) ≃ 0)
     show x ≃ 0 ∧ 0 ≄ 0
-    have : (1 : α) ≃ 0 := calc
+    have : (1:α) ≃ 0 := calc
       _ ≃ 1   := Rel.refl
       _ ≃ x^0 := Rel.symm pow_zero
       _ ≃ 0   := ‹x^(0:ℕ) ≃ 0›
@@ -367,7 +367,7 @@ multiplication, then that's just the original number.
 theorem pow_one {x : α} : x^1 ≃ x := calc
   _ = x^1         := rfl
   _ ≃ x^(step 0)  := pow_substR literal_step
-  _ ≃ x^(0:ℕ) * x := pow_step
+  _ ≃ x^(0) * x := pow_step
   _ ≃ 1 * x       := AA.substL pow_zero
   _ ≃ x           := identL
 
