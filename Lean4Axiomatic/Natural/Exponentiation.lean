@@ -60,7 +60,7 @@ export Exponentiation.Props (pow_step pow_zero)
 /-- All exponentiation axioms. -/
 class Exponentiation
     (ℕ : semiOutParam Type) {α : Type}
-    [Core ℕ] [Addition ℕ] [Multiplication ℕ] [eqvop : EqvOp α]
+    [Core ℕ] [Addition ℕ] [Multiplication ℕ] [EqvOp α]
     [CA.Monoid.Monoid α]
     :=
   toOps : Exponentiation.Ops α ℕ
@@ -367,7 +367,7 @@ multiplication, then that's just the original number.
 theorem pow_one {x : α} : x^1 ≃ x := calc
   _ = x^1         := rfl
   _ ≃ x^(step 0)  := pow_substR literal_step
-  _ ≃ x^(0) * x := pow_step
+  _ ≃ x^0 * x     := pow_step
   _ ≃ 1 * x       := AA.substL pow_zero
   _ ≃ x           := identL
 

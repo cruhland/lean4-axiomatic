@@ -514,8 +514,7 @@ local instance mul_monoid_ops :  CA.Monoid.Ops ℕ := {
   ident := 1
 }
 
-def mul_monoid_props : CA.Monoid.Props (α := ℕ) :=
-{
+def mul_monoid_props : CA.Monoid.Props (α := ℕ) := {
   substL  := AA.substL
   substR  := AA.substR
   assoc   := mul_associative.assoc
@@ -542,12 +541,5 @@ theorem one_neqv_zero : (1 : ℕ) ≄ 0 := by
   have : Natural.step (0 : ℕ) ≃ 0 :=
     Rel.trans (Rel.symm Natural.literal_step) ‹(1 : ℕ) ≃ 0›
   exact absurd ‹Natural.step (0 : ℕ) ≃ 0› Natural.step_neqv_zero
-
-/--
-The multiplicative identity for naturals is not the same as 0.
--/
-theorem mul_ident_not_zero : mul_monoid.toOps.ident ≄ 0 := by
-  show mul_monoid.toOps.ident ≄ 0
-  exact one_neqv_zero
 
 end Lean4Axiomatic.Natural

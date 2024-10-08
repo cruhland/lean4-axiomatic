@@ -231,8 +231,4 @@ instance mul_monoid : CA.Monoid.Monoid (α := ℚ) := {
   toProps := mul_monoid_props
 }
 
-instance : AP ((mul_monoid.toOps.ident) ≄ (0 : ℚ)) := by
-  have mul_ident_not_zero : mul_monoid.toOps.ident ≄ (0 : ℚ) := nonzero_one
-  exact AP.mk mul_ident_not_zero
-
 end Lean4Axiomatic.Rational
