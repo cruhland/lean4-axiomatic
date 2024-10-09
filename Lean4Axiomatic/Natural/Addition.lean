@@ -303,7 +303,7 @@ local instance add_monoid_ops :  CA.Monoid.Ops ℕ := {
   ident := 0
 }
 
-def add_monoid_props : CA.Monoid.Props (α := ℕ) (zz := add_monoid_ops) :=
+def add_monoid_props : CA.Monoid.Props (α := ℕ) :=
   let subst_addL {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m := AA.substL;
   let subst_addR {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m + n₁ ≃ m + n₂ := AA.substR;
 {

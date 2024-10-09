@@ -41,8 +41,7 @@ def of_scientific
   let naturalDecimalExponent : ℕ := OfNat.ofNat decimalExponent
   let powTen := (10:ℕ) ^ naturalDecimalExponent
 
-  have : Natural.step 0 ≄ 0 := Natural.step_neqv_zero
-  have : (1:ℕ) ≄ 0 := AA.neqv_substL (Rel.symm Natural.literal_step) this
+  have : (1:ℕ) ≄ 0 := Natural.one_neqv_zero
   have : AP ((1:ℕ) ≄ 0) := AP.mk this
 
   have : Natural.step 9 ≄ 0 := Natural.step_neqv_zero
