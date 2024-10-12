@@ -5,7 +5,7 @@ import Lean4Axiomatic.Rational.Sign
 
 namespace Lean4Axiomatic.Rational
 
-open Logic (AP)
+open Logic (AP iff_subst_covar or_mapL or_mapR)
 open Signed (sgn)
 
 /-! ## Axioms -/
@@ -182,6 +182,70 @@ theorem gt_zero_sgn {p : ℚ} : p > 0 ↔ sgn p ≃ 1 := by
       _ ≃ 1           := ‹sgn p ≃ 1›
     have : p > 0 := gt_sgn.mpr ‹sgn (p - 0) ≃ 1›
     exact this
+
+/--
+Positive rationals are nonzero.
+
+**Proof intuition**: Any nonzero rational has a nonzero sign, by the
+contrapositive of `sgn_zero`. In particular, positive rationals have a sign of
+`1`, thus they are nonzero.
+-/
+theorem pos_nonzero {p : ℚ} : p > 0 → p ≄ 0 := by
+  intro (_ : p > 0)
+  show p ≄ 0
+  have : sgn p ≃ 1 := gt_zero_sgn.mp ‹p > 0›
+  have : (1:ℤ) ≄ 0 := Integer.one_neqv_zero
+  have : sgn p ≄ 0 := AA.neqv_substL (Rel.symm ‹sgn p ≃ 1›) ‹(1:ℤ) ≄ 0›
+  have : p ≄ 0 := mt sgn_zero.mp ‹sgn p ≄ 0›
+  exact this
+
+/--
+The only sign value greater than zero, is one.
+
+**Property intuition**: The only sign values are `1`, `0`, and `-1`.
+
+**Proof intuition**: The sign of any number greater than zero is one; taking
+the sign of a sign leaves it unchanged.
+-/
+theorem sgn_gt_zero_iff_pos {p : ℚ} : sgn p > 0 ↔ sgn p ≃ 1 := calc
+  _ ↔ sgn p > 0       := Iff.rfl
+  _ ↔ sgn (sgn p) ≃ 1 := Integer.gt_zero_sgn
+  _ ↔ sgn p ≃ 1       := AA.eqv_substL_iff sgn_idemp
+
+/--
+A rational number is greater than zero iff its sign is greater than zero.
+
+**Property and proof intuition**: Rationals greater than zero have sign value
+`1`; this is the only sign value that's greater than zero.
+-/
+theorem sgn_preserves_gt_zero {p : ℚ} : p > 0 ↔ sgn p > 0 := calc
+  _ ↔ p > 0     := Iff.rfl
+  _ ↔ sgn p ≃ 1 := gt_zero_sgn
+  _ ↔ sgn p > 0 := sgn_gt_zero_iff_pos.symm
+
+/--
+The product of two positive rational numbers is also positive.
+
+**Property intuition**: Multiplying a positive value by another positive value
+can shrink it towards zero or grow it towards infinity, but it can't make it
+zero or negative.
+
+**Proof intuition**: Express the greater-than relations using `sgn`; we need to
+show that `sgn (p * q)` is equivalent to `1` when both `sgn p` and `sgn q` are
+equivalent to `1`. Use `sgn_compat_mul` to factor `sgn (p * q)` into
+`sgn p * sgn q`; this is equivalent to one because both factors are.
+-/
+theorem mul_preserves_pos {p q : ℚ} : p > 0 → q > 0 → p * q > 0 := by
+  intro (_ : p > 0) (_ : q > 0)
+  show p * q > 0
+  have : sgn (p * q) ≃ 1 := calc
+    _ = sgn (p * q)   := rfl
+    _ ≃ sgn p * sgn q := sgn_compat_mul
+    _ ≃ 1 * sgn q     := AA.substL (gt_zero_sgn.mp ‹p > 0›)
+    _ ≃ sgn q         := AA.identL
+    _ ≃ 1             := gt_zero_sgn.mp ‹q > 0›
+  have : p * q > 0 := gt_zero_sgn.mpr ‹sgn (p * q) ≃ 1›
+  exact this
 
 /--
 A rational number is greater than or equivalent to another when subtracting the
@@ -451,6 +515,38 @@ theorem ge_cases {p q : ℚ} : p ≥ q ↔ p > q ∨ p ≃ q := by
     have : q ≤ p := le_cases.mpr this
     have : p ≥ q := this
     exact this
+
+/--
+A rational number is greater than or equivalent to zero iff its sign is greater
+than or equivalent to zero.
+
+**Property intuition**: Rationals greater than or equivalent to zero have sign
+values of `1` and `0`, which are the only ones that are also greater than or
+equivalent to zero.
+
+**Proof intuition**: Split the _greater than or equivalent to_ relation into
+_greater than_ or _equivalent to_. The theorem `sgn_preserves_gt_zero` covers
+the _greater than_ relation, while `sgn_zero` covers _equivalent to_.
+-/
+theorem sgn_preserves_ge_zero {p : ℚ} : p ≥ 0 ↔ sgn p ≥ 0 := calc
+  _ ↔ p ≥ 0                 := Iff.rfl
+  _ ↔ p > 0 ∨ p ≃ 0         := ge_cases
+  _ ↔ sgn p > 0 ∨ p ≃ 0     := iff_subst_covar or_mapL sgn_preserves_gt_zero
+  _ ↔ sgn p > 0 ∨ sgn p ≃ 0 := iff_subst_covar or_mapR sgn_zero
+  _ ↔ sgn p ≥ 0             := Integer.ge_split.symm
+
+/--
+A rational is greater than or equivalent to another exactly when the sign of
+their difference is also greater than or equivalent to zero.
+
+**Property and proof intuition**: The simpler property `p ≥ q ↔ p - q ≥ 0` is
+already obvious using algebra. Add `sgn` on both sides and simplify.
+-/
+theorem ge_iff_sub_sgn_nonneg {p q : ℚ} : p ≥ q ↔ sgn (p - q) ≥ 0 := calc
+  _ ↔ p ≥ q            := Rel.refl
+  _ ↔ sgn (p - q) ≄ -1 := ge_sgn
+  _ ↔ p - q ≥ 0        := ge_zero_sgn.symm
+  _ ↔ sgn (p - q) ≥ 0  := sgn_preserves_ge_zero
 
 /--
 Two rational numbers cannot be both _less than or equivalent to_ and _greater
@@ -952,7 +1048,7 @@ theorem sgn_max {p : ℚ} : sgn p ≤ 1 := by
   match this with
   | AA.OneOfThree.first (_ : sgn p ≃ 0) =>
     have : (0 : ℤ) < 1 := Integer.zero_lt_one
-    have : (0 : ℤ) ≤ 1 := Integer.le_iff_lt_or_eqv.mpr (Or.inl this)
+    have : (0 : ℤ) ≤ 1 := Integer.le_split.mpr (Or.inl this)
     have : sgn p ≤ 1 := Integer.le_substL_eqv (Rel.symm ‹sgn p ≃ 0›) this
     exact this
   | AA.OneOfThree.second (_ : sgn p ≃ 1) =>
@@ -962,8 +1058,8 @@ theorem sgn_max {p : ℚ} : sgn p ≤ 1 := by
   | AA.OneOfThree.third (_ : sgn p ≃ -1) =>
     have : (-1 : ℤ) < 0 := Integer.neg_one_lt_zero
     have : (0 : ℤ) < 1 := Integer.zero_lt_one
-    have : (-1 : ℤ) < 1 := Integer.lt_trans ‹(-1 : ℤ) < 0› ‹(0 : ℤ) < 1›
-    have : (-1 : ℤ) ≤ 1 := Integer.le_iff_lt_or_eqv.mpr (Or.inl this)
+    have : (-1 : ℤ) < 1 := Integer.trans_lt_lt_lt ‹(-1 : ℤ) < 0› ‹(0 : ℤ) < 1›
+    have : (-1 : ℤ) ≤ 1 := Integer.le_split.mpr (Or.inl this)
     have : sgn p ≤ 1 := Integer.le_substL_eqv (Rel.symm ‹sgn p ≃ -1›) this
     exact this
 
@@ -1382,12 +1478,14 @@ via their `sgn`-based definitions. Show that they are equivalent using algebra
 and substitution.
 -/
 theorem lt_substN_div_pos
-    {p q r : ℚ} [AP (sgn r ≃ 1)] : p < q → p/r < q/r
+    {p q r : ℚ} (r_pos : sgn r ≃ 1)
+    : have : AP (r ≄ 0) := AP.mk (nonzero_if_pos ‹sgn r ≃ 1›)
+      p < q → p/r < q/r
     := by
-  intro (_ : p < q)
+  intro (_ : AP (r ≄ 0)) (_ : p < q)
   show p/r < q/r
   have : sgn (p - q) ≃ -1 := lt_sgn.mp ‹p < q›
-  have : sgn (p/r - q/r) ≃ sgn (p - q) := sgn_sub_cancelR_div_pos
+  have : sgn (p/r - q/r) ≃ sgn (p - q) := sgn_sub_cancelR_div_pos ‹sgn r ≃ 1›
   have : sgn (p/r - q/r) ≃ -1 :=
     AA.eqv_substL (Rel.symm this) ‹sgn (p - q) ≃ -1›
   have : p/r < q/r := lt_sgn.mpr this
@@ -1405,16 +1503,55 @@ via their `sgn`-based definitions. Show that they are equivalent using algebra
 and substitution.
 -/
 theorem lt_substD_div_neg
-    {p q r : ℚ} [AP (sgn r ≃ -1)] : p < q → q/r < p/r
+    {p q r : ℚ} (r_neg : sgn r ≃ -1)
+    : have : AP (r ≄ 0) := AP.mk (nonzero_if_neg ‹sgn r ≃ -1›)
+      p < q → q/r < p/r
     := by
-  intro (_ : p < q)
+  intro (_ : AP (r ≄ 0)) (_ : p < q)
   show q/r < p/r
   have : sgn (p - q) ≃ -1 := lt_sgn.mp ‹p < q›
-  have : sgn (q/r - p/r) ≃ sgn (p - q) := sgn_sub_cancelR_div_neg
+  have : sgn (q/r - p/r) ≃ sgn (p - q) := sgn_sub_cancelR_div_neg ‹sgn r ≃ -1›
   have : sgn (q/r - p/r) ≃ -1 :=
     AA.eqv_substL (Rel.symm this) ‹sgn (p - q) ≃ -1›
   have : q/r < p/r := lt_sgn.mpr this
   exact this
+
+/--
+The comparison of reciprocals of two rational numbers gives the opposite result
+as comparison of the original numbers, when both numbers have the same nonzero
+sign.
+
+**Property intuition**: `2 < 3`, but `1/2 > 1/3`.
+
+**Proof intuition**: Simplify the subtraction of reciprocals into an expression
+with a single division. Computing its sign converts the division into
+multiplication. The former denominator is positive and drops out, leaving the
+former numerator which gives the result.
+-/
+theorem sgn_sub_recip
+    {p q : ℚ} (pq_pos : p * q > 0)
+    : have : p * q ≄ 0 := pos_nonzero ‹p * q > 0›
+      have : p ≄ 0 ∧ q ≄ 0 := mul_split_nonzero.mp ‹p * q ≄ 0›
+      have : AP (p ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.1
+      have : AP (q ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.2
+      sgn (p⁻¹ - q⁻¹) ≃ sgn (q - p)
+    := by
+  intro _ _ (_ : AP (p ≄ 0)) (_ : AP (q ≄ 0))
+  show sgn (p⁻¹ - q⁻¹) ≃ sgn (q - p)
+
+  have sub_recips : p⁻¹ - q⁻¹ ≃ (q - p)/(p * q) := calc
+    _ = p⁻¹ - q⁻¹               := rfl
+    _ ≃ 1/p - q⁻¹               := sub_substL (eqv_symm div_identL)
+    _ ≃ 1/p - 1/q               := sub_substR (eqv_symm div_identL)
+    _ ≃ (1 * q - p * 1)/(p * q) := sub_fractions
+    _ ≃ (q - p * 1)/(p * q)     := div_substL (sub_substL mul_identL)
+    _ ≃ (q - p)/(p * q)         := div_substL (sub_substR mul_identR)
+  calc
+    _ = sgn (p⁻¹ - q⁻¹)           := rfl
+    _ ≃ sgn ((q - p)/(p * q))     := sgn_subst sub_recips
+    _ ≃ sgn (q - p) * sgn (p * q) := sgn_div
+    _ ≃ sgn (q - p) * 1           := AA.substR (gt_zero_sgn.mp ‹p * q > 0›)
+    _ ≃ sgn (q - p)               := AA.identR
 
 /--
 The average of two nonequivalent rational numbers lies strictly between them.
@@ -1428,17 +1565,21 @@ number.
 `p` is less than one half of `p` and one half of `q`, by substitution on
 `p < q`. Similarly, two halves of `q` is greater than the average value.
 -/
-theorem average {p q : ℚ} : p < q → p < (p + q)/2 ∧ (p + q)/2 < q := by
-  intro (_ : p < q)
+theorem average
+    {p q : ℚ}
+    : have : AP ((2:ℚ) ≄ 0) := AP.mk (nonzero_if_pos sgn_two)
+      p < q → p < (p + q)/2 ∧ (p + q)/2 < q
+    := by
+  intro (_ : AP ((2:ℚ) ≄ 0)) (_ : p < q)
   show p < (p + q)/2 ∧ (p + q)/2 < q
   have : p < (p + q)/2 := calc
     _ ≃ p         := eqv_refl
     _ ≃ (2 * p)/2 := eqv_symm mulL_div_same
     _ ≃ (p + p)/2 := div_substL mul_two_add
-    _ < (p + q)/2 := lt_substN_div_pos (lt_substR_add ‹p < q›)
+    _ < (p + q)/2 := lt_substN_div_pos sgn_two (lt_substR_add ‹p < q›)
   have : (p + q)/2 < q := calc
     _ ≃ (p + q)/2 := eqv_refl
-    _ < (q + q)/2 := lt_substN_div_pos (lt_substL_add ‹p < q›)
+    _ < (q + q)/2 := lt_substN_div_pos sgn_two (lt_substL_add ‹p < q›)
     _ ≃ (2 * q)/2 := div_substL (eqv_symm mul_two_add)
     _ ≃ q         := mulL_div_same
   exact And.intro ‹p < (p + q)/2› ‹(p + q)/2 < q›
@@ -1449,8 +1590,12 @@ that number and zero.
 
 **Proof intuition**: Follows directly from taking the average of zero and `p`.
 -/
-theorem halve {p : ℚ} : p > 0 → p > p/2 ∧ p/2 > 0 := by
-  intro (_ : p > 0)
+theorem halve
+    {p : ℚ}
+    : have : AP ((2:ℚ) ≄ 0) := AP.mk (nonzero_if_pos sgn_two)
+      p > 0 → p > p/2 ∧ p/2 > 0
+    := by
+  intro (_ : AP ((2:ℚ) ≄ 0)) (_ : p > 0)
   show p > p/2 ∧ p/2 > 0
   have (And.intro (_ : 0 < (0 + p)/2) (_ : (0 + p)/2 < p)) := average ‹0 < p›
   have : p > p/2 := calc
@@ -1545,5 +1690,97 @@ theorem le_diff_upper {ε p q : ℚ} : q - p ≤ ε ↔ q ≤ p + ε := by
       _ ≃ ε + (p + (-p)) := add_assoc
       _ ≃ ε + 0          := add_substR add_inverseR
       _ ≃ ε              := add_identR
+
+/--
+Provides evidence that the given rational number can be expressed as a ratio of
+nonnegative integers.
+
+Inductive types are the best option for existential statements, as their named
+fields keep things organized, and they are allowed to inhabit `Prop`, unlike
+structures.
+
+**Why this is useful**: See `as_nonneg_ratio` below.
+-/
+inductive NonnegRatio (p : ℚ) : Prop :=
+| intro
+    (a b : ℤ)
+    (a_nneg : a ≥ 0)
+    (b_pos : b > 0)
+    (b_nz : AP ((b:ℚ) ≄ 0) :=
+      have : (b:ℚ) > 0 := lt_subst_from_integer ‹b > 0›
+      have : (b:ℚ) ≄ 0 := pos_nonzero ‹(b:ℚ) > 0›
+      AP.mk ‹(b:ℚ) ≄ 0›)
+    (p_eqv : p ≃ a/b)
+  : NonnegRatio p
+
+/--
+A nonnegative rational number can be expressed as a ratio of nonnegative
+integers.
+
+This is useful for simplifying proofs that convert rational numbers to integer
+ratios: nonnegative integers can be easier to work with than general integers.
+
+**Property intuition**: A nonnegative rational is either zero or positive. When
+it's zero, it can be expressed as an integer ratio with a zero numerator. When
+it's positive, it can be expressed either as a ratio of two positive integers,
+or as a ratio of two negative integers. But in the negative case, the numerator
+and denominator can both be multiplied by negative one to make them positive.
+Thus, in all cases the numerator and denominator can always be nonnegative.
+
+**Proof intuition**: Follows the strategy outlined in **Property intuition**,
+but doesn't split into cases. Instead, explicitly defines the nonnegative
+integers in the ratio as expressions involving `sgn`, and uses sign properties
+to show that both must be nonnegative.
+-/
+theorem as_nonneg_ratio {p : ℚ} : p ≥ 0 → NonnegRatio p := by
+  intro (_ : p ≥ 0)
+  show NonnegRatio p
+  have (AsRatio.intro (x : ℤ) (y : ℤ) (_ : Integer.Nonzero y) p_eqv) :=
+    as_ratio p
+  have : p ≃ x/y := p_eqv
+  let a := x * sgn y
+  let b := y * sgn y
+  have : x * sgn y ≃ a := Rel.symm Rel.refl
+  have : y * sgn y ≃ b := Rel.symm Rel.refl
+
+  have : sgn a ≥ 0 := calc
+    _ = sgn a               := rfl
+    _ = sgn (x * sgn y)     := rfl
+    _ ≃ sgn x * sgn (sgn y) := Integer.sgn_compat_mul
+    _ ≃ sgn x * sgn y       := AA.substR Integer.sgn_idemp
+    _ ≃ sgn ((x:ℚ)/y)       := Rel.symm sgn_div_integers
+    _ ≃ sgn p               := sgn_subst (eqv_symm ‹p ≃ x/y›)
+    _ ≥ 0                   := sgn_preserves_ge_zero.mp ‹p ≥ 0›
+  have : a ≥ 0 := Integer.sgn_preserves_ge_zero.mpr ‹sgn a ≥ 0›
+
+  have : Integer.Sqrt1 (sgn y) := Integer.sgn_nonzero.mp ‹Integer.Nonzero y›
+  have : sgn b ≃ 1 := calc
+    _ = sgn b               := rfl
+    _ = sgn (y * sgn y)     := rfl
+    _ ≃ sgn y * sgn (sgn y) := Integer.sgn_compat_mul
+    _ ≃ sgn y * sgn y       := AA.substR Integer.sgn_idemp
+    _ ≃ 1                   := ‹Integer.Sqrt1 (sgn y)›.elim
+  have : b > 0 := Integer.gt_zero_sgn.mpr ‹sgn b ≃ 1›
+
+  have : (x:ℚ)/y ≃ ((x:ℚ) * sgn y)/(y * sgn y) := calc
+    _ = (x:ℚ)/y                             := rfl
+    _ ≃ ((x:ℚ)/y) * 1                       := eqv_symm mul_identR
+    _ ≃ ((x:ℚ)/y) * (((sgn y:ℤ):ℚ)/(sgn y)) := mul_substR (eqv_symm div_same)
+    _ ≃ ((x:ℚ) * sgn y)/(y * sgn y)         := div_mul_swap
+  have liftQ {c z : ℤ} : z * sgn y ≃ c → (z:ℚ) * sgn y ≃ (c:ℚ) := by
+    intro (_ : z * sgn y ≃ c)
+    calc
+      _ = (z:ℚ) * sgn y       := rfl
+      _ ≃ ((z * sgn y : ℤ):ℚ) := eqv_symm mul_compat_from_integer
+      _ ≃ (c:ℚ)               := from_integer_subst ‹z * sgn y ≃ c›
+  have : p ≃ a/b := calc
+    _ = p                           := rfl
+    _ ≃ x/y                         := ‹p ≃ x/y›
+    _ ≃ ((x:ℚ) * sgn y)/(y * sgn y) := ‹(x:ℚ)/y ≃ ((x:ℚ) * sgn y)/(y * sgn y)›
+    _ ≃ (a:ℚ)/(y * sgn y)           := div_substL (liftQ ‹x * sgn y ≃ a›)
+    _ ≃ (a:ℚ)/b                     := div_substR (liftQ ‹y * sgn y ≃ b›)
+
+  have : NonnegRatio p := NonnegRatio.intro a b ‹a ≥ 0› ‹b > 0› _ ‹p ≃ a/b›
+  exact this
 
 end Lean4Axiomatic.Rational

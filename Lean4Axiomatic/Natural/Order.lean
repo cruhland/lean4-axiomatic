@@ -1,3 +1,4 @@
+import Lean4Axiomatic.Logic
 import Lean4Axiomatic.Natural.Sign
 
 /-!
@@ -6,6 +7,7 @@ import Lean4Axiomatic.Natural.Sign
 
 namespace Lean4Axiomatic.Natural
 
+open Logic (iff_subst_covar or_mapL)
 open Signed (Positive)
 
 /-!
@@ -50,7 +52,7 @@ export Order (le_defn leOp lt_defn ltOp)
 
 variable
   {ℕ : Type}
-    [Core ℕ] [Induction.{0} ℕ] [Addition ℕ] [Sign ℕ] [order_inst : Order ℕ]
+    [Core ℕ] [Induction ℕ] [Addition ℕ] [Sign ℕ] [order_inst : Order ℕ]
 
 /--
 The _less than or equal to_ relation is preserved when both sides are
@@ -179,6 +181,19 @@ theorem le_refl {n : ℕ} : n ≤ n := by
 instance le_reflexive : Relation.Reflexive (α := ℕ) (· ≤ ·) := {
   refl := le_refl
 }
+
+/--
+All natural numbers are _greater than or equivalent to_ zero.
+
+**Property intuition**: Zero is the "starting point" for the natural numbers.
+
+**Proof intuition**: Follows directly from the definition of _less than or
+equivalent to_, and zero being the additive identity.
+-/
+theorem ge_zero {n : ℕ} : n ≥ 0 := by
+  have : 0 + n ≃ n := AA.identL
+  have : n ≥ 0 := le_defn.mpr (Exists.intro n ‹0 + n ≃ n›)
+  exact this
 
 theorem le_step_split {n m : ℕ} : n ≤ step m → n ≤ m ∨ n ≃ step m := by
   intro (_ : n ≤ step m)
@@ -317,8 +332,8 @@ instance le_cancellative_add
 theorem le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m := by
   intro (_ : n ≤ m) (_ : m ≤ n)
   show n ≃ m
-  have ⟨d₁, (_ : n + d₁ ≃ m)⟩ := le_defn.mp ‹n ≤ m›
-  have ⟨d₂, (_ : m + d₂ ≃ n)⟩ := le_defn.mp ‹m ≤ n›
+  have (Exists.intro (d₁ : ℕ) (_ : n + d₁ ≃ m)) := le_defn.mp ‹n ≤ m›
+  have (Exists.intro (d₂ : ℕ) (_ : m + d₂ ≃ n)) := le_defn.mp ‹m ≤ n›
   have : n + (d₁ + d₂) ≃ n + 0 := calc
     n + (d₁ + d₂) ≃ _ := Rel.symm AA.assoc
     (n + d₁) + d₂ ≃ _ := AA.substL ‹n + d₁ ≃ m›
@@ -326,7 +341,7 @@ theorem le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m := by
     n             ≃ _ := Rel.symm add_zero
     n + 0         ≃ _ := Rel.refl
   have : d₁ + d₂ ≃ 0 := AA.cancelL ‹n + (d₁ + d₂) ≃ n + 0›
-  have ⟨(_ : d₁ ≃ 0), _⟩ := zero_sum_split ‹d₁ + d₂ ≃ 0›
+  have (And.intro (_ : d₁ ≃ 0) _) := zero_sum_split.mp ‹d₁ + d₂ ≃ 0›
   calc
     n      ≃ _ := Rel.symm add_zero
     n + 0  ≃ _ := AA.substR (Rel.symm ‹d₁ ≃ 0›)
@@ -472,6 +487,21 @@ theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
     exact ⟨‹n ≤ m›, ‹n ≄ m›⟩
 
 /--
+Convert between _less than_ and _less than or equivalent to_ by adding or
+removing `step` from the right-hand operand.
+
+**Property intuition**: Even if `n ≃ m`, we must have `n < step m` because
+`m < step m`.
+
+**Proof intuition**: Use previous results to convert mechanically between the
+expressions.
+-/
+theorem lt_stepR {n m : ℕ} : n < step m ↔ n ≤ m := calc
+  _ ↔ n < step m      := Iff.rfl
+  _ ↔ step n ≤ step m := lt_step_le
+  _ ↔ n ≤ m           := Iff.intro AA.inject AA.subst₁
+
+/--
 The _less than_ relation between two natural numbers `n` and `m` is
 equivalent to there being a positive natural number -- the _difference_
 between `n` and `m` -- that, when added to `n`, results in `m`.
@@ -550,53 +580,49 @@ theorem lt_zero_pos {n : ℕ} : Positive n ↔ n > 0 := by
     have : k ≃ n := Rel.symm (Rel.trans ‹n ≃ 0 + k› zero_add)
     exact AA.substFn ‹k ≃ n› ‹Positive k›
 
-/-- Weakens equivalence to _less than or equal to_. -/
-theorem le_from_eqv {n m : ℕ} : n ≃ m → n ≤ m := by
-  intro (_ : n ≃ m)
-  show n ≤ m
-  have : n ≤ n := Rel.refl
-  exact AA.substRFn ‹n ≃ m› ‹n ≤ n›
-
-/-- Weakens _less than_ to _less than or equal to_. -/
-theorem le_from_lt {n m : ℕ} : n < m → n ≤ m := by
-  intro (_ : n < m)
-  show n ≤ m
-  have ⟨(_ : n ≤ m), _⟩ := lt_defn.mp ‹n < m›
-  exact ‹n ≤ m›
-
 /--
-As the name implies, if _less than or equal to_ holds between two natural
-numbers, then either _less than_ holds between them as well, or the numbers are
-equivalent.
+The _less than or equivalent to_ relation can be formed from, or split into,
+the two relations in its name.
+
+**Proof intuition**: In the forward direction, expand the definition of `n ≤ m`
+into `∃ d, n + d ≃ m`. Case split on `d`: if it's zero, then `n ≃ m`; otherwise
+it's greater than zero and `n < m`. In the reverse direction, `n < m` includes
+`n ≤ m` in its definition, and if `n ≃ m` then `n ≤ n` implies `n ≤ m`.
 -/
-theorem le_split {n m : ℕ} : n ≤ m → n < m ∨ n ≃ m := by
-  intro (_ : n ≤ m)
-  show n < m ∨ n ≃ m
-  have ⟨d, (h : n + d ≃ m)⟩ := le_defn.mp ‹n ≤ m›
-  revert h
-  apply cases_on (motive := λ d => n + d ≃ m → n < m ∨ n ≃ m) d
-  case zero =>
-    intro (_ : n + 0 ≃ m)
-    apply Or.inr
-    show n ≃ m
-    calc
-      n     ≃ _ := Rel.symm add_zero
-      n + 0 ≃ _ := ‹n + 0 ≃ m›
-      m     ≃ _ := Rel.refl
-  case step =>
-    intro d (_ : n + step d ≃ m)
-    apply Or.inl
-    show n < m
-    apply lt_step_le.mpr
-    show step n ≤ m
-    apply le_defn.mpr
-    exists d
-    show step n + d ≃ m
-    calc
-      step n + d   ≃ _ := step_add
-      step (n + d) ≃ _ := Rel.symm add_step
-      n + step d   ≃ _ := ‹n + step d ≃ m›
-      m            ≃ _ := Rel.refl
+theorem le_split {n m : ℕ} : n ≤ m ↔ n < m ∨ n ≃ m := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : n ≤ m)
+    show n < m ∨ n ≃ m
+    have (Exists.intro (d : ℕ) (_ : n + d ≃ m)) := le_defn.mp ‹n ≤ m›
+    have : d ≃ 0 ∨ ∃ (d' : ℕ), d ≃ step d' := split_cases d
+    match this with
+    | Or.inl (_ : d ≃ 0) =>
+      have : n ≃ m := calc
+        _ = n     := rfl
+        _ ≃ n + 0 := Rel.symm add_zero
+        _ ≃ n + d := AA.substR (Rel.symm ‹d ≃ 0›)
+        _ ≃ m     := ‹n + d ≃ m›
+      exact Or.inr ‹n ≃ m›
+    | Or.inr (Exists.intro (d' : ℕ) (_ : d ≃ step d')) =>
+      have : step n + d' ≃ m := calc
+        _ = step n + d'   := rfl
+        _ ≃ n + step d'   := step_add_swap
+        _ ≃ n + d         := AA.substR (Rel.symm ‹d ≃ step d'›)
+        _ ≃ m             := ‹n + d ≃ m›
+      have : step n ≤ m := le_defn.mpr (Exists.intro d' ‹step n + d' ≃ m›)
+      have : n < m := lt_step_le.mpr ‹step n ≤ m›
+      exact Or.inl ‹n < m›
+  case mpr =>
+    intro (_ : n < m ∨ n ≃ m)
+    show n ≤ m
+    match ‹n < m ∨ n ≃ m› with
+    | Or.inl (_ : n < m) =>
+      have (And.intro (_ : n ≤ m) _) := lt_defn.mp ‹n < m›
+      exact ‹n ≤ m›
+    | Or.inr (_ : n ≃ m) =>
+      have : n ≤ n := Rel.refl
+      exact AA.substRFn ‹n ≃ m› ‹n ≤ n›
 
 /--
 Split _greater than or equivalent to_ into the relations implied by its name.
@@ -607,7 +633,7 @@ theorem ge_split {n m : ℕ} : n ≥ m → n > m ∨ n ≃ m := by
   intro (_ : n ≥ m)
   show n > m ∨ n ≃ m
   have : m ≤ n := ‹n ≥ m›
-  have : m < n ∨ m ≃ n := le_split this
+  have : m < n ∨ m ≃ n := le_split.mp this
   match this with
   | Or.inl (_ : m < n) =>
     have : n > m := ‹m < n›
@@ -615,6 +641,67 @@ theorem ge_split {n m : ℕ} : n ≥ m → n > m ∨ n ≃ m := by
   | Or.inr (_ : m ≃ n) =>
     have : n ≃ m := Rel.symm ‹m ≃ n›
     exact Or.inr this
+
+/--
+Add/remove `step` from the right-hand operand of _less than or equivalent to_.
+
+**Property intuition**: For the conversion to work, we need to account for the
+possibility that `n ≃ step m`.
+
+**Proof intuition**: Split `n ≤ step m` into its _less than_ or _equivalent to_
+cases, and transform the _less than_ case.
+-/
+theorem le_stepR {n m : ℕ} : n ≤ step m ↔ n ≤ m ∨ n ≃ step m := calc
+  _ ↔ n ≤ step m              := Iff.rfl
+  _ ↔ n < step m ∨ n ≃ step m := le_split
+  _ ↔ n ≤ m ∨ n ≃ step m      := iff_subst_covar or_mapL lt_stepR
+
+/--
+Induction starting from an arbitrary natural number.
+
+**Property intuition**: Induction works fine with non-zero base cases, since
+the whole idea is to show that we can reach arbitrarily high by iterating the
+inductive step. As long as you don't care about proving the motive for values
+below your chosen starting point.
+
+**Proof intuition**: Uses standard induction, proving the origial motive
+restricted to inputs _greater than or equivalent to_ the chosen starting point.
+For the zero case, show that the starting point must be zero, and thus the
+result is given by the `motive m` base case. For the successor case, we have
+`step k ≥ m` which we can split into `k ≥ m` and `step k ≃ m`. The first option
+follows from the inductive hypothesis; the second option follows from the given
+base case `motive m`.
+-/
+def ind_from
+    {motive : ℕ → Prop}
+    (motive_subst : {k₁ k₂ : ℕ} → k₁ ≃ k₂ → motive k₁ → motive k₂)
+    {n m : ℕ} (n_ge_m : n ≥ m)
+    (base : motive m) (next : {k : ℕ} → k ≥ m → motive k → motive (step k))
+    : motive n
+    := by
+  let motive' := λ x => x ≥ m → motive x
+  have z : motive' 0 := by
+    intro (_ : 0 ≥ m)
+    show motive 0
+    have : m ≥ 0 := ge_zero
+    have : m ≃ 0 := le_antisymm ‹m ≤ 0› ‹0 ≤ m›
+    have : motive 0 := motive_subst ‹m ≃ 0› ‹motive m›
+    exact this
+  have s : (k : ℕ) → motive' k → motive' (step k) := by
+    intro (k : ℕ) (ih : k ≥ m → motive k) (_ : step k ≥ m)
+    show motive (step k)
+    have : m ≤ k ∨ m ≃ step k := le_stepR.mp ‹m ≤ step k›
+    match ‹m ≤ k ∨ m ≃ step k› with
+    | Or.inl (_ : m ≤ k) =>
+      have : motive k := ih ‹k ≥ m›
+      have : motive (step k) := next ‹k ≥ m› ‹motive k›
+      exact this
+    | Or.inr (_ : m ≃ step k) =>
+      have : motive (step k) := motive_subst ‹m ≃ step k› ‹motive m›
+      exact this
+  have : n ≥ m → motive n := ind_on n z s
+  have : motive n := this ‹n ≥ m›
+  exact this
 
 /--
 Positive natural numbers are exactly those that are greater than or equivalent
@@ -641,15 +728,27 @@ theorem positive_ge {n : ℕ} : Positive n ↔ n ≥ 1 := by
     exact this
 
 /--
+Integers greater than zero are exactly those that are greater than or
+equivalent to one.
+
+**Property intuition**: There's no integer between zero and one.
+
+**Proof intuition**: Follows from `lt_zero_pos` and `positive_ge`.
+-/
+theorem gt_zero_iff_ge_one {n : ℕ} : n > 0 ↔ n ≥ 1 := calc
+  _ ↔ n > 0      := Iff.rfl
+  _ ↔ Positive n := lt_zero_pos.symm
+  _ ↔ n ≥ 1      := positive_ge
+
+/--
 Useful result when needing to decrement the larger number in a _less than_
 relation.
 -/
 theorem lt_split {n m : ℕ} : n < step m → n < m ∨ n ≃ m := by
   intro (_ : n < step m)
   show n < m ∨ n ≃ m
-  have : step n ≤ step m := lt_step_le.mp ‹n < step m›
-  have : n ≤ m := AA.inject ‹step n ≤ step m›
-  exact le_split ‹n ≤ m›
+  have : n ≤ m := lt_stepR.mp ‹n < step m›
+  exact le_split.mp ‹n ≤ m›
 
 /--
 Useful result when needing to decrement the larger number in a _greater than_
@@ -675,7 +774,7 @@ theorem lt_trans {n m k : ℕ} : n < m → m < k → n < k := by
   show step n ≤ k
   calc
     step n ≤ _ := lt_step_le.mp ‹n < m›
-    m      ≤ _ := le_from_lt lt_step
+    m      ≤ _ := le_split.mpr (Or.inl lt_step)
     step m ≤ _ := lt_step_le.mp ‹m < k›
     k      ≤ _ := Rel.refl
 
@@ -698,7 +797,7 @@ existing transitivity property for each case.
 theorem trans_lt_le_lt {n m k : ℕ} : n < m → m ≤ k → n < k := by
   intro (_ : n < m) (_ : m ≤ k)
   show n < k
-  have : m < k ∨ m ≃ k := le_split ‹m ≤ k›
+  have : m < k ∨ m ≃ k := le_split.mp ‹m ≤ k›
   match this with
   | Or.inl (_ : m < k) =>
     have : n < k := lt_trans ‹n < m› ‹m < k›
@@ -726,7 +825,7 @@ existing transitivity property for each case.
 theorem trans_le_lt_lt {n m k : ℕ} : n ≤ m → m < k → n < k := by
   intro (_ : n ≤ m) (_ : m < k)
   show n < k
-  have : n < m ∨ n ≃ m := le_split ‹n ≤ m›
+  have : n < m ∨ n ≃ m := le_split.mp ‹n ≤ m›
   match this with
   | Or.inl (_ : n < m) =>
     have : n < k := lt_trans ‹n < m› ‹m < k›
@@ -814,13 +913,13 @@ theorem trichotomy (n m : ℕ)
       match ih with
       | AA.OneOfThree.first (_ : n < m) =>
         have : step n ≤ m := lt_step_le.mp ‹n < m›
-        have : step n < m ∨ step n ≃ m := le_split ‹step n ≤ m›
+        have : step n < m ∨ step n ≃ m := le_split.mp ‹step n ≤ m›
         match ‹step n < m ∨ step n ≃ m› with
         | Or.inl (_ : step n < m) => exact AA.OneOfThree.first ‹step n < m›
         | Or.inr (_ : step n ≃ m) => exact AA.OneOfThree.second ‹step n ≃ m›
       | AA.OneOfThree.second (_ : n ≃ m) =>
         have : m ≃ n := Rel.symm ‹n ≃ m›
-        have : m ≤ n := le_from_eqv ‹m ≃ n›
+        have : m ≤ n := le_split.mpr (Or.inr ‹m ≃ n›)
         have : step m ≤ step n := AA.subst₁ ‹m ≤ n›
         have : m < step n := lt_step_le.mpr ‹step m ≤ step n›
         apply AA.OneOfThree.third

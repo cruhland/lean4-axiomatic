@@ -5,7 +5,7 @@ import Lean4Axiomatic.Rational.MinMax
 
 namespace Lean4Axiomatic.Rational
 
-open Logic (and_mapL and_mapR iff_subst_covar)
+open Logic (AP and_mapL and_mapR iff_subst_covar)
 open Metric (abs dist MetricSpace)
 open Ordered (max min)
 open Rel (iff_subst_eqv)
@@ -671,6 +671,7 @@ theorem close_eqv {p q : ℚ} : ({ε : ℚ} → ε > 0 → p ⊢ε⊣ q) ↔ p �
     match this with
     | Or.inl (_ : dist p q > 0) =>
       let ε := dist p q
+      have : AP ((2:ℚ) ≄ 0) := AP.mk (nonzero_if_pos sgn_two)
       have (And.intro (_ : ε > ε/2) (_ : ε/2 > 0)) := halve ‹ε > 0›
       have : p ⊢ε/2⊣ q := hyp ‹ε/2 > 0›
       have : dist p q ≤ ε/2 := close_dist.mp this

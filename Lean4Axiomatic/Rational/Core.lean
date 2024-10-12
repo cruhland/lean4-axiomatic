@@ -141,6 +141,19 @@ instance from_integer_preserves_nonzero_inst
   AP.mk (from_integer_preserves_nonzero ‹Integer.Nonzero a›)
 
 /--
+Allows the integer-to-rational conversion syntax `((·:ℤ):ℚ)` to be used in
+places that require a nonzero value, such as under a division operator, as long
+as the underlying integer value is also nonzero.
+-/
+instance from_integer_preserves_neqv_zero_inst
+    {a : ℤ} [AP (a ≄ 0)] : AP ((a:ℚ) ≄ 0)
+    := by
+  have : a ≄ 0 := ‹AP (a ≄ 0)›.ev
+  have : Integer.Nonzero a := Integer.nonzero_iff_neqv_zero.mpr ‹a ≄ 0›
+  have : (a:ℚ) ≄ 0 := from_integer_preserves_nonzero ‹Integer.Nonzero a›
+  exact AP.mk ‹(a:ℚ) ≄ 0›
+
+/--
 One and zero are distinct rational numbers.
 
 **Intuition**: They are also distinct integers, and their rational number

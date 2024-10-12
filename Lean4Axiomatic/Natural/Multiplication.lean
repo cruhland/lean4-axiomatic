@@ -208,7 +208,7 @@ theorem mul_split_zero {n m : ℕ} : n * m ≃ 0 ↔ n ≃ 0 ∨ m ≃ 0 := by
         n * m + m  ≃ _ := Rel.symm step_mul
         step n * m ≃ _ := ‹step n * m ≃ 0›
         0          ≃ _ := Rel.refl
-      have ⟨_, (_ : m ≃ 0)⟩ := zero_sum_split ‹n * m + m ≃ 0›
+      have (And.intro _ (_ : m ≃ 0)) := zero_sum_split.mp ‹n * m + m ≃ 0›
       exact ‹m ≃ 0›
   · intro (_ : n ≃ 0 ∨ m ≃ 0)
     show n * m ≃ 0

@@ -4,6 +4,8 @@ import Lean4Axiomatic.Integer.Sign
 
 namespace Lean4Axiomatic.Integer
 
+open Logic (iff_subst_covar or_mapR)
+
 /-! ## Axioms -/
 
 /-- Operations pertaining to integer subtraction. -/
@@ -192,6 +194,22 @@ theorem sub_assoc_addR {a b c : ℤ} : (a - b) + c ≃ a + (c - b) := calc
   _ ≃ a + (c - b)  := AA.substR (Rel.symm sub_defn)
 
 /--
+Subtraction "associates" with subtraction to its right.
+
+**Property intuition**: Subtracting `b` from `a`, and then `c` from the result,
+is equivalent to subtracting `b` and `c` from `a` together.
+
+**Proof intuition**: Expand subtraction into addition; rearrange.
+-/
+theorem sub_assoc_subR {a b c : ℤ} : (a - b) - c ≃ a - (b + c) := calc
+  _ = (a - b) - c   := rfl
+  _ ≃ (a - b) + -c  := sub_defn
+  _ ≃ (a + -b) + -c := AA.substL sub_defn
+  _ ≃ a + (-b + -c) := AA.assoc
+  _ ≃ a + -(b + c)  := AA.substR (Rel.symm neg_compat_add)
+  _ ≃ a - (b + c)   := Rel.symm sub_defn
+
+/--
 Move a subtraction's right operand to an addition's right operand, from left to
 right across an equivalence (or the reverse).
 
@@ -309,6 +327,26 @@ instance mul_distributive_sub : AA.Distributive (α := ℤ) (· * ·) (· - ·) 
 }
 
 /--
+The only way for multiplication on the right to have no effect on the left
+value, is if the left value is zero or the right value is one.
+
+**Property intuition**: The reverse direction is trivial. The forward direction
+makes sense because multiplication by any values that are not zero or one will
+change the magnitude of the result or the sign of the result.
+
+**Proof intuition**: Rewrite the equivalence into `a * (b - 1) ≃ 0` using
+algebra. Then `mul_split_zero` implies at least one of the factors is zero, and
+with trivial algebra this gives the result.
+-/
+theorem mul_identR_reasons {a b : ℤ} : a * b ≃ a ↔ a ≃ 0 ∨ b ≃ 1 := calc
+  _ ↔ a * b ≃ a         := Iff.rfl
+  _ ↔ a * b ≃ a * 1     := AA.eqv_substR_iff (Rel.symm AA.identR)
+  _ ↔ a * b - a * 1 ≃ 0 := zero_diff_iff_eqv.symm
+  _ ↔ a * (b - 1) ≃ 0   := AA.eqv_substL_iff (Rel.symm mul_distribL_sub)
+  _ ↔ a ≃ 0 ∨ b - 1 ≃ 0 := mul_split_zero
+  _ ↔ a ≃ 0 ∨ b ≃ 1     := iff_subst_covar or_mapR zero_diff_iff_eqv
+
+/--
 When subtracting two sums, if they both have the same right-hand operand, it
 can be removed, leaving just the difference of the left-hand operands.
 
@@ -325,6 +363,23 @@ theorem sub_sums_sameR {a b c : ℤ} : a + c - (b + c) ≃ a - b := calc
   a + -1 * b                ≃ _ := AA.substR mul_neg_one
   a + -b                    ≃ _ := Rel.symm sub_defn
   a - b                     ≃ _ := Rel.refl
+
+/--
+The simplest example of a "telescoping" sum: adding two differences with a
+common middle value results in the difference of the endpoints.
+
+**Property and proof intuition**: The middle value is positive in one of the
+sum's arguments, and negative in the other. Those are additive inverses so they
+sum to zero and disappear from the result.
+-/
+theorem add_sub_telescope {a b c : ℤ} : (a - b) + (b - c) ≃ a - c := calc
+  (a - b) + (b - c)   ≃ _ := AA.substL sub_defn
+  (a + -b) + (b - c)  ≃ _ := AA.substR sub_defn
+  (a + -b) + (b + -c) ≃ _ := AA.expr_xxfxxff_lr_swap_rr
+  (a + -c) + (b + -b) ≃ _ := AA.substR AA.inverseR
+  (a + -c) + 0        ≃ _ := AA.identR
+  a + -c              ≃ _ := Rel.symm sub_defn
+  a - c               ≃ _ := Rel.refl
 
 /--
 Multiplication by a nonzero value on the left is injective.
@@ -370,6 +425,19 @@ theorem mul_cancelR {a b c : ℤ} : a ≄ 0 → b * a ≃ c * a → b ≃ c :=
   AA.cancelRC (C := (· ≄ 0))
 
 /--
+Two integers are equivalent iff the sign of their difference is zero.
+
+This lemma can save some lines in proofs of sign or order trichotomy.
+
+**Property and proof intution**: Follows directly from `zero_diff_iff_eqv` and
+`sgn_zero`.
+-/
+theorem eqv_sgn {a b : ℤ} : a ≃ b ↔ sgn (a - b) ≃ 0 := calc
+  _ ↔ a ≃ b           := Iff.rfl
+  _ ↔ a - b ≃ 0       := zero_diff_iff_eqv.symm
+  _ ↔ sgn (a - b) ≃ 0 := sgn_zero
+
+/--
 Decidable equivalence for integers.
 
 **Property intuition**: Every integer has a finite value, so it should be
@@ -384,8 +452,7 @@ instance eqv? (a b : ℤ) : Decidable (a ≃ b) := by
   have : Sgn3 := sgn_trichotomy (a-b)
   match this with
   | AA.OneOfThree₁.first (_ : sgn (a-b) ≃ 0) =>
-    have : a-b ≃ 0 := sgn_zero.mpr ‹sgn (a-b) ≃ 0›
-    have : a ≃ b := zero_diff_iff_eqv.mp this
+    have : a ≃ b := eqv_sgn.mpr ‹sgn (a-b) ≃ 0›
     have : Decidable (a ≃ b) := isTrue this
     exact this
   | AA.OneOfThree₁.second (_ : sgn (a-b) ≃ 1) =>

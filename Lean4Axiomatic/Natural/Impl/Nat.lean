@@ -166,7 +166,7 @@ from `le`'s definition in the inductive step.
 theorem prelude_le_from_impl_le {n : Nat} : {m : Nat} → le n m → n ≤ m
 | 0, Exists.intro k (_ : n + k ≃ 0) => by
   show n ≤ 0
-  have (And.intro (_ : n ≃ 0) (_ : k ≃ 0)) := zero_sum_split ‹n + k ≃ 0›
+  have (And.intro (_ : n ≃ 0) (_ : k ≃ 0)) := zero_sum_split.mp ‹n + k ≃ 0›
   have : n = 0 := ‹n ≃ 0›
   match ‹n = 0› with
   | rfl => exact Nat.le.refl

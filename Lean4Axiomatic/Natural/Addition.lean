@@ -274,25 +274,47 @@ instance add_cancellative
 }
 
 /--
-Both operands in a sum of natural numbers must be zero if the result is zero.
--/
-theorem zero_sum_split {n m : ℕ} : n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0 := by
-  apply cases_on (motive := λ n => n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0) n
-  case zero =>
-    intro (_ : 0 + m ≃ 0)
-    show 0 ≃ 0 ∧ m ≃ 0
-    have : m ≃ 0 := Rel.trans (Rel.symm Addition.zero_add) ‹0 + m ≃ 0›
-    exact And.intro Rel.refl ‹m ≃ 0›
-  case step =>
-    intro n (_ : step n + m ≃ 0)
-    show step n ≃ 0 ∧ m ≃ 0
-    apply False.elim
-    show False
-    have : step (n + m) ≃ step n + m := Rel.symm Addition.step_add
-    have : step (n + m) ≃ 0 :=
-      Rel.trans ‹step (n + m) ≃ step n + m› ‹step n + m ≃ 0›
-    exact absurd ‹step (n + m) ≃ 0› step_neqv_zero
+The only way to have two natural numbers that sum to zero is if both of them
+are themselves zero.
 
+**Property intuition**: Zero is the smallest natural number; including it in a
+sum doesn't increase the result, unlike all non-zero naturals.
+
+**Proof intuition**: The forward direction is a case analysis on the sum's
+first operand. When it's zero, the second operand must also be zero. When it's
+`step` of some other natural, the result must also contain `step`, which
+contradicts the assumption that the result is zero. The reverse direction holds
+because zero is the additive identity.
+-/
+theorem zero_sum_split {n m : ℕ} : n + m ≃ 0 ↔ n ≃ 0 ∧ m ≃ 0 := by
+  apply Iff.intro
+  case mp =>
+    apply cases_on (motive := λ x => x + m ≃ 0 → x ≃ 0 ∧ m ≃ 0) n
+    case zero =>
+      intro (_ : 0 + m ≃ 0)
+      show 0 ≃ 0 ∧ m ≃ 0
+      have : m ≃ 0 := calc
+        _ = m     := rfl
+        _ ≃ 0 + m := Rel.symm zero_add
+        _ ≃ 0     := ‹0 + m ≃ 0›
+      exact And.intro Rel.refl ‹m ≃ 0›
+    case step =>
+      intro k (_ : step k + m ≃ 0)
+      show step k ≃ 0 ∧ m ≃ 0
+      have : step (k + m) ≃ 0 := calc
+        _ = step (k + m) := rfl
+        _ ≃ step k + m   := Rel.symm step_add
+        _ ≃ 0            := ‹step k + m ≃ 0›
+      have : step (k + m) ≄ 0 := step_neqv_zero
+      exact absurd ‹step (k + m) ≃ 0› ‹step (k + m) ≄ 0›
+  case mpr =>
+    intro (And.intro (_ : n ≃ 0) (_ : m ≃ 0))
+    show n + m ≃ 0
+    calc
+      _ = n + m := rfl
+      _ ≃ 0 + m := AA.substL ‹n ≃ 0›
+      _ ≃ m     := AA.identL
+      _ ≃ 0     := ‹m ≃ 0›
 
 /-
 Example showing that naturals numbers with addition form a Monoid and use

@@ -479,7 +479,7 @@ class Sgn.Props
       [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Signed.Ops ℤ] [Ops ℤ]
     :=
   /-- Zero is the only integer with sign value zero. -/
-  sgn_zero {a : ℤ} : a ≃ 0 ↔ sgn a ≃ (0 : ℤ)
+  sgn_zero {a : ℤ} : a ≃ 0 ↔ sgn a ≃ (0:ℤ)
 
   /-- Only positive integers have sign value one. -/
   sgn_positive {a : ℤ} : Positive a ↔ sgn a ≃ 1
@@ -1102,6 +1102,11 @@ theorem mul_split_zero {a b : ℤ} : a * b ≃ 0 ↔ a ≃ 0 ∨ b ≃ 0 := by
       a * 0 ≃ _ := AA.absorbR
       0     ≃ _ := Rel.refl
 
+/-- Integers satisfy the zero-product property. -/
+instance zero_product_inst : AA.ZeroProduct (α := ℤ) (· * ·) := {
+  zero_prod := mul_split_zero.mp
+}
+
 /--
 If a product of integers is nonzero, then both factors must be nonzero.
 
@@ -1547,40 +1552,73 @@ theorem sgn_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → sgn a₁ ≃ sgn a₂ :=
       sgn a₂ ≃ _ := Rel.refl
 
 /--
+The only values for which `sgn` leaves its input unchanged are zero, one, and
+negative one.
+
+**Property intuition**: We already know that zero, one, and negative one are
+the only possible outputs of `sgn`. But they are also all fixed points because
+`sgn` does not change the sign of its input.
+
+**Proof intuition**: The forward direction follows immediately from trichotomy.
+In the reverse direction, the three values of `a` correspond with zero,
+positive, and negative. The `sgn` of zero is zero, the `sgn` of a positive
+value is one, and the `sgn` of a negative value is negative one.
+-/
+theorem sgn_fixed_points {a : ℤ} : sgn a ≃ a ↔ a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : sgn a ≃ a)
+    show a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1
+    have : a ≃ sgn a := Rel.symm ‹sgn a ≃ a›
+    have : AA.OneOfThree₁ (sgn a ≃ 0) (sgn a ≃ 1) (sgn a ≃ -1) :=
+      sgn_trichotomy a
+    exact match this with
+    | AA.OneOfThree₁.first (_ : sgn a ≃ 0) =>
+      Or.inl (Rel.trans ‹a ≃ sgn a› ‹sgn a ≃ 0›)
+    | AA.OneOfThree₁.second (_ : sgn a ≃ 1) =>
+      Or.inr (Or.inl (Rel.trans ‹a ≃ sgn a› ‹sgn a ≃ 1›))
+    | AA.OneOfThree₁.third (_ : sgn a ≃ -1) =>
+      Or.inr (Or.inr (Rel.trans ‹a ≃ sgn a› ‹sgn a ≃ -1›))
+  case mpr =>
+    intro (_ : a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1)
+    show sgn a ≃ a
+    match ‹a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1› with
+    | Or.inl (_ : a ≃ 0) =>
+      calc
+        _ = sgn a := rfl
+        _ ≃ 0     := sgn_zero.mp ‹a ≃ 0›
+        _ ≃ a     := Rel.symm ‹a ≃ 0›
+    | Or.inr (Or.inl (_ : a ≃ 1)) =>
+      have : Positive a := AA.substFn (Rel.symm ‹a ≃ 1›) one_positive
+      calc
+        _ = sgn a := rfl
+        _ ≃ 1     := sgn_positive.mp ‹Positive a›
+        _ ≃ a     := Rel.symm ‹a ≃ 1›
+    | Or.inr (Or.inr (_ : a ≃ -1)) =>
+      have : Negative a := AA.substFn (Rel.symm ‹a ≃ -1›) neg_one_negative
+      calc
+        _ = sgn a := rfl
+        _ ≃ -1    := sgn_negative.mp ‹Negative a›
+        _ ≃ a     := Rel.symm ‹a ≃ -1›
+
+/--
 The `sgn` function is idempotent.
 
 **Property intuition**: The `sgn` function returns a canonical representative
 of the states zero, positive, and negative. The sign value of this
 representative is of course the same number.
 
-**Proof intuition**: Split `a` into zero, positive, and negative states. Use
-the definition of `sgn` and its substitutive property to show that `sgn a` and
-`sgn (sgn a)` give the same result in each case.
+**Proof intuition**: Follows directly from `sgn_trichotomy` and
+`sgn_fixed_points`.
 -/
 theorem sgn_idemp {a : ℤ} : sgn (sgn a) ≃ sgn a := by
-  have : AA.OneOfThree (a ≃ 0) (Positive a) (Negative a) :=
-    (sign_trichotomy a).atLeastOne
-  match this with
-  | AA.OneOfThree.first (_ : a ≃ 0) =>
-    have : sgn a ≃ 0 := sgn_zero.mp ‹a ≃ 0›
-    calc
-      sgn (sgn a) ≃ _ := sgn_subst ‹sgn a ≃ 0›
-      sgn (0 : ℤ) ≃ _ := sgn_subst (Rel.symm ‹a ≃ 0›)
-      sgn a       ≃ _ := Rel.refl
-  | AA.OneOfThree.second (_ : Positive a) =>
-    have : sgn a ≃ 1 := sgn_positive.mp ‹Positive a›
-    calc
-      sgn (sgn a) ≃ _ := sgn_subst ‹sgn a ≃ 1›
-      sgn (1 : ℤ) ≃ _ := sgn_positive.mp one_positive
-      1           ≃ _ := Rel.symm ‹sgn a ≃ 1›
-      sgn a       ≃ _ := Rel.refl
-  | AA.OneOfThree.third (_ : Negative a) =>
-    have : sgn a ≃ -1 := sgn_negative.mp ‹Negative a›
-    calc
-      sgn (sgn a)  ≃ _ := sgn_subst ‹sgn a ≃ -1›
-      sgn (-1 : ℤ) ≃ _ := sgn_negative.mp neg_one_negative
-      (-1)         ≃ _ := Rel.symm ‹sgn a ≃ -1›
-      sgn a        ≃ _ := Rel.refl
+  have : AA.OneOfThree₁ (sgn a ≃ 0) (sgn a ≃ 1) (sgn a ≃ -1) := sgn_trichotomy a
+  have : sgn a ≃ 0 ∨ sgn a ≃ 1 ∨ sgn a ≃ -1 := match this with
+  | AA.OneOfThree₁.first (_ : sgn a ≃ 0) => Or.inl ‹sgn a ≃ 0›
+  | AA.OneOfThree₁.second (_ : sgn a ≃ 1) => Or.inr (Or.inl ‹sgn a ≃ 1›)
+  | AA.OneOfThree₁.third (_ : sgn a ≃ -1) => Or.inr (Or.inr ‹sgn a ≃ -1›)
+  have : sgn (sgn a) ≃ sgn a := sgn_fixed_points.mpr this
+  exact this
 
 /--
 Both factors in a nonzero product have sign values that are square roots of
@@ -1792,6 +1830,27 @@ instance positive_mul_sgn_self_inst
   AP.mk (positive_mul_sgn_self ‹Nonzero a›)
 
 /--
+Extract a positive natural number "magnitude" from a nonzero integer, such that
+the integer's sign times its magnitude is equivalent to the integer.
+
+**Property intuition**: This captures the idea that a (nonzero) integer is a
+natural number with a sign attached.
+
+**Proof intuition**: By various properties of `sgn` and `Nonzero`.
+-/
+theorem as_size_with_sign
+    {a : ℤ} : Nonzero a → ∃ (n : ℕ), n ≥ 1 ∧ a ≃ n * sgn a
+    := by
+  intro (_ : Nonzero a)
+  show ∃ (n : ℕ), n ≥ 1 ∧ a ≃ n * sgn a
+  have : Sqrt1 (sgn a) := sgn_nonzero.mp ‹Nonzero a›
+  have (NonzeroWithSign.intro (n : ℕ) (_ : Positive n) (_ : a ≃ sgn a * n)) :=
+    sgn_nonzeroWithSign (a := a)
+  have : n ≥ 1 := Natural.positive_ge.mp ‹Positive n›
+  have : a ≃ n * sgn a := Rel.trans ‹a ≃ sgn a * n› AA.comm
+  exact Exists.intro n (And.intro ‹n ≥ 1› ‹a ≃ n * sgn a›)
+
+/--
 The integer two's sign is one.
 
 **Property intution**: Two is positive.
@@ -1805,5 +1864,66 @@ theorem sgn_two_eqv_one : sgn (2:ℤ) ≃ 1 := by
     _ ≃ sgn (2:ℤ)       := Rel.refl
     _ ≃ sgn (1 + 1 : ℤ) := sgn_subst (Rel.symm add_one_one)
     _ ≃ 1               := add_preserves_sign ‹sgn (1:ℤ) ≃ 1› ‹sgn (1:ℤ) ≃ 1›
+
+/--
+The square of an integer is nonnegative.
+
+**Property intuition**: The product of two negative numbers is positive, and
+zero times anything is zero, so this must be true.
+
+**Proof intuition**: Assume that the square is negative and reach a
+contradiction. The sign of the number being squared must be nonzero, otherwise
+its square would have a sign of zero. We also know that the square of the sign
+is `-1`. If two nonzero signs have a negative product, then they must be
+distinct -- but in this case that means the sign is distinct from itself.
+Contradiction.
+-/
+theorem nonneg_square {a : ℤ} : sgn (a * a) ≄ -1 := by
+  intro (_ : sgn (a * a) ≃ -1)
+  show False
+  have : sgn a * sgn a ≃ -1 :=
+    Rel.trans (Rel.symm sgn_compat_mul) ‹sgn (a * a) ≃ -1›
+  have : Nonzero (-1:ℤ) := nonzero_sqrt1
+  have : Nonzero (sgn a * sgn a) :=
+    nonzero_subst (Rel.symm ‹sgn a * sgn a ≃ -1›) ‹Nonzero (-1:ℤ)›
+  have (And.intro (_ : Nonzero (sgn a)) _) :=
+    nonzero_factors_if_nonzero_product ‹Nonzero (sgn a * sgn a)›
+  have : Sqrt1 (sgn (sgn a)) := sgn_nonzero.mp ‹Nonzero (sgn a)›
+  have : Sqrt1 (sgn a) := sqrt1_subst sgn_idemp ‹Sqrt1 (sgn (sgn a))›
+  have : sgn a ≄ sgn a := mul_sqrt1_neqv.mp ‹sgn a * sgn a ≃ -1›
+  exact absurd Rel.refl this
+
+/--
+The signum function is compatible with addition if one of the operands is zero.
+
+**Property and proof intuition**: Zero is the additive identity, and its sign
+is also zero, so the zero terms drop out of the equivalence.
+-/
+theorem sgn_sum_zero_term
+    {a b : ℤ} : a ≃ 0 ∨ b ≃ 0 → sgn (a + b) ≃ sgn a + sgn b
+    := by
+  intro (_ : a ≃ 0 ∨ b ≃ 0)
+  show sgn (a + b) ≃ sgn a + sgn b
+
+  have sgn_sum_zeroL {x y : ℤ} : x ≃ 0 → sgn (x + y) ≃ sgn x + sgn y := by
+    intro (_ : x ≃ 0)
+    show sgn (x + y) ≃ sgn x + sgn y
+    calc
+      _ = sgn (x + y)   := rfl
+      _ ≃ sgn (0 + y)   := sgn_subst (AA.substL ‹x ≃ 0›)
+      _ ≃ sgn y         := sgn_subst AA.identL
+      _ ≃ 0 + sgn y     := Rel.symm AA.identL
+      _ ≃ sgn x + sgn y := AA.substL (Rel.symm (sgn_zero.mp ‹x ≃ 0›))
+
+  match ‹a ≃ 0 ∨ b ≃ 0› with
+  | Or.inl (_ : a ≃ 0) =>
+    have : sgn (a + b) ≃ sgn a + sgn b := sgn_sum_zeroL ‹a ≃ 0›
+    exact this
+  | Or.inr (_ : b ≃ 0) =>
+    calc
+      _ = sgn (a + b)   := rfl
+      _ ≃ sgn (b + a)   := sgn_subst AA.comm
+      _ ≃ sgn b + sgn a := sgn_sum_zeroL ‹b ≃ 0›
+      _ ≃ sgn a + sgn b := AA.comm
 
 end Lean4Axiomatic.Integer

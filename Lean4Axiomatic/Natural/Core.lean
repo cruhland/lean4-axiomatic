@@ -223,6 +223,26 @@ theorem rec_on_step
   _ = s (ind_on n z (λ _ => s))         := rfl
   _ = s (rec_on n z s)                  := rfl
 
+/--
+A natural number is either zero, or the successor of another natural number.
+
+This can sometimes be easier to use than `cases_on`.
+
+**Property intuition**: Zero and successor are the only ways to construct
+natural numbers.
+
+**Proof intuition**: Follows directly from `cases_on`.
+-/
+theorem split_cases (n : ℕ) : n ≃ 0 ∨ ∃ (m : ℕ), n ≃ step m := by
+  apply cases_on n
+  case zero =>
+    show 0 ≃ 0 ∨ ∃ m, 0 ≃ step m
+    exact Or.inl Rel.refl
+  case step =>
+    intro (k : ℕ)
+    show step k ≃ 0 ∨ ∃ m, step k ≃ step m
+    exact Or.inr (Exists.intro k Rel.refl)
+
 /-- A natural number is never equal to its successor. -/
 theorem step_neqv {n : ℕ} : step n ≄ n := by
   apply ind_on (motive := λ n => step n ≄ n) n

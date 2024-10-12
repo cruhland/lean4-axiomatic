@@ -58,7 +58,7 @@ def exponentiation_props : Exponentiation.Props (α := α) := {
   pow_step := pow_step
 }
 
-def exponentiation : Exponentiation ℕ (α := α):= {
+def exponentiation : Exponentiation ℕ α := {
   toOps := exponentiation_ops
   toProps := exponentiation_props
 }

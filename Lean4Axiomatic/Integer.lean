@@ -1,5 +1,5 @@
+import Lean4Axiomatic.Integer.Exponentiation
 import Lean4Axiomatic.Integer.Induction
-import Lean4Axiomatic.Integer.Order
 
 /-!
 # Combined typeclass of all integer definitions and properties
@@ -35,6 +35,7 @@ class Integer {ℕ : outParam Type} [Natural ℕ] (ℤ : Type) :=
   toCore : Core (ℕ := ℕ) ℤ
   toAddition : Addition ℤ
   toMultiplication : Multiplication ℤ
+  toExponentiation : Natural.Exponentiation ℕ ℤ
   toNegation : Negation ℤ
   toOrder : Order ℤ
   toSign : Sign ℤ
@@ -43,6 +44,7 @@ class Integer {ℕ : outParam Type} [Natural ℕ] (ℤ : Type) :=
 
 attribute [instance] Integer.toAddition
 attribute [instance] Integer.toCore
+attribute [instance] Integer.toExponentiation
 attribute [instance] Integer.toInduction
 attribute [instance] Integer.toMultiplication
 attribute [instance] Integer.toNegation

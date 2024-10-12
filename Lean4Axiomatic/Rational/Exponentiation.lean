@@ -14,7 +14,7 @@ open Lean4Axiomatic.Function (idx_fam_prop)
 open Lean4Axiomatic.Logic (AP)
 open Lean4Axiomatic.Metric (abs)
 open Lean4Axiomatic.Natural (pow_step pow_zero step)
-open Lean4Axiomatic.Signed (sgn)
+open Lean4Axiomatic.Signed (Positive sgn)
 
 /-! ## Derived properties for exponentiation to a natural number -/
 
@@ -25,117 +25,40 @@ variable
   {ℚ : Type}
     [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
     [Negation ℚ] [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ]
-    [Sign ℚ] [Order ℚ] [Metric ℚ] [Natural.Exponentiation ℕ (α := ℚ)]
+    [Sign ℚ] [Order ℚ] [Metric ℚ] [Natural.Exponentiation ℕ ℚ]
 
 /--
-Raising two ordered, nonnegative values to the same natural number power
-preserves their ordering and nonnegativity.
+Casting an integer to a rational number is left-semicompatible with natural
+number exponentiation.
 
-**Property intuition**: We already know that products of any nonnegative values
-remain nonnegative, and that the greater the inputs, the greater the result. So
-it's not surprising that this also holds for powers of nonnegative values.
+In other words, starting from an integer value, the operations of (i) raising a
+value to a natural number power, and (ii) converting an integer to a rational
+number, can be done in either order and produce the same result.
 
-**Proof intuition**: Induction and algebra. Substitutions on ordering relations
-are the key steps.
+**Property intuition**: Multiplication is compatible with integer-to-rational
+conversion, so the base of exponentiation should also be compatible.
+
+**Proof intuition**: By induction on the exponent. The zero case is trivial:
+both sides reduce to `1` via `pow_zero`. The step case follows from `pow_step`
+and `mul_compat_from_integer`.
 -/
-theorem pow_substL_ge_nonneg
-    {p q : ℚ} {n : ℕ} : p ≥ q ∧ q ≥ 0 → p^n ≥ q^n ∧ q^n ≥ 0
-    := by
-  intro (And.intro (_ : p ≥ q) (_ : q ≥ 0))
-  show p^n ≥ q^n ∧ q^n ≥ 0
+theorem pow_scompatL_from_integer {a : ℤ} {n : ℕ} : ((a^n:ℤ):ℚ) ≃ (a:ℚ)^n := by
   apply Natural.ind_on n
   case zero =>
-    show p^0 ≥ q^0 ∧ q^0 ≥ 0
-    have : p^(0:ℕ) ≥ q^(0:ℕ) := calc
-      _ ≃ p^0 := eqv_refl
-      _ ≃ 1   := pow_zero
-      _ ≃ q^0 := eqv_symm pow_zero
-      _ ≥ q^0 := le_refl
-    have : q^(0:ℕ) ≥ 0 := calc
-      _ ≃ q^0 := eqv_refl
-      _ ≃ 1   := pow_zero
-      _ ≥ 0   := one_ge_zero
-    exact And.intro ‹p^(0:ℕ) ≥ q^(0:ℕ)› ‹q^(0:ℕ) ≥ 0›
+    show ((a^0:ℤ):ℚ) ≃ (a:ℚ)^0
+    calc
+      _ = ((a^0:ℤ):ℚ) := rfl
+      _ ≃ 1           := from_integer_subst Natural.pow_zero
+      _ ≃ (a:ℚ)^0     := eqv_symm Natural.pow_zero
   case step =>
-    intro (n' : ℕ) (And.intro (_ : p^n' ≥ q^n') (_ : q^n' ≥ 0))
-    show p^(step n') ≥ q^(step n') ∧ q^(step n') ≥ 0
-    have : p ≥ 0 := ge_trans ‹p ≥ q› ‹q ≥ 0›
-    have : p^(step n') ≥ q^(step n') := calc
-      _ ≃ p^(step n') := eqv_refl
-      _ ≃ p^n' * p    := pow_step
-      _ ≥ q^n' * p    := le_substL_mul_nonneg ‹p ≥ 0› ‹p^n' ≥ q^n'›
-      _ ≥ q^n' * q    := le_substR_mul_nonneg ‹q^n' ≥ 0› ‹p ≥ q›
-      _ ≃ q^(step n') := eqv_symm pow_step
-    have : q^(step n') ≥ 0 := calc
-      _ ≃ q^(step n') := eqv_refl
-      _ ≃ q^n' * q    := pow_step
-      _ ≥ 0 * q       := le_substL_mul_nonneg ‹q ≥ 0› ‹q^n' ≥ 0›
-      _ ≃ 0           := mul_absorbL
-    exact And.intro ‹p^(step n') ≥ q^(step n')› ‹q^(step n') ≥ 0›
-
-/--
-Raising two strictly ordered, nonnegative values to the same positive natural
-number power preserves their strict ordering and nonnegativity.
-
-**Property intuition**: We already know that products of any nonnegative values
-remain nonnegative, and that the greater the inputs, the greater the result. So
-it's not surprising that this also holds for powers of nonnegative values.
-
-**Proof intuition**: Induction and algebra. Substitutions on ordering relations
-are the key steps. The base case is a contradiction because `n > 0` is an
-assumption, so there's a case split inside the inductive step to handle the
-"real" base case of `n ≃ 1`.
--/
-theorem pow_pos_substL_gt_nonneg
-    {p q : ℚ} {n : ℕ} : n > 0 → p > q ∧ q ≥ 0 → p^n > q^n ∧ q^n ≥ 0
-    := by
-  intro (_ : n > 0) (And.intro (_ : p > q) (_ : q ≥ 0))
-  revert ‹n > 0›
-  show n > 0 → p^n > q^n ∧ q^n ≥ 0
-  apply Natural.ind_on n
-  case zero =>
-    intro (_ : (0:ℕ) > 0)
-    show p^0 > q^0 ∧ q^0 ≥ 0
-    have : (0:ℕ) ≯ 0 := Natural.lt_zero
-    exact absurd ‹(0:ℕ) > 0› ‹(0:ℕ) ≯ 0›
-  case step =>
-    intro (n' : ℕ) (ih : n' > 0 → p^n' > q^n' ∧ q^n' ≥ 0) (_ : step n' > 0)
-    show p^(step n') > q^(step n') ∧ q^(step n') ≥ 0
-    have : n' ≃ 0 ∨ n' > 0 := Natural.gt_split ‹step n' > 0›
-    match this with
-    | Or.inl (_ : n' ≃ 0) =>
-      have pow_step_zero {x : ℚ} : x^(step n') ≃ x := calc
-        _ ≃ x^(step n') := eqv_refl
-        _ ≃ x^n' * x    := pow_step
-        _ ≃ x^0 * x     := mul_substL (Natural.pow_substR ‹n' ≃ 0›)
-        _ ≃ 1 * x       := mul_substL pow_zero
-        _ ≃ x           := mul_identL
-      have : p^(step n') > q^(step n') := calc
-        _ ≃ p^(step n') := eqv_refl
-        _ ≃ p           := pow_step_zero
-        _ > q           := ‹p > q›
-        _ ≃ q^(step n') := eqv_symm pow_step_zero
-      have : q^(step n') ≥ 0 := calc
-        _ ≃ q^(step n') := eqv_refl
-        _ ≃ q           := pow_step_zero
-        _ ≥ 0           := ‹q ≥ 0›
-      exact And.intro ‹p^(step n') > q^(step n')› ‹q^(step n') ≥ 0›
-    | Or.inr (_ : n' > 0) =>
-      have (And.intro (_ : p^n' > q^n') (_ : q^n' ≥ 0)) := ih ‹n' > 0›
-      have : p ≥ q := ge_cases.mpr (Or.inl ‹p > q›)
-      have : p > 0 := trans_gt_ge_gt ‹p > q› ‹q ≥ 0›
-      have : p^(step n') > q^(step n') := calc
-        _ ≃ p^(step n') := eqv_refl
-        _ ≃ p^n' * p    := pow_step
-        _ > q^n' * p    := lt_substL_mul_pos ‹p > 0› ‹p^n' > q^n'›
-        _ ≥ q^n' * q    := le_substR_mul_nonneg ‹q^n' ≥ 0› ‹p ≥ q›
-        _ ≃ q^(step n') := eqv_symm pow_step
-      have : q^(step n') ≥ 0 := calc
-        _ ≃ q^(step n') := eqv_refl
-        _ ≃ q^n' * q    := pow_step
-        _ ≥ 0 * q       := le_substL_mul_nonneg ‹q ≥ 0› ‹q^n' ≥ 0›
-        _ ≃ 0           := mul_absorbL
-      exact And.intro ‹p^(step n') > q^(step n')› ‹q^(step n') ≥ 0›
+    intro (n' : ℕ) (ih : ((a^n':ℤ):ℚ) ≃ (a:ℚ)^n')
+    show ((a^(step n'):ℤ):ℚ) ≃ (a:ℚ)^(step n')
+    calc
+      _ = ((a^(step n'):ℤ):ℚ)  := rfl
+      _ ≃ ((a^n' * a : ℤ):ℚ)   := from_integer_subst Natural.pow_step
+      _ ≃ ((a^n':ℤ):ℚ) * (a:ℚ) := mul_compat_from_integer
+      _ ≃ (a:ℚ)^n' * (a:ℚ)     := mul_substL ih
+      _ ≃ (a:ℚ)^(step n')      := eqv_symm Natural.pow_step
 
 /--
 Raising rationals to natural number powers is semicompatible with reciprocation
@@ -170,6 +93,328 @@ theorem pow_scompatL_recip
       _ ≃ (p⁻¹)^(step n') := eqv_symm pow_step
 
 /--
+A natural number exponent distributes over division.
+
+**Property intuition**: The product of two fractions is the product of their
+numerators over the product of their denominators. Exponentiation is repeated
+multiplication, so we'd expect the same pattern to hold.
+
+**Proof intuition**: Convert division to multiplication by the reciprocal. Then
+distribute the exponent over multiplication, and commute it with reciprocation.
+-/
+theorem pow_distribR_div
+    {p q : ℚ} [AP (q ≄ 0)] {n : ℕ} : (p / q)^n ≃ p^n / q^n
+    := calc
+  _ = (p / q)^n     := rfl
+  _ ≃ (p * q⁻¹)^n   := Natural.pow_substL div_mul_recip
+  _ ≃ p^n * (q⁻¹)^n := Natural.pow_distribR_mul
+  _ ≃ p^n * (q^n)⁻¹ := mul_substR (eqv_symm pow_scompatL_recip)
+  _ ≃ p^n / q^n     := eqv_symm div_mul_recip
+
+/--
+Swap the order of two operations on a rational number: raising it to a natural
+number power, and extracting its sign.
+-/
+theorem sgn_int_pow_nat {p : ℚ} {n : ℕ} : sgn (p^n) ≃ (sgn p)^n := by
+  have (AsRatio.intro (a : ℤ) (b : ℤ) (_ : Integer.Nonzero b) p_eqv) :=
+    as_ratio p
+  have : p ≃ a/b := p_eqv
+
+  -- Helpers to keep the main proof short and avoid repetition
+  have int_sgn_pow {x : ℤ} : sgn ((x:ℚ)^n) ≃ (sgn x)^n := calc
+    _ = sgn ((x:ℚ)^n)   := rfl
+    _ ≃ sgn ((x^n:ℤ):ℚ) := sgn_subst (eqv_symm pow_scompatL_from_integer)
+    _ ≃ sgn (x^n)       := sgn_from_integer
+    -- This is the key step of the whole proof
+    _ ≃ (sgn x)^n       := Integer.sgn_pow
+  have sgn_merge : sgn a * sgn b ≃ sgn p := Rel.symm $ calc
+    _ = sgn p                 := rfl
+    _ ≃ sgn ((a:ℚ)/b)         := sgn_subst ‹p ≃ a/b›
+    _ ≃ sgn (a:ℚ) * sgn (b:ℚ) := sgn_div
+    _ ≃ sgn a * sgn (b:ℚ)     := AA.substL sgn_from_integer
+    _ ≃ sgn a * sgn b         := AA.substR sgn_from_integer
+
+  calc
+    _ = sgn (p^n)                     := rfl
+    _ ≃ sgn (((a:ℚ)/b)^n)             := sgn_subst (Natural.pow_substL p_eqv)
+    _ ≃ sgn ((a:ℚ)^n/b^n)             := sgn_subst pow_distribR_div
+    _ ≃ sgn ((a:ℚ)^n) * sgn ((b:ℚ)^n) := sgn_div
+    -- The following two steps are the most important at this level
+    _ ≃ (sgn a)^n * sgn ((b:ℚ)^n)     := AA.substL int_sgn_pow
+    _ ≃ (sgn a)^n * (sgn b)^n         := AA.substR int_sgn_pow
+    _ ≃ (sgn a * sgn b)^n             := Rel.symm Natural.pow_distribR_mul
+    _ ≃ (sgn p)^n                     := Natural.pow_substL sgn_merge
+
+/--
+Swap the order of two operations on a rational number: raising it to a natural
+number power, and extracting its (rational-valued) sign.
+-/
+theorem sgn_pow_nat {p : ℚ} {n : ℕ} : (sgn (p^n):ℚ) ≃ (sgn p:ℚ)^n := calc
+  _ = (sgn (p^n):ℚ)     := rfl
+  -- This is the key step
+  _ ≃ (((sgn p)^n:ℤ):ℚ) := from_integer_subst sgn_int_pow_nat
+  _ ≃ (sgn p:ℚ)^n       := pow_scompatL_from_integer
+
+/--
+A positive rational number raised to a natural number power is still positive.
+
+**Property intuition**: Exponentiation preserves signs.
+
+**Proof intuition**: Convert the ordering relation to its `sgn` representation.
+The result follows from `sgn_pow`.
+-/
+theorem pow_preserves_pos {p : ℚ} {n : ℕ} : p > 0 → p^n > 0 := by
+  intro (_ : p > 0)
+  show p^n > 0
+  have : sgn p ≃ 1 := gt_zero_sgn.mp ‹p > 0›
+  have : sgn (p^n) ≃ 1 := calc
+    _ = sgn (p^n) := rfl
+    _ ≃ (sgn p)^n := sgn_int_pow_nat
+    _ ≃ 1^n       := Natural.pow_substL ‹sgn p ≃ 1›
+    _ ≃ 1         := Natural.pow_absorbL
+  have : p^n > 0 := gt_zero_sgn.mpr ‹sgn (p^n) ≃ 1›
+  exact this
+
+/--
+A nonnegative rational number raised to a natural number power is still
+nonnegative.
+
+**Property intuition**: Multiplication cannot generate a negative value from
+nonnegative factors.
+
+**Proof intuition**: Split the nonnegativity assumption into positive and zero
+cases. The positive case follows by `pow_preserves_pos`. In the zero case, if
+the exponent is also zero, then the result is one; otherwise, it's zero. Both
+results are nonnegative.
+-/
+theorem pow_preserves_nonneg {p : ℚ} {n : ℕ} : p ≥ 0 → p^n ≥ 0 := by
+  intro (_ : p ≥ 0)
+  show p^n ≥ 0
+
+  have : p > 0 ∨ p ≃ 0 := ge_cases.mp ‹p ≥ 0›
+  match this with
+  | Or.inl (_ : p > 0) =>
+    have : p^n > 0 := pow_preserves_pos ‹p > 0›
+    have : p^n ≥ 0 := ge_cases.mpr (Or.inl ‹p^n > 0›)
+    exact this
+  | Or.inr (_ : p ≃ 0) =>
+    have : (0:ℚ)^n ≃ 0 ∨ (0:ℚ)^n ≃ 1 := Natural.pow_of_zero
+    match this with
+    | Or.inl (_ : (0:ℚ)^n ≃ 0) =>
+      calc
+        _ = p^n := rfl
+        _ ≃ 0^n := Natural.pow_substL ‹p ≃ 0›
+        _ ≃ 0   := ‹(0:ℚ)^n ≃ 0›
+        _ ≥ 0   := le_refl
+    | Or.inr (_ : (0:ℚ)^n ≃ 1) =>
+      calc
+        _ = p^n := rfl
+        _ ≃ 0^n := Natural.pow_substL ‹p ≃ 0›
+        _ ≃ 1   := ‹(0:ℚ)^n ≃ 1›
+        _ ≥ 0   := one_ge_zero
+
+/--
+Raising two nonnegative rational numbers to the same positive natural number
+power preserves their ordering.
+
+**Property intuition**: If the numbers are greater than one, they increase in
+magnitude proportionally when raised to the same power. If they are less than
+one, then they decrease in magnitude proportionally when raised to the same
+power, approaching zero but not reaching it. And if one number is greater than
+zero and the other is less than zero, then their relative ordering is still
+preserved because they both move away from one.
+
+**Proof intuition**: This proof has a large amount of helper code, but the core
+can be found in the final `calc` block. The proof strategy is to convert the
+rational numbers into integer fractions and back. The fractions simplify under
+`sgn` into several integer values raised to the same natural number power. The
+powers can be removed from the values via integer theorems. Finally, the simple
+expressions that remain can be combined back into rational numbers, which turn
+out to be exactly the ones we wanted.
+-/
+theorem sgn_diff_pow_pos
+    {p q : ℚ} {n : ℕ} : p ≥ 0 → q ≥ 0 → n ≥ 1 → sgn (p^n - q^n) ≃ sgn (p - q)
+    := by
+  intro (_ : p ≥ 0) (_ : q ≥ 0) (_ : n ≥ 1)
+  show sgn (p^n - q^n) ≃ sgn (p - q)
+  have (NonnegRatio.intro
+      (a : ℤ) (b : ℤ) (_ : a ≥ 0) (_ : b > 0) (_ : AP ((b:ℚ) ≄ 0)) p_eqv)
+      :=
+    as_nonneg_ratio ‹p ≥ 0›
+  have : p ≃ a/b := p_eqv
+  have (NonnegRatio.intro
+      (c : ℤ) (d : ℤ) (_ : c ≥ 0) (_ : d > 0) (_ : AP ((d:ℚ) ≄ 0)) q_eqv)
+      :=
+    as_nonneg_ratio ‹q ≥ 0›
+  have : q ≃ c/d := q_eqv
+
+  have sgn_mul_absorbL {x y : ℤ} : x > 0 → sgn (x * y) ≃ sgn y := by
+    intro (_ : x > 0)
+    show sgn (x * y) ≃ sgn y
+    calc
+      _ = sgn (x * y)   := rfl
+      _ ≃ sgn x * sgn y := Integer.sgn_compat_mul
+      _ ≃ 1 * sgn y     := AA.substL (Integer.gt_zero_sgn.mp ‹x > 0›)
+      _ ≃ sgn y         := AA.identL
+  have : sgn (b * d) ≃ 1 := calc
+    _ = sgn (b * d)   := rfl
+    _ ≃ sgn d         := sgn_mul_absorbL ‹b > 0›
+    _ ≃ 1             := Integer.gt_zero_sgn.mp ‹d > 0›
+  have sqr_sgn_bd_idemp : (sgn (b * d))^2 ≃ sgn (b * d) :=
+    Integer.sqr_idemp_reasons.mpr (Or.inr ‹sgn (b * d) ≃ 1›)
+  have sgn_bd_pow {k : ℕ} : sgn ((b * d)^k) ≃ 1 := calc
+    _ = sgn ((b * d)^k) := rfl
+    _ ≃ (sgn (b * d))^k := Integer.sgn_pow
+    _ ≃ 1^k             := Natural.pow_substL ‹sgn (b * d) ≃ 1›
+    _ ≃ 1               := Natural.pow_absorbL
+  have : Integer.Sqrt1 (sgn (b * d)) :=
+    Integer.sqrt1_cases.mpr (Or.inl ‹sgn (b * d) ≃ 1›)
+  have : Integer.Nonzero (b * d) := Integer.sgn_nonzero.mpr this
+  have sqrt1_sgn_bd_pow {k : ℕ} : Integer.Sqrt1 (sgn ((b * d)^k)) :=
+    Integer.sqrt1_cases.mpr (Or.inl sgn_bd_pow)
+  have nonzero_bd_pow {k : ℕ} : Integer.Nonzero ((b * d)^k) :=
+    Integer.sgn_nonzero.mpr sqrt1_sgn_bd_pow
+  have : sgn (b * c) ≥ 0 := calc
+    _ = sgn (b * c)   := rfl
+    _ ≃ sgn c         := sgn_mul_absorbL ‹b > 0›
+    _ ≥ 0             := Integer.sgn_preserves_ge_zero.mp ‹c ≥ 0›
+  have : b * c ≥ 0 := Integer.sgn_preserves_ge_zero.mpr this
+  have : d ≥ 0 := Integer.ge_split.mpr (Or.inl ‹d > 0›)
+  have : a * d ≥ 0 := Integer.mul_preserves_nonneg ‹a ≥ 0› ‹d ≥ 0›
+
+  have sub_liftQ {x y : ℤ} : (x:ℚ) - y ≃ ((x - y : ℤ):ℚ) :=
+    eqv_symm sub_compat_from_integer
+  have mul_liftQ {x y : ℤ} : (x:ℚ) * y ≃ ((x * y : ℤ):ℚ) :=
+    eqv_symm mul_compat_from_integer
+  have mul_pow_liftQ
+      {x y : ℤ} {k : ℕ} : (x:ℚ)^k * (y:ℚ)^k ≃ (((x * y)^k : ℤ):ℚ)
+      := calc
+    _ = (x:ℚ)^k * (y:ℚ)^k   := rfl
+    _ ≃ ((x:ℚ) * y)^k       := eqv_symm Natural.pow_distribR_mul
+    _ ≃ ((x * y : ℤ):ℚ)^k   := Natural.pow_substL mul_liftQ
+    _ ≃ (((x * y)^k : ℤ):ℚ) := eqv_symm pow_scompatL_from_integer
+  have sub_mul_liftQ
+      {k : ℕ}
+      : (a:ℚ)^k * (d:ℚ)^k - (b:ℚ)^k * (c:ℚ)^k ≃ (((a * d)^k - (b * c)^k : ℤ):ℚ)
+      := calc
+    _ = (a:ℚ)^k * (d:ℚ)^k - (b:ℚ)^k * (c:ℚ)^k     := rfl
+    _ ≃ (((a * d)^k : ℤ):ℚ) - (b:ℚ)^k * (c:ℚ)^k   := sub_substL mul_pow_liftQ
+    _ ≃ (((a * d)^k : ℤ):ℚ) - (((b * c)^k : ℤ):ℚ) := sub_substR mul_pow_liftQ
+    _ ≃ (((a * d)^k - (b * c)^k : ℤ):ℚ)           := sub_liftQ
+  have sub_pow_expand {k : ℕ} : p^k - q^k ≃ (a:ℚ)^k/b^k - (c:ℚ)^k/d^k := calc
+    _ = p^k - q^k                 := rfl
+    _ ≃ ((a:ℚ)/b)^k - q^k         := sub_substL (Natural.pow_substL ‹p ≃ a/b›)
+    _ ≃ ((a:ℚ)/b)^k - ((c:ℚ)/d)^k := sub_substR (Natural.pow_substL ‹q ≃ c/d›)
+    _ ≃ (a:ℚ)^k/b^k - ((c:ℚ)/d)^k := sub_substL pow_distribR_div
+    _ ≃ (a:ℚ)^k/b^k - (c:ℚ)^k/d^k := sub_substR pow_distribR_div
+  have sub_pow_frac
+      {k : ℕ}
+      : have : Integer.Nonzero ((b * d)^k) := nonzero_bd_pow
+        p^k - q^k ≃ (((a * d)^k - (b * c)^k : ℤ):ℚ)/(((b * d)^k : ℤ):ℚ)
+      := by
+    have : Integer.Nonzero ((b * d)^k) := nonzero_bd_pow
+    calc
+    _ = p^k - q^k                                   := rfl
+    _ ≃ (a:ℚ)^k/b^k - (c:ℚ)^k/d^k                   := sub_pow_expand
+    _ ≃ ((a:ℚ)^k*(d:ℚ)^k - (b:ℚ)^k*(c:ℚ)^k)/((b:ℚ)^k*(d:ℚ)^k) := sub_fractions
+    _ ≃ (((a*d)^k-(b*c)^k:ℤ):ℚ)/((b:ℚ)^k * (d:ℚ)^k) := div_substL sub_mul_liftQ
+    _ ≃ (((a*d)^k-(b*c)^k:ℤ):ℚ)/(((b*d)^k:ℤ):ℚ)     := div_substR mul_pow_liftQ
+
+  have sgn_sub_pow_factor
+      : sgn (p^n - q^n) ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n)
+      := calc
+    _ = sgn (p^n - q^n)                               := rfl
+    _ ≃ sgn ((((a*d)^n-(b*c)^n:ℤ):ℚ)/(((b*d)^n:ℤ):ℚ)) := sgn_subst sub_pow_frac
+    _ ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n)         := sgn_div_integers
+  have sgn_diff_int_pow : sgn ((a * d)^n - (b * c)^n) ≃ sgn (a * d - b * c) :=
+    Integer.sgn_diff_pow_pos ‹a * d ≥ 0› ‹b * c ≥ 0› ‹n ≥ 1›
+  have sgn_bd_drop_pow : sgn ((b * d)^n) ≃ sgn (b * d) := calc
+    _ = sgn ((b * d)^n) := rfl
+    _ ≃ (sgn (b * d))^n := Integer.sgn_pow
+    _ ≃ sgn (b * d)     := Integer.pow_absorbL ‹n ≥ 1› sqr_sgn_bd_idemp
+
+  have drop_pow_ones_ℚ : p^1 - q^1 ≃ p - q := calc
+    _ = p^1 - q^1 := rfl
+    _ ≃ p - q^1   := sub_substL Natural.pow_one
+    _ ≃ p - q     := sub_substR Natural.pow_one
+  have drop_pow_num {x y : ℤ} : ((x^1 - y^1 : ℤ):ℚ) ≃ ((x - y : ℤ):ℚ) := calc
+    _ = ((x^1 - y^1 : ℤ):ℚ) := rfl
+    _ ≃ ((x - y^1 : ℤ):ℚ)   := from_integer_subst (AA.substL Natural.pow_one)
+    _ ≃ ((x - y : ℤ):ℚ)     := from_integer_subst (AA.substR Natural.pow_one)
+  have drop_pow_den {x : ℤ} : ((x^1:ℤ):ℚ) ≃ (x:ℚ) :=
+    from_integer_subst Natural.pow_one
+  have sub_frac : p - q ≃ ((a * d - b * c : ℤ):ℚ)/((b * d : ℤ):ℚ) := calc
+    _ = p - q                                       := rfl
+    _ ≃ p^1 - q^1                                   := eqv_symm drop_pow_ones_ℚ
+    _ ≃ (((a*d)^1 - (b*c)^1 : ℤ):ℚ)/(((b*d)^1:ℤ):ℚ) := sub_pow_frac
+    _ ≃ ((a*d - b*c : ℤ):ℚ)/(((b*d)^1:ℤ):ℚ)         := div_substL drop_pow_num
+    _ ≃ ((a*d - b*c : ℤ):ℚ)/((b*d:ℤ):ℚ)             := div_substR drop_pow_den
+
+  calc
+    _ = sgn (p^n - q^n)                       := rfl
+    _ ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n) := sgn_sub_pow_factor
+    _ ≃ sgn (a*d - b*c) * sgn ((b*d)^n)       := AA.substL sgn_diff_int_pow
+    _ ≃ sgn (a*d - b*c) * sgn (b*d)           := AA.substR sgn_bd_drop_pow
+    _ ≃ sgn (((a*d - b*c:ℤ):ℚ)/((b*d:ℤ):ℚ))   := Rel.symm sgn_div_integers
+    _ ≃ sgn (p - q)                           := sgn_subst (eqv_symm sub_frac)
+
+/--
+The greater-than relation between two nonnegative rational numbers is
+maintained when they are both raised to the same positive natural number power.
+
+**Property and proof intuition**: Follows directly from `sgn_diff_pow_pos`.
+-/
+theorem pow_pos_preserves_gt_nonneg
+    {p q : ℚ} {n : ℕ} : p > q → q ≥ 0 → n ≥ 1 → p^n > q^n
+    := by
+  intro (_ : p > q) (_ : q ≥ 0) (_ : n ≥ 1)
+  show p^n > q^n
+  have : p ≥ q := ge_cases.mpr (Or.inl ‹p > q›)
+  have : p ≥ 0 := ge_trans ‹p ≥ q› ‹q ≥ 0›
+  have : sgn (p^n - q^n) ≃ 1 := calc
+    _ = sgn (p^n - q^n) := rfl
+    _ ≃ sgn (p - q)     := sgn_diff_pow_pos ‹p ≥ 0› ‹q ≥ 0› ‹n ≥ 1›
+    _ ≃ 1               := gt_sgn.mp ‹p > q›
+  have : p^n > q^n := gt_sgn.mpr ‹sgn (p^n - q^n) ≃ 1›
+  exact this
+
+/--
+The greater-than-or-equivalent-to relation between two nonnegative rational
+numbers is maintained when they are both raised to the same natural number
+power.
+
+**Property and proof intuition**: When the exponent is positive, follows
+directly from `sgn_diff_pow_pos`. When the exponent is zero, both values reduce
+to one, and thus they trivially satisfy the relation.
+-/
+theorem pow_preserves_ge_nonneg
+    {p q : ℚ} {n : ℕ} : p ≥ q → q ≥ 0 → p^n ≥ q^n
+    := by
+  intro (_ : p ≥ q) (_ : q ≥ 0)
+  show p^n ≥ q^n
+  have : n ≥ 0 := Natural.ge_zero
+  have : n > 0 ∨ n ≃ 0 := Natural.ge_split ‹n ≥ 0›
+  match ‹n > 0 ∨ n ≃ 0› with
+  | Or.inl (_ : n > 0) =>
+    have : n ≥ 1 := Natural.gt_zero_iff_ge_one.mp ‹n > 0›
+    have : p ≥ 0 := ge_trans ‹p ≥ q› ‹q ≥ 0›
+    have : sgn (p^n - q^n) ≥ 0 := calc
+      _ = sgn (p^n - q^n) := rfl
+      _ ≃ sgn (p - q)     := sgn_diff_pow_pos ‹p ≥ 0› ‹q ≥ 0› ‹n ≥ 1›
+      _ ≥ 0               := ge_iff_sub_sgn_nonneg.mp ‹p ≥ q›
+    have : p^n ≥ q^n := ge_iff_sub_sgn_nonneg.mpr ‹sgn (p^n - q^n) ≥ 0›
+    exact this
+  | Or.inr (_ : n ≃ 0) =>
+    have : p^n ≃ q^n := calc
+      _ = p^n := rfl
+      _ ≃ p^0 := Natural.pow_substR ‹n ≃ 0›
+      _ ≃ 1   := Natural.pow_zero
+      _ ≃ q^0 := eqv_symm Natural.pow_zero
+      _ ≃ q^n := Natural.pow_substR (Rel.symm ‹n ≃ 0›)
+    have : p^n ≥ q^n := ge_cases.mpr (Or.inr ‹p^n ≃ q^n›)
+    exact this
+
+/--
 Absolute value is semicompatible with the base argument of exponentiation.
 
 **Property intuition**: Absolute value is compatible with multiplication, so
@@ -199,25 +444,6 @@ theorem pow_scompatL_abs {p : ℚ} {n : ℕ} : abs (p^n) ≃ (abs p)^n := by
       _ ≃ (abs p)^n' * abs p := mul_substL ih
       _ ≃ (abs p)^(step n')  := eqv_symm pow_step
 
-/--
-A natural number exponent distributes over division.
-
-**Property intuition**: The product of two fractions is the product of their
-numerators over the product of their denominators. Exponentiation is repeated
-multiplication, so we'd expect the same pattern to hold.
-
-**Proof intuition**: Convert division to multiplication by the reciprocal. Then
-distribute the exponent over multiplication, and commute it with reciprocation.
--/
-theorem pow_distribR_div
-    {p q : ℚ} [AP (q ≄ 0)] {n : ℕ} : (p / q)^n ≃ p^n / q^n
-    := calc
-  _ = (p / q)^n     := rfl
-  _ ≃ (p * q⁻¹)^n   := Natural.pow_substL div_mul_recip
-  _ ≃ p^n * (q⁻¹)^n := Natural.pow_distribR_mul
-  _ ≃ p^n * (q^n)⁻¹ := mul_substR (eqv_symm pow_scompatL_recip)
-  _ ≃ p^n / q^n     := eqv_symm div_mul_recip
-
 end pow_nat
 
 /-! ## Axioms for exponentiation to an integer -/
@@ -237,7 +463,7 @@ infixr:80 " ^ " => Exponentiation.Ops._pow
 class Exponentiation.Props
     {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
-    [Reciprocation ℚ] [Division ℚ] [Natural.Exponentiation ℕ (α := ℚ)]
+    [Reciprocation ℚ] [Division ℚ] [Natural.Exponentiation ℕ ℚ]
     [Negation ℚ] [Sign ℚ] [Ops ℚ ℤ]
     :=
   /--
@@ -268,7 +494,7 @@ export Exponentiation.Props (pow_diff pow_substR)
 class Exponentiation
     {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
-    [Reciprocation ℚ] [Division ℚ] [Natural.Exponentiation ℕ (α := ℚ)]
+    [Reciprocation ℚ] [Division ℚ] [Natural.Exponentiation ℕ ℚ]
     [Negation ℚ] [Sign ℚ]
     :=
   toOps : Exponentiation.Ops ℚ ℤ
@@ -282,9 +508,9 @@ attribute [instance] Exponentiation.toProps
 variable
   {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
   {ℚ : Type}
-    [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
-    [Negation ℚ] [Reciprocation ℚ] [Division ℚ] [Sign ℚ]
-    [Natural.Exponentiation ℕ (α := ℚ) ] [Exponentiation ℚ]
+    [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ]
+    [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ] [Sign ℚ] [Order ℚ]
+    [Natural.Exponentiation ℕ ℚ] [Exponentiation ℚ]
 
 /--
 Rational number exponentiation to an integer respects equivalence of the base
@@ -383,6 +609,22 @@ theorem pow_neg {p : ℚ} {n : ℕ} [AP (p ≄ 0)] : p^(-(n:ℤ)) ≃ 1 / p^n :=
   _ ≃ p^(0 - (n:ℤ)) := pow_substR (Rel.symm Integer.sub_identL)
   _ ≃ p^(0:ℕ) / p^n := pow_diff
   _ ≃ 1 / p^n       := div_substL Natural.pow_zero
+
+/--
+Exponentiation of rationals to integer powers is consistent with reciprocation.
+
+**Property intuition**: The notation for reciprocation strongly suggests this
+should be the case!
+
+**Proof intuition**: Follows directly from `pow_neg` and the fractional form of
+the reciprocal.
+-/
+theorem pow_neg_one {p : ℚ} [AP (p ≄ 0)] : p^(-1:ℤ) ≃ p⁻¹ := calc
+  _ = p^(-1:ℤ)    := rfl
+  _ = p^(-(1:ℤ))  := rfl
+  _ ≃ 1 / p^(1:ℕ) := pow_neg
+  _ ≃ 1 / p       := div_substR Natural.pow_one
+  _ ≃ p⁻¹         := div_identL
 
 /--
 Integer exponents add when powers of the same rational number are multiplied.
@@ -532,5 +774,227 @@ theorem pow_distribR_mul
     _ ≃ p^((n:ℤ)-m) * q^((n:ℤ)-m) := mul_substR (eqv_symm pow_diff)
     _ ≃ p^a * q^((n:ℤ)-m)         := mul_substL (pow_substR (Rel.symm a_eqv))
     _ ≃ p^a * q^a                 := mul_substR (pow_substR (Rel.symm a_eqv))
+
+/--
+The rational number one, raised to any integer exponent, is one.
+
+**Property intuition**: One to a positive exponent is always one; anything to a
+zero exponent is one; one is its own reciprocal.
+
+**Proof intuition**: Write the integer exponent as a difference of natural
+numbers. Convert the expression to a ratio of natural number powers via
+`pow_diff`. Each part of the ratio reduces to one via this property for natural
+number exponents.
+-/
+theorem one_pow {a : ℤ} : (1:ℚ)^a ≃ 1 := by
+  have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : a ≃ n - m)) :=
+    Integer.as_diff a
+  calc
+    _ = (1:ℚ)^a           := rfl
+    _ ≃ (1:ℚ)^((n:ℤ) - m) := pow_substR ‹a ≃ n - m›
+    _ ≃ (1:ℚ)^n / (1:ℚ)^m := pow_diff
+    _ ≃ (1:ℚ)^n / 1       := div_substR Natural.pow_absorbL
+    _ ≃ (1:ℚ)^n           := div_identR
+    _ ≃ 1                 := Natural.pow_absorbL
+
+/--
+Swap the order of two operations on a nonzero rational number: raising it to an
+integer power, and extracting its (rational-valued) sign.
+-/
+theorem sgn_pow_int
+    {p : ℚ} [AP (p ≄ 0)] {a : ℤ} : (sgn (p^a):ℚ) ≃ (sgn p:ℚ)^a
+    := by
+  have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : a ≃ n - m)) :=
+    Integer.as_diff a
+  have pow_eqv : p^a ≃ p^((n:ℤ) - m) := pow_substR ‹a ≃ n - m›
+  calc
+    _ = (sgn (p^a):ℚ)               := rfl
+    _ ≃ (sgn (p^((n:ℤ) - m)):ℚ)     := from_integer_subst (sgn_subst pow_eqv)
+    _ ≃ (sgn (p^n/p^m):ℚ)           := from_integer_subst (sgn_subst pow_diff)
+    _ ≃ (sgn (p^n):ℚ)/(sgn (p^m):ℚ) := sgn_compat_div
+    -- The next two steps are the key to the proof
+    _ ≃ (sgn p:ℚ)^n/(sgn (p^m):ℚ)   := div_substL sgn_pow_nat
+    _ ≃ (sgn p:ℚ)^n/(sgn p:ℚ)^m     := div_substR sgn_pow_nat
+    _ ≃ (sgn p:ℚ)^((n:ℤ) - m)       := eqv_symm pow_diff
+    _ ≃ (sgn p:ℚ)^a                 := pow_substR (Rel.symm ‹a ≃ n - m›)
+
+/-- A positive rational, raised to an integer power, is also positive. -/
+theorem pow_preserves_pos_base
+    {p : ℚ} {a : ℤ} (p_pos : p > 0)
+    : have : AP (p ≄ 0) := AP.mk (pos_nonzero ‹p > 0›)
+      p^a > 0
+    := by
+  intro (_ : AP (p ≄ 0))
+  show p^a > 0
+
+  have : sgn p ≃ 1 := gt_zero_sgn.mp ‹p > 0›
+  have : (sgn (p^a):ℚ) ≃ 1 := calc
+    _ = (sgn (p^a):ℚ) := rfl
+    -- The next two steps are the key
+    _ ≃ (sgn p:ℚ)^a   := sgn_pow_int
+    _ ≃ (1:ℚ)^a       := pow_substL (from_integer_subst ‹sgn p ≃ 1›)
+    _ ≃ 1             := one_pow
+  have : sgn (p^a) ≃ 1 := from_integer_inject ‹(sgn (p^a):ℚ) ≃ 1›
+  have : p^a > 0 := gt_zero_sgn.mpr ‹sgn (p^a) ≃ 1›
+  exact this
+
+/--
+Generalizes a number of identities showing how the ordering of two rational
+numbers relates to the ordering of their powers, when they are raised to the
+same integer exponent.
+
+Recall that `sgn (p - q)` evaluates to `1`, `0`, or `-1`, when `p` is greater
+than, equal to, or less than `q`, respectively. Then this theorem shows how
+the ordering of `p^a` and `q^a` can be calculated from the ordering of `p` and
+`q` along with the sign of the exponent `a`.
+
+For concrete examples of what this generalizes, see `pow_pos_preserves_ge_pos`
+and `pow_neg_reverses_ge_pos` below.
+-/
+theorem sgn_diff_pow
+    {p q : ℚ} {a : ℤ} (p_pos : p > 0) (q_pos : q > 0)
+    : have : p ≄ 0 := pos_nonzero ‹p > 0›
+      have : q ≄ 0 := pos_nonzero ‹q > 0›
+      have : AP (p ≄ 0) := AP.mk ‹p ≄ 0›
+      have : AP (q ≄ 0) := AP.mk ‹q ≄ 0›
+      sgn (p^a - q^a) ≃ sgn (p - q) * sgn a
+    := by
+  intro (_ : p ≄ 0) (_ : q ≄ 0) (_ : AP (p ≄ 0)) (_ : AP (q ≄ 0))
+  show sgn (p^a - q^a) ≃ sgn (p - q) * sgn a
+
+  have : p ≥ 0 := ge_cases.mpr (Or.inl ‹p > 0›)
+  have : q ≥ 0 := ge_cases.mpr (Or.inl ‹q > 0›)
+
+  /-
+  Split the proof into cases for a zero, positive, or negative exponent. This
+  appears to be the only approach that works; converting the exponent into a
+  difference of natural numbers and/or converting the rational numbers into
+  ratios of integers and then rearranging via algebra gets stuck.
+  -/
+  have : a ≃ 0 ∨ Integer.Nonzero a := (Integer.zero? a).left
+  match this with
+  | Or.inl (_ : a ≃ 0) =>
+    have pow_a_simp {x : ℚ} [AP (x ≄ 0)] : x^a ≃ 1 := calc
+      _ = x^a     := rfl
+      _ ≃ x^(0:ℤ) := pow_substR ‹a ≃ 0›
+      _ ≃ x^(0:ℕ) := pow_nonneg
+      _ ≃ 1       := Natural.pow_zero
+    have : sgn a ≃ 0 := Integer.sgn_zero.mp ‹a ≃ 0›
+    calc
+      -- V begin key steps V
+      _ = sgn (p^a - q^a)     := rfl
+      _ ≃ sgn (1 - q^a)       := sgn_subst (sub_substL pow_a_simp)
+      _ ≃ sgn ((1:ℚ) - 1)     := sgn_subst (sub_substR pow_a_simp)
+      _ ≃ sgn (0:ℚ)           := sgn_subst (sub_eqv_zero_iff_eqv.mpr eqv_refl)
+      -- ^  end key steps  ^
+      _ ≃ 0                   := sgn_zero.mp eqv_refl
+      _ ≃ sgn (p - q) * 0     := Rel.symm AA.absorbR
+      _ ≃ sgn (p - q) * sgn a := AA.substR (Rel.symm ‹sgn a ≃ 0›)
+  | Or.inr (_ : Integer.Nonzero a) =>
+    /-
+    It's important to express `a` as a natural number with a sign, so that the
+    proof can rely on properties of rational numbers with natural number
+    exponents that have already been proven.
+    -/
+    have (Exists.intro (n:ℕ) (And.intro (_ : n ≥ 1) (_ : a ≃ n * sgn a))) :=
+      Integer.as_size_with_sign ‹Integer.Nonzero a›
+    have : Integer.Sqrt1 (sgn a) := Integer.sgn_nonzero.mp ‹Integer.Nonzero a›
+    have : sgn a ≃ 1 ∨ sgn a ≃ -1 :=
+      Integer.sqrt1_cases.mp ‹Integer.Sqrt1 (sgn a)›
+    match ‹sgn a ≃ 1 ∨ sgn a ≃ -1› with
+    | Or.inl (_ : sgn a ≃ 1) =>
+      have pow_a_simp {x : ℚ} [AP (x ≄ 0)] : x^a ≃ x^n := calc
+        _ = x^a               := rfl
+        _ ≃ x^((n:ℤ) * sgn a) := pow_substR ‹a ≃ n * sgn a›
+        _ ≃ x^((n:ℤ) * 1)     := pow_substR (AA.substR ‹sgn a ≃ 1›)
+        _ ≃ x^(n:ℤ)           := pow_substR AA.identR
+        _ ≃ x^n               := pow_nonneg
+      calc
+        _ = sgn (p^a - q^a)     := rfl
+        _ ≃ sgn (p^n - q^a)     := sgn_subst (sub_substL pow_a_simp)
+        -- V begin key steps V
+        _ ≃ sgn (p^n - q^n)     := sgn_subst (sub_substR pow_a_simp)
+        _ ≃ sgn (p - q)         := sgn_diff_pow_pos ‹p ≥ 0› ‹q ≥ 0› ‹n ≥ 1›
+        -- ^  end key steps  ^
+        _ ≃ sgn (p - q) * 1     := Rel.symm AA.identR
+        _ ≃ sgn (p - q) * sgn a := AA.substR (Rel.symm ‹sgn a ≃ 1›)
+    | Or.inr (_ : sgn a ≃ -1) =>
+      have pow_a_simp {x : ℚ} [AP (x ≄ 0)] : x^a ≃ (x^n)⁻¹ := calc
+        _ = x^a               := rfl
+        _ ≃ x^((n:ℤ) * sgn a) := pow_substR ‹a ≃ n * sgn a›
+        _ ≃ x^((n:ℤ) * -1)    := pow_substR (AA.substR ‹sgn a ≃ -1›)
+        _ ≃ (x^(n:ℤ))^(-1:ℤ)  := eqv_symm pow_flatten
+        _ ≃ (x^(n:ℤ))⁻¹       := pow_neg_one
+        _ ≃ (x^n)⁻¹           := recip_subst pow_nonneg
+      have : p^n > 0 := pow_preserves_pos ‹p > 0›
+      have : q^n > 0 := pow_preserves_pos ‹q > 0›
+      have : p^n * q^n > 0 := mul_preserves_pos ‹p^n > 0› ‹q^n > 0›
+      calc
+        _ = sgn (p^a - q^a)         := rfl
+        _ ≃ sgn ((p^n)⁻¹ - q^a)     := sgn_subst (sub_substL pow_a_simp)
+        -- V begin key steps V
+        _ ≃ sgn ((p^n)⁻¹ - (q^n)⁻¹) := sgn_subst (sub_substR pow_a_simp)
+        _ ≃ sgn (q^n - p^n)         := sgn_sub_recip ‹p^n * q^n > 0›
+        _ ≃ sgn (q - p)             := sgn_diff_pow_pos ‹q ≥ 0› ‹p ≥ 0› ‹n ≥ 1›
+        -- ^  end key steps  ^
+        _ ≃ sgn (-(p - q))          := sgn_subst (eqv_symm neg_sub)
+        _ ≃ -sgn (p - q)            := sgn_compat_neg
+        _ ≃ -1 * sgn (p - q)        := Rel.symm Integer.mul_neg_one
+        _ ≃ sgn (p - q) * -1        := AA.comm
+        _ ≃ sgn (p - q) * sgn a     := AA.substR (Rel.symm ‹sgn a ≃ -1›)
+
+/--
+Raising two positive rational numbers (with one greater than or equivalent to
+the other) to the same positive integer exponent leaves their ordering
+unchanged.
+-/
+theorem pow_pos_preserves_ge_pos
+    {p q : ℚ} {a : ℤ} (q_pos : q > 0) (a_pos : a > 0) (p_ge_q : p ≥ q)
+    : have : p > 0 := trans ‹p ≥ q› ‹q > 0›
+      have : AP (p ≄ 0) := AP.mk (pos_nonzero ‹p > 0›)
+      have : AP (q ≄ 0) := AP.mk (pos_nonzero ‹q > 0›)
+      p^a ≥ q^a
+    := by
+  intro (_ : p > 0) (_ : AP (p ≄ 0)) (_ : AP (q ≄ 0))
+  show p^a ≥ q^a
+
+  have : sgn (p^a - q^a) ≥ 0 := calc
+    -- V begin key steps V
+    _ = sgn (p^a - q^a)     := rfl
+    _ ≃ sgn (p - q) * sgn a := sgn_diff_pow ‹p > 0› ‹q > 0›
+    -- ^  end key steps  ^
+    _ ≃ sgn (p - q) * 1     := AA.substR (Integer.gt_zero_sgn.mp ‹a > 0›)
+    _ ≃ sgn (p - q)         := AA.identR
+    _ ≥ 0                   := ge_iff_sub_sgn_nonneg.mp ‹p ≥ q›
+  have : p^a ≥ q^a := ge_iff_sub_sgn_nonneg.mpr ‹sgn (p^a - q^a) ≥ 0›
+  exact this
+
+/--
+Raising two positive rational numbers (with one greater than or equivalent to
+the other) to the same negative integer exponent reverses their ordering.
+-/
+theorem pow_neg_reverses_ge_pos
+    {p q : ℚ} {a : ℤ} (q_pos : q > 0) (a_neg : a < 0) (p_ge_q : p ≥ q)
+    : have : p > 0 := trans ‹p ≥ q› ‹q > 0›
+      have : AP (p ≄ 0) := AP.mk (pos_nonzero ‹p > 0›)
+      have : AP (q ≄ 0) := AP.mk (pos_nonzero ‹q > 0›)
+      p^a ≤ q^a
+    := by
+  intro (_ : p > 0) (_ : AP (p ≄ 0)) (_ : AP (q ≄ 0))
+  show p^a ≤ q^a
+
+  have : sgn (q^a - p^a) ≥ 0 := calc
+    -- V begin key steps V
+    _ = sgn (q^a - p^a)     := rfl
+    _ ≃ sgn (q - p) * sgn a := sgn_diff_pow ‹q > 0› ‹p > 0›
+    -- ^  end key steps  ^
+    _ ≃ sgn (q - p) * -1    := AA.substR (Integer.lt_zero_sgn.mp ‹a < 0›)
+    _ ≃ -1 * sgn (q - p)    := AA.comm
+    _ ≃ -sgn (q - p)        := Integer.mul_neg_one
+    _ ≃ sgn (-(q - p))      := Rel.symm sgn_compat_neg
+    _ ≃ sgn (p - q)         := sgn_subst neg_sub
+    _ ≥ 0                   := ge_iff_sub_sgn_nonneg.mp ‹p ≥ q›
+  have : p^a ≤ q^a := ge_iff_sub_sgn_nonneg.mpr ‹sgn (q^a - p^a) ≥ 0›
+  exact this
 
 end Lean4Axiomatic.Rational

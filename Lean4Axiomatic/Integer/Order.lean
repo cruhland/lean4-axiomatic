@@ -4,7 +4,11 @@ import Lean4Axiomatic.Integer.Subtraction
 
 namespace Lean4Axiomatic.Integer
 
+open AA.TwoOfThree (oneAndThree twoAndThree)
 open Coe (coe)
+open Logic (
+  AP and_mapL and_mapR iff_subst_contra iff_subst_covar or_mapL or_mapR
+)
 open Natural (step)
 open Signed (Negative Positive)
 
@@ -84,6 +88,16 @@ theorem gt_iff_pos_diff {a b : ℤ} : a > b ↔ Positive (a - b) := by
       AA.neqv_substL (Rel.symm ‹a - b ≃ coe k›) ‹(coe k : ℤ) ≄ 0›
     have : b ≄ a := Rel.symm (mt zero_diff_iff_eqv.mpr ‹a - b ≄ 0›)
     exact And.intro ‹b ≤ a› ‹b ≄ a›
+
+/--
+Integers greater than zero are positive.
+
+**Proof intuition**: Follows directly from `gt_iff_pos_diff`.
+-/
+theorem gt_zero_iff_pos {a : ℤ} : a > 0 ↔ Positive a := calc
+  _ ↔ a > 0            := Iff.rfl
+  _ ↔ Positive (a - 0) := gt_iff_pos_diff
+  _ ↔ Positive a       := Rel.iff_subst_eqv AA.substFn sub_identR
 
 /--
 Equivalence between the _less than_ relation on integers and their
@@ -404,6 +418,291 @@ instance lt_injective_neg : AA.Injective (α := ℤ) (-·) (· < ·) (· > ·) :
 }
 
 /--
+_Less than or equivalent to_ is reflexive.
+
+**Property intuition**: Equivalence is already reflexive.
+
+**Proof intuition**: The difference between the two operands of _less than or
+equivalent to_ must be a natural number; zero in this case.
+-/
+theorem le_refl {a : ℤ} : a ≤ a := by
+  apply le_iff_add_nat.mpr
+  show ∃ (k : ℕ), a ≃ a + coe k
+  have : a ≃ a + coe (0 : ℕ) := calc
+    a               ≃ _ := Rel.symm AA.identR
+    a + 0           ≃ _ := Rel.refl
+    a + coe (0 : ℕ) ≃ _ := Rel.refl
+  exact Exists.intro 0 ‹a ≃ a + coe (0 : ℕ)›
+
+/--
+_Less than or equivalent to_ is literally the same as _less than_ OR
+_equivalent to_.
+
+**Proof intuition**: For the forwards direction, if `a ≃ b` then we are done;
+if `a ≄ b` then `a ≤ b` lets us conclude `a < b`. The reverse direction follows
+directly from definitions.
+-/
+theorem le_split {a b : ℤ} : a ≤ b ↔ a < b ∨ a ≃ b := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a ≤ b)
+    show a < b ∨ a ≃ b
+    have : Decidable (a ≃ b) := eqv? a b
+    have : a < b ∨ a ≃ b := match this with
+    | isTrue (_ : a ≃ b) =>
+      Or.inr ‹a ≃ b›
+    | isFalse (_ : a ≄ b) =>
+      have : a < b := lt_iff_le_neqv.mpr (And.intro ‹a ≤ b› ‹a ≄ b›)
+      Or.inl ‹a < b›
+    exact this
+  case mpr =>
+    intro (_ : a < b ∨ a ≃ b)
+    show a ≤ b
+    have : a ≤ b := match ‹a < b ∨ a ≃ b› with
+    | Or.inl (_ : a < b) =>
+      have (And.intro (_ : a ≤ b) _) := lt_iff_le_neqv.mp ‹a < b›
+      ‹a ≤ b›
+    | Or.inr (_ : a ≃ b) =>
+      have : a ≤ a := le_refl
+      have : a ≤ b := AA.substRFn ‹a ≃ b› ‹a ≤ a›
+      ‹a ≤ b›
+    exact this
+
+/--
+The _greater than or equivalent to_ relation can be formed from, or split into,
+the two relations in its name.
+
+**Proof intuition**: Follows directly from `le_split`.
+-/
+theorem ge_split {a b : ℤ} : a ≥ b ↔ a > b ∨ a ≃ b := calc
+  _ ↔ a ≥ b         := Iff.rfl
+  _ ↔ b < a ∨ b ≃ a := le_split
+  _ ↔ a > b ∨ a ≃ b := iff_subst_covar or_mapR Fn.swap
+
+/--
+Convert the _less than_ relation to and from its representation as the sign
+value of the difference of its operands.
+
+**Property intuition**: If a subtraction's result is negative, then its first
+operand must be less than its second.
+
+**Proof intuition**: Use `Negative` as an intermediate step in the conversion.
+-/
+theorem lt_sgn {a b : ℤ} : a < b ↔ sgn (a - b) ≃ -1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a < b)
+    show sgn (a - b) ≃ -1
+    have : Negative (a - b) := lt_iff_neg_diff.mp ‹a < b›
+    have : sgn (a - b) ≃ -1 := sgn_negative.mp this
+    exact this
+  case mpr =>
+    intro (_ : sgn (a - b) ≃ -1)
+    show a < b
+    have : Negative (a - b) := sgn_negative.mpr ‹sgn (a - b) ≃ -1›
+    have : a < b := lt_iff_neg_diff.mpr this
+    exact this
+
+/--
+Integers are less than zero iff they have sign `-1`.
+
+**Proof intuition**: Follows directly from `lt_sgn`.
+-/
+theorem lt_zero_sgn {a : ℤ} : a < 0 ↔ sgn a ≃ -1 := calc
+  _ ↔ a < 0            := Iff.rfl
+  _ ↔ sgn (a - 0) ≃ -1 := lt_sgn
+  _ ↔ sgn a ≃ -1       := AA.eqv_substL_iff (sgn_subst sub_identR)
+
+/--
+Convert the _greater than_ relation to and from its representation as the sign
+value of the difference of its operands.
+
+**Property intuition**: If a subtraction's result is positive, then its first
+operand must be greater than its second.
+
+**Proof intuition**: Use `Positive` as an intermediate step in the conversion.
+-/
+theorem gt_sgn {a b : ℤ} : a > b ↔ sgn (a - b) ≃ 1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a > b)
+    show sgn (a - b) ≃ 1
+    have : Positive (a - b) := gt_iff_pos_diff.mp ‹a > b›
+    have : sgn (a - b) ≃ 1 := sgn_positive.mp this
+    exact this
+  case mpr =>
+    intro (_ : sgn (a - b) ≃ 1)
+    show a > b
+    have : Positive (a - b) := sgn_positive.mpr ‹sgn (a - b) ≃ 1›
+    have : a > b := gt_iff_pos_diff.mpr this
+    exact this
+
+/--
+Integers are greater than zero iff they have sign `1`.
+
+**Proof intuition**: Follows directly from `gt_sgn`.
+-/
+theorem gt_zero_sgn {a : ℤ} : a > 0 ↔ sgn a ≃ 1 := calc
+  _ ↔ a > 0           := Iff.rfl
+  _ ↔ sgn (a - 0) ≃ 1 := gt_sgn
+  _ ↔ sgn a ≃ 1       := AA.eqv_substL_iff (sgn_subst sub_identR)
+
+/--
+Converts the _greater than or equivalent to_ relation on integers to and from
+its _signum_ function representation.
+
+**Property intuition**: The result of subtracting a smaller (or equivalent)
+value from a larger one will never be negative.
+
+**Proof intuition**: In the forward direction, assume the sign of the
+difference _is_ `-1` and attempt to reach a contradiction. Split `a ≥ b` into
+`a > b` and `a ≃ b`. In either case, the sign of `a - b` is different from `-1`
+which is impossible. In the reverse direction, consider the three `sgn` values
+of `a - b`: zero and one both imply `a ≥ b`, while negative one contradicts the
+assumption that `sgn (a - b) ≄ -1`.
+-/
+theorem ge_sgn {a b : ℤ} : a ≥ b ↔ sgn (a - b) ≄ -1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a ≥ b) (_ : sgn (a - b) ≃ -1)
+    show False
+    have : a > b ∨ a ≃ b := ge_split.mp ‹a ≥ b›
+    let TwoSgns :=
+      AA.TwoOfThree (sgn (a - b) ≃ 0) (sgn (a - b) ≃ 1) (sgn (a - b) ≃ -1)
+    have : TwoSgns :=
+      match ‹a > b ∨ a ≃ b› with
+      | Or.inl (_ : a > b) =>
+        have : sgn (a - b) ≃ 1 := gt_sgn.mp ‹a > b›
+        twoAndThree ‹sgn (a - b) ≃ 1› ‹sgn (a - b) ≃ -1›
+      | Or.inr (_ : a ≃ b) =>
+        have : sgn (a - b) ≃ 0 := eqv_sgn.mp ‹a ≃ b›
+        oneAndThree ‹sgn (a - b) ≃ 0› ‹sgn (a - b) ≃ -1›
+    have : ¬TwoSgns := signs_distinct
+    exact absurd ‹TwoSgns› ‹¬TwoSgns›
+  case mpr =>
+    intro (_ : sgn (a - b) ≄ -1)
+    show a ≥ b
+    match sgn_trichotomy (a - b) with
+    | AA.OneOfThree₁.first (_ : sgn (a - b) ≃ 0) =>
+      have : a ≃ b := eqv_sgn.mpr ‹sgn (a - b) ≃ 0›
+      have : a ≥ b := ge_split.mpr (Or.inr ‹a ≃ b›)
+      exact this
+    | AA.OneOfThree₁.second (_ : sgn (a - b) ≃ 1) =>
+      have : a > b := gt_sgn.mpr ‹sgn (a - b) ≃ 1›
+      have : a ≥ b := ge_split.mpr (Or.inl ‹a > b›)
+      exact this
+    | AA.OneOfThree₁.third (_ : sgn (a - b) ≃ -1) =>
+      exact absurd ‹sgn (a - b) ≃ -1› ‹sgn (a - b) ≄ -1›
+
+/--
+Converts the _less than or equivalent to_ relation on integers to and from
+its _signum_ function representation.
+
+**Property intuition**: The result of subtracting a larger (or equivalent)
+value from a smaller one will never be positive.
+
+**Proof intuition**: Follows from `ge_sgn` and properties of negation.
+-/
+theorem le_sgn {a b : ℤ} : a ≤ b ↔ sgn (a - b) ≄ 1 := by
+  have reduce_neg : -sgn (b - a) ≃ -(-1) ↔ sgn (a - b) ≃ 1 := calc
+    _ ↔ -sgn (b - a) ≃ -(-1)   := Iff.rfl
+    _ ↔ sgn (-(b - a)) ≃ -(-1) := AA.eqv_substL_iff (Rel.symm sgn_compat_neg)
+    _ ↔ sgn (a - b) ≃ -(-1)    := AA.eqv_substL_iff (sgn_subst sub_neg_flip)
+    _ ↔ sgn (a - b) ≃ 1        := AA.eqv_substR_iff neg_involutive
+  calc
+    _ ↔ a ≤ b                  := Iff.rfl
+    _ ↔ sgn (b - a) ≄ -1       := ge_sgn
+    _ ↔ -sgn (b - a) ≄ -(-1)   := Iff.intro AA.subst₁ AA.inject
+    _ ↔ sgn (a - b) ≄ 1        := iff_subst_contra mt reduce_neg
+
+/--
+Integers are greater than or equivalent to zero iff they don't have sign `-1`.
+
+**Proof intuition**: Follows directly from `ge_sgn`.
+-/
+theorem ge_zero_sgn {a : ℤ} : a ≥ 0 ↔ sgn a ≄ -1 := by
+  have : sgn (a - 0) ≃ sgn a := sgn_subst sub_identR
+  have : sgn (a - 0) ≃ -1 ↔ sgn a ≃ -1 := AA.eqv_substL_iff this
+  calc
+    _ ↔ a ≥ 0            := Iff.rfl
+    _ ↔ sgn (a - 0) ≄ -1 := ge_sgn
+    _ ↔ sgn a ≄ -1       := iff_subst_contra mt ‹sgn (a - 0) ≃ -1 ↔ sgn a ≃ -1›
+
+/--
+The only sign value greater than zero, is one.
+
+**Property intuition**: The only sign values are `1`, `0`, and `-1`.
+
+**Proof intuition**: The sign of any number greater than zero is one; taking
+the sign of a sign leaves it unchanged.
+-/
+theorem sgn_gt_zero_iff_pos {a : ℤ} : sgn a > 0 ↔ sgn a ≃ 1 := calc
+  _ ↔ sgn a > 0       := Iff.rfl
+  _ ↔ sgn (sgn a) ≃ 1 := gt_zero_sgn
+  _ ↔ sgn a ≃ 1       := AA.eqv_substL_iff sgn_idemp
+
+/--
+Negative one is the only sign value that's not greater than or equivalent to
+zero.
+
+**Property intuition**: The only sign values are `1`, `0`, and `-1`.
+
+**Proof intuition**: The sign of any number greater than or equivalent to zero
+is not `-1`; taking the sign of a sign leaves it unchanged.
+-/
+theorem sgn_ge_zero_iff_nonneg {a : ℤ} : sgn a ≥ 0 ↔ sgn a ≄ -1 := calc
+  _ ↔ sgn a ≥ 0        := Iff.rfl
+  _ ↔ sgn (sgn a) ≄ -1 := ge_zero_sgn
+  _ ↔ sgn a ≄ -1       := iff_subst_contra mt (AA.eqv_substL_iff sgn_idemp)
+
+/--
+An integer is greater than zero iff its sign is greater than zero.
+
+**Property and proof intuition**: Integers greater than zero have sign value
+`1`; this is the only sign value that's greater than zero.
+-/
+theorem sgn_preserves_gt_zero {a : ℤ} : a > 0 ↔ sgn a > 0 := calc
+  _ ↔ a > 0     := Iff.rfl
+  _ ↔ sgn a ≃ 1 := gt_zero_sgn
+  _ ↔ sgn a > 0 := sgn_gt_zero_iff_pos.symm
+
+/--
+An integer is greater than or equivalent to zero iff its sign is greater than
+or equivalent to zero.
+
+**Property intuition**: Integers greater than or equivalent to zero have sign
+values of `1` and `0`, which are the only ones that are also greater than or
+equivalent to zero.
+
+**Proof intuition**: Split the _greater than or equivalent to_ relation into
+_greater than_ or _equivalent to_. The theorem `sgn_preserves_gt_zero` covers
+the _greater than_ relation, while `sgn_zero` covers _equivalent to_.
+-/
+theorem sgn_preserves_ge_zero {a : ℤ} : a ≥ 0 ↔ sgn a ≥ 0 := calc
+  _ ↔ a ≥ 0                 := Iff.rfl
+  _ ↔ a > 0 ∨ a ≃ 0         := ge_split
+  _ ↔ sgn a > 0 ∨ a ≃ 0     := iff_subst_covar or_mapL sgn_preserves_gt_zero
+  _ ↔ sgn a > 0 ∨ sgn a ≃ 0 := iff_subst_covar or_mapR sgn_zero
+  _ ↔ sgn a ≥ 0             := ge_split.symm
+
+/--
+Expresses _greater than or equivalent to_ in terms of the sign value of a
+difference being nonnegative.
+
+This is a useful lemma because it enables adding or removing usage of `sgn`
+while staying in the context of the _greater than or equivalent to_ relation.
+
+**Property intuition**: If `a ≥ b`, then their difference is `≥ 0`, and so is
+the sign value of that difference.
+
+**Proof intuition**: By previous lemmas for `sgn`.
+-/
+theorem sgn_diff_ge_zero {a b : ℤ} : a ≥ b ↔ sgn (a - b) ≥ 0 := calc
+  _ ↔ a ≥ b            := Iff.rfl
+  _ ↔ sgn (a - b) ≄ -1 := ge_sgn
+  _ ↔ sgn (a - b) ≥ 0  := sgn_ge_zero_iff_nonneg.symm
+
+/--
 The less-than relation is transitive.
 
 **Property intuition**: This is a fundamental property of total ordering
@@ -415,7 +714,7 @@ elements.
 integer subtraction being positive, the result follows from adding the two
 smaller properties and using algebra to show that it produces the conclusion.
 -/
-theorem lt_trans {a b c : ℤ} : a < b → b < c → a < c := by
+theorem trans_lt_lt_lt {a b c : ℤ} : a < b → b < c → a < c := by
   intro (_ : a < b) (_ : b < c)
   show a < c
   have : Positive (b - a) := gt_iff_pos_diff.mp ‹a < b›
@@ -424,22 +723,352 @@ theorem lt_trans {a b c : ℤ} : a < b → b < c → a < c := by
   show Positive (c - a)
   have : Positive ((c - b) + (b - a)) :=
     add_preserves_positive ‹Positive (c - b)› ‹Positive (b - a)›
-  have : (c - b) + (b - a) ≃ c - a := calc
-    (c - b) + (b - a)   ≃ _ := AA.substL sub_defn
-    (c + -b) + (b - a)  ≃ _ := AA.substR sub_defn
-    (c + -b) + (b + -a) ≃ _ := AA.assoc
-    c + (-b + (b + -a)) ≃ _ := AA.substR (Rel.symm AA.assoc)
-    c + ((-b + b) + -a) ≃ _ := AA.substR (AA.substL AA.inverseL)
-    c + (0 + -a)        ≃ _ := AA.substR AA.identL
-    c + -a              ≃ _ := Rel.symm sub_defn
-    c - a               ≃ _ := Rel.refl
+  have : (c - b) + (b - a) ≃ c - a := add_sub_telescope
   have : Positive (c - a) :=
     AA.substFn ‹(c - b) + (b - a) ≃ c - a› ‹Positive ((c - b) + (b - a))›
   exact this
 
-instance lt_transitive : Relation.Transitive (α := ℤ) (· < ·) := {
-  trans := lt_trans
+/-- Enable `trans_lt_lt_lt` use by `calc` tactics. -/
+instance trans_lt_lt_lt_inst : Relation.Transitive (α := ℤ) (· < ·) := {
+  trans := trans_lt_lt_lt
 }
+
+/--
+Transitivity of _less than_ with equivalence on the left.
+
+**Property and proof intuition**: Follows from the substituitive property of
+equivalence on _less than_.
+-/
+theorem trans_eqv_lt_lt {a b c : ℤ} : a ≃ b → b < c → a < c := by
+  intro (_ : a ≃ b) (_ : b < c)
+  show a < c
+  exact lt_substL_eqv (Rel.symm ‹a ≃ b›) ‹b < c›
+
+/-- Enable `trans_eqv_lt_lt` use by `calc` tactics. -/
+instance trans_eqv_lt_lt_inst : Trans (α := ℤ) (· ≃ ·) (· < ·) (· < ·) := {
+  trans := trans_eqv_lt_lt
+}
+
+/--
+Transitivity of _less than_ with equivalence on the right.
+
+**Property and proof intuition**: Follows from the substituitive property of
+equivalence on _less than_.
+-/
+theorem trans_lt_eqv_lt {a b c : ℤ} : a < b → b ≃ c → a < c := by
+  intro (_ : a < b) (_ : b ≃ c)
+  show a < c
+  exact lt_substR_eqv ‹b ≃ c› ‹a < b›
+
+/-- Enable `trans_lt_eqv_lt` use by `calc` tactics. -/
+instance trans_lt_eqv_lt_inst : Trans (α := ℤ) (· < ·) (· ≃ ·) (· < ·) := {
+  trans := trans_lt_eqv_lt
+}
+
+/--
+Transitivity of _less than_ with _less than or equivalent to_ on the left.
+
+**Property and proof intuition**: Split _less than or equivalent to_ into
+_less than_ or _equivalent to_. Transitivity holds for both of those simpler
+relations, so it holds for this one as well.
+-/
+theorem trans_le_lt_lt {a b c : ℤ} : a ≤ b → b < c → a < c := by
+  intro (_ : a ≤ b) (_ : b < c)
+  show a < c
+  have : a < b ∨ a ≃ b := le_split.mp ‹a ≤ b›
+  match ‹a < b ∨ a ≃ b› with
+  | Or.inl (_ : a < b) =>
+    have : a < c := trans_lt_lt_lt ‹a < b› ‹b < c›
+    exact this
+  | Or.inr (_ : a ≃ b) =>
+    have : a < c := trans_eqv_lt_lt ‹a ≃ b› ‹b < c›
+    exact this
+
+/-- Enable `trans_le_lt_lt` use by `calc` tactics. -/
+instance trans_le_lt_lt_inst : Trans (α := ℤ) (· ≤ ·) (· < ·) (· < ·) := {
+  trans := trans_le_lt_lt
+}
+
+/--
+Transitivity of _less than_ with _less than or equivalent to_ on the right.
+
+**Property and proof intuition**: Split _less than or equivalent to_ into
+_less than_ or _equivalent to_. Transitivity holds for both of those simpler
+relations, so it holds for this one as well.
+-/
+theorem trans_lt_le_lt {a b c : ℤ} : a < b → b ≤ c → a < c := by
+  intro (_ : a < b) (_ : b ≤ c)
+  show a < c
+  have : b < c ∨ b ≃ c := le_split.mp ‹b ≤ c›
+  match ‹b < c ∨ b ≃ c› with
+  | Or.inl (_ : b < c) =>
+    have : a < c := trans_lt_lt_lt ‹a < b› ‹b < c›
+    exact this
+  | Or.inr (_ : b ≃ c) =>
+    have : a < c := trans_lt_eqv_lt ‹a < b› ‹b ≃ c›
+    exact this
+
+/-- Enable `trans_lt_le_lt` use by `calc` tactics. -/
+instance trans_lt_le_lt_inst : Trans (α := ℤ) (· < ·) (· ≤ ·) (· < ·) := {
+  trans := trans_lt_le_lt
+}
+
+/--
+Transitivity of _less than or equivalent to_.
+
+**Property and proof intuition**: Split each input relation into its
+_less than_ case and its equivalence case. Delegate to a previous transitivity
+result for each combination of cases. Note that this turns out to be easier
+than expanding the relation into its `sgn`-based definition, because that
+involves a `· ≄ ·` operation which is more difficult to deal with.
+-/
+theorem trans_le_le_le {a b c : ℤ} : a ≤ b → b ≤ c → a ≤ c := by
+  intro (_ : a ≤ b) (_ : b ≤ c)
+  show a ≤ c
+  have : a < b ∨ a ≃ b := le_split.mp ‹a ≤ b›
+  have : b < c ∨ b ≃ c := le_split.mp ‹b ≤ c›
+  match And.intro ‹a < b ∨ a ≃ b› ‹b < c ∨ b ≃ c› with
+  | (And.intro (Or.inl (_ : a < b)) (Or.inl (_ : b < c))) =>
+    have : a < c := trans_lt_lt_lt ‹a < b› ‹b < c›
+    have : a ≤ c := le_split.mpr (Or.inl ‹a < c›)
+    exact this
+  | (And.intro (Or.inl (_ : a < b)) (Or.inr (_ : b ≃ c))) =>
+    have : a < c := trans_lt_eqv_lt ‹a < b› ‹b ≃ c›
+    have : a ≤ c := le_split.mpr (Or.inl ‹a < c›)
+    exact this
+  | (And.intro (Or.inr (_ : a ≃ b)) (Or.inl (_ : b < c))) =>
+    have : a < c := trans_eqv_lt_lt ‹a ≃ b› ‹b < c›
+    have : a ≤ c := le_split.mpr (Or.inl ‹a < c›)
+    exact this
+  | (And.intro (Or.inr (_ : a ≃ b)) (Or.inr (_ : b ≃ c))) =>
+    have : a ≃ c := Rel.trans ‹a ≃ b› ‹b ≃ c›
+    have : a ≤ c := le_split.mpr (Or.inr ‹a ≃ c›)
+    exact this
+
+/-- Enable `trans_le_le_le` use by `calc` tactics. -/
+instance trans_le_le_le_inst : Trans (α := ℤ) (· ≤ ·) (· ≤ ·) (· ≤ ·) := {
+  trans := trans_le_le_le
+}
+
+/--
+Transitivity of _less than or equivalent to_ with equivalence on the left.
+
+**Property and proof intuition**: Convert equivalence to _less than or
+equivalent to_; follows from transitivity of that relation.
+-/
+theorem trans_eqv_le_le {a b c : ℤ} : a ≃ b → b ≤ c → a ≤ c := by
+  intro (_ : a ≃ b) (_ : b ≤ c)
+  show a ≤ c
+  have : a ≤ b := le_split.mpr (Or.inr ‹a ≃ b›)
+  have : a ≤ c := trans_le_le_le ‹a ≤ b› ‹b ≤ c›
+  exact this
+
+/-- Enable `trans_eqv_le_le` use by `calc` tactics. -/
+instance trans_eqv_le_le_inst : Trans (α := ℤ) (· ≃ ·) (· ≤ ·) (· ≤ ·) := {
+  trans := trans_eqv_le_le
+}
+
+/--
+Transitivity of _less than or equivalent to_ with equivalence on the right.
+
+**Property and proof intuition**: Convert equivalence to _less than or
+equivalent to_; follows from transitivity of that relation.
+-/
+theorem trans_le_eqv_le {a b c : ℤ} : a ≤ b → b ≃ c → a ≤ c := by
+  intro (_ : a ≤ b) (_ : b ≃ c)
+  show a ≤ c
+  have : b ≤ c := le_split.mpr (Or.inr ‹b ≃ c›)
+  have : a ≤ c := trans_le_le_le ‹a ≤ b› ‹b ≤ c›
+  exact this
+
+/-- Enable `trans_le_eqv_le` use by `calc` tactics. -/
+instance trans_le_eqv_le_inst : Trans (α := ℤ) (· ≤ ·) (· ≃ ·) (· ≤ ·) := {
+  trans := trans_le_eqv_le
+}
+
+/--
+Transitivity of the _greater than_ relation.
+
+**Property and proof intuition**: Follows from _less than_ transitivity.
+-/
+theorem trans_gt_gt_gt {a b c : ℤ} : a > b → b > c → a > c := by
+  intro (_ : a > b) (_ : b > c)
+  show a > c
+  have : c < a := trans_lt_lt_lt ‹c < b› ‹b < a›
+  exact this
+
+/-- Enable `trans_gt_gt_gt` use by `calc` tactics. -/
+instance trans_gt_gt_gt_inst : Trans (α := ℤ) (· > ·) (· > ·) (· > ·) := {
+  trans := trans_gt_gt_gt
+}
+
+/--
+Transitivity of _greater than_ with equivalence on the left.
+
+**Property and proof intuition**: Follows from transitivity of _less than_ and
+equivalence.
+-/
+theorem trans_eqv_gt_gt {a b c : ℤ} : a ≃ b → b > c → a > c := by
+  intro (_ : a ≃ b) (_ : b > c)
+  show a > c
+  have : c < a := trans_lt_eqv_lt ‹c < b› (Rel.symm ‹a ≃ b›)
+  exact this
+
+/-- Enable `trans_eqv_gt_gt` use by `calc` tactics. -/
+instance trans_eqv_gt_gt_inst : Trans (α := ℤ) (· ≃ ·) (· > ·) (· > ·) := {
+  trans := trans_eqv_gt_gt
+}
+
+/--
+Transitivity of _greater than_ with equivalence on the left.
+
+**Property and proof intuition**: Follows from transitivity of _less than_ and
+equivalence.
+-/
+theorem trans_gt_eqv_gt {a b c : ℤ} : a > b → b ≃ c → a > c := by
+  intro (_ : a > b) (_ : b ≃ c)
+  show a > c
+  have : c < a := trans_eqv_lt_lt (Rel.symm ‹b ≃ c›) ‹b < a›
+  exact this
+
+/-- Enable `trans_gt_eqv_gt` use by `calc` tactics. -/
+instance trans_gt_eqv_gt_inst : Trans (α := ℤ) (· > ·) (· ≃ ·) (· > ·) := {
+  trans := trans_gt_eqv_gt
+}
+
+/--
+Transitivity of _greater than_ with _greater than or equivalent to_ on the
+left.
+
+**Property and proof intuition**: Follows from transitivity of _less than_ and
+_less than or equivalent to_.
+-/
+theorem trans_ge_gt_gt {a b c : ℤ} : a ≥ b → b > c → a > c := by
+  intro (_ : a ≥ b) (_ : b > c)
+  show a > c
+  have : c < a := trans_lt_le_lt ‹c < b› ‹b ≤ a›
+  exact this
+
+/-- Enable `trans_ge_gt_gt` use by `calc` tactics. -/
+instance trans_ge_gt_gt_inst : Trans (α := ℤ) (· ≥ ·) (· > ·) (· > ·) := {
+  trans := trans_ge_gt_gt
+}
+
+/--
+Transitivity of _greater than_ with _greater than or equivalent to_ on the
+right.
+
+**Property and proof intuition**: Follows from transitivity of _less than_ and
+_less than or equivalent to_.
+-/
+theorem trans_gt_ge_gt {a b c : ℤ} : a > b → b ≥ c → a > c := by
+  intro (_ : a > b) (_ : b ≥ c)
+  show a > c
+  have : c < a := trans_le_lt_lt ‹c ≤ b› ‹b < a›
+  exact this
+
+/-- Enable `trans_gt_ge_gt` use by `calc` tactics. -/
+instance trans_gt_ge_gt_inst : Trans (α := ℤ) (· > ·) (· ≥ ·) (· > ·) := {
+  trans := trans_gt_ge_gt
+}
+
+/--
+Transitivity of _greater than or equivalent to_.
+
+**Property and proof intuition**: Follows from transitivity of _less than or
+equivalent to_.
+-/
+theorem trans_ge_ge_ge {a b c : ℤ} : a ≥ b → b ≥ c → a ≥ c := by
+  intro (_ : a ≥ b) (_ : b ≥ c)
+  show a ≥ c
+  have : c ≤ a := trans_le_le_le ‹c ≤ b› ‹b ≤ a›
+  exact this
+
+/-- Enable `trans_ge_ge_ge` use by `calc` tactics. -/
+instance trans_ge_ge_ge_inst : Trans (α := ℤ) (· ≥ ·) (· ≥ ·) (· ≥ ·) := {
+  trans := trans_ge_ge_ge
+}
+
+/--
+Transitivity of _greater than or equivalent to_ with equivalence on the left.
+
+**Property and proof intuition**: Follows from transitivity of _less than or
+equivalent to_ with equivalence.
+-/
+theorem trans_eqv_ge_ge {a b c : ℤ} : a ≃ b → b ≥ c → a ≥ c := by
+  intro (_ : a ≃ b) (_ : b ≥ c)
+  show a ≥ c
+  have : c ≤ a := trans_le_eqv_le ‹c ≤ b› (Rel.symm ‹a ≃ b›)
+  exact this
+
+/-- Enable `trans_eqv_ge_ge` use by `calc` tactics. -/
+instance trans_eqv_ge_ge_inst : Trans (α := ℤ) (· ≃ ·) (· ≥ ·) (· ≥ ·) := {
+  trans := trans_eqv_ge_ge
+}
+
+/--
+Transitivity of _greater than or equivalent to_ with equivalence on the right.
+
+**Property and proof intuition**: Follows from transitivity of _less than or
+equivalent to_ with equivalence.
+-/
+theorem trans_ge_eqv_ge {a b c : ℤ} : a ≥ b → b ≃ c → a ≥ c := by
+  intro (_ : a ≥ b) (_ : b ≃ c)
+  show a ≥ c
+  have : c ≤ a := trans_eqv_le_le (Rel.symm ‹b ≃ c›) ‹b ≤ a›
+  exact this
+
+/-- Enable `trans_ge_eqv_ge` use by `calc` tactics. -/
+instance trans_ge_eqv_ge_inst : Trans (α := ℤ) (· ≥ ·) (· ≃ ·) (· ≥ ·) := {
+  trans := trans_ge_eqv_ge
+}
+
+/--
+An integer is _greater than or equivalent to_ another iff the larger minus the
+smaller is nonnegative.
+
+**Proof intuition**: Converts through an intermediate expression involving
+`sgn`. It's more obscure than a proof via substitution of subtraction on both
+sides of the relation, but that's because it uses more primitive theorems.
+-/
+theorem ge_iff_diff_nonneg {a b : ℤ} : a ≥ b ↔ a - b ≥ 0 := calc
+  _ ↔ a ≥ b           := Iff.rfl
+  _ ↔ sgn (a - b) ≥ 0 := sgn_diff_ge_zero
+  _ ↔ a - b ≥ 0       := sgn_preserves_ge_zero.symm
+
+/--
+A common term can be added to or removed from the right-hand side of both
+operands of _greater than or equivalent to_.
+
+**Property intuition**: Adjusting two values by the same amount doesn't affect
+their relative ordering.
+
+**Proof intuition**: Move both operands to the same side of the relation, then
+use algebra.
+-/
+theorem ge_addR {a₁ a₂ b : ℤ} : a₁ ≥ a₂ ↔ a₁ + b ≥ a₂ + b := by
+  have expand_sub : a₁ - a₂ ≃ (a₁ + b) - (a₂ + b) := Rel.symm sub_sums_sameR
+  calc
+    _ ↔ a₁ ≥ a₂                 := Iff.rfl
+    _ ↔ a₁ - a₂ ≥ 0             := ge_iff_diff_nonneg
+    _ ↔ (a₁ + b) - (a₂ + b) ≥ 0 := Rel.iff_subst_eqv le_substR_eqv expand_sub
+    _ ↔ a₁ + b ≥ a₂ + b         := ge_iff_diff_nonneg.symm
+
+/--
+A common term can be added to or removed from the left-hand side of both
+operands of _greater than or equivalent to_.
+
+**Property intuition**: Adjusting two values by the same amount doesn't affect
+their relative ordering.
+
+**Proof intuition**: Use the right-hand version of this theorem, then use
+commutativity to swap the operands to addition.
+-/
+theorem ge_addL {a₁ a₂ b : ℤ} : a₁ ≥ a₂ ↔ b + a₁ ≥ b + a₂ := calc
+  _ ↔ a₁ ≥ a₂         := Iff.rfl
+  _ ↔ a₁ + b ≥ a₂ + b := ge_addR
+  _ ↔ b + a₁ ≥ a₂ + b := Rel.iff_subst_eqv le_substR_eqv AA.comm
+  _ ↔ b + a₁ ≥ b + a₂ := Rel.iff_subst_eqv le_substL_eqv AA.comm
 
 /--
 Any pair of integers can only be in one of three relations: _less than_,
@@ -493,57 +1122,6 @@ theorem order_trichotomy
     exact absurd abTwo abNotTwo
 
 /--
-_Less than or equivalent to_ is reflexive.
-
-**Property intuition**: Equivalence is already reflexive.
-
-**Proof intuition**: The difference between the two operands of _less than or
-equivalent to_ must be a natural number; zero in this case.
--/
-theorem le_refl {a : ℤ} : a ≤ a := by
-  apply le_iff_add_nat.mpr
-  show ∃ (k : ℕ), a ≃ a + coe k
-  have : a ≃ a + coe (0 : ℕ) := calc
-    a               ≃ _ := Rel.symm AA.identR
-    a + 0           ≃ _ := Rel.refl
-    a + coe (0 : ℕ) ≃ _ := Rel.refl
-  exact Exists.intro 0 ‹a ≃ a + coe (0 : ℕ)›
-
-/--
-_Less than or equivalent to_ is literally the same as _less than_ OR
-_equivalent to_.
-
-**Proof intuition**: For the forwards direction, if `a ≃ b` then we are done;
-if `a ≄ b` then `a ≤ b` lets us conclude `a < b`. The reverse direction follows
-directly from definitions.
--/
-theorem le_iff_lt_or_eqv {a b : ℤ} : a ≤ b ↔ a < b ∨ a ≃ b := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : a ≤ b)
-    show a < b ∨ a ≃ b
-    have : Decidable (a ≃ b) := eqv? a b
-    have : a < b ∨ a ≃ b := match this with
-    | isTrue (_ : a ≃ b) =>
-      Or.inr ‹a ≃ b›
-    | isFalse (_ : a ≄ b) =>
-      have : a < b := lt_iff_le_neqv.mpr (And.intro ‹a ≤ b› ‹a ≄ b›)
-      Or.inl ‹a < b›
-    exact this
-  case mpr =>
-    intro (_ : a < b ∨ a ≃ b)
-    show a ≤ b
-    have : a ≤ b := match ‹a < b ∨ a ≃ b› with
-    | Or.inl (_ : a < b) =>
-      have (And.intro (_ : a ≤ b) _) := lt_iff_le_neqv.mp ‹a < b›
-      ‹a ≤ b›
-    | Or.inr (_ : a ≃ b) =>
-      have : a ≤ a := le_refl
-      have : a ≤ b := AA.substRFn ‹a ≃ b› ‹a ≤ a›
-      ‹a ≤ b›
-    exact this
-
-/--
 The _less than or equivalent to_ relation is reversed with negated operands.
 
 **Property and proof intuition**: Equivalence is symmetric and preserved by
@@ -555,28 +1133,28 @@ theorem le_neg_flip {a b : ℤ} : a ≤ b ↔ -b ≤ -a := by
   case mp =>
     intro (_ : a ≤ b)
     show -b ≤ -a
-    have : a < b ∨ a ≃ b := le_iff_lt_or_eqv.mp ‹a ≤ b›
+    have : a < b ∨ a ≃ b := le_split.mp ‹a ≤ b›
     match this with
     | Or.inl (_ : a < b) =>
       have : -b < -a := lt_neg_flip.mp ‹a < b›
-      have : -b ≤ -a := le_iff_lt_or_eqv.mpr (Or.inl this)
+      have : -b ≤ -a := le_split.mpr (Or.inl this)
       exact this
     | Or.inr (_ : a ≃ b) =>
       have : -b ≃ -a := AA.subst₁ (Rel.symm ‹a ≃ b›)
-      have : -b ≤ -a := le_iff_lt_or_eqv.mpr (Or.inr this)
+      have : -b ≤ -a := le_split.mpr (Or.inr this)
       exact this
   case mpr =>
     intro (_ : -b ≤ -a)
     show a ≤ b
-    have : -b < -a ∨ -b ≃ -a := le_iff_lt_or_eqv.mp ‹-b ≤ -a›
+    have : -b < -a ∨ -b ≃ -a := le_split.mp ‹-b ≤ -a›
     match this with
     | Or.inl (_ : -b < -a) =>
       have : a < b := lt_neg_flip.mpr ‹-b < -a›
-      have : a ≤ b := le_iff_lt_or_eqv.mpr (Or.inl this)
+      have : a ≤ b := le_split.mpr (Or.inl this)
       exact this
     | Or.inr (_ : -b ≃ -a) =>
       have : a ≃ b := AA.inject (Rel.symm ‹-b ≃ -a›)
-      have : a ≤ b := le_iff_lt_or_eqv.mpr (Or.inr this)
+      have : a ≤ b := le_split.mpr (Or.inr this)
       exact this
 
 /--
@@ -588,7 +1166,7 @@ each other.
 theorem le_gt_false {a b : ℤ} : a ≤ b → a > b → False := by
   intro (_ : a ≤ b) (_ : a > b)
   show False
-  have : a < b ∨ a ≃ b := le_iff_lt_or_eqv.mp ‹a ≤ b›
+  have : a < b ∨ a ≃ b := le_split.mp ‹a ≤ b›
   have notTwo : ¬AA.TwoOfThree (a < b) (a ≃ b) (a > b) :=
     (order_trichotomy a b).atMostOne
   have two : AA.TwoOfThree (a < b) (a ≃ b) (a > b) :=
@@ -660,58 +1238,161 @@ theorem le_widen_lt {a b : ℤ} : a ≤ b → a < b + 1 := by
   intro (_ : a ≤ b)
   show a < b + 1
   have : b < b + 1 := lt_inc
-  have : a < b ∨ a ≃ b := le_iff_lt_or_eqv.mp ‹a ≤ b›
+  have : a < b ∨ a ≃ b := le_split.mp ‹a ≤ b›
   have : a < b + 1 := match ‹a < b ∨ a ≃ b› with
   | Or.inl (_ : a < b) => Rel.trans ‹a < b› ‹b < b + 1›
   | Or.inr (_ : a ≃ b) => AA.substLFn (Rel.symm ‹a ≃ b›) ‹b < b + 1›
   exact this
 
 /--
-Convert the _less than_ relation to and from its representation as the sign
-value of the difference of its operands.
+Every nonnegative integer is equivalent to a natural number.
 
-**Property intuition**: If a subtraction's result is negative, then its first
-operand must be less than its second.
-
-**Proof intuition**: Use `Negative` as an intermediate step in the conversion.
+**Proof intuition**: Split the nonnegative condition into positive and zero
+cases. The zero case is trivial; the positive case follows from the theorem
+`positive_elim_nat`.
 -/
-theorem lt_sgn {a b : ℤ} : a < b ↔ sgn (a - b) ≃ -1 := by
+theorem ge_zero_eqv_nat {a : ℤ} : a ≥ 0 → ∃ (n : ℕ), a ≃ (n:ℤ) := by
+  intro (_ : a ≥ 0)
+  show ∃ (n : ℕ), a ≃ (n:ℤ)
+  have : a > 0 ∨ a ≃ 0 := ge_split.mp ‹a ≥ 0›
+  match ‹a > 0 ∨ a ≃ 0› with
+  | Or.inl (_ : a > 0) =>
+    have : Positive a := gt_zero_iff_pos.mp ‹a > 0›
+    have Exists.intro (n : ℕ) (And.intro (_ : Positive n) (_ : a ≃ (n:ℤ))) :=
+      positive_elim_nat ‹Positive a›
+    exact Exists.intro n ‹a ≃ (n:ℤ)›
+  | Or.inr (_ : a ≃ 0) =>
+    exact Exists.intro 0 ‹a ≃ 0›
+
+/--
+The sum of two nonnegative integers is zero iff they are both zero as well.
+
+**Property and proof intuition**: There is an identical result for natural
+numbers, and nonnegative integers are equivalent to natural numbers.
+-/
+theorem zero_sum_split
+    {a b : ℤ} : a ≥ 0 → b ≥ 0 → (a + b ≃ 0 ↔ a ≃ 0 ∧ b ≃ 0)
+    := by
+  intro (_ : a ≥ 0) (_ : b ≥ 0)
+  have (Exists.intro (n : ℕ) (_ : a ≃ (n:ℤ))) := ge_zero_eqv_nat ‹a ≥ 0›
+  have (Exists.intro (m : ℕ) (_ : b ≃ (m:ℤ))) := ge_zero_eqv_nat ‹b ≥ 0›
+  have from_natural_eqv {k j : ℕ} : k ≃ j ↔ (k:ℤ) ≃ (j:ℤ) :=
+    Iff.intro AA.subst₁ AA.inject
+  have nat_int_eqvL {k j : ℕ} {c : ℤ} : c ≃ (k:ℤ) → (k ≃ j ↔ c ≃ (j:ℤ)) := by
+    intro (_ : c ≃ (k:ℤ))
+    show k ≃ j ↔ c ≃ (j:ℤ)
+    calc
+      _ ↔ k ≃ j         := Iff.rfl
+      _ ↔ (k:ℤ) ≃ (j:ℤ) := from_natural_eqv
+      _ ↔ c ≃ (j:ℤ)     := (AA.eqv_substL_iff ‹c ≃ (k:ℤ)›).symm
+  have : n ≃ 0 ↔ a ≃ 0 := nat_int_eqvL ‹a ≃ (n:ℤ)›
+  have : m ≃ 0 ↔ b ≃ 0 := nat_int_eqvL ‹b ≃ (m:ℤ)›
+  calc
+    _ ↔ a + b ≃ 0               := Iff.rfl
+    _ ↔ (n:ℤ) + b ≃ 0           := AA.eqv_substL_iff (AA.substL ‹a ≃ (n:ℤ)›)
+    _ ↔ (n:ℤ) + (m:ℤ) ≃ 0       := AA.eqv_substL_iff (AA.substR ‹b ≃ (m:ℤ)›)
+    _ ↔ ((n+m:ℕ):ℤ) ≃ ((0:ℕ):ℤ) := AA.eqv_substL_iff (Rel.symm AA.compat₂)
+    _ ↔ n + m ≃ 0               := from_natural_eqv.symm
+    _ ↔ n ≃ 0 ∧ m ≃ 0           := Natural.zero_sum_split
+    _ ↔ a ≃ 0 ∧ m ≃ 0           := iff_subst_covar and_mapL ‹n ≃ 0 ↔ a ≃ 0›
+    _ ↔ a ≃ 0 ∧ b ≃ 0           := iff_subst_covar and_mapR ‹m ≃ 0 ↔ b ≃ 0›
+
+/--
+The product of two integers is positive iff their product is nonzero and they
+have the same sign.
+
+**Property intuition**: The product cannot be negative, because the product of
+like signs is always positive.
+
+**Proof intuition**: In the forward direction, use `mul_sqrt1_eqv` to show the
+signs are equivalent. Assume the product is zero and reach a contradiction with
+`a * b > 0`. In the reverse direction, use the assumption that the integers'
+signs are equivalent, along with `nonneg_square`, to show that their product is
+nonnegative. Use the assumption that the product is nonzero to conclude it's
+strictly positive.
+-/
+theorem mul_gt_zero_iff_sgn_same
+    {a b : ℤ} : a * b > 0 ↔ sgn a ≃ sgn b ∧ a * b ≄ 0 := by
   apply Iff.intro
   case mp =>
-    intro (_ : a < b)
-    show sgn (a - b) ≃ -1
-    have : Negative (a - b) := lt_iff_neg_diff.mp ‹a < b›
-    have : sgn (a - b) ≃ -1 := sgn_negative.mp this
-    exact this
+    intro (_ : a * b > 0)
+    show sgn a ≃ sgn b ∧ a * b ≄ 0
+    have : sgn a * sgn b ≃ 1 := calc
+      _ = sgn a * sgn b := rfl
+      _ ≃ sgn (a * b)   := Rel.symm sgn_compat_mul
+      _ ≃ 1             := gt_zero_sgn.mp ‹a * b > 0›
+    have (And.intro _ (_ : sgn a ≃ sgn b)) :=
+      mul_sqrt1_eqv.mp ‹sgn a * sgn b ≃ 1›
+    have : a * b ≄ 0 := by
+      intro (_ : a * b ≃ 0)
+      show False
+      have : a * b ≤ 0 := le_split.mpr (Or.inr ‹a * b ≃ 0›)
+      exact le_gt_false ‹a * b ≤ 0› ‹a * b > 0›
+    exact And.intro ‹sgn a ≃ sgn b› ‹a * b ≄ 0›
   case mpr =>
-    intro (_ : sgn (a - b) ≃ -1)
-    show a < b
-    have : Negative (a - b) := sgn_negative.mpr ‹sgn (a - b) ≃ -1›
-    have : a < b := lt_iff_neg_diff.mpr this
+    intro (And.intro (_ : sgn a ≃ sgn b) (_ : a * b ≄ 0))
+    show a * b > 0
+    have : sgn (a * b) ≥ 0 := calc
+      _ = sgn (a * b)   := rfl
+      _ ≃ sgn a * sgn b := sgn_compat_mul
+      _ ≃ sgn b * sgn b := AA.substL ‹sgn a ≃ sgn b›
+      _ ≥ 0             := ge_zero_sgn.mpr nonneg_square
+    have : a * b ≥ 0 := sgn_preserves_ge_zero.mpr ‹sgn (a * b) ≥ 0›
+    have : 0 ≄ a * b := Rel.symm ‹a * b ≄ 0›
+    have : a * b > 0 := lt_iff_le_neqv.mpr (And.intro ‹a * b ≥ 0› ‹0 ≄ a * b›)
     exact this
 
 /--
-Convert the _greater than_ relation to and from its representation as the sign
-value of the difference of its operands.
+The _greater than or equivalent to_ relation between two integers is preserved
+when both are multiplied by a nonnegative integer on the right.
 
-**Property intuition**: If a subtraction's result is positive, then its first
-operand must be greater than its second.
+**Property intuition**: Multiplication scales the integers by the same amount,
+so their location relative to each other doesn't change.
 
-**Proof intuition**: Use `Positive` as an intermediate step in the conversion.
+**Proof intuition**: Convert the ordering relations into their `sgn`-based
+equivalents. The goal becomes showing that `sgn (a₁ - a₂) * sgn b ≥ 0`. If `b`
+is zero, this is trivially true; if `b` is positive then this follows by the
+`a₁ ≥ a₂` assumption.
 -/
-theorem gt_sgn {a b : ℤ} : a > b ↔ sgn (a - b) ≃ 1 := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : a > b)
-    show sgn (a - b) ≃ 1
-    have : Positive (a - b) := gt_iff_pos_diff.mp ‹a > b›
-    have : sgn (a - b) ≃ 1 := sgn_positive.mp this
-    exact this
-  case mpr =>
-    intro (_ : sgn (a - b) ≃ 1)
-    show a > b
-    have : Positive (a - b) := sgn_positive.mpr ‹sgn (a - b) ≃ 1›
-    have : a > b := gt_iff_pos_diff.mpr this
-    exact this
+theorem ge_mulR_nonneg {a₁ a₂ b : ℤ} : b ≥ 0 → a₁ ≥ a₂ → a₁ * b ≥ a₂ * b := by
+  intro (_ : b ≥ 0) (_ : a₁ ≥ a₂)
+  show a₁ * b ≥ a₂ * b
+  have : b > 0 ∨ b ≃ 0 := ge_split.mp ‹b ≥ 0›
+  have : sgn (a₁ - a₂) * sgn b ≥ 0 := match ‹b > 0 ∨ b ≃ 0› with
+  | Or.inl (_ : b > 0) =>
+    calc
+      _ = sgn (a₁ - a₂) * sgn b := rfl
+      _ ≃ sgn (a₁ - a₂) * 1     := AA.substR (gt_zero_sgn.mp ‹b > 0›)
+      _ ≃ sgn (a₁ - a₂)         := AA.identR
+      _ ≥ 0                     := sgn_diff_ge_zero.mp ‹a₁ ≥ a₂›
+  | Or.inr (_ : b ≃ 0) =>
+    calc
+      _ = sgn (a₁ - a₂) * sgn b := rfl
+      _ ≃ sgn (a₁ - a₂) * 0     := AA.substR (sgn_zero.mp ‹b ≃ 0›)
+      _ ≃ 0                     := AA.absorbR
+      _ ≥ 0                     := le_refl
+  have : sgn (a₁ * b - a₂ * b) ≥ 0 := calc
+    _ = sgn (a₁ * b - a₂ * b) := rfl
+    _ ≃ sgn ((a₁ - a₂) * b)   := sgn_subst (Rel.symm AA.distribR)
+    _ ≃ sgn (a₁ - a₂) * sgn b := sgn_compat_mul
+    _ ≥ 0                     := ‹sgn (a₁ - a₂) * sgn b ≥ 0›
+  have : a₁ * b ≥ a₂ * b := sgn_diff_ge_zero.mpr ‹sgn (a₁ * b - a₂ * b) ≥ 0›
+  exact this
+
+/--
+The product of two nonnegative integers is also nonnegative.
+
+**Property intuition**: The worst that can happen is one factor is zero, making
+the product zero.
+
+**Proof intuition**: Trivial corollary of `ge_mulR_nonneg`.
+-/
+theorem mul_preserves_nonneg {a b : ℤ} : a ≥ 0 → b ≥ 0 → a * b ≥ 0 := by
+  intro (_ : a ≥ 0) (_ : b ≥ 0)
+  show a * b ≥ 0
+  calc
+    _ = a * b := rfl
+    _ ≥ 0 * b := ge_mulR_nonneg ‹b ≥ 0› ‹a ≥ 0›
+    _ ≃ 0     := AA.absorbL
 
 end Lean4Axiomatic.Integer
