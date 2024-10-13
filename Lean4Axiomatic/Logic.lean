@@ -80,6 +80,48 @@ theorem or_mapR {p₁ p₂ q : Prop} (f : p₁ → p₂) : q ∨ p₁ → q ∨ 
   exact ‹p₂ ∨ q›.symm
 
 /--
+The left operand can be projected from a disjunction if the right operand can
+be converted into it.
+-/
+theorem or_projL {p q : Prop} : (q → p) → p ∨ q → p := by
+  intro (f : q → p) (_ : p ∨ q)
+  show p
+  exact ‹p ∨ q›.elim id f
+
+/--
+The right operand can be projected from a disjunction if the left operand can
+be converted into it.
+-/
+theorem or_projR {p q : Prop} : (p → q) → p ∨ q → q := by
+  intro (f : p → q) (_ : p ∨ q)
+  show q
+  exact ‹p ∨ q›.elim f id
+
+/--
+Falsehood is the left identity for disjunction: it can be freely added or
+removed as the left operand.
+-/
+theorem or_identL {p : Prop} : False ∨ p ↔ p := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : False ∨ p)
+    show p
+    exact or_projR False.elim ‹False ∨ p›
+  case mpr =>
+    intro (_ : p)
+    show False ∨ p
+    exact Or.inr ‹p›
+
+/--
+Falsehood is the right identity for disjunction: it can be freely added or
+removed as the right operand.
+-/
+theorem or_identR {p : Prop} : p ∨ False ↔ p := calc
+  _ ↔ p ∨ False := Iff.rfl
+  _ ↔ False ∨ p := Or.comm
+  _ ↔ p         := or_identL
+
+/--
 Disjunction distributes over conjunction.
 
 **Intuition**: In the forward direction, if we have `p`, then we can provide it

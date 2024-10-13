@@ -11,7 +11,7 @@ derived properties.
 namespace Lean4Axiomatic.Rational
 
 open Lean4Axiomatic.Function (idx_fam_prop)
-open Lean4Axiomatic.Logic (AP)
+open Lean4Axiomatic.Logic (AP iff_subst_covar or_identR or_mapR)
 open Lean4Axiomatic.Metric (abs)
 open Lean4Axiomatic.Natural (pow_step pow_zero step)
 open Lean4Axiomatic.Signed (Positive sgn)
@@ -996,5 +996,42 @@ theorem pow_neg_reverses_ge_pos
     _ ≥ 0                   := ge_iff_sub_sgn_nonneg.mp ‹p ≥ q›
   have : p^a ≤ q^a := ge_iff_sub_sgn_nonneg.mpr ‹sgn (q^a - p^a) ≥ 0›
   exact this
+
+/--
+Exponentiation of positive rational numbers to a nonzero integer is bijective
+in its left argument.
+
+In other words, a common nonzero exponent can be dropped from an equivalence of
+positive rational powers, or the reverse.
+-/
+theorem pow_bijectL
+    {p q : ℚ} {a : ℤ} (p_pos : p > 0) (q_pos : q > 0)
+    : have : AP (p ≄ 0) := AP.mk (pos_nonzero ‹p > 0›)
+      have : AP (q ≄ 0) := AP.mk (pos_nonzero ‹q > 0›)
+      a ≄ 0 → (p^a ≃ q^a ↔ p ≃ q)
+    := by
+  intro (_ : AP (p ≄ 0)) (_ : AP (q ≄ 0)) (_ : a ≄ 0)
+  show p^a ≃ q^a ↔ p ≃ q
+
+  -- Helpers to keep the lines within the margin for the main proof
+  have factor : sgn (p^a - q^a) ≃ sgn (p - q) * sgn a :=
+    sgn_diff_pow ‹p > 0› ‹q > 0›
+  have a_neqv_0 : sgn a ≃ 0 ↔ False := calc
+    _ ↔ sgn a ≃ 0 := Iff.rfl
+    _ ↔ a ≃ 0     := Integer.sgn_zero.symm
+    _ ↔ False     := Iff.intro ‹a ≄ 0› False.elim
+
+  calc
+    _ ↔ p^a ≃ q^a                   := Iff.rfl
+    _ ↔ p^a - q^a ≃ 0               := sub_eqv_zero_iff_eqv.symm
+    -- V begin key steps V
+    _ ↔ sgn (p^a - q^a) ≃ 0         := sgn_zero
+    _ ↔ sgn (p - q) * sgn a ≃ 0     := AA.eqv_substL_iff factor
+    -- ^  end key steps  ^
+    _ ↔ sgn (p - q) ≃ 0 ∨ sgn a ≃ 0 := Integer.mul_split_zero
+    _ ↔ sgn (p - q) ≃ 0 ∨ False     := iff_subst_covar or_mapR a_neqv_0
+    _ ↔ sgn (p - q) ≃ 0             := or_identR
+    _ ↔ p - q ≃ 0                   := sgn_zero.symm
+    _ ↔ p ≃ q                       := sub_eqv_zero_iff_eqv
 
 end Lean4Axiomatic.Rational
