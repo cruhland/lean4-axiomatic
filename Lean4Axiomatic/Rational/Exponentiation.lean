@@ -423,7 +423,7 @@ factor in the expression.
 
 **Proof intuition**: Induction and algebra.
 -/
-theorem pow_scompatL_abs {p : ℚ} {n : ℕ} : abs (p^n) ≃ (abs p)^n := by
+theorem pow_nat_scompatL_abs {p : ℚ} {n : ℕ} : abs (p^n) ≃ (abs p)^n := by
   apply Natural.ind_on n
   case zero =>
     show abs (p^0) ≃ (abs p)^0
@@ -510,7 +510,7 @@ variable
   {ℚ : Type}
     [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ]
     [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ] [Sign ℚ] [Order ℚ]
-    [Natural.Exponentiation ℕ ℚ] [Exponentiation ℚ]
+    [Metric ℚ] [Natural.Exponentiation ℕ ℚ] [Exponentiation ℚ]
 
 /--
 Rational number exponentiation to an integer respects equivalence of the base
@@ -1033,5 +1033,27 @@ theorem pow_bijectL
     _ ↔ sgn (p - q) ≃ 0             := or_identR
     _ ↔ p - q ≃ 0                   := sgn_zero.symm
     _ ↔ p ≃ q                       := sub_eqv_zero_iff_eqv
+
+/--
+Swap the order of two operations on a nonzero rational number: raising it to an
+integer power, and computing its absolute value.
+-/
+theorem pow_int_scompatL_abs
+    {p : ℚ} [AP (p ≄ 0)] {a : ℤ} : abs (p^a) ≃ (abs p)^a
+    := by
+  have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : a ≃ n - m)) :=
+    Integer.as_diff a
+
+  calc
+    _ = abs (p^a)             := rfl
+    _ ≃ abs (p^((n:ℤ)-m))     := abs_subst (pow_substR ‹a ≃ n - m›)
+    _ ≃ abs (p^n/p^m)         := abs_subst pow_diff
+    -- V begin key steps V
+    _ ≃ abs (p^n) / abs (p^m) := abs_compat_div
+    _ ≃ (abs p)^n / abs (p^m) := div_substL pow_nat_scompatL_abs
+    _ ≃ (abs p)^n / (abs p)^m := div_substR pow_nat_scompatL_abs
+    -- ^  end key steps  ^
+    _ ≃ (abs p)^((n:ℤ)-m)     := eqv_symm pow_diff
+    _ ≃ (abs p)^a             := pow_substR (Rel.symm ‹a ≃ n - m›)
 
 end Lean4Axiomatic.Rational

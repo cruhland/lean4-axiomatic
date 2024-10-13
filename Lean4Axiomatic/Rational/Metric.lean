@@ -164,6 +164,15 @@ theorem abs_zero {p : ℚ} : abs p ≃ 0 ↔ p ≃ 0 := by
       0               ≃ _ := eqv_refl
 
 /--
+The absolute value of a nonzero rational number is also nonzero.
+
+Allows the expression `abs p` to appear in contexts where it's required to be
+nonzero, when only the assumption `AP (p ≄ 0)` is available.
+-/
+instance abs_nonzero_inst {p : ℚ} [AP (p ≄ 0)] : AP (abs p ≄ 0) :=
+  ‹AP (p ≄ 0)›.map (mt abs_zero.mp)
+
+/--
 A positive rational number's absolute value is itself.
 
 **Property intuition**: Absolute value measures "distance from zero" using
@@ -390,6 +399,34 @@ theorem abs_compat_mul {p q : ℚ} : abs (p * q) ≃ abs p * abs q := by
     _ ≃ abs p * (q * sgn q)                   := mul_substL (eqv_symm abs_sgn)
     _ ≃ abs p * abs q                         := mul_substR (eqv_symm abs_sgn)
   exact this
+
+/--
+Swap the order of two operations on a nonzero rational number: taking the
+reciprocal, and the absolute value.
+-/
+theorem abs_compat_recip {p : ℚ} [AP (p ≄ 0)] : abs (p⁻¹) ≃ (abs p)⁻¹ := calc
+  _ = abs (p⁻¹)         := rfl
+  -- V begin key steps V
+  _ ≃ p⁻¹ * sgn (p⁻¹)   := abs_sgn
+  _ ≃ p⁻¹ * (sgn p:ℚ)⁻¹ := mul_substR sgn_swap_recip
+  -- ^  end key steps  ^
+  _ ≃ (p * sgn p)⁻¹     := eqv_symm recip_compat_mul
+  _ ≃ (abs p)⁻¹         := recip_subst (eqv_symm abs_sgn)
+
+/--
+Swap the order of two operations on two rational numbers: division, and taking
+the absolute value.
+-/
+theorem abs_compat_div
+    {p q : ℚ} [AP (q ≄ 0)] : abs (p / q) ≃ abs p / abs q
+    := calc
+  _ = abs (p / q)       := rfl
+  _ ≃ abs (p * q⁻¹)     := abs_subst div_mul_recip
+  -- V begin key steps V
+  _ ≃ abs p * abs (q⁻¹) := abs_compat_mul
+  _ ≃ abs p * (abs q)⁻¹ := mul_substR abs_compat_recip
+  -- ^  end key steps  ^
+  _ ≃ abs p / abs q     := eqv_symm div_mul_recip
 
 /--
 The absolute values of a rational number and its negation are the same.
