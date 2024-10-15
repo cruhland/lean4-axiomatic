@@ -35,6 +35,7 @@ a specific implementation of natural numbers.
 -/
 
 variable {ℕ : Type} [Core ℕ] [Induction.{0} ℕ] [Addition ℕ] [Sign ℕ]
+set_option linter.unusedSectionVars false
 
 /--
 The `Positive` predicate respects equivalence.

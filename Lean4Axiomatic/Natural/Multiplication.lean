@@ -45,7 +45,9 @@ variable
   {ℕ : Type}
     [Core ℕ] [Induction.{0} ℕ] [Addition ℕ]
     [Sign ℕ] [Order ℕ] [Multiplication ℕ]
+set_option linter.unusedSectionVars false
 
+omit [Order ℕ] in
 /--
 Multiplying by zero on the right always gives zero.
 
@@ -72,6 +74,7 @@ instance mul_absorbing : AA.Absorbing (α := ℕ) 0 (· * ·) := {
   absorbingR := AA.AbsorbingOn.mk mul_zero
 }
 
+omit [Order ℕ] in
 /--
 Take a product and increment the right-hand factor. This gives the same result
 as adding a copy of the left-hand factor to the original product.

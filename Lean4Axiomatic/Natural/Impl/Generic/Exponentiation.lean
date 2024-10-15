@@ -12,6 +12,7 @@ open Lean4Axiomatic.CA.Monoid (ident binop identL identR)
 variable
   {ℕ : Type} [Core ℕ] [Induction.{1} ℕ] [Addition ℕ] [Multiplication ℕ]
   {α : Type} [EqvOp α] [CA.Monoid.Monoid α]
+set_option linter.unusedSectionVars false
 
 /-- Enables the use of `· * ·` syntax. -/
 local instance mul_inst : Mul α := {

@@ -53,6 +53,7 @@ export Order (le_defn leOp lt_defn ltOp)
 variable
   {ℕ : Type}
     [Core ℕ] [Induction ℕ] [Addition ℕ] [Sign ℕ] [order_inst : Order ℕ]
+set_option linter.unusedSectionVars false
 
 /--
 The _less than or equal to_ relation is preserved when both sides are

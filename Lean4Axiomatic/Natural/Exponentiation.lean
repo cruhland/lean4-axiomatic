@@ -36,7 +36,9 @@ instance (priority := default+1) pow_inst
 }
 
 /-- Enables the use of `· * ·` syntax for `α`'s multiplication function. -/
-local instance mul_inst [EqvOp α] [CA.Monoid.Monoid α] : Mul α := {
+local instance (priority := low) mul_inst
+    [EqvOp α] [CA.Monoid.Monoid α] : Mul α
+    := {
   mul := binop
 }
 
@@ -74,6 +76,7 @@ attribute [instance] Exponentiation.toProps
 variable
   {ℕ : Type}
     [Core ℕ] [Induction.{0} ℕ] [Addition ℕ] [Sign ℕ] [Multiplication ℕ]
+set_option linter.unusedSectionVars false
 
 section general
 
