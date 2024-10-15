@@ -362,6 +362,7 @@ theorem compare_gt {n m : Nat} : compare n m = Ordering.gt ↔ lt m n := by
     split
     case isTrue =>
       have : n < m := by assumption
+      apply False.elim
       show False
       have : lt n m := prelude_lt_iff_impl_lt.mp ‹n < m›
       have two : AA.TwoOfThree (lt n m) (n ≃ m) (lt m n) :=
@@ -371,6 +372,7 @@ theorem compare_gt {n m : Nat} : compare n m = Ordering.gt ↔ lt m n := by
       split
       case isTrue =>
         have : n = m := by assumption
+        apply False.elim
         show False
         have : n ≃ m := ‹n = m›
         have two : AA.TwoOfThree (lt n m) (n ≃ m) (lt m n) :=
