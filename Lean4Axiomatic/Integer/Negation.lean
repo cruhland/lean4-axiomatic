@@ -73,18 +73,18 @@ The integer negative one (`-1`) is not equivalent to one.
 `0 ≃ 2`. Convert into natural numbers, `coe 0 ≃ coe 2`, then contradict with
 the axiom `step n ≄ 0` to prove the negation.
 -/
-theorem neg_one_neqv_one : -1 ≄ (1 : ℤ) := by
-  intro (_ : -1 ≃ (1 : ℤ))
+theorem neg_one_neqv_one : -1 ≄ (1:ℤ) := by
+  intro (_ : -1 ≃ (1:ℤ))
   show False
   have : step 0 ≃ 1 := Rel.symm Natural.literal_step
-  have : (step 1 : ℤ) ≃ (0 : ℤ) := calc
-    (step 1 : ℤ)           ≃ _ := AA.subst₁ (AA.subst₁ (Rel.symm AA.identR))
-    (step (1 + 0) : ℤ)     ≃ _ := AA.subst₁ AA.scompatR
-    ((1 + step 0 : ℕ) : ℤ) ≃ _ := AA.subst₁ (AA.substR ‹step 0 ≃ 1›)
-    ((1 + 1 : ℕ) : ℤ)      ≃ _ := AA.compat₂
-    (1 : ℤ) + (1 : ℤ)      ≃ _ := AA.substR (Rel.symm ‹-1 ≃ (1 : ℤ)›)
-    1 + -1                 ≃ _ := AA.inverseR
-    0                      ≃ _ := Rel.refl
+  have : (step 1:ℤ) ≃ (0:ℤ) := calc
+    (step 1:ℤ)         ≃ _ := AA.subst₁ (AA.subst₁ (Rel.symm Natural.add_zero))
+    (step (1 + 0):ℤ)   ≃ _ := AA.subst₁ AA.scompatR
+    ((1 + step 0:ℕ):ℤ) ≃ _ := AA.subst₁ (AA.substR (f := (· + ·)) ‹step 0 ≃ 1›)
+    ((1 + 1 :ℕ):ℤ)     ≃ _ := AA.compat₂
+    (1:ℤ) + (1:ℤ)      ≃ _ := AA.substR (Rel.symm ‹-1 ≃ (1 : ℤ)›)
+    1 + -1             ≃ _ := AA.inverseR
+    0                  ≃ _ := Rel.refl
   have : step 1 ≃ 0 := AA.inject ‹((step 1 : ℕ) : ℤ) ≃ ((0 : ℕ) : ℤ)›
   have : step 1 ≄ 0 := Natural.step_neqv_zero
   exact absurd ‹step 1 ≃ 0› ‹step 1 ≄ 0›
@@ -106,6 +106,7 @@ theorem signs_distinct {a : ℤ} : ¬ AA.TwoOfThree (a ≃ 0) (a ≃ 1) (a ≃ -
   | AA.TwoOfThree.twoAndThree (_ : a ≃ 1) (_ : a ≃ -1) =>
     exact Rel.trans_failR ‹a ≃ -1› neg_one_neqv_one ‹a ≃ 1›
 
+omit [Multiplication ℤ] in
 /--
 Non-typeclass version of `neg_inverse.inverseL`.
 
@@ -202,6 +203,7 @@ theorem mul_neg_one {a : ℤ} : -1 * a ≃ -a := calc
   (-(1 * a)) ≃ _ := AA.subst₁ AA.identL
   (-a)       ≃ _ := Rel.refl
 
+omit [Multiplication ℤ] in
 /--
 Negation is an involution: applying it twice is equivalent to not applying it
 at all.
@@ -220,6 +222,7 @@ theorem neg_involutive {a : ℤ} : -(-a) ≃ a := calc
   a + 0            ≃ _ := AA.identR
   a                ≃ _ := Rel.refl
 
+omit [Multiplication ℤ] in
 /--
 Negation is an injection: it sends distinct inputs to distinct outputs.
 
@@ -259,6 +262,7 @@ theorem neg_compat_add {a b : ℤ} : -(a + b) ≃ -a + -b := calc
   (-a) + (-1) * b     ≃ _ := AA.substR mul_neg_one
   (-a) + -b           ≃ _ := Rel.refl
 
+omit [Multiplication ℤ] in
 /--
 Remove a common left operand of addition from both sides of an equivalence.
 
@@ -279,6 +283,7 @@ theorem add_cancelL {a b₁ b₂ : ℤ} : a + b₁ ≃ a + b₂ → b₁ ≃ b�
     _ ≃ -a + (a + b₂) := AA.substR ‹a + b₁ ≃ a + b₂›
     _ ≃ b₂            := reduce
 
+omit [Multiplication ℤ] in
 /--
 Remove a common right operand of addition from both sides of an equivalence.
 
@@ -296,6 +301,7 @@ theorem add_cancelR {a₁ a₂ b : ℤ} : a₁ + b ≃ a₂ + b → a₁ ≃ a�
   have : a₁ ≃ a₂ := add_cancelL ‹b + a₁ ≃ b + a₂›
   exact this
 
+omit [Multiplication ℤ] in
 /--
 Add or remove a left operand to addition on both sides of an equivalence.
 
@@ -307,6 +313,7 @@ cancellation of addition.
 theorem add_bijectL {a b₁ b₂ : ℤ} : b₁ ≃ b₂ ↔ a + b₁ ≃ a + b₂ :=
   Iff.intro AA.substR add_cancelL
 
+omit [Multiplication ℤ] in
 /--
 Add or remove a right operand to addition on both sides of an equivalence.
 

@@ -47,7 +47,6 @@ class Monoid (α : Type) [EqvOp α] :=
 attribute [instance] Monoid.toOps
 attribute [instance] Monoid.toProps
 
-
 /-! ### Properties -/
 
 variable {α : Type} [EqvOp α] [m : Monoid α]
