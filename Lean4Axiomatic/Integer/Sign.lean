@@ -40,6 +40,7 @@ class Sqrt1 (a : ℤ) : Prop :=
   /-- The underlying property expressed by `Sqrt1`. -/
   elim : a * a ≃ 1
 
+omit [Negation ℤ] in
 /--
 The `Sqrt1` predicate respects equivalence.
 
@@ -66,6 +67,7 @@ instance sqrt1_substitutive
   subst₁ := sqrt1_subst
 }
 
+omit [Negation ℤ] in
 /-- One is a square root of unity. -/
 theorem one_mul_one_eqv_one : (1 : ℤ) * 1 ≃ 1 := by
   show 1 * 1 ≃ 1
@@ -172,6 +174,7 @@ def NonzeroWithSign.for_sign {s : ℤ} [Sqrt1 s] : NonzeroWithSign s s :=
   have : s ≃ s * 1 := Rel.symm AA.identR
   NonzeroWithSign.intro (1:ℕ) ‹Positive (1:ℕ)› ‹s ≃ s * 1›
 
+omit [Negation ℤ] in
 /--
 `NonzeroWithSign` respects equivalence of its nonzero integer parameter.
 
@@ -191,6 +194,7 @@ theorem NonzeroWithSign.subst_nonzero
   have : a₂ ≃ s * coe m := Rel.trans (Rel.symm ‹a₁ ≃ a₂›) ‹a₁ ≃ s * coe m›
   exact NonzeroWithSign.intro m ‹Positive m› ‹a₂ ≃ s * coe m›
 
+omit [Negation ℤ] in
 /--
 `NonzeroWithSign` respects equivalence of signs.
 
@@ -209,6 +213,7 @@ theorem NonzeroWithSign.subst_sign
   have : a ≃ s₂ * coe m := Rel.trans ‹a ≃ s₁ * coe m› (AA.substL ‹s₁ ≃ s₂›)
   exact NonzeroWithSign.intro m ‹Positive m› ‹a ≃ s₂ * coe m›
 
+omit [Negation ℤ] in
 /--
 Given two integers in signed-magnitude form, we can put their product in
 signed-magnitude form as well.
@@ -307,6 +312,7 @@ def Nonzero.mk {a s : ℤ} {sqrt1 : Sqrt1 s} : NonzeroWithSign a s → Nonzero a
 instance nonzero_sqrt1 {s : ℤ} [Sqrt1 s] : Nonzero s :=
   Nonzero.mk NonzeroWithSign.for_sign
 
+omit [Negation ℤ] in
 /--
 The `Nonzero` predicate respects equivalence.
 
@@ -322,6 +328,7 @@ theorem nonzero_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → Nonzero a₁ → Non
     NonzeroWithSign.subst_nonzero ‹a₁ ≃ a₂› ‹NonzeroWithSign a₁ s›
   exact Nonzero.mk ‹NonzeroWithSign a₂ s›
 
+omit [Negation ℤ] in
 /--
 The product of nonzero integers is nonzero.
 
@@ -1126,6 +1133,7 @@ theorem nonzero_factors_if_nonzero_product
   have : Nonzero b := nonzero_iff_neqv_zero.mpr ‹b ≄ 0›
   exact And.intro ‹Nonzero a› ‹Nonzero b›
 
+omit [Negation ℤ] [Sign ℤ] in
 /--
 Every nonzero integer's square is equivalent to some positive natural number's
 square.
