@@ -1,4 +1,4 @@
-import Lean4Axiomatic.Integer
+import Lean4Axiomatic.Integer.Core
 
 namespace Lean4Axiomatic.Integer.Impl
 
