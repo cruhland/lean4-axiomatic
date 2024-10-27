@@ -68,33 +68,8 @@ attribute [instance] Order.toProps
 
 variable {ℕ ℤ ℚ : Type}
   [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
-  [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ]
-  [Sign ℚ] [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ] [Order ℚ]
-
-/--
-Two rational numbers are equivalent exactly when the sign of their difference
-is zero.
-
-This lemma is mainly useful to support the proof of `order_trichotomy`.
-
-**Property and proof intuition**: We already know that rational numbers are
-equivalent when their difference is zero (`sub_eqv_zero_iff_eqv`); combine that
-with the proof that the `sgn` of zero is zero.
--/
-theorem eqv_sgn {p q : ℚ} : p ≃ q ↔ sgn (p - q) ≃ 0 := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : p ≃ q)
-    show sgn (p - q) ≃ 0
-    have : p - q ≃ 0 := sub_eqv_zero_iff_eqv.mpr ‹p ≃ q›
-    have : sgn (p - q) ≃ 0 := sgn_zero.mp this
-    exact this
-  case mpr =>
-    intro (_ : sgn (p - q) ≃ 0)
-    show p ≃ q
-    have : p - q ≃ 0 := sgn_zero.mpr ‹sgn (p - q) ≃ 0›
-    have : p ≃ q := sub_eqv_zero_iff_eqv.mp this
-    exact this
+  [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ] [Sign ℚ]
+  [Subtraction ℚ] [Order ℚ]
 
 /--
 A rational number is less than zero iff it has a sign of `-1`.
@@ -198,30 +173,6 @@ theorem pos_nonzero {p : ℚ} : p > 0 → p ≄ 0 := by
   have : sgn p ≄ 0 := AA.neqv_substL (Rel.symm ‹sgn p ≃ 1›) ‹(1:ℤ) ≄ 0›
   have : p ≄ 0 := mt sgn_zero.mp ‹sgn p ≄ 0›
   exact this
-
-/--
-The only sign value greater than zero, is one.
-
-**Property intuition**: The only sign values are `1`, `0`, and `-1`.
-
-**Proof intuition**: The sign of any number greater than zero is one; taking
-the sign of a sign leaves it unchanged.
--/
-theorem sgn_gt_zero_iff_pos {p : ℚ} : sgn p > 0 ↔ sgn p ≃ 1 := calc
-  _ ↔ sgn p > 0       := Iff.rfl
-  _ ↔ sgn (sgn p) ≃ 1 := Integer.gt_zero_sgn
-  _ ↔ sgn p ≃ 1       := AA.eqv_substL_iff sgn_idemp
-
-/--
-A rational number is greater than zero iff its sign is greater than zero.
-
-**Property and proof intuition**: Rationals greater than zero have sign value
-`1`; this is the only sign value that's greater than zero.
--/
-theorem sgn_preserves_gt_zero {p : ℚ} : p > 0 ↔ sgn p > 0 := calc
-  _ ↔ p > 0     := Iff.rfl
-  _ ↔ sgn p ≃ 1 := gt_zero_sgn
-  _ ↔ sgn p > 0 := sgn_gt_zero_iff_pos.symm
 
 /--
 The product of two positive rational numbers is also positive.
@@ -372,42 +323,6 @@ theorem neg_le_sgn {p q : ℚ} : ¬(p ≤ q) ↔ sgn (p - q) ≃ 1 := by
     exact absurd ‹sgn (p - q) ≃ 1› ‹sgn (p - q) ≄ 1›
 
 /--
-The _less than or equivalent to_ relation is decidable for rational numbers.
-
-**Property and proof intuition**: The relation can be expressed as an
-equivalence of integer sign values, which we already know to be decidable.
--/
-instance le_decidable {p q : ℚ} : Decidable (p ≤ q) := by
-  have : Decidable (sgn (p - q) ≃ 1) := Integer.eqv? (sgn (p - q)) 1
-  match this with
-  | isTrue (_ : sgn (p - q) ≃ 1) =>
-    have : ¬(p ≤ q) := neg_le_sgn.mpr ‹sgn (p - q) ≃ 1›
-    have : Decidable (p ≤ q) := isFalse this
-    exact this
-  | isFalse (_ : sgn (p - q) ≄ 1) =>
-    have : p ≤ q := le_sgn.mpr ‹sgn (p - q) ≄ 1›
-    have : Decidable (p ≤ q) := isTrue this
-    exact this
-
-/--
-The _less than_ relation is decidable for rational numbers.
-
-**Property and proof intuition**: The relation can be expressed as an
-equivalence of integer sign values, which we already know to be decidable.
--/
-instance lt_decidable {p q : ℚ} : Decidable (p < q) := by
-  have : Decidable (sgn (p - q) ≃ -1) := Integer.eqv? (sgn (p - q)) (-1)
-  match this with
-  | isTrue (_ : sgn (p - q) ≃ -1) =>
-    have : p < q := lt_sgn.mpr ‹sgn (p - q) ≃ -1›
-    have : Decidable (p < q) := isTrue this
-    exact this
-  | isFalse (_ : sgn (p - q) ≄ -1) =>
-    have : ¬(p < q) := mt lt_sgn.mp ‹sgn (p - q) ≄ -1›
-    have : Decidable (p < q) := isFalse this
-    exact this
-
-/--
 The _less than_ relation on rational numbers is irreflexive.
 
 **Property and proof intuition**: We already have `p ≃ p`, so by trichotomy we
@@ -517,38 +432,6 @@ theorem ge_cases {p q : ℚ} : p ≥ q ↔ p > q ∨ p ≃ q := by
     exact this
 
 /--
-A rational number is greater than or equivalent to zero iff its sign is greater
-than or equivalent to zero.
-
-**Property intuition**: Rationals greater than or equivalent to zero have sign
-values of `1` and `0`, which are the only ones that are also greater than or
-equivalent to zero.
-
-**Proof intuition**: Split the _greater than or equivalent to_ relation into
-_greater than_ or _equivalent to_. The theorem `sgn_preserves_gt_zero` covers
-the _greater than_ relation, while `sgn_zero` covers _equivalent to_.
--/
-theorem sgn_preserves_ge_zero {p : ℚ} : p ≥ 0 ↔ sgn p ≥ 0 := calc
-  _ ↔ p ≥ 0                 := Iff.rfl
-  _ ↔ p > 0 ∨ p ≃ 0         := ge_cases
-  _ ↔ sgn p > 0 ∨ p ≃ 0     := iff_subst_covar or_mapL sgn_preserves_gt_zero
-  _ ↔ sgn p > 0 ∨ sgn p ≃ 0 := iff_subst_covar or_mapR sgn_zero
-  _ ↔ sgn p ≥ 0             := Integer.ge_split.symm
-
-/--
-A rational is greater than or equivalent to another exactly when the sign of
-their difference is also greater than or equivalent to zero.
-
-**Property and proof intuition**: The simpler property `p ≥ q ↔ p - q ≥ 0` is
-already obvious using algebra. Add `sgn` on both sides and simplify.
--/
-theorem ge_iff_sub_sgn_nonneg {p q : ℚ} : p ≥ q ↔ sgn (p - q) ≥ 0 := calc
-  _ ↔ p ≥ q            := Rel.refl
-  _ ↔ sgn (p - q) ≄ -1 := ge_sgn
-  _ ↔ p - q ≥ 0        := ge_zero_sgn.symm
-  _ ↔ sgn (p - q) ≥ 0  := sgn_preserves_ge_zero
-
-/--
 Two rational numbers cannot be both _less than or equivalent to_ and _greater
 than_ each other.
 
@@ -627,52 +510,6 @@ theorem one_ge_zero : (1:ℚ) ≥ 0 := by
   have : (1:ℚ) > 0 := lt_subst_from_integer this
   have : (1:ℚ) ≥ 0 := ge_cases.mpr (Or.inl this)
   exact this
-
-/--
-The _less than_ relation for rational numbers is transitive.
-
-**Property intuition**: This is a required property for any totally ordered
-type.
-
-**Proof intuition**: Convert the input relations to `sgn`s of differences.
-We know the sum of the differences must have the same `sgn`. The sum
-telescopes, leaving only the first and last value, giving us the result.
--/
-theorem lt_trans {p q r : ℚ} : p < q → q < r → p < r := by
-  intro (_ : p < q) (_ : q < r)
-  show p < r
-  have : sgn (p - q) ≃ -1 := lt_sgn.mp ‹p < q›
-  have : sgn (q - r) ≃ -1 := lt_sgn.mp ‹q < r›
-  have : sgn ((p - q) + (q - r)) ≃ -1 :=
-    add_preserves_sign ‹sgn (p - q) ≃ -1› ‹sgn (q - r) ≃ -1›
-  have : sgn (p - r) ≃ -1 := calc
-    sgn (p - r)             ≃ _ := sgn_subst (eqv_symm add_sub_telescope)
-    sgn ((p - q) + (q - r)) ≃ _ := ‹sgn ((p - q) + (q - r)) ≃ -1›
-    (-1)                    ≃ _ := Rel.refl
-  have : p < r := lt_sgn.mpr ‹sgn (p - r) ≃ -1›
-  exact this
-
-instance trans_lt_lt_lt_inst : Trans (α := ℚ) (· < ·) (· < ·) (· < ·) := {
-  trans := lt_trans
-}
-
-/--
-The _greater than_ relation for rational numbers is transitive.
-
-**Property intuition**: This is a required property for any totally ordered
-type.
-
-**Proof intuition**: Interpret _greater than_ as _less than_ and use
-`lt_trans`.
--/
-theorem gt_trans {p q r : ℚ} : p > q → q > r → p > r := by
-  intro (_ : q < p) (_ : r < q)
-  show r < p
-  exact lt_trans ‹r < q› ‹q < p›
-
-instance trans_gt_gt_gt_inst : Trans (α := ℚ) (· > ·) (· > ·) (· > ·) := {
-  trans := gt_trans
-}
 
 /--
 Replace _less than_'s left-hand operand with an equivalent value.
@@ -859,46 +696,6 @@ instance trans_ge_eqv_ge_inst : Trans (α := ℚ) (· ≥ ·) (· ≃ ·) (· �
 }
 
 /--
-Merge two _less than or equivalent to_ relations on a common "midpoint" (i.e.,
-_less than or equivalent to_ is transitive).
-
-**Property intuition**: This allows reasoning about ordering to be extended to
-values that are "further apart". It's fundamental to the meaning of _ordering_.
-
-**Proof intuition**: Split each input relation into its _less than_ case and
-its equivalence case. Delegate to a previous transitivity result for each
-combination of cases. Note that this turns out to be easier than expanding the
-relation into its `sgn`-based definition, because that involves a `· ≄ ·`
-operation which is more difficult to deal with.
--/
-theorem le_trans {p q r : ℚ} : p ≤ q → q ≤ r → p ≤ r := by
-  intro (_ : p ≤ q) (_ : q ≤ r)
-  show p ≤ r
-  have : p < q ∨ p ≃ q := le_cases.mp ‹p ≤ q›
-  have : q < r ∨ q ≃ r := le_cases.mp ‹q ≤ r›
-  match And.intro ‹p < q ∨ p ≃ q› ‹q < r ∨ q ≃ r› with
-  | (And.intro (Or.inl (_ : p < q)) (Or.inl (_ : q < r))) =>
-    have : p < r := lt_trans ‹p < q› ‹q < r›
-    have : p ≤ r := le_cases.mpr (Or.inl this)
-    exact this
-  | (And.intro (Or.inl (_ : p < q)) (Or.inr (_ : q ≃ r))) =>
-    have : p < r := trans_lt_eqv_lt ‹p < q› ‹q ≃ r›
-    have : p ≤ r := le_cases.mpr (Or.inl this)
-    exact this
-  | (And.intro (Or.inr (_ : p ≃ q)) (Or.inl (_ : q < r))) =>
-    have : p < r := trans_eqv_lt_lt ‹p ≃ q› ‹q < r›
-    have : p ≤ r := le_cases.mpr (Or.inl this)
-    exact this
-  | (And.intro (Or.inr (_ : p ≃ q)) (Or.inr (_ : q ≃ r))) =>
-    have : p ≃ r := eqv_trans ‹p ≃ q› ‹q ≃ r›
-    have : p ≤ r := le_cases.mpr (Or.inr this)
-    exact this
-
-instance trans_le_le_le_inst : Trans (α := ℚ) (· ≤ ·) (· ≤ ·) (· ≤ ·) := {
-  trans := le_trans
-}
-
-/--
 The _less than or equivalent to_ relation on rational numbers is antisymmetric.
 
 **Property and proof intuition**: Two numbers can't be both less than and
@@ -921,161 +718,6 @@ theorem le_antisymm {p q : ℚ} : p ≤ q → q ≤ p → p ≃ q := by
       exact eqv_symm ‹q ≃ p›
   | Or.inr (_ : p ≃ q) =>
     exact ‹p ≃ q›
-
-/--
-A _less than_ relation can be extended on the right by a _less than or
-equivalent to_ relation through a common value.
-
-**Property and proof intuition**: We know that the first value is less than the
-second, so even if the second value is equivalent to the third, the first must
-still be less than the third.
--/
-theorem trans_lt_le_lt {p q r : ℚ} : p < q → q ≤ r → p < r := by
-  intro (_ : p < q) (_ : q ≤ r)
-  show p < r
-  have : q < r ∨ q ≃ r := le_cases.mp ‹q ≤ r›
-  match this with
-  | Or.inl (_ : q < r) =>
-    have : p < r := lt_trans ‹p < q› ‹q < r›
-    exact this
-  | Or.inr (_ : q ≃ r) =>
-    have : p < r := lt_substR_eqv ‹q ≃ r› ‹p < q›
-    exact this
-
-instance trans_lt_le_lt_inst : Trans (α := ℚ) (· < ·) (· ≤ ·) (· < ·) := {
-  trans := trans_lt_le_lt
-}
-
-/--
-A _less than_ relation can be extended on the left by a _less than or
-equivalent to_ relation through a common value.
-
-**Property and proof intuition**: We know that the second value is less than
-the third, so even if the first value is equivalent to the second, the first
-must still be less than the third.
--/
-theorem trans_le_lt_lt {p q r : ℚ} : p ≤ q → q < r → p < r := by
-  intro (_ : p ≤ q) (_ : q < r)
-  show p < r
-  have : p < q ∨ p ≃ q := le_cases.mp ‹p ≤ q›
-  match this with
-  | Or.inl (_ : p < q) =>
-    have : p < r := lt_trans ‹p < q› ‹q < r›
-    exact this
-  | Or.inr (_ : p ≃ q) =>
-    have : p < r := lt_substL_eqv (eqv_symm ‹p ≃ q›) ‹q < r›
-    exact this
-
-instance trans_le_lt_lt_inst : Trans (α := ℚ) (· ≤ ·) (· < ·) (· < ·) := {
-  trans := trans_le_lt_lt
-}
-
-/--
-Merge two _greater than or equivalent to_ relations on a common "midpoint"
-(i.e., _greater than or equivalent to_ is transitive).
-
-**Property intuition**: This allows reasoning about ordering to be extended to
-values that are "further apart". It's fundamental to the meaning of _ordering_.
-
-**Proof intuition**: Interpret _greater than or equivalent to_ as _less than or
-equivalent to_ and use `le_trans`.
--/
-theorem ge_trans {p q r : ℚ} : p ≥ q → q ≥ r → p ≥ r := by
-  intro (_ : q ≤ p) (_ : r ≤ q)
-  show r ≤ p
-  exact le_trans ‹r ≤ q› ‹q ≤ p›
-
-instance trans_ge_ge_ge_inst : Trans (α := ℚ) (· ≥ ·) (· ≥ ·) (· ≥ ·) := {
-  trans := ge_trans
-}
-
-/--
-A _greater than_ relation can be extended on the right by a _greater than or
-equivalent to_ relation through a common value.
-
-**Property and proof intuition**: We know that the first value is greater than
-the second, so even if the second value is equivalent to the third, the first
-must still be greater than the third.
--/
-theorem trans_gt_ge_gt {p q r : ℚ} : p > q → q ≥ r → p > r := by
-  intro (_ : p > q) (_ : q ≥ r)
-  show p > r
-  have : q > r ∨ q ≃ r := ge_cases.mp ‹q ≥ r›
-  match this with
-  | Or.inl (_ : q > r) =>
-    have : p > r := gt_trans ‹p > q› ‹q > r›
-    exact this
-  | Or.inr (_ : q ≃ r) =>
-    have : p > r := lt_substL_eqv ‹q ≃ r› ‹p > q›
-    exact this
-
-instance trans_gt_ge_gt_inst : Trans (α := ℚ) (· > ·) (· ≥ ·) (· > ·) := {
-  trans := trans_gt_ge_gt
-}
-
-/--
-A _greater than_ relation can be extended on the left by a _greater than or
-equivalent to_ relation through a common value.
-
-**Property and proof intuition**: We know that the second value is greater than
-the third, so even if the first value is equivalent to the second, the first
-must still be greater than the third.
--/
-theorem trans_ge_gt_gt {p q r : ℚ} : p ≥ q → q > r → p > r := by
-  intro (_ : p ≥ q) (_ : q > r)
-  show p > r
-  have : p > q ∨ p ≃ q := ge_cases.mp ‹p ≥ q›
-  match this with
-  | Or.inl (_ : p > q) =>
-    have : p > r := gt_trans ‹p > q› ‹q > r›
-    exact this
-  | Or.inr (_ : p ≃ q) =>
-    have : p > r := lt_substR_eqv (eqv_symm ‹p ≃ q›) ‹q > r›
-    exact this
-
-instance trans_ge_gt_gt_inst : Trans (α := ℚ) (· ≥ ·) (· > ·) (· > ·) := {
-  trans := trans_ge_gt_gt
-}
-
-/--
-The largest sign value is one.
-
-**Property and proof intuition**: The three possible sign values are `-1`, `0`,
-and `1`. Show that each of these is less than or equal to `1`.
--/
-theorem sgn_max {p : ℚ} : sgn p ≤ 1 := by
-  have : AA.OneOfThree (sgn p ≃ 0) (sgn p ≃ 1) (sgn p ≃ -1) := sgn_trichotomy p
-  match this with
-  | AA.OneOfThree.first (_ : sgn p ≃ 0) =>
-    have : (0 : ℤ) < 1 := Integer.zero_lt_one
-    have : (0 : ℤ) ≤ 1 := Integer.le_split.mpr (Or.inl this)
-    have : sgn p ≤ 1 := Integer.le_substL_eqv (Rel.symm ‹sgn p ≃ 0›) this
-    exact this
-  | AA.OneOfThree.second (_ : sgn p ≃ 1) =>
-    have : (1 : ℤ) ≤ 1 := Integer.le_refl
-    have : sgn p ≤ 1 := Integer.le_substL_eqv (Rel.symm ‹sgn p ≃ 1›) this
-    exact this
-  | AA.OneOfThree.third (_ : sgn p ≃ -1) =>
-    have : (-1 : ℤ) < 0 := Integer.neg_one_lt_zero
-    have : (0 : ℤ) < 1 := Integer.zero_lt_one
-    have : (-1 : ℤ) < 1 := Integer.trans_lt_lt_lt ‹(-1 : ℤ) < 0› ‹(0 : ℤ) < 1›
-    have : (-1 : ℤ) ≤ 1 := Integer.le_split.mpr (Or.inl this)
-    have : sgn p ≤ 1 := Integer.le_substL_eqv (Rel.symm ‹sgn p ≃ -1›) this
-    exact this
-
-/--
-The smallest sign value is negative one.
-
-**Proof intuition**: Use `sgn_max` on the negation of the input number, then
-transform algebraically to show the result.
--/
-theorem sgn_min {p : ℚ} : sgn p ≥ -1 := by
-  have : sgn (-p) ≤ 1 := sgn_max
-  have : -(sgn (-p)) ≥ -1 := Integer.le_neg_flip.mp this
-  have : -(-(sgn p)) ≥ -1 :=
-    Integer.le_substR_eqv (AA.subst₁ sgn_compat_neg) this
-  have : sgn p ≥ -1 := Integer.le_substR_eqv Integer.neg_involutive this
-  exact this
 
 /--
 Add the same value on the right to both operands of
@@ -1468,6 +1110,354 @@ theorem mul_sgn_self_max {p q : ℚ} : p * sgn q ≤ p * sgn p := by
     exact Integer.lt_ge_false ‹sgn q < -1› this
 
 /--
+A lemma rewriting a difference's lower bound into a lower bound on its first
+argument.
+
+**Property and proof intuition**: The second argument of the difference can be
+moved to the other side of the ordering relation via algebra.
+-/
+theorem le_diff_lower {ε p q : ℚ} : -ε ≤ q - p ↔ p - ε ≤ q := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : -ε ≤ q - p)
+    show p - ε ≤ q
+    calc
+      _ ≃ p - ε          := eqv_refl
+      _ ≃ p + (-ε)       := sub_add_neg
+      _ ≤ p + (q - p)    := le_substR_add ‹-ε ≤ q - p›
+      _ ≃ p + (q + (-p)) := add_substR sub_add_neg
+      _ ≃ p + ((-p) + q) := add_substR add_comm
+      _ ≃ (p + (-p)) + q := eqv_symm add_assoc
+      _ ≃ 0 + q          := add_substL add_inverseR
+      _ ≃ q              := add_identL
+  case mpr =>
+    intro (_ : p - ε ≤ q)
+    show -ε ≤ q - p
+    calc
+      _ ≃ -ε              := eqv_refl
+      _ ≃ 0 + (-ε)        := eqv_symm add_identL
+      _ ≃ (-p + p) + (-ε) := add_substL (eqv_symm add_inverseL)
+      _ ≃ -p + (p + (-ε)) := add_assoc
+      _ ≃ -p + (p - ε)    := add_substR (eqv_symm sub_add_neg)
+      _ ≤ -p + q          := le_substR_add ‹p-ε ≤ q›
+      _ ≃ q + (-p)        := add_comm
+      _ ≃ q - p           := eqv_symm sub_add_neg
+
+/--
+A lemma rewriting a difference's upper bound into an upper bound on its first
+argument.
+
+**Property and proof intuition**: The second argument of the difference can be
+moved to the other side of the ordering relation via algebra.
+-/
+theorem le_diff_upper {ε p q : ℚ} : q - p ≤ ε ↔ q ≤ p + ε := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : q - p ≤ ε)
+    show q ≤ p + ε
+    calc
+      _ ≃ q              := eqv_refl
+      _ ≃ q + 0          := eqv_symm add_identR
+      _ ≃ q + ((-p) + p) := add_substR (eqv_symm add_inverseL)
+      _ ≃ (q + (-p)) + p := eqv_symm add_assoc
+      _ ≃ (q - p) + p    := add_substL (eqv_symm sub_add_neg)
+      _ ≤ ε + p          := le_substL_add ‹q - p ≤ ε›
+      _ ≃ p + ε          := add_comm
+  case mpr =>
+    intro (_ : q ≤ p + ε)
+    show q - p ≤ ε
+    calc
+      _ ≃ q - p          := eqv_refl
+      _ ≃ q + (-p)       := sub_add_neg
+      _ ≤ (p + ε) + (-p) := le_substL_add ‹q ≤ p+ε›
+      _ ≃ (ε + p) + (-p) := add_substL add_comm
+      _ ≃ ε + (p + (-p)) := add_assoc
+      _ ≃ ε + 0          := add_substR add_inverseR
+      _ ≃ ε              := add_identR
+
+variable [Reciprocation ℚ] [Division ℚ]
+
+/--
+A rational number is greater than zero iff its sign is greater than zero.
+
+**Property and proof intuition**: Rationals greater than zero have sign value
+`1`; this is the only sign value that's greater than zero.
+-/
+theorem sgn_preserves_gt_zero {p : ℚ} : p > 0 ↔ sgn p > 0 := calc
+  _ ↔ p > 0     := Iff.rfl
+  _ ↔ sgn p ≃ 1 := gt_zero_sgn
+  _ ↔ sgn p > 0 := sgn_gt_zero_iff_pos.symm
+
+/--
+A rational number is greater than or equivalent to zero iff its sign is greater
+than or equivalent to zero.
+
+**Property intuition**: Rationals greater than or equivalent to zero have sign
+values of `1` and `0`, which are the only ones that are also greater than or
+equivalent to zero.
+
+**Proof intuition**: Split the _greater than or equivalent to_ relation into
+_greater than_ or _equivalent to_. The theorem `sgn_preserves_gt_zero` covers
+the _greater than_ relation, while `sgn_zero` covers _equivalent to_.
+-/
+theorem sgn_preserves_ge_zero {p : ℚ} : p ≥ 0 ↔ sgn p ≥ 0 := calc
+  _ ↔ p ≥ 0                 := Iff.rfl
+  _ ↔ p > 0 ∨ p ≃ 0         := ge_cases
+  _ ↔ sgn p > 0 ∨ p ≃ 0     := iff_subst_covar or_mapL sgn_preserves_gt_zero
+  _ ↔ sgn p > 0 ∨ sgn p ≃ 0 := iff_subst_covar or_mapR sgn_zero
+  _ ↔ sgn p ≥ 0             := Integer.ge_split.symm
+
+/--
+A rational is greater than or equivalent to another exactly when the sign of
+their difference is also greater than or equivalent to zero.
+
+**Property and proof intuition**: The simpler property `p ≥ q ↔ p - q ≥ 0` is
+already obvious using algebra. Add `sgn` on both sides and simplify.
+-/
+theorem ge_iff_sub_sgn_nonneg {p q : ℚ} : p ≥ q ↔ sgn (p - q) ≥ 0 := calc
+  _ ↔ p ≥ q            := Rel.refl
+  _ ↔ sgn (p - q) ≄ -1 := ge_sgn
+  _ ↔ p - q ≥ 0        := ge_zero_sgn.symm
+  _ ↔ sgn (p - q) ≥ 0  := sgn_preserves_ge_zero
+
+/--
+The _less than or equivalent to_ relation is decidable for rational numbers.
+
+**Property and proof intuition**: The relation can be expressed as an
+equivalence of integer sign values, which we already know to be decidable.
+-/
+instance le_decidable {p q : ℚ} : Decidable (p ≤ q) := by
+  have : Decidable (sgn (p - q) ≃ 1) := Integer.eqv? (sgn (p - q)) 1
+  match this with
+  | isTrue (_ : sgn (p - q) ≃ 1) =>
+    have : ¬(p ≤ q) := neg_le_sgn.mpr ‹sgn (p - q) ≃ 1›
+    have : Decidable (p ≤ q) := isFalse this
+    exact this
+  | isFalse (_ : sgn (p - q) ≄ 1) =>
+    have : p ≤ q := le_sgn.mpr ‹sgn (p - q) ≄ 1›
+    have : Decidable (p ≤ q) := isTrue this
+    exact this
+
+/--
+The _less than_ relation is decidable for rational numbers.
+
+**Property and proof intuition**: The relation can be expressed as an
+equivalence of integer sign values, which we already know to be decidable.
+-/
+instance lt_decidable {p q : ℚ} : Decidable (p < q) := by
+  have : Decidable (sgn (p - q) ≃ -1) := Integer.eqv? (sgn (p - q)) (-1)
+  match this with
+  | isTrue (_ : sgn (p - q) ≃ -1) =>
+    have : p < q := lt_sgn.mpr ‹sgn (p - q) ≃ -1›
+    have : Decidable (p < q) := isTrue this
+    exact this
+  | isFalse (_ : sgn (p - q) ≄ -1) =>
+    have : ¬(p < q) := mt lt_sgn.mp ‹sgn (p - q) ≄ -1›
+    have : Decidable (p < q) := isFalse this
+    exact this
+
+/--
+The _less than_ relation for rational numbers is transitive.
+
+**Property intuition**: This is a required property for any totally ordered
+type.
+
+**Proof intuition**: Convert the input relations to `sgn`s of differences.
+We know the sum of the differences must have the same `sgn`. The sum
+telescopes, leaving only the first and last value, giving us the result.
+-/
+theorem lt_trans {p q r : ℚ} : p < q → q < r → p < r := by
+  intro (_ : p < q) (_ : q < r)
+  show p < r
+  have : sgn (p - q) ≃ -1 := lt_sgn.mp ‹p < q›
+  have : sgn (q - r) ≃ -1 := lt_sgn.mp ‹q < r›
+  have : sgn ((p - q) + (q - r)) ≃ -1 :=
+    add_preserves_sign ‹sgn (p - q) ≃ -1› ‹sgn (q - r) ≃ -1›
+  have : sgn (p - r) ≃ -1 := calc
+    sgn (p - r)             ≃ _ := sgn_subst (eqv_symm add_sub_telescope)
+    sgn ((p - q) + (q - r)) ≃ _ := ‹sgn ((p - q) + (q - r)) ≃ -1›
+    (-1)                    ≃ _ := Rel.refl
+  have : p < r := lt_sgn.mpr ‹sgn (p - r) ≃ -1›
+  exact this
+
+instance trans_lt_lt_lt_inst : Trans (α := ℚ) (· < ·) (· < ·) (· < ·) := {
+  trans := lt_trans
+}
+
+/--
+The _greater than_ relation for rational numbers is transitive.
+
+**Property intuition**: This is a required property for any totally ordered
+type.
+
+**Proof intuition**: Interpret _greater than_ as _less than_ and use
+`lt_trans`.
+-/
+theorem gt_trans {p q r : ℚ} : p > q → q > r → p > r := by
+  intro (_ : q < p) (_ : r < q)
+  show r < p
+  exact lt_trans ‹r < q› ‹q < p›
+
+instance trans_gt_gt_gt_inst : Trans (α := ℚ) (· > ·) (· > ·) (· > ·) := {
+  trans := gt_trans
+}
+
+/--
+Merge two _less than or equivalent to_ relations on a common "midpoint" (i.e.,
+_less than or equivalent to_ is transitive).
+
+**Property intuition**: This allows reasoning about ordering to be extended to
+values that are "further apart". It's fundamental to the meaning of _ordering_.
+
+**Proof intuition**: Split each input relation into its _less than_ case and
+its equivalence case. Delegate to a previous transitivity result for each
+combination of cases. Note that this turns out to be easier than expanding the
+relation into its `sgn`-based definition, because that involves a `· ≄ ·`
+operation which is more difficult to deal with.
+-/
+theorem le_trans {p q r : ℚ} : p ≤ q → q ≤ r → p ≤ r := by
+  intro (_ : p ≤ q) (_ : q ≤ r)
+  show p ≤ r
+  have : p < q ∨ p ≃ q := le_cases.mp ‹p ≤ q›
+  have : q < r ∨ q ≃ r := le_cases.mp ‹q ≤ r›
+  match And.intro ‹p < q ∨ p ≃ q› ‹q < r ∨ q ≃ r› with
+  | (And.intro (Or.inl (_ : p < q)) (Or.inl (_ : q < r))) =>
+    have : p < r := lt_trans ‹p < q› ‹q < r›
+    have : p ≤ r := le_cases.mpr (Or.inl this)
+    exact this
+  | (And.intro (Or.inl (_ : p < q)) (Or.inr (_ : q ≃ r))) =>
+    have : p < r := trans_lt_eqv_lt ‹p < q› ‹q ≃ r›
+    have : p ≤ r := le_cases.mpr (Or.inl this)
+    exact this
+  | (And.intro (Or.inr (_ : p ≃ q)) (Or.inl (_ : q < r))) =>
+    have : p < r := trans_eqv_lt_lt ‹p ≃ q› ‹q < r›
+    have : p ≤ r := le_cases.mpr (Or.inl this)
+    exact this
+  | (And.intro (Or.inr (_ : p ≃ q)) (Or.inr (_ : q ≃ r))) =>
+    have : p ≃ r := eqv_trans ‹p ≃ q› ‹q ≃ r›
+    have : p ≤ r := le_cases.mpr (Or.inr this)
+    exact this
+
+instance trans_le_le_le_inst : Trans (α := ℚ) (· ≤ ·) (· ≤ ·) (· ≤ ·) := {
+  trans := le_trans
+}
+
+/--
+A _less than_ relation can be extended on the right by a _less than or
+equivalent to_ relation through a common value.
+
+**Property and proof intuition**: We know that the first value is less than the
+second, so even if the second value is equivalent to the third, the first must
+still be less than the third.
+-/
+theorem trans_lt_le_lt {p q r : ℚ} : p < q → q ≤ r → p < r := by
+  intro (_ : p < q) (_ : q ≤ r)
+  show p < r
+  have : q < r ∨ q ≃ r := le_cases.mp ‹q ≤ r›
+  match this with
+  | Or.inl (_ : q < r) =>
+    have : p < r := lt_trans ‹p < q› ‹q < r›
+    exact this
+  | Or.inr (_ : q ≃ r) =>
+    have : p < r := lt_substR_eqv ‹q ≃ r› ‹p < q›
+    exact this
+
+instance trans_lt_le_lt_inst : Trans (α := ℚ) (· < ·) (· ≤ ·) (· < ·) := {
+  trans := trans_lt_le_lt
+}
+
+/--
+A _less than_ relation can be extended on the left by a _less than or
+equivalent to_ relation through a common value.
+
+**Property and proof intuition**: We know that the second value is less than
+the third, so even if the first value is equivalent to the second, the first
+must still be less than the third.
+-/
+theorem trans_le_lt_lt {p q r : ℚ} : p ≤ q → q < r → p < r := by
+  intro (_ : p ≤ q) (_ : q < r)
+  show p < r
+  have : p < q ∨ p ≃ q := le_cases.mp ‹p ≤ q›
+  match this with
+  | Or.inl (_ : p < q) =>
+    have : p < r := lt_trans ‹p < q› ‹q < r›
+    exact this
+  | Or.inr (_ : p ≃ q) =>
+    have : p < r := lt_substL_eqv (eqv_symm ‹p ≃ q›) ‹q < r›
+    exact this
+
+instance trans_le_lt_lt_inst : Trans (α := ℚ) (· ≤ ·) (· < ·) (· < ·) := {
+  trans := trans_le_lt_lt
+}
+
+/--
+Merge two _greater than or equivalent to_ relations on a common "midpoint"
+(i.e., _greater than or equivalent to_ is transitive).
+
+**Property intuition**: This allows reasoning about ordering to be extended to
+values that are "further apart". It's fundamental to the meaning of _ordering_.
+
+**Proof intuition**: Interpret _greater than or equivalent to_ as _less than or
+equivalent to_ and use `le_trans`.
+-/
+theorem ge_trans {p q r : ℚ} : p ≥ q → q ≥ r → p ≥ r := by
+  intro (_ : q ≤ p) (_ : r ≤ q)
+  show r ≤ p
+  exact le_trans ‹r ≤ q› ‹q ≤ p›
+
+instance trans_ge_ge_ge_inst : Trans (α := ℚ) (· ≥ ·) (· ≥ ·) (· ≥ ·) := {
+  trans := ge_trans
+}
+
+/--
+A _greater than_ relation can be extended on the right by a _greater than or
+equivalent to_ relation through a common value.
+
+**Property and proof intuition**: We know that the first value is greater than
+the second, so even if the second value is equivalent to the third, the first
+must still be greater than the third.
+-/
+theorem trans_gt_ge_gt {p q r : ℚ} : p > q → q ≥ r → p > r := by
+  intro (_ : p > q) (_ : q ≥ r)
+  show p > r
+  have : q > r ∨ q ≃ r := ge_cases.mp ‹q ≥ r›
+  match this with
+  | Or.inl (_ : q > r) =>
+    have : p > r := gt_trans ‹p > q› ‹q > r›
+    exact this
+  | Or.inr (_ : q ≃ r) =>
+    have : p > r := lt_substL_eqv ‹q ≃ r› ‹p > q›
+    exact this
+
+instance trans_gt_ge_gt_inst : Trans (α := ℚ) (· > ·) (· ≥ ·) (· > ·) := {
+  trans := trans_gt_ge_gt
+}
+
+/--
+A _greater than_ relation can be extended on the left by a _greater than or
+equivalent to_ relation through a common value.
+
+**Property and proof intuition**: We know that the second value is greater than
+the third, so even if the first value is equivalent to the second, the first
+must still be greater than the third.
+-/
+theorem trans_ge_gt_gt {p q r : ℚ} : p ≥ q → q > r → p > r := by
+  intro (_ : p ≥ q) (_ : q > r)
+  show p > r
+  have : p > q ∨ p ≃ q := ge_cases.mp ‹p ≥ q›
+  match this with
+  | Or.inl (_ : p > q) =>
+    have : p > r := gt_trans ‹p > q› ‹q > r›
+    exact this
+  | Or.inr (_ : p ≃ q) =>
+    have : p > r := lt_substR_eqv (eqv_symm ‹p ≃ q›) ‹q > r›
+    exact this
+
+instance trans_ge_gt_gt_inst : Trans (α := ℚ) (· ≥ ·) (· > ·) (· > ·) := {
+  trans := trans_ge_gt_gt
+}
+
+/--
 Divide both operands of _less than_ by the same positive value.
 
 **Property intuition**: Scaling two values by the same positive factor doesn't
@@ -1624,72 +1614,6 @@ theorem le_neg_nonneg {p : ℚ} : p ≥ 0 → -p ≤ p := by
     _ ≃ 0  := neg_preserves_zero.mpr eqv_refl
   have : -p ≤ p := le_trans ‹-p ≤ 0› ‹0 ≤ p›
   exact this
-
-/--
-A lemma rewriting a difference's lower bound into a lower bound on its first
-argument.
-
-**Property and proof intuition**: The second argument of the difference can be
-moved to the other side of the ordering relation via algebra.
--/
-theorem le_diff_lower {ε p q : ℚ} : -ε ≤ q - p ↔ p - ε ≤ q := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : -ε ≤ q - p)
-    show p - ε ≤ q
-    calc
-      _ ≃ p - ε          := eqv_refl
-      _ ≃ p + (-ε)       := sub_add_neg
-      _ ≤ p + (q - p)    := le_substR_add ‹-ε ≤ q - p›
-      _ ≃ p + (q + (-p)) := add_substR sub_add_neg
-      _ ≃ p + ((-p) + q) := add_substR add_comm
-      _ ≃ (p + (-p)) + q := eqv_symm add_assoc
-      _ ≃ 0 + q          := add_substL add_inverseR
-      _ ≃ q              := add_identL
-  case mpr =>
-    intro (_ : p - ε ≤ q)
-    show -ε ≤ q - p
-    calc
-      _ ≃ -ε              := eqv_refl
-      _ ≃ 0 + (-ε)        := eqv_symm add_identL
-      _ ≃ (-p + p) + (-ε) := add_substL (eqv_symm add_inverseL)
-      _ ≃ -p + (p + (-ε)) := add_assoc
-      _ ≃ -p + (p - ε)    := add_substR (eqv_symm sub_add_neg)
-      _ ≤ -p + q          := le_substR_add ‹p-ε ≤ q›
-      _ ≃ q + (-p)        := add_comm
-      _ ≃ q - p           := eqv_symm sub_add_neg
-
-/--
-A lemma rewriting a difference's upper bound into an upper bound on its first
-argument.
-
-**Property and proof intuition**: The second argument of the difference can be
-moved to the other side of the ordering relation via algebra.
--/
-theorem le_diff_upper {ε p q : ℚ} : q - p ≤ ε ↔ q ≤ p + ε := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : q - p ≤ ε)
-    show q ≤ p + ε
-    calc
-      _ ≃ q              := eqv_refl
-      _ ≃ q + 0          := eqv_symm add_identR
-      _ ≃ q + ((-p) + p) := add_substR (eqv_symm add_inverseL)
-      _ ≃ (q + (-p)) + p := eqv_symm add_assoc
-      _ ≃ (q - p) + p    := add_substL (eqv_symm sub_add_neg)
-      _ ≤ ε + p          := le_substL_add ‹q - p ≤ ε›
-      _ ≃ p + ε          := add_comm
-  case mpr =>
-    intro (_ : q ≤ p + ε)
-    show q - p ≤ ε
-    calc
-      _ ≃ q - p          := eqv_refl
-      _ ≃ q + (-p)       := sub_add_neg
-      _ ≤ (p + ε) + (-p) := le_substL_add ‹q ≤ p+ε›
-      _ ≃ (ε + p) + (-p) := add_substL add_comm
-      _ ≃ ε + (p + (-p)) := add_assoc
-      _ ≃ ε + 0          := add_substR add_inverseR
-      _ ≃ ε              := add_identR
 
 /--
 Provides evidence that the given rational number can be expressed as a ratio of

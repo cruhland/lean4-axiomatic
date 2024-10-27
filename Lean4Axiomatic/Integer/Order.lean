@@ -40,98 +40,9 @@ attribute [instance] Order.ltOp
 export Order (le_iff_add_nat leOp lt_iff_le_neqv ltOp)
 
 variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Core ℤ] [Addition ℤ] [Multiplication (ℕ := ℕ) ℤ]
-variable [Negation ℤ] [Subtraction ℤ] [Sign ℤ] [Order ℤ]
+variable {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Order ℤ]
 
 /-! ## Derived properties -/
-
-/--
-Equivalence between the _greater than_ relation on integers and their
-difference being positive.
-
-**Property intuition**: For nonnegative values, this makes sense: taking away a
-smaller value from a larger one should leave a positive amount behind. Taking
-away a negative value is the same as adding its positive equivalent, which will
-always give a positive result because the other number was "less negative".
-
-**Proof intuition**: No special insight here; assumptions and goals are
-expanded into their underlying properties, and then connected.
--/
-theorem gt_iff_pos_diff {a b : ℤ} : a > b ↔ Positive (a - b) := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : b < a)
-    show Positive (a - b)
-    have (And.intro (_ : b ≤ a) (_ : b ≄ a)) := lt_iff_le_neqv.mp ‹b < a›
-    have (Exists.intro (k : ℕ) (_ : a ≃ b + coe k)) :=
-      le_iff_add_nat.mp ‹b ≤ a›
-    have : a - b ≃ coe k := subR_moveR_addL.mpr ‹a ≃ b + coe k›
-    have : a - b ≄ 0 := mt zero_diff_iff_eqv.mp (Rel.symm ‹b ≄ a›)
-    have : (k:ℤ) ≄ 0 := AA.neqv_substL ‹a - b ≃ coe k› ‹a - b ≄ 0›
-    have : k ≄ 0 := AA.inject ‹coe k ≄ coe (0 : ℕ)›
-    have : Positive k := Signed.positive_defn.mpr ‹k ≄ 0›
-    have : Positive (a - b) := positive_intro_nat ‹Positive k› ‹a - b ≃ coe k›
-    exact this
-  case mpr =>
-    intro (_ : Positive (a - b))
-    show b < a
-    have
-      (Exists.intro (k : ℕ) (And.intro (_ : Positive k) (_ : a - b ≃ coe k)))
-        := positive_elim_nat ‹Positive (a - b)›
-    apply lt_iff_le_neqv.mpr
-    show b ≤ a ∧ b ≄ a
-    have : a ≃ b + coe k := subR_moveR_addL.mp ‹a - b ≃ coe k›
-    have : b ≤ a := le_iff_add_nat.mpr (Exists.intro k ‹a ≃ b + coe k›)
-    have : k ≄ 0 := Signed.positive_defn.mp ‹Positive k›
-    have : (k:ℤ) ≄ ((0:ℕ):ℤ) := AA.subst₁ ‹k ≄ 0›
-    have : a - b ≄ 0 :=
-      AA.neqv_substL (Rel.symm ‹a - b ≃ coe k›) ‹(coe k : ℤ) ≄ 0›
-    have : b ≄ a := Rel.symm (mt zero_diff_iff_eqv.mpr ‹a - b ≄ 0›)
-    exact And.intro ‹b ≤ a› ‹b ≄ a›
-
-/--
-Integers greater than zero are positive.
-
-**Proof intuition**: Follows directly from `gt_iff_pos_diff`.
--/
-theorem gt_zero_iff_pos {a : ℤ} : a > 0 ↔ Positive a := calc
-  _ ↔ a > 0            := Iff.rfl
-  _ ↔ Positive (a - 0) := gt_iff_pos_diff
-  _ ↔ Positive a       := Rel.iff_subst_eqv AA.substFn sub_identR
-
-/--
-Equivalence between the _less than_ relation on integers and their
-difference being negative.
-
-**Property intuition**: For nonnegative values, this makes sense: taking away a
-larger value from a smaller one should leave a negative amount behind. Taking
-away a negative value is the same as adding its positive equivalent, which will
-still give a negative result because the other number was "more negative".
-
-**Proof intuition**: Flip the ordering around to be _greater than_, and derive
-a positive difference. Then swap the operands of the difference back, and show
-that it's now negative.
--/
-theorem lt_iff_neg_diff {a b : ℤ} : a < b ↔ Negative (a - b) := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : a < b)
-    show Negative (a - b)
-    have : Positive (b - a) := gt_iff_pos_diff.mp ‹a < b›
-    have : Positive (-(a - b)) :=
-      AA.substFn (Rel.symm sub_neg_flip) ‹Positive (b - a)›
-    have : Negative (a - b) :=
-      negative_iff_negated_positive.mpr ‹Positive (-(a - b))›
-    exact this
-  case mpr =>
-    intro (_ : Negative (a - b))
-    show a < b
-    have : Negative (-(b - a)) :=
-      AA.substFn (Rel.symm sub_neg_flip) ‹Negative (a - b)›
-    have : Positive (b - a) :=
-      positive_iff_negated_negative.mpr ‹Negative (-(b - a))›
-    have : a < b := gt_iff_pos_diff.mpr ‹Positive (b - a)›
-    exact this
 
 /--
 Equivalent integers can be substituted on the left of the `· ≤ ·` relation.
@@ -222,6 +133,179 @@ instance lt_substitutive_eqv
   substitutiveL := { subst₂ := λ (_ : True) => lt_substL_eqv }
   substitutiveR := { subst₂ := λ (_ : True) => lt_substR_eqv }
 }
+
+/--
+_Less than or equivalent to_ is reflexive.
+
+**Property intuition**: Equivalence is already reflexive.
+
+**Proof intuition**: The difference between the two operands of _less than or
+equivalent to_ must be a natural number; zero in this case.
+-/
+theorem le_refl {a : ℤ} : a ≤ a := by
+  apply le_iff_add_nat.mpr
+  show ∃ (k : ℕ), a ≃ a + coe k
+  have : a ≃ a + coe (0 : ℕ) := calc
+    a               ≃ _ := Rel.symm AA.identR
+    a + 0           ≃ _ := Rel.refl
+    a + coe (0 : ℕ) ≃ _ := Rel.refl
+  exact Exists.intro 0 ‹a ≃ a + coe (0 : ℕ)›
+
+/--
+Transitivity of _less than_ with equivalence on the left.
+
+**Property and proof intuition**: Follows from the substituitive property of
+equivalence on _less than_.
+-/
+theorem trans_eqv_lt_lt {a b c : ℤ} : a ≃ b → b < c → a < c := by
+  intro (_ : a ≃ b) (_ : b < c)
+  show a < c
+  exact lt_substL_eqv (Rel.symm ‹a ≃ b›) ‹b < c›
+
+/-- Enable `trans_eqv_lt_lt` use by `calc` tactics. -/
+instance trans_eqv_lt_lt_inst : Trans (α := ℤ) (· ≃ ·) (· < ·) (· < ·) := {
+  trans := trans_eqv_lt_lt
+}
+
+/--
+Transitivity of _less than_ with equivalence on the right.
+
+**Property and proof intuition**: Follows from the substituitive property of
+equivalence on _less than_.
+-/
+theorem trans_lt_eqv_lt {a b c : ℤ} : a < b → b ≃ c → a < c := by
+  intro (_ : a < b) (_ : b ≃ c)
+  show a < c
+  exact lt_substR_eqv ‹b ≃ c› ‹a < b›
+
+/-- Enable `trans_lt_eqv_lt` use by `calc` tactics. -/
+instance trans_lt_eqv_lt_inst : Trans (α := ℤ) (· < ·) (· ≃ ·) (· < ·) := {
+  trans := trans_lt_eqv_lt
+}
+
+/--
+Transitivity of _greater than_ with equivalence on the left.
+
+**Property and proof intuition**: Follows from transitivity of _less than_ and
+equivalence.
+-/
+theorem trans_eqv_gt_gt {a b c : ℤ} : a ≃ b → b > c → a > c := by
+  intro (_ : a ≃ b) (_ : b > c)
+  show a > c
+  have : c < a := trans_lt_eqv_lt ‹c < b› (Rel.symm ‹a ≃ b›)
+  exact this
+
+/-- Enable `trans_eqv_gt_gt` use by `calc` tactics. -/
+instance trans_eqv_gt_gt_inst : Trans (α := ℤ) (· ≃ ·) (· > ·) (· > ·) := {
+  trans := trans_eqv_gt_gt
+}
+
+/--
+Transitivity of _greater than_ with equivalence on the left.
+
+**Property and proof intuition**: Follows from transitivity of _less than_ and
+equivalence.
+-/
+theorem trans_gt_eqv_gt {a b c : ℤ} : a > b → b ≃ c → a > c := by
+  intro (_ : a > b) (_ : b ≃ c)
+  show a > c
+  have : c < a := trans_eqv_lt_lt (Rel.symm ‹b ≃ c›) ‹b < a›
+  exact this
+
+/-- Enable `trans_gt_eqv_gt` use by `calc` tactics. -/
+instance trans_gt_eqv_gt_inst : Trans (α := ℤ) (· > ·) (· ≃ ·) (· > ·) := {
+  trans := trans_gt_eqv_gt
+}
+
+variable [Multiplication (ℕ := ℕ) ℤ] [Negation ℤ] [Subtraction ℤ] [Sign ℤ]
+
+/--
+Equivalence between the _greater than_ relation on integers and their
+difference being positive.
+
+**Property intuition**: For nonnegative values, this makes sense: taking away a
+smaller value from a larger one should leave a positive amount behind. Taking
+away a negative value is the same as adding its positive equivalent, which will
+always give a positive result because the other number was "less negative".
+
+**Proof intuition**: No special insight here; assumptions and goals are
+expanded into their underlying properties, and then connected.
+-/
+theorem gt_iff_pos_diff {a b : ℤ} : a > b ↔ Positive (a - b) := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : b < a)
+    show Positive (a - b)
+    have (And.intro (_ : b ≤ a) (_ : b ≄ a)) := lt_iff_le_neqv.mp ‹b < a›
+    have (Exists.intro (k : ℕ) (_ : a ≃ b + coe k)) :=
+      le_iff_add_nat.mp ‹b ≤ a›
+    have : a - b ≃ coe k := subR_moveR_addL.mpr ‹a ≃ b + coe k›
+    have : a - b ≄ 0 := mt zero_diff_iff_eqv.mp (Rel.symm ‹b ≄ a›)
+    have : (k:ℤ) ≄ 0 := AA.neqv_substL ‹a - b ≃ coe k› ‹a - b ≄ 0›
+    have : k ≄ 0 := AA.inject ‹coe k ≄ coe (0 : ℕ)›
+    have : Positive k := Signed.positive_defn.mpr ‹k ≄ 0›
+    have : Positive (a - b) := positive_intro_nat ‹Positive k› ‹a - b ≃ coe k›
+    exact this
+  case mpr =>
+    intro (_ : Positive (a - b))
+    show b < a
+    have
+      (Exists.intro (k : ℕ) (And.intro (_ : Positive k) (_ : a - b ≃ coe k)))
+        := positive_elim_nat ‹Positive (a - b)›
+    apply lt_iff_le_neqv.mpr
+    show b ≤ a ∧ b ≄ a
+    have : a ≃ b + coe k := subR_moveR_addL.mp ‹a - b ≃ coe k›
+    have : b ≤ a := le_iff_add_nat.mpr (Exists.intro k ‹a ≃ b + coe k›)
+    have : k ≄ 0 := Signed.positive_defn.mp ‹Positive k›
+    have : (k:ℤ) ≄ ((0:ℕ):ℤ) := AA.subst₁ ‹k ≄ 0›
+    have : a - b ≄ 0 :=
+      AA.neqv_substL (Rel.symm ‹a - b ≃ coe k›) ‹(coe k : ℤ) ≄ 0›
+    have : b ≄ a := Rel.symm (mt zero_diff_iff_eqv.mpr ‹a - b ≄ 0›)
+    exact And.intro ‹b ≤ a› ‹b ≄ a›
+
+/--
+Integers greater than zero are positive.
+
+**Proof intuition**: Follows directly from `gt_iff_pos_diff`.
+-/
+theorem gt_zero_iff_pos {a : ℤ} : a > 0 ↔ Positive a := calc
+  _ ↔ a > 0            := Iff.rfl
+  _ ↔ Positive (a - 0) := gt_iff_pos_diff
+  _ ↔ Positive a       := Rel.iff_subst_eqv AA.substFn sub_identR
+
+/--
+Equivalence between the _less than_ relation on integers and their
+difference being negative.
+
+**Property intuition**: For nonnegative values, this makes sense: taking away a
+larger value from a smaller one should leave a negative amount behind. Taking
+away a negative value is the same as adding its positive equivalent, which will
+still give a negative result because the other number was "more negative".
+
+**Proof intuition**: Flip the ordering around to be _greater than_, and derive
+a positive difference. Then swap the operands of the difference back, and show
+that it's now negative.
+-/
+theorem lt_iff_neg_diff {a b : ℤ} : a < b ↔ Negative (a - b) := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a < b)
+    show Negative (a - b)
+    have : Positive (b - a) := gt_iff_pos_diff.mp ‹a < b›
+    have : Positive (-(a - b)) :=
+      AA.substFn (Rel.symm sub_neg_flip) ‹Positive (b - a)›
+    have : Negative (a - b) :=
+      negative_iff_negated_positive.mpr ‹Positive (-(a - b))›
+    exact this
+  case mpr =>
+    intro (_ : Negative (a - b))
+    show a < b
+    have : Negative (-(b - a)) :=
+      AA.substFn (Rel.symm sub_neg_flip) ‹Negative (a - b)›
+    have : Positive (b - a) :=
+      positive_iff_negated_negative.mpr ‹Negative (-(b - a))›
+    have : a < b := gt_iff_pos_diff.mpr ‹Positive (b - a)›
+    exact this
 
 /--
 The `· < ·` relation is preserved when the same value is added on the right to
@@ -416,23 +500,6 @@ instance lt_substitutive_neg
 instance lt_injective_neg : AA.Injective (α := ℤ) (-·) (· < ·) (· > ·) := {
   inject := lt_neg_flip.mpr
 }
-
-/--
-_Less than or equivalent to_ is reflexive.
-
-**Property intuition**: Equivalence is already reflexive.
-
-**Proof intuition**: The difference between the two operands of _less than or
-equivalent to_ must be a natural number; zero in this case.
--/
-theorem le_refl {a : ℤ} : a ≤ a := by
-  apply le_iff_add_nat.mpr
-  show ∃ (k : ℕ), a ≃ a + coe k
-  have : a ≃ a + coe (0 : ℕ) := calc
-    a               ≃ _ := Rel.symm AA.identR
-    a + 0           ≃ _ := Rel.refl
-    a + coe (0 : ℕ) ≃ _ := Rel.refl
-  exact Exists.intro 0 ‹a ≃ a + coe (0 : ℕ)›
 
 /--
 _Less than or equivalent to_ is literally the same as _less than_ OR
@@ -734,38 +801,6 @@ instance trans_lt_lt_lt_inst : Relation.Transitive (α := ℤ) (· < ·) := {
 }
 
 /--
-Transitivity of _less than_ with equivalence on the left.
-
-**Property and proof intuition**: Follows from the substituitive property of
-equivalence on _less than_.
--/
-theorem trans_eqv_lt_lt {a b c : ℤ} : a ≃ b → b < c → a < c := by
-  intro (_ : a ≃ b) (_ : b < c)
-  show a < c
-  exact lt_substL_eqv (Rel.symm ‹a ≃ b›) ‹b < c›
-
-/-- Enable `trans_eqv_lt_lt` use by `calc` tactics. -/
-instance trans_eqv_lt_lt_inst : Trans (α := ℤ) (· ≃ ·) (· < ·) (· < ·) := {
-  trans := trans_eqv_lt_lt
-}
-
-/--
-Transitivity of _less than_ with equivalence on the right.
-
-**Property and proof intuition**: Follows from the substituitive property of
-equivalence on _less than_.
--/
-theorem trans_lt_eqv_lt {a b c : ℤ} : a < b → b ≃ c → a < c := by
-  intro (_ : a < b) (_ : b ≃ c)
-  show a < c
-  exact lt_substR_eqv ‹b ≃ c› ‹a < b›
-
-/-- Enable `trans_lt_eqv_lt` use by `calc` tactics. -/
-instance trans_lt_eqv_lt_inst : Trans (α := ℤ) (· < ·) (· ≃ ·) (· < ·) := {
-  trans := trans_lt_eqv_lt
-}
-
-/--
 Transitivity of _less than_ with _less than or equivalent to_ on the left.
 
 **Property and proof intuition**: Split _less than or equivalent to_ into
@@ -900,40 +935,6 @@ theorem trans_gt_gt_gt {a b c : ℤ} : a > b → b > c → a > c := by
 /-- Enable `trans_gt_gt_gt` use by `calc` tactics. -/
 instance trans_gt_gt_gt_inst : Trans (α := ℤ) (· > ·) (· > ·) (· > ·) := {
   trans := trans_gt_gt_gt
-}
-
-/--
-Transitivity of _greater than_ with equivalence on the left.
-
-**Property and proof intuition**: Follows from transitivity of _less than_ and
-equivalence.
--/
-theorem trans_eqv_gt_gt {a b c : ℤ} : a ≃ b → b > c → a > c := by
-  intro (_ : a ≃ b) (_ : b > c)
-  show a > c
-  have : c < a := trans_lt_eqv_lt ‹c < b› (Rel.symm ‹a ≃ b›)
-  exact this
-
-/-- Enable `trans_eqv_gt_gt` use by `calc` tactics. -/
-instance trans_eqv_gt_gt_inst : Trans (α := ℤ) (· ≃ ·) (· > ·) (· > ·) := {
-  trans := trans_eqv_gt_gt
-}
-
-/--
-Transitivity of _greater than_ with equivalence on the left.
-
-**Property and proof intuition**: Follows from transitivity of _less than_ and
-equivalence.
--/
-theorem trans_gt_eqv_gt {a b c : ℤ} : a > b → b ≃ c → a > c := by
-  intro (_ : a > b) (_ : b ≃ c)
-  show a > c
-  have : c < a := trans_eqv_lt_lt (Rel.symm ‹b ≃ c›) ‹b < a›
-  exact this
-
-/-- Enable `trans_gt_eqv_gt` use by `calc` tactics. -/
-instance trans_gt_eqv_gt_inst : Trans (α := ℤ) (· > ·) (· ≃ ·) (· > ·) := {
-  trans := trans_gt_eqv_gt
 }
 
 /--

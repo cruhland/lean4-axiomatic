@@ -49,11 +49,11 @@ theorem mul_comm {a b : Difference ℕ} : a * b ≃ b * a := by
   apply AA.subst₁
   show (n * k + m * j, n * j + m * k) ≃ (k * n + j * m, k * m + j * n)
   calc
-    (n * k + m * j, n * j + m * k) ≃ _ := AA.substL (AA.substL AA.comm)
-    (k * n + m * j, n * j + m * k) ≃ _ := AA.substL (AA.substR AA.comm)
-    (k * n + j * m, n * j + m * k) ≃ _ := AA.substR (AA.substL AA.comm)
-    (k * n + j * m, j * n + m * k) ≃ _ := AA.substR (AA.substR AA.comm)
-    (k * n + j * m, j * n + k * m) ≃ _ := AA.substR AA.comm
+    (n * k + m * j, n * j + m * k) ≃ _ := AA.substL (Natural.add_substL AA.comm)
+    (k * n + m * j, n * j + m * k) ≃ _ := AA.substL (Natural.add_substR AA.comm)
+    (k * n + j * m, n * j + m * k) ≃ _ := AA.substR (Natural.add_substL AA.comm)
+    (k * n + j * m, j * n + m * k) ≃ _ := AA.substR (Natural.add_substR AA.comm)
+    (k * n + j * m, j * n + k * m) ≃ _ := AA.substR Natural.add_comm
     (k * n + j * m, k * m + j * n) ≃ _ := Rel.refl
 
 instance mul_commutative : AA.Commutative (α := Difference ℕ) (· * ·) := {
@@ -73,24 +73,28 @@ theorem mul_substL {a₁ a₂ b : Difference ℕ} : a₁ ≃ a₂ → a₁ * b �
   revert a₁; intro (n——m); revert a₂; intro (k——j); revert b; intro (p——q)
   intro (_ : n——m ≃ k——j)
   have h : n + j ≃ k + m := ‹n——m ≃ k——j›
+  have hr : k + m ≃ n + j := Rel.symm h
   show n——m * p——q ≃ k——j * p——q
   show (n * p + m * q)——(n * q + m * p) ≃ (k * p + j * q)——(k * q + j * p)
   show (n * p + m * q) + (k * q + j * p) ≃ (k * p + j * q) + (n * q + m * p)
   calc
     (n * p + m * q) + (k * q + j * p) ≃ _ := Rel.symm expand_swap
-    (n + j) * p     + (k + m) * q     ≃ _ := AA.substL (AA.substL h)
-    (k + m) * p     + (k + m) * q     ≃ _ := AA.substR (AA.substL (Rel.symm h))
+    (n + j) * p     + (k + m) * q     ≃ _ := Natural.add_substL (AA.substL h)
+    (k + m) * p     + (k + m) * q     ≃ _ := Natural.add_substR (AA.substL hr)
     (k + m) * p     + (n + j) * q     ≃ _ := expand_swap
     (k * p + j * q) + (n * q + m * p) ≃ _ := Rel.refl
 where
   expand_swap
       {u v w x y z : ℕ}
       : (w + x) * u + (y + z) * v ≃ (w * u + z * v) + (y * v + x * u)
-      := calc
-    (w + x) * u     + (y + z) * v     ≃ _ := AA.substL AA.distribR
-    (w * u + x * u) + (y + z) * v     ≃ _ := AA.substR AA.distribR
-    (w * u + x * u) + (y * v + z * v) ≃ _ := AA.expr_xxfxxff_lr_swap_rr
-    (w * u + z * v) + (y * v + x * u) ≃ _ := Rel.refl
+      := by
+    have swap : (w*u + x*u) + (y*v + z*v) ≃ (w*u + z*v) + (y*v + x*u) :=
+      AA.expr_xxfxxff_lr_swap_rr (f := (· + ·))
+    calc
+      (w + x) * u     + (y + z) * v     ≃ _ := Natural.add_substL AA.distribR
+      (w * u + x * u) + (y + z) * v     ≃ _ := Natural.add_substR AA.distribR
+      (w * u + x * u) + (y * v + z * v) ≃ _ := swap
+      (w * u + z * v) + (y * v + x * u) ≃ _ := Rel.refl
 
 def mul_substitutiveL
     : AA.SubstitutiveOn
@@ -134,25 +138,25 @@ theorem mul_assoc {a b c : Difference ℕ} : (a * b) * c ≃ a * (b * c) := by
       ≃  q * (n * x + m * y) + p * (n * y + m * x)
       := calc
     (q * n + p * m) * x + (q * m + p * n) * y
-      ≃ _ := AA.substL AA.distribR
+      ≃ _ := Natural.add_substL AA.distribR
     (q * n) * x + (p * m) * x + (q * m + p * n) * y
-      ≃ _ := AA.substR AA.distribR
+      ≃ _ := Natural.add_substR AA.distribR
     (q * n) * x + (p * m) * x + ((q * m) * y + (p * n) * y)
-      ≃ _ := AA.expr_xxfxxff_lr_swap_rl
+      ≃ _ := AA.expr_xxfxxff_lr_swap_rl (f := (· + ·))
     (q * n) * x + (q * m) * y + ((p * m) * x + (p * n) * y)
-      ≃ _ := AA.substR AA.comm
+      ≃ _ := Natural.add_substR Natural.add_comm
     (q * n) * x + (q * m) * y + ((p * n) * y + (p * m) * x)
-      ≃ _ := AA.substL (AA.substL AA.assoc)
+      ≃ _ := Natural.add_substL (Natural.add_substL AA.assoc)
     q * (n * x) + (q * m) * y + ((p * n) * y + (p * m) * x)
-      ≃ _ := AA.substL (AA.substR AA.assoc)
+      ≃ _ := Natural.add_substL (Natural.add_substR AA.assoc)
     q * (n * x) + q * (m * y) + ((p * n) * y + (p * m) * x)
-      ≃ _ := AA.substR (AA.substL AA.assoc)
+      ≃ _ := Natural.add_substR (Natural.add_substL AA.assoc)
     q * (n * x) + q * (m * y) + (p * (n * y) + (p * m) * x)
-      ≃ _ := AA.substR (AA.substR AA.assoc)
+      ≃ _ := Natural.add_substR (Natural.add_substR AA.assoc)
     q * (n * x) + q * (m * y) + (p * (n * y) + p * (m * x))
-      ≃ _ := AA.substL (Rel.symm AA.distribL)
+      ≃ _ := Natural.add_substL (Rel.symm AA.distribL)
     q * (n * x + m * y) + (p * (n * y) + p * (m * x))
-      ≃ _ := AA.substR (Rel.symm AA.distribL)
+      ≃ _ := Natural.add_substR (Rel.symm AA.distribL)
     q * (n * x + m * y) + p * (n * y + m * x)
       ≃ _ := Rel.refl
   apply And.intro
@@ -180,13 +184,19 @@ theorem mul_identL {a : Difference ℕ} : 1 * a ≃ a := by
   show from_prod (1 * n + 0 * m, 1 * m + 0 * n) ≃ from_prod (n, m)
   apply AA.subst₁
   show (1 * n + 0 * m, 1 * m + 0 * n) ≃ (n, m)
+  have : 1 * n + 0 * m ≃ n := calc
+    _ = 1 * n + 0 * m := rfl
+    _ ≃ n + 0 * m     := Natural.add_substL AA.identL
+    _ ≃ n + 0         := Natural.add_substR AA.absorbL
+    _ ≃ n             := Natural.add_zero
+  have : 1 * m + 0 * n ≃ m := calc
+    _ = 1 * m + 0 * n := rfl
+    _ ≃ m + 0 * n     := Natural.add_substL AA.identL
+    _ ≃ m + 0         := Natural.add_substR AA.absorbL
+    _ ≃ m             := Natural.add_zero
   calc
-    (1 * n + 0 * m, 1 * m + 0 * n) ≃ _ := AA.substL (AA.substL AA.identL)
-    (n + 0 * m, 1 * m + 0 * n)     ≃ _ := AA.substL (AA.substR AA.absorbL)
-    (n + 0, 1 * m + 0 * n)         ≃ _ := AA.substR (AA.substL AA.identL)
-    (n + 0, m + 0 * n)             ≃ _ := AA.substR (AA.substR AA.absorbL)
-    (n + 0, m + 0)                 ≃ _ := AA.substL AA.identR
-    (n, m + 0)                     ≃ _ := AA.substR AA.identR
+    (1 * n + 0 * m, 1 * m + 0 * n) ≃ _ := AA.substL ‹1 * n + 0 * m ≃ n›
+    (n, 1 * m + 0 * n)             ≃ _ := AA.substR ‹1 * m + 0 * n ≃ m›
     (n, m)                         ≃ _ := Rel.refl
 
 def mul_identityL : AA.IdentityOn Hand.L (α := Difference ℕ) 1 (· * ·) := {
@@ -240,11 +250,14 @@ theorem mul_distribL {a b c : Difference ℕ} : a * (b + c) ≃ a * b + a * c :=
      ∧ q * m_j + p * n_k ≃ (qm + pn) + (qj + pk)
   have distrib_swap (w x y z : ℕ)
       : q * (w + y) + p * (x + z) ≃ (q * w + p * x) + (q * y + p * z)
-      := calc
-    q * (w + y) + p * (x + z)         ≃ _ := AA.substL AA.distribL
-    (q * w + q * y) + p * (x + z)     ≃ _ := AA.substR AA.distribL
-    (q * w + q * y) + (p * x + p * z) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
-    (q * w + p * x) + (q * y + p * z) ≃ _ := Rel.refl
+      := by
+    have swap : (q*w + q*y) + (p*x + p*z) ≃ (q*w + p*x) + (q*y + p*z) :=
+      AA.expr_xxfxxff_lr_swap_rl (f := (· + ·))
+    calc
+      q * (w + y) + p * (x + z)         ≃ _ := Natural.add_substL AA.distribL
+      (q * w + q * y) + p * (x + z)     ≃ _ := Natural.add_substR AA.distribL
+      (q * w + q * y) + (p * x + p * z) ≃ _ := swap
+      (q * w + p * x) + (q * y + p * z) ≃ _ := Rel.refl
   apply And.intro
   · show q * n_k + p * m_j ≃ (qn + pm) + (qk + pj)
     exact distrib_swap n m k j
@@ -281,12 +294,18 @@ theorem mul_compat_natural
   show (n * m, 0) ≃ (n * m + 0 * 0, n * 0 + 0 * m)
   apply Rel.symm (α := ℕ × ℕ)
   show (n * m + 0 * 0, n * 0 + 0 * m) ≃ (n * m, 0)
+  have : n * m + 0 * 0 ≃ n * m := calc
+    _ = n * m + 0 * 0 := rfl
+    _ ≃ n * m + 0     := Natural.add_substR AA.absorbL
+    _ ≃ n * m         := Natural.add_zero
+  have : n * 0 + 0 * m ≃ 0 := calc
+    _ = n * 0 + 0 * m := rfl
+    _ ≃ 0 + 0 * m     := Natural.add_substL AA.absorbR
+    _ ≃ 0 * m         := Natural.zero_add
+    _ ≃ 0             := AA.absorbL
   calc
-    (n * m + 0 * 0, n * 0 + 0 * m) ≃ _ := AA.substL (AA.substR AA.absorbL)
-    (n * m + 0, n * 0 + 0 * m)     ≃ _ := AA.substL Natural.add_zero
-    (n * m, n * 0 + 0 * m)         ≃ _ := AA.substR (AA.substL AA.absorbR)
-    (n * m, 0 + 0 * m)             ≃ _ := AA.substR Natural.zero_add
-    (n * m, 0 * m)                 ≃ _ := AA.substR AA.absorbL
+    (n * m + 0 * 0, n * 0 + 0 * m) ≃ _ := AA.substL ‹n * m + 0 * 0 ≃ n * m›
+    (n * m, n * 0 + 0 * m)         ≃ _ := AA.substR ‹n * 0 + 0 * m ≃ 0›
     (n * m, 0)                     ≃ _ := Rel.refl
 
 def mul_compatible_from_natural

@@ -88,44 +88,7 @@ attribute [instance] Subtraction.toProps
 /-! ## Derived properties -/
 
 variable {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
-variable {ℚ : Type}
-  [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
-  [Negation ℚ] [Subtraction ℚ]
-
-/--
-Zero is a left absorbing element for multiplication.
-
-The proof is identical to `Integer.mul_absorbL`; see its comment for intuition.
--/
-theorem mul_absorbL {p : ℚ} : 0 * p ≃ 0 := calc
-  0 * p                      ≃ _ := eqv_symm add_identR
-  0 * p + 0                  ≃ _ := add_substR (eqv_symm add_inverseR)
-  0 * p + (0 * p + -(0 * p)) ≃ _ := eqv_symm add_assoc
-  (0 * p + 0 * p) + -(0 * p) ≃ _ := add_substL (eqv_symm mul_distribR)
-  (0 + 0) * p + -(0 * p)     ≃ _ := add_substL (mul_substL add_identL)
-  0 * p + -(0 * p)           ≃ _ := add_inverseR
-  0                          ≃ _ := eqv_refl
-
-/--
-Zero is a right absorbing element for multiplication.
-
-This follows from left absorption because multiplication is commutative.
--/
-theorem mul_absorbR {p : ℚ} : p * 0 ≃ 0 := calc
-  p * 0 ≃ _ := mul_comm
-  0 * p ≃ _ := mul_absorbL
-  0     ≃ _ := eqv_refl
-
-/--
-Instance for the absorption property of zero in the rationals.
-
-This enables the use of abstract algebraic theorems depending on this property,
-in proofs involving rational numbers.
--/
-instance mul_absorbing_inst : AA.Absorbing (0:ℚ) (· * ·) := {
-  absorbingL := { absorb := mul_absorbL }
-  absorbingR := { absorb := mul_absorbR }
-}
+variable {ℚ : Type} [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Negation ℚ]
 
 /--
 Adding or removing a negation from zero leaves it unchanged.
@@ -171,6 +134,58 @@ theorem neg_preserves_nonzero {p : ℚ} : p ≄ 0 → -p ≄ 0 :=
 /-- Useful for having negated expressions under the division sign. -/
 instance neg_preserves_nonzero_inst {p : ℚ} [AP (p ≄ 0)] : AP (-p ≄ 0) :=
   AP.mk (neg_preserves_nonzero ‹AP (p ≄ 0)›.ev)
+
+/--
+Negating twice is the same as not negating at all.
+
+The proof is identical to `Integer.neg_involutive`; see its comment for
+intuition.
+-/
+theorem neg_involutive {p : ℚ} : -(-p) ≃ p := calc
+  -(-p)            ≃ _ := eqv_symm add_identL
+  0 + -(-p)        ≃ _ := add_substL (eqv_symm add_inverseR)
+  (p + -p) + -(-p) ≃ _ := add_assoc
+  p + (-p + -(-p)) ≃ _ := add_substR add_inverseR
+  p + 0            ≃ _ := add_identR
+  p                ≃ _ := eqv_refl
+
+section mul_only
+variable [Multiplication ℚ]
+
+/--
+Zero is a left absorbing element for multiplication.
+
+The proof is identical to `Integer.mul_absorbL`; see its comment for intuition.
+-/
+theorem mul_absorbL {p : ℚ} : 0 * p ≃ 0 := calc
+  0 * p                      ≃ _ := eqv_symm add_identR
+  0 * p + 0                  ≃ _ := add_substR (eqv_symm add_inverseR)
+  0 * p + (0 * p + -(0 * p)) ≃ _ := eqv_symm add_assoc
+  (0 * p + 0 * p) + -(0 * p) ≃ _ := add_substL (eqv_symm mul_distribR)
+  (0 + 0) * p + -(0 * p)     ≃ _ := add_substL (mul_substL add_identL)
+  0 * p + -(0 * p)           ≃ _ := add_inverseR
+  0                          ≃ _ := eqv_refl
+
+/--
+Zero is a right absorbing element for multiplication.
+
+This follows from left absorption because multiplication is commutative.
+-/
+theorem mul_absorbR {p : ℚ} : p * 0 ≃ 0 := calc
+  p * 0 ≃ _ := mul_comm
+  0 * p ≃ _ := mul_absorbL
+  0     ≃ _ := eqv_refl
+
+/--
+Instance for the absorption property of zero in the rationals.
+
+This enables the use of abstract algebraic theorems depending on this property,
+in proofs involving rational numbers.
+-/
+instance mul_absorbing_inst : AA.Absorbing (0:ℚ) (· * ·) := {
+  absorbingL := { absorb := mul_absorbL }
+  absorbingR := { absorb := mul_absorbR }
+}
 
 /--
 Negation is left-semicompatible with multiplication.
@@ -229,36 +244,6 @@ theorem neg_compat_add {p q : ℚ} : -(p + q) ≃ -p + -q := calc
   _ ≃ -p + -q         := add_substR mul_neg_one
 
 /--
-Negating twice is the same as not negating at all.
-
-The proof is identical to `Integer.neg_involutive`; see its comment for
-intuition.
--/
-theorem neg_involutive {p : ℚ} : -(-p) ≃ p := calc
-  -(-p)            ≃ _ := eqv_symm add_identL
-  0 + -(-p)        ≃ _ := add_substL (eqv_symm add_inverseR)
-  (p + -p) + -(-p) ≃ _ := add_assoc
-  p + (-p + -(-p)) ≃ _ := add_substR add_inverseR
-  p + 0            ≃ _ := add_identR
-  p                ≃ _ := eqv_refl
-
-/--
-The rational number `-1` is a square root of unity.
-
-**Property and proof intuition**: This is a (nearly) trivial corollary of the
-proof that integer square roots of unity are also rational square roots of
-unity. There's a single, technical, complication in that the most natural
-syntax for representing `-1` as a rational number is `(-1 : ℚ)`, but this is
-interpreted as `(-(1 : ℤ) : ℚ)` by Lean, instead of the more convenient
-`((-1 : ℤ) : ℚ)`.
--/
-instance sqrt1_neg_one : Sqrt1 (-1 : ℚ) := by
-  have : Integer.Sqrt1 (-1 : ℤ) := Integer.sqrt1_neg_one
-  have : Sqrt1 ((-1 : ℤ) : ℚ) := from_integer_preserves_sqrt1.mpr this
-  have : Sqrt1 (-1 : ℚ) := sqrt1_subst neg_compat_from_integer this
-  exact this
-
-/--
 Square roots of unity are nonzero.
 
 **Property and proof intuition**: Trivial because `p * p ≃ 1` can only hold if
@@ -281,6 +266,10 @@ unity in contexts where they need to be nonzero, such as taking reciprocals.
 -/
 instance sqrt1_nonzero_inst {p : ℚ} [Sqrt1 p] : AP (p ≄ 0) :=
   AP.mk (sqrt1_nonzero ‹Sqrt1 p›)
+
+end mul_only
+section sub_only
+variable [Subtraction ℚ]
 
 /--
 Replacing the left operand of subtraction with an equivalent value gives an
@@ -319,22 +308,6 @@ theorem sub_substR {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → q - p₁ ≃ q - p₂
     q + -p₁ ≃ _ := add_substR (neg_subst ‹p₁ ≃ p₂›)
     q + -p₂ ≃ _ := eqv_symm sub_add_neg
     q - p₂  ≃ _ := eqv_refl
-
-/--
-Negating a subtraction operation swaps its operands.
-
-For intuition, see the identical proof for integers, `Integer.sub_neg_flip`.
--/
-theorem neg_sub {p q : ℚ} : -(p - q) ≃ q - p := calc
-  -(p - q)             ≃ _ := eqv_symm mul_neg_one
-  (-1) * (p - q)       ≃ _ := mul_substR sub_add_neg
-  (-1) * (p + -q)      ≃ _ := mul_distribL
-  (-1) * p + (-1) * -q ≃ _ := add_substL mul_neg_one
-  (-p) + (-1) * -q     ≃ _ := add_substR mul_neg_one
-  (-p) + -(-q)         ≃ _ := add_substR neg_involutive
-  (-p) + q             ≃ _ := add_comm
-  q + -p               ≃ _ := eqv_symm sub_add_neg
-  q - p                ≃ _ := eqv_refl
 
 /--
 Two rational numbers are equal if and only if their difference is zero.
@@ -408,6 +381,41 @@ theorem add_sub_telescope {p q r : ℚ} : (p - q) + (q - r) ≃ p - r := calc
   (p + -r) + 0        ≃ _ := add_identR
   p + -r              ≃ _ := eqv_symm sub_add_neg
   p - r               ≃ _ := eqv_refl
+
+end sub_only
+variable [Multiplication ℚ] [Subtraction ℚ]
+
+/--
+The rational number `-1` is a square root of unity.
+
+**Property and proof intuition**: This is a (nearly) trivial corollary of the
+proof that integer square roots of unity are also rational square roots of
+unity. There's a single, technical, complication in that the most natural
+syntax for representing `-1` as a rational number is `(-1 : ℚ)`, but this is
+interpreted as `(-(1 : ℤ) : ℚ)` by Lean, instead of the more convenient
+`((-1 : ℤ) : ℚ)`.
+-/
+instance sqrt1_neg_one : Sqrt1 (-1 : ℚ) := by
+  have : Integer.Sqrt1 (-1 : ℤ) := Integer.sqrt1_neg_one
+  have : Sqrt1 ((-1 : ℤ) : ℚ) := from_integer_preserves_sqrt1.mpr this
+  have : Sqrt1 (-1 : ℚ) := sqrt1_subst neg_compat_from_integer this
+  exact this
+
+/--
+Negating a subtraction operation swaps its operands.
+
+For intuition, see the identical proof for integers, `Integer.sub_neg_flip`.
+-/
+theorem neg_sub {p q : ℚ} : -(p - q) ≃ q - p := calc
+  -(p - q)             ≃ _ := eqv_symm mul_neg_one
+  (-1) * (p - q)       ≃ _ := mul_substR sub_add_neg
+  (-1) * (p + -q)      ≃ _ := mul_distribL
+  (-1) * p + (-1) * -q ≃ _ := add_substL mul_neg_one
+  (-p) + (-1) * -q     ≃ _ := add_substR mul_neg_one
+  (-p) + -(-q)         ≃ _ := add_substR neg_involutive
+  (-p) + q             ≃ _ := add_comm
+  q + -p               ≃ _ := eqv_symm sub_add_neg
+  q - p                ≃ _ := eqv_refl
 
 /--
 A common left operand can be removed from a subtraction of two sums.

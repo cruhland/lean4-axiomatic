@@ -34,7 +34,7 @@ These results follow from the generic definitions in `Sign` and don't depend on
 a specific implementation of natural numbers.
 -/
 
-variable {ℕ : Type} [Core ℕ] [Induction.{0} ℕ] [Addition ℕ] [Sign ℕ]
+variable {ℕ : Type} [Core ℕ] [Sign ℕ]
 
 /--
 The `Positive` predicate respects equivalence.
@@ -74,6 +74,8 @@ theorem one_positive : Positive (1 : ℕ) :=
   have : Positive (step 0) := step_positive
   positive_subst ‹step 0 ≃ 1› ‹Positive (step 0)›
 
+variable [Induction ℕ]
+
 /--
 Every positive natural number is the successor of a natural number.
 
@@ -96,6 +98,8 @@ theorem positive_step {n : ℕ} : Positive n → ∃ m : ℕ, step m ≃ n := by
     exists n
     show step n ≃ step n
     exact Rel.refl
+
+variable [Addition ℕ]
 
 /--
 Addition to a positive number preserves its positivity.

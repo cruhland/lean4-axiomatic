@@ -202,7 +202,7 @@ theorem add_eqv_denominators
   a//d + b//d
     ≃ _ := eqv_refl
   (a * d + d * b)//(d * d)
-    ≃ _ := substN (AA.substR AA.comm)
+    ≃ _ := substN (Integer.add_substR AA.comm)
   (a * d + b * d)//(d * d)
     ≃ _ := substN (Rel.symm AA.distribR)
   ((a + b) * d)//(d * d)

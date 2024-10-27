@@ -96,8 +96,7 @@ attribute [instance] Sign.toProps
 
 variable {ℕ ℤ ℚ : Type}
   [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
-  [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
-  [Negation ℚ] [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ] [Sign ℚ]
+  [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ] [Sign ℚ]
 
 /--
 Zero's sign is zero, and it's the only rational number with that sign value.
@@ -119,6 +118,16 @@ theorem sgn_zero {p : ℚ} : p ≃ 0 ↔ sgn p ≃ 0 := by
       0                 ≃ _ := Rel.refl
   case mpr =>
     exact Sign.Props.sgn_zero_only_for_zero
+
+/--
+Allows the syntax `sgn p` to be used in places that require a nonzero value,
+such as under a division operator, as long as the underlying value `p` is also
+nonzero.
+-/
+instance sgn_preserves_nonzero_inst
+    {p : ℚ} [AP (p ≄ 0)] : AP (sgn p ≄ 0)
+    :=
+  ‹AP (p ≄ 0)›.map (mt sgn_zero.mpr)
 
 /--
 The sign of (the rational number) one, is one.
@@ -170,6 +179,147 @@ theorem sgn_compat_neg {p : ℚ} : sgn (-p) ≃ -(sgn p) := calc
   _ ≃ sgn (-1 : ℚ) * sgn p := sgn_compat_mul
   _ ≃ -1 * sgn p           := AA.substL sgn_neg_one
   _ ≃ -(sgn p)             := Integer.mul_neg_one
+
+/--
+The sign of a nonzero rational number is a square root of unity.
+
+**Property and proof intuition**: The allowed sign values are `1`, `0`, and
+`-1`; nonzero rationals have nonzero signs; `1` and `-1` are square roots of
+unity.
+-/
+theorem sqrt1_sgn_nonzero {p : ℚ} : p ≄ 0 → Integer.Sqrt1 (sgn p) := by
+  intro (_ : p ≄ 0)
+  show Integer.Sqrt1 (sgn p)
+
+  have : AA.OneOfThree (sgn p ≃ 0) (sgn p ≃ 1) (sgn p ≃ -1) := sgn_trichotomy p
+  have : sgn p ≃ 1 ∨ sgn p ≃ -1 :=
+    match this with
+    | AA.OneOfThree.first (_ : sgn p ≃ 0) =>
+      have : sgn p ≄ 0 := mt sgn_zero.mpr ‹p ≄ 0›
+      absurd ‹sgn p ≃ 0› ‹sgn p ≄ 0›
+    | AA.OneOfThree.second (_ : sgn p ≃ 1) =>
+      Or.inl ‹sgn p ≃ 1›
+    | AA.OneOfThree.third (_ : sgn p ≃ -1) =>
+      Or.inr ‹sgn p ≃ -1›
+  have : Integer.Sqrt1 (sgn p) := Integer.sqrt1_cases.mpr this
+  exact this
+
+/--
+For a product of rational numbers to be zero, at least one of its factors must
+be zero.
+
+**Property intuition**: This holds for integers, and since rational numbers
+are just scaled integers it should hold for them as well.
+
+**Proof intuition**: The `sgn` of a rational number is an integer, so we can
+use the integer version of this property to show that the sign value of one of
+the factors must be zero. But only zero has a zero sign value, so one of the
+rational numbers must itself be zero.
+-/
+theorem mul_split_zero {p q : ℚ} : p * q ≃ 0 ↔ p ≃ 0 ∨ q ≃ 0 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : p * q ≃ 0)
+    show p ≃ 0 ∨ q ≃ 0
+    have : sgn p * sgn q ≃ 0 := calc
+      sgn p * sgn q ≃ _ := Rel.symm sgn_compat_mul
+      sgn (p * q)   ≃ _ := sgn_zero.mp ‹p * q ≃ 0›
+      0             ≃ _ := Rel.refl
+    have : sgn p ≃ 0 ∨ sgn q ≃ 0 := Integer.mul_split_zero.mp this
+    have : p ≃ 0 ∨ q ≃ 0 := match this with
+    | Or.inl (_ : sgn p ≃ 0) =>
+      have : p ≃ 0 := sgn_zero.mpr ‹sgn p ≃ 0›
+      Or.inl this
+    | Or.inr (_ : sgn q ≃ 0) =>
+      have : q ≃ 0 := sgn_zero.mpr ‹sgn q ≃ 0›
+      Or.inr this
+    exact this
+  case mpr =>
+    intro (_ : p ≃ 0 ∨ q ≃ 0)
+    show p * q ≃ 0
+    match ‹p ≃ 0 ∨ q ≃ 0› with
+    | Or.inl (_ : p ≃ 0) => calc
+      p * q ≃ _ := mul_substL ‹p ≃ 0›
+      0 * q ≃ _ := mul_absorbL
+      0     ≃ _ := eqv_refl
+    | Or.inr (_ : q ≃ 0) => calc
+      p * q ≃ _ := mul_substR ‹q ≃ 0›
+      p * 0 ≃ _ := mul_absorbR
+      0     ≃ _ := eqv_refl
+
+/--
+Instance for the zero-product property in the rationals.
+
+This enables the use of abstract algebraic theorems depending on this property,
+in proofs involving rational numbers.
+-/
+instance zero_product_inst : AA.ZeroProduct (α := ℚ) (· * ·) := {
+  zero_prod := mul_split_zero.mp
+}
+
+/--
+For a product of rational numbers to be nonzero, both of its factors must be
+nonzero.
+
+**Property and proof intuition**: The contrapositive of `mul_split_zero`.
+-/
+theorem mul_split_nonzero {p q : ℚ} : p * q ≄ 0 ↔ p ≄ 0 ∧ q ≄ 0 := calc
+  _ ↔ p * q ≄ 0           := Iff.rfl
+  _ ↔ ¬(p * q ≃ 0)        := Iff.rfl
+  _ ↔ ¬(p ≃ 0 ∨ q ≃ 0)    := Logic.iff_subst_contra mt mul_split_zero
+  _ ↔ ¬(p ≃ 0) ∧ ¬(q ≃ 0) := Logic.not_or_iff_and_not
+  _ ↔ p ≄ 0 ∧ q ≄ 0       := Iff.rfl
+
+/--
+Enables clean syntax when taking reciprocals of, or dividing by, products.
+-/
+instance mul_split_nonzero_mpr_inst
+    {p q : ℚ} [AP (p ≄ 0)] [AP (q ≄ 0)] : AP (p * q ≄ 0)
+    :=
+  AP.mk (mul_split_nonzero.mpr (And.intro ‹AP (p ≄ 0)›.ev ‹AP (q ≄ 0)›.ev))
+
+/--
+The largest sign value is one.
+
+**Property and proof intuition**: The three possible sign values are `-1`, `0`,
+and `1`. Show that each of these is less than or equal to `1`.
+-/
+theorem sgn_max {p : ℚ} : sgn p ≤ 1 := by
+  have : AA.OneOfThree (sgn p ≃ 0) (sgn p ≃ 1) (sgn p ≃ -1) := sgn_trichotomy p
+  match this with
+  | AA.OneOfThree.first (_ : sgn p ≃ 0) =>
+    have : (0 : ℤ) < 1 := Integer.zero_lt_one
+    have : (0 : ℤ) ≤ 1 := Integer.le_split.mpr (Or.inl this)
+    have : sgn p ≤ 1 := Integer.le_substL_eqv (Rel.symm ‹sgn p ≃ 0›) this
+    exact this
+  | AA.OneOfThree.second (_ : sgn p ≃ 1) =>
+    have : (1 : ℤ) ≤ 1 := Integer.le_refl
+    have : sgn p ≤ 1 := Integer.le_substL_eqv (Rel.symm ‹sgn p ≃ 1›) this
+    exact this
+  | AA.OneOfThree.third (_ : sgn p ≃ -1) =>
+    have : (-1 : ℤ) < 0 := Integer.neg_one_lt_zero
+    have : (0 : ℤ) < 1 := Integer.zero_lt_one
+    have : (-1 : ℤ) < 1 := Integer.trans_lt_lt_lt ‹(-1 : ℤ) < 0› ‹(0 : ℤ) < 1›
+    have : (-1 : ℤ) ≤ 1 := Integer.le_split.mpr (Or.inl this)
+    have : sgn p ≤ 1 := Integer.le_substL_eqv (Rel.symm ‹sgn p ≃ -1›) this
+    exact this
+
+/--
+The smallest sign value is negative one.
+
+**Proof intuition**: Use `sgn_max` on the negation of the input number, then
+transform algebraically to show the result.
+-/
+theorem sgn_min {p : ℚ} : sgn p ≥ -1 := by
+  have : sgn (-p) ≤ 1 := sgn_max
+  have : -(sgn (-p)) ≥ -1 := Integer.le_neg_flip.mp this
+  have : -(-(sgn p)) ≥ -1 :=
+    Integer.le_substR_eqv (AA.subst₁ sgn_compat_neg) this
+  have : sgn p ≥ -1 := Integer.le_substR_eqv Integer.neg_involutive this
+  exact this
+
+section sub_only
+variable [Subtraction ℚ]
 
 /--
 Removing a common positive left factor from a difference of two rational
@@ -282,28 +432,32 @@ theorem sgn_sub_cancelR_mul_neg
     _ ≃ sgn (q - p)         := sgn_sub_cancelL_mul_neg ‹sgn r ≃ -1›
 
 /--
-The sign of a nonzero rational number is a square root of unity.
+Two rational numbers are equivalent exactly when the sign of their difference
+is zero.
 
-**Property and proof intuition**: The allowed sign values are `1`, `0`, and
-`-1`; nonzero rationals have nonzero signs; `1` and `-1` are square roots of
-unity.
+This lemma is mainly useful to support the proof of `order_trichotomy`.
+
+**Property and proof intuition**: We already know that rational numbers are
+equivalent when their difference is zero (`sub_eqv_zero_iff_eqv`); combine that
+with the proof that the `sgn` of zero is zero.
 -/
-theorem sqrt1_sgn_nonzero {p : ℚ} : p ≄ 0 → Integer.Sqrt1 (sgn p) := by
-  intro (_ : p ≄ 0)
-  show Integer.Sqrt1 (sgn p)
+theorem eqv_sgn {p q : ℚ} : p ≃ q ↔ sgn (p - q) ≃ 0 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : p ≃ q)
+    show sgn (p - q) ≃ 0
+    have : p - q ≃ 0 := sub_eqv_zero_iff_eqv.mpr ‹p ≃ q›
+    have : sgn (p - q) ≃ 0 := sgn_zero.mp this
+    exact this
+  case mpr =>
+    intro (_ : sgn (p - q) ≃ 0)
+    show p ≃ q
+    have : p - q ≃ 0 := sgn_zero.mpr ‹sgn (p - q) ≃ 0›
+    have : p ≃ q := sub_eqv_zero_iff_eqv.mp this
+    exact this
 
-  have : AA.OneOfThree (sgn p ≃ 0) (sgn p ≃ 1) (sgn p ≃ -1) := sgn_trichotomy p
-  have : sgn p ≃ 1 ∨ sgn p ≃ -1 :=
-    match this with
-    | AA.OneOfThree.first (_ : sgn p ≃ 0) =>
-      have : sgn p ≄ 0 := mt sgn_zero.mpr ‹p ≄ 0›
-      absurd ‹sgn p ≃ 0› ‹sgn p ≄ 0›
-    | AA.OneOfThree.second (_ : sgn p ≃ 1) =>
-      Or.inl ‹sgn p ≃ 1›
-    | AA.OneOfThree.third (_ : sgn p ≃ -1) =>
-      Or.inr ‹sgn p ≃ -1›
-  have : Integer.Sqrt1 (sgn p) := Integer.sqrt1_cases.mpr this
-  exact this
+end sub_only
+variable [Reciprocation ℚ]
 
 /--
 Taking the reciprocal of a rational number preserves its sign.
@@ -330,16 +484,6 @@ theorem sgn_recip {p : ℚ} [AP (p ≄ 0)] : sgn (p⁻¹) ≃ sgn p := by
     sgn p                       ≃ _ := Rel.refl
 
 /--
-Allows the syntax `sgn p` to be used in places that require a nonzero value,
-such as under a division operator, as long as the underlying value `p` is also
-nonzero.
--/
-instance sgn_preserves_nonzero_inst
-    {p : ℚ} [AP (p ≄ 0)] : AP (sgn p ≄ 0)
-    :=
-  ‹AP (p ≄ 0)›.map (mt sgn_zero.mpr)
-
-/--
 Extracting the sign of a rational number, and taking its reciprocal, can be
 performed in either order and achieve the same result.
 
@@ -357,6 +501,53 @@ theorem sgn_swap_recip
   _ = (sgn (p⁻¹):ℚ) := rfl
   _ ≃ (sgn p:ℚ)     := from_integer_subst sgn_recip
   _ ≃ (sgn p:ℚ)⁻¹   := eqv_symm recip_sqrt1
+
+/--
+Taking the reciprocal of a product of rational numbers is equivalent to the
+product of each of their reciprocals.
+
+**Property intuition**: Reciprocals and products have independent effects on
+fractions, so it makes sense that they can be done in any order.
+
+**Proof intuition**: Follows from algebraic operations, mostly associativity
+and the multiplicative identity and inverse properties.
+-/
+theorem recip_compat_mul
+    {p q : ℚ} [AP (p ≄ 0)] [AP (q ≄ 0)] : (p * q)⁻¹ ≃ p⁻¹ * q⁻¹
+    := by
+  have inv_p : 1 ≃ p * p⁻¹ := eqv_symm mul_inverseR
+  have inv_q : 1 ≃ q * q⁻¹ := eqv_symm mul_inverseR
+  have swap_middle : (p * p⁻¹) * (q * q⁻¹) ≃ (p * q) * (p⁻¹ * q⁻¹) :=
+    AA.expr_xxfxxff_lr_swap_rl
+  calc
+    (p * q)⁻¹                           ≃ _ := eqv_symm mul_identR
+    (p * q)⁻¹ * 1                       ≃ _ := mul_substR (eqv_symm mul_identR)
+    (p * q)⁻¹ * (1 * 1)                 ≃ _ := mul_substR (mul_substL inv_p)
+    (p * q)⁻¹ * ((p * p⁻¹) * 1)         ≃ _ := mul_substR (mul_substR inv_q)
+    (p * q)⁻¹ * ((p * p⁻¹) * (q * q⁻¹)) ≃ _ := mul_substR swap_middle
+    (p * q)⁻¹ * ((p * q) * (p⁻¹ * q⁻¹)) ≃ _ := eqv_symm mul_assoc
+    ((p * q)⁻¹ * (p * q)) * (p⁻¹ * q⁻¹) ≃ _ := mul_substL mul_inverseL
+    1 * (p⁻¹ * q⁻¹)                     ≃ _ := mul_identL
+    p⁻¹ * q⁻¹                           ≃ _ := eqv_refl
+
+/--
+Taking the reciprocal of a negated rational number is equivalent to negating
+its reciprocal.
+
+**Property intuition**: Reciprocals and negation have independent effects on
+fractions, so it makes sense that they can be done in any order.
+
+**Proof intuition**: Convert negation to multiplication by `-1`, then use the
+result that reciprocals are compatible with multiplication.
+-/
+theorem recip_compat_neg {p : ℚ} [AP (p ≄ 0)] : (-p)⁻¹ ≃ -p⁻¹ := calc
+  (-p)⁻¹       ≃ _ := recip_subst (eqv_symm mul_neg_one)
+  (-1 * p)⁻¹   ≃ _ := recip_compat_mul
+  (-1)⁻¹ * p⁻¹ ≃ _ := mul_substL recip_sqrt1
+  (-1) * p⁻¹   ≃ _ := mul_neg_one
+  (-p⁻¹)       ≃ _ := eqv_refl
+
+variable [Division ℚ]
 
 /--
 The ordering of sign and division operations on rational numbers doesn't
@@ -477,66 +668,6 @@ theorem nonzero_if_neg {p : ℚ} : sgn p ≃ -1 → p ≄ 0 := by
   exact this
 
 /--
-Removing a common positive denominator from a difference of two fractions will
-leave the difference's sign value unchanged.
-
-This is a useful lemma for proving properties of ordering relations, which are
-defined using signs of differences.
-
-**Property intuition**: The positive divisor doesn't change the signs of the
-difference's operands, and it can only scale their magnitudes, not change their
-relative ordering.
-
-**Proof intuition**: Convert the divisions to multiplication by reciprocals.
-The reciprocals of positive numbers are positive. Delegate to the
-multiplicative version of this property.
--/
-theorem sgn_sub_cancelR_div_pos
-    {p q r : ℚ} (r_pos : sgn r ≃ 1)
-    : have : AP (r ≄ 0) := AP.mk (nonzero_if_pos ‹sgn r ≃ 1›)
-      sgn (p/r - q/r) ≃ sgn (p - q)
-    := by
-  intro (_ : AP (r ≄ 0))
-  show sgn (p/r - q/r) ≃ sgn (p - q)
-
-  have : sgn (r⁻¹) ≃ 1 := Rel.trans sgn_recip ‹sgn r ≃ 1›
-  calc
-    _ ≃ sgn (p/r - q/r)         := Rel.refl
-    _ ≃ sgn (p * r⁻¹ - q/r)     := sgn_subst (sub_substL div_mul_recip)
-    _ ≃ sgn (p * r⁻¹ - q * r⁻¹) := sgn_subst (sub_substR div_mul_recip)
-    _ ≃ sgn (p - q)             := sgn_sub_cancelR_mul_pos this
-
-/--
-Removing a common negative right factor from a difference of two rational
-numbers will leave the difference's sign value unchanged only if its remaining
-operands are swapped.
-
-This is a useful lemma for proving properties of ordering relations, which are
-defined using signs of differences.
-
-**Property intuition**: The negative divisor reflects the two numbers across
-zero, reversing their relative ordering. (Their magnitudes may also be scaled,
-but that doesn't affect order.) That inverts the sign of their difference; swap
-the operands to compensate.
-
-**Proof intuition**: Convert the divisions to multiplication by reciprocals.
-The reciprocals of negative numbers are negative. Delegate to the
-multiplicative version of this property.
--/
-theorem sgn_sub_cancelR_div_neg
-    {p q r : ℚ} (r_neg : sgn r ≃ -1)
-    : have : AP (r ≄ 0) := AP.mk (nonzero_if_neg ‹sgn r ≃ -1›)
-      sgn (p/r - q/r) ≃ sgn (q - p)
-    := by
-  intro (_ : AP (r ≄ 0))
-  have : sgn (r⁻¹) ≃ -1 := Rel.trans sgn_recip ‹sgn r ≃ -1›
-  calc
-    _ ≃ sgn (p/r - q/r)         := Rel.refl
-    _ ≃ sgn (p * r⁻¹ - q/r)     := sgn_subst (sub_substL div_mul_recip)
-    _ ≃ sgn (p * r⁻¹ - q * r⁻¹) := sgn_subst (sub_substR div_mul_recip)
-    _ ≃ sgn (q - p)             := sgn_sub_cancelR_mul_neg this
-
-/--
 The square of a rational number is nonnegative.
 
 **Property intuition**: The product of two negative numbers is positive, and
@@ -556,138 +687,6 @@ theorem nonneg_square {p : ℚ} : sgn (p * p) ≄ -1 := by
   have : sgn (p * p) ≄ -1 :=
     AA.neqv_substL ‹sgn (sgn p * sgn p) ≃ sgn (p * p)› this
   exact this
-
-/--
-For a product of rational numbers to be zero, at least one of its factors must
-be zero.
-
-**Property intuition**: This holds for integers, and since rational numbers
-are just scaled integers it should hold for them as well.
-
-**Proof intuition**: The `sgn` of a rational number is an integer, so we can
-use the integer version of this property to show that the sign value of one of
-the factors must be zero. But only zero has a zero sign value, so one of the
-rational numbers must itself be zero.
--/
-theorem mul_split_zero {p q : ℚ} : p * q ≃ 0 ↔ p ≃ 0 ∨ q ≃ 0 := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : p * q ≃ 0)
-    show p ≃ 0 ∨ q ≃ 0
-    have : sgn p * sgn q ≃ 0 := calc
-      sgn p * sgn q ≃ _ := Rel.symm sgn_compat_mul
-      sgn (p * q)   ≃ _ := sgn_zero.mp ‹p * q ≃ 0›
-      0             ≃ _ := Rel.refl
-    have : sgn p ≃ 0 ∨ sgn q ≃ 0 := Integer.mul_split_zero.mp this
-    have : p ≃ 0 ∨ q ≃ 0 := match this with
-    | Or.inl (_ : sgn p ≃ 0) =>
-      have : p ≃ 0 := sgn_zero.mpr ‹sgn p ≃ 0›
-      Or.inl this
-    | Or.inr (_ : sgn q ≃ 0) =>
-      have : q ≃ 0 := sgn_zero.mpr ‹sgn q ≃ 0›
-      Or.inr this
-    exact this
-  case mpr =>
-    intro (_ : p ≃ 0 ∨ q ≃ 0)
-    show p * q ≃ 0
-    match ‹p ≃ 0 ∨ q ≃ 0› with
-    | Or.inl (_ : p ≃ 0) => calc
-      p * q ≃ _ := mul_substL ‹p ≃ 0›
-      0 * q ≃ _ := mul_absorbL
-      0     ≃ _ := eqv_refl
-    | Or.inr (_ : q ≃ 0) => calc
-      p * q ≃ _ := mul_substR ‹q ≃ 0›
-      p * 0 ≃ _ := mul_absorbR
-      0     ≃ _ := eqv_refl
-
-/--
-Instance for the zero-product property in the rationals.
-
-This enables the use of abstract algebraic theorems depending on this property,
-in proofs involving rational numbers.
--/
-instance zero_product_inst : AA.ZeroProduct (α := ℚ) (· * ·) := {
-  zero_prod := mul_split_zero.mp
-}
-
-/--
-For a product of rational numbers to be nonzero, both of its factors must be
-nonzero.
-
-**Property and proof intuition**: The contrapositive of `mul_split_zero`.
--/
-theorem mul_split_nonzero {p q : ℚ} : p * q ≄ 0 ↔ p ≄ 0 ∧ q ≄ 0 := calc
-  _ ↔ p * q ≄ 0           := Iff.rfl
-  _ ↔ ¬(p * q ≃ 0)        := Iff.rfl
-  _ ↔ ¬(p ≃ 0 ∨ q ≃ 0)    := Logic.iff_subst_contra mt mul_split_zero
-  _ ↔ ¬(p ≃ 0) ∧ ¬(q ≃ 0) := Logic.not_or_iff_and_not
-  _ ↔ p ≄ 0 ∧ q ≄ 0       := Iff.rfl
-
-/--
-Enables clean syntax when taking reciprocals of, or dividing by, products.
--/
-instance mul_split_nonzero_mpr_inst
-    {p q : ℚ} [AP (p ≄ 0)] [AP (q ≄ 0)] : AP (p * q ≄ 0)
-    :=
-  AP.mk (mul_split_nonzero.mpr (And.intro ‹AP (p ≄ 0)›.ev ‹AP (q ≄ 0)›.ev))
-
-/--
-Taking the reciprocal of a product of rational numbers is equivalent to the
-product of each of their reciprocals.
-
-**Property intuition**: Reciprocals and products have independent effects on
-fractions, so it makes sense that they can be done in any order.
-
-**Proof intuition**: Follows from algebraic operations, mostly associativity
-and the multiplicative identity and inverse properties.
--/
-theorem recip_compat_mul
-    {p q : ℚ} [AP (p ≄ 0)] [AP (q ≄ 0)] : (p * q)⁻¹ ≃ p⁻¹ * q⁻¹
-    := by
-  have inv_p : 1 ≃ p * p⁻¹ := eqv_symm mul_inverseR
-  have inv_q : 1 ≃ q * q⁻¹ := eqv_symm mul_inverseR
-  have swap_middle : (p * p⁻¹) * (q * q⁻¹) ≃ (p * q) * (p⁻¹ * q⁻¹) :=
-    AA.expr_xxfxxff_lr_swap_rl
-  calc
-    (p * q)⁻¹                           ≃ _ := eqv_symm mul_identR
-    (p * q)⁻¹ * 1                       ≃ _ := mul_substR (eqv_symm mul_identR)
-    (p * q)⁻¹ * (1 * 1)                 ≃ _ := mul_substR (mul_substL inv_p)
-    (p * q)⁻¹ * ((p * p⁻¹) * 1)         ≃ _ := mul_substR (mul_substR inv_q)
-    (p * q)⁻¹ * ((p * p⁻¹) * (q * q⁻¹)) ≃ _ := mul_substR swap_middle
-    (p * q)⁻¹ * ((p * q) * (p⁻¹ * q⁻¹)) ≃ _ := eqv_symm mul_assoc
-    ((p * q)⁻¹ * (p * q)) * (p⁻¹ * q⁻¹) ≃ _ := mul_substL mul_inverseL
-    1 * (p⁻¹ * q⁻¹)                     ≃ _ := mul_identL
-    p⁻¹ * q⁻¹                           ≃ _ := eqv_refl
-
-/--
-Taking the reciprocal of a negated rational number is equivalent to negating
-its reciprocal.
-
-**Property intuition**: Reciprocals and negation have independent effects on
-fractions, so it makes sense that they can be done in any order.
-
-**Proof intuition**: Convert negation to multiplication by `-1`, then use the
-result that reciprocals are compatible with multiplication.
--/
-theorem recip_compat_neg {p : ℚ} [AP (p ≄ 0)] : (-p)⁻¹ ≃ -p⁻¹ := calc
-  (-p)⁻¹       ≃ _ := recip_subst (eqv_symm mul_neg_one)
-  (-1 * p)⁻¹   ≃ _ := recip_compat_mul
-  (-1)⁻¹ * p⁻¹ ≃ _ := mul_substL recip_sqrt1
-  (-1) * p⁻¹   ≃ _ := mul_neg_one
-  (-p⁻¹)       ≃ _ := eqv_refl
-
-/--
-Negation can be moved between the "outside" of a division operation and the
-"inside", specifically its left operand.
-
-**Property and proof intuition**: The same property holds for multiplication,
-and division is a form of multiplication.
--/
-theorem neg_scompatL_div {p q : ℚ} [AP (q ≄ 0)] : -(p / q) ≃ (-p) / q := calc
-  (-(p / q))   ≃ _ := neg_subst div_mul_recip
-  (-(p * q⁻¹)) ≃ _ := neg_scompatL_mul
-  (-p) * q⁻¹   ≃ _ := eqv_symm div_mul_recip
-  (-p) / q     ≃ _ := eqv_refl
 
 /--
 Negation can be moved between the "outside" of a division operation and the
@@ -991,31 +990,14 @@ theorem add_preserves_sign
     sgn ((a * d + b * c) * (b * d))
       ≃ _ := Integer.sgn_subst AA.distribR
     sgn (a * d * (b * d) + b * c * (b * d))
-      ≃ _ := Integer.sgn_subst (AA.substL AA.expr_xxfxxff_lr_swap_rl)
+      ≃ _ := Integer.sgn_subst (Integer.add_substL AA.expr_xxfxxff_lr_swap_rl)
     sgn (a * b * (d * d) + b * c * (b * d))
-      ≃ _ := Integer.sgn_subst (AA.substR AA.expr_xxfxxff_lr_swap_rl)
+      ≃ _ := Integer.sgn_subst (Integer.add_substR AA.expr_xxfxxff_lr_swap_rl)
     sgn (a * b * (d * d) + b * b * (c * d))
       ≃ _ := Integer.add_preserves_sign sgn_abdd sgn_bbcd
     s
       ≃ _ := Rel.refl
   exact this
-
-/--
-Division by a rational number distributes over addition of rational numbers.
-
-**Property intuition**: The result of the division is the same, whether the
-numbers are added before dividing them or after.
-
-**Proof intuition**: Expand division into multiplication by a reciprocal. The
-reciprocal factor distributes over addition. Then convert the two terms back to
-division.
--/
-theorem div_distribR {p q r : ℚ} [AP (r ≄ 0)] : (p + q)/r ≃ p/r + q/r := calc
-  _ = (p + q)/r         := rfl
-  _ ≃ (p + q) * r⁻¹     := div_mul_recip
-  _ ≃ p * r⁻¹ + q * r⁻¹ := mul_distribR
-  _ ≃ p/r + q * r⁻¹     := add_substL (eqv_symm div_mul_recip)
-  _ ≃ p/r + q/r         := add_substR (eqv_symm div_mul_recip)
 
 /--
 The result of adding two ratios of rational numbers can be written as a single
@@ -1037,6 +1019,81 @@ theorem add_fractions
   _ ≃ (p*s)/(q*s) + (q/q)*(r/s) := add_substR (mul_substL (eqv_symm div_same))
   _ ≃ (p*s)/(q*s) + (q*r)/(q*s) := add_substR div_mul_swap
   _ ≃ (p*s + q*r)/(q*s)         := eqv_symm div_distribR
+
+/--
+The only sign value greater than zero, is one.
+
+**Property intuition**: The only sign values are `1`, `0`, and `-1`.
+
+**Proof intuition**: The sign of any number greater than zero is one; taking
+the sign of a sign leaves it unchanged.
+-/
+theorem sgn_gt_zero_iff_pos {p : ℚ} : sgn p > 0 ↔ sgn p ≃ 1 := calc
+  _ ↔ sgn p > 0       := Iff.rfl
+  _ ↔ sgn (sgn p) ≃ 1 := Integer.gt_zero_sgn
+  _ ↔ sgn p ≃ 1       := AA.eqv_substL_iff sgn_idemp
+
+variable [Subtraction ℚ]
+
+/--
+Removing a common positive denominator from a difference of two fractions will
+leave the difference's sign value unchanged.
+
+This is a useful lemma for proving properties of ordering relations, which are
+defined using signs of differences.
+
+**Property intuition**: The positive divisor doesn't change the signs of the
+difference's operands, and it can only scale their magnitudes, not change their
+relative ordering.
+
+**Proof intuition**: Convert the divisions to multiplication by reciprocals.
+The reciprocals of positive numbers are positive. Delegate to the
+multiplicative version of this property.
+-/
+theorem sgn_sub_cancelR_div_pos
+    {p q r : ℚ} (r_pos : sgn r ≃ 1)
+    : have : AP (r ≄ 0) := AP.mk (nonzero_if_pos ‹sgn r ≃ 1›)
+      sgn (p/r - q/r) ≃ sgn (p - q)
+    := by
+  intro (_ : AP (r ≄ 0))
+  show sgn (p/r - q/r) ≃ sgn (p - q)
+
+  have : sgn (r⁻¹) ≃ 1 := Rel.trans sgn_recip ‹sgn r ≃ 1›
+  calc
+    _ ≃ sgn (p/r - q/r)         := Rel.refl
+    _ ≃ sgn (p * r⁻¹ - q/r)     := sgn_subst (sub_substL div_mul_recip)
+    _ ≃ sgn (p * r⁻¹ - q * r⁻¹) := sgn_subst (sub_substR div_mul_recip)
+    _ ≃ sgn (p - q)             := sgn_sub_cancelR_mul_pos this
+
+/--
+Removing a common negative right factor from a difference of two rational
+numbers will leave the difference's sign value unchanged only if its remaining
+operands are swapped.
+
+This is a useful lemma for proving properties of ordering relations, which are
+defined using signs of differences.
+
+**Property intuition**: The negative divisor reflects the two numbers across
+zero, reversing their relative ordering. (Their magnitudes may also be scaled,
+but that doesn't affect order.) That inverts the sign of their difference; swap
+the operands to compensate.
+
+**Proof intuition**: Convert the divisions to multiplication by reciprocals.
+The reciprocals of negative numbers are negative. Delegate to the
+multiplicative version of this property.
+-/
+theorem sgn_sub_cancelR_div_neg
+    {p q r : ℚ} (r_neg : sgn r ≃ -1)
+    : have : AP (r ≄ 0) := AP.mk (nonzero_if_neg ‹sgn r ≃ -1›)
+      sgn (p/r - q/r) ≃ sgn (q - p)
+    := by
+  intro (_ : AP (r ≄ 0))
+  have : sgn (r⁻¹) ≃ -1 := Rel.trans sgn_recip ‹sgn r ≃ -1›
+  calc
+    _ ≃ sgn (p/r - q/r)         := Rel.refl
+    _ ≃ sgn (p * r⁻¹ - q/r)     := sgn_subst (sub_substL div_mul_recip)
+    _ ≃ sgn (p * r⁻¹ - q * r⁻¹) := sgn_subst (sub_substR div_mul_recip)
+    _ ≃ sgn (q - p)             := sgn_sub_cancelR_mul_neg this
 
 /--
 The result of subtracting two ratios of rational numbers can be written as a

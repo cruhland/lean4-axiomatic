@@ -10,7 +10,7 @@ open Relation.Equivalence (EqvOp)
 open Lean4Axiomatic.CA.Monoid (ident binop identL identR)
 
 variable
-  {ℕ : Type} [Core ℕ] [Induction.{1} ℕ] [Addition ℕ] [Multiplication ℕ]
+  {ℕ : Type} [Core ℕ] [Induction.{1} ℕ]
   {α : Type} [EqvOp α] [CA.Monoid.Monoid α]
 
 /-- Enables the use of `· * ·` syntax. -/

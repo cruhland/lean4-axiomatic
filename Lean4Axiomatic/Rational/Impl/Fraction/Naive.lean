@@ -316,17 +316,17 @@ example : (2//4 + (-1 : ℤ)//2).numerator ≃ 0 := by
     coe (step 1 * 2) + -4
       ≃ _ := AA.substL (AA.subst₁ Natural.step_mul)
     coe (1 * 2 + 2) + -4
-      ≃ _ := AA.substL (AA.subst₁ (AA.substL AA.identL))
+      ≃ _ := AA.substL (AA.subst₁ (Natural.add_substL AA.identL))
     coe (2 + 2) + -4
-      ≃ _ := AA.substL (AA.subst₁ (AA.substL Natural.literal_step))
+      ≃ _ := AA.substL (AA.subst₁ (Natural.add_substL Natural.literal_step))
     coe (step 1 + 2) + -4
       ≃ _ := AA.substL (AA.subst₁ Natural.step_add_swap)
     coe (1 + step 2) + -4
-      ≃ _ := AA.substL (AA.subst₁ (AA.substL Natural.literal_step))
+      ≃ _ := AA.substL (AA.subst₁ (Natural.add_substL Natural.literal_step))
     coe (step 0 + step 2) + -4
       ≃ _ := AA.substL (AA.subst₁ Natural.step_add_swap)
     coe (0 + step (step 2)) + -4
-      ≃ _ := AA.substL (AA.subst₁ AA.identL)
+      ≃ _ := AA.substL (AA.subst₁ Natural.zero_add)
     coe (step (step 2)) + -4
       ≃ _ := AA.substL (AA.subst₁ (AA.subst₁ (Rel.symm Natural.literal_step)))
     coe (step 3) + -4

@@ -8,7 +8,7 @@ open Lean4Axiomatic.Logic (AP)
 open Lean4Axiomatic.Relation.Equivalence (EqvOp)
 
 variable
-  {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ] [Integer.Induction.{1} ℤ]
+  {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
   {ℚ : Type}
     [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ]
     [Reciprocation ℚ] [Division ℚ] [Sign ℚ] [Natural.Exponentiation ℕ ℚ]
@@ -69,7 +69,7 @@ theorem on_diff_subst_pow
     _ = ((n₁ + m₂:ℕ):ℤ) := rfl
     _ ≃ (n₁:ℤ) + m₂     := AA.compat₂
     _ ≃ n₂ + m₁         := ‹(n₁:ℤ) + m₂ ≃ n₂ + m₁›
-    _ ≃ m₁ + n₂         := AA.comm
+    _ ≃ m₁ + n₂         := Integer.add_comm
     _ ≃ ((m₁ + n₂:ℕ):ℤ) := Rel.symm AA.compat₂
   have : n₁ + m₂ ≃ m₁ + n₂ := AA.inject this
   have pow_add_subst : p^(n₁ + m₂) ≃ p^(m₁ + n₂) := Natural.pow_substR this
@@ -83,6 +83,8 @@ theorem on_diff_subst_pow
     _ ≃ 1                             := div_same
   have : p^n₁ / p^m₁ ≃ p^n₂ / p^m₂ := div_eqv_1.mp this
   exact this
+
+variable [Integer.Induction.{1} ℤ]
 
 /--
 A "context" value that will be used to both (1) define the operation of

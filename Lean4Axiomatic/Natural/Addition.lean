@@ -141,7 +141,7 @@ Addition preserves equivalence of natural numbers; two equivalent natural
 numbers are still equivalent after the same quantity is added to both (on the
 right).
 -/
-theorem subst_add {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m := by
+theorem add_substL {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m := by
   apply ind_on (motive := λ x => ∀ y, x ≃ y → x + m ≃ y + m) n₁
   case zero =>
     intro n₂
@@ -172,17 +172,25 @@ theorem subst_add {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m 
         step (n₂ + m) ≃ _ := Rel.symm Addition.step_add
         step n₂ + m   ≃ _ := Rel.refl
 
-def add_substL
-    : AA.SubstitutiveOn Hand.L (α := ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·)
-    := {
-  subst₂ := λ (_ : True) => subst_add
-}
+/--
+Addition preserves equivalence of natural numbers; two equivalent natural
+numbers are still equivalent after the same quantity is added to both (on the
+left).
+-/
+theorem add_substR {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m + n₁ ≃ m + n₂ := by
+  intro (_ : n₁ ≃ n₂)
+  show m + n₁ ≃ m + n₂
+  calc
+    _ = m + n₁ := rfl
+    _ ≃ n₁ + m := add_comm
+    _ ≃ n₂ + m := add_substL ‹n₁ ≃ n₂›
+    _ ≃ m + n₂ := add_comm
 
 instance add_substitutive
     : AA.Substitutive₂ (α := ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·)
     := {
-  substitutiveL := add_substL
-  substitutiveR := AA.substR_from_substL_swap (rS := (· ≃ ·)) add_substL
+  substitutiveL := { subst₂ := λ (_ : True) => add_substL }
+  substitutiveR := { subst₂ := λ (_ : True) => add_substR }
 }
 
 /-- Adding one is the same as incrementing. -/
@@ -212,10 +220,7 @@ moved arbitrarily between terms. Given any particular grouping of a sum, all of
 the `step`s can be moved over to the first term, always producing the same
 result.
 -/
-instance add_associative : AA.Associative (α := ℕ) (· + ·) := by
-  constructor
-  intro n m k
-  show (n + m) + k ≃ n + (m + k)
+theorem add_assoc {n m k : ℕ} : (n + m) + k ≃ n + (m + k) := by
   apply ind_on (motive := λ n => (n + m) + k ≃ n + (m + k)) n
   case zero =>
     show (0 + m) + k ≃ 0 + (m + k)
@@ -232,6 +237,10 @@ instance add_associative : AA.Associative (α := ℕ) (· + ·) := by
       step ((n + m) + k) ≃ _ := AA.subst₁ ih
       step (n + (m + k)) ≃ _ := Rel.symm Addition.step_add
       step n + (m + k)   ≃ _ := Rel.refl
+
+instance add_associative : AA.Associative (α := ℕ) (· + ·) := {
+  assoc := add_assoc
+}
 
 /--
 The right-hand sides of two equal sums are equal if their left-hand sides are.

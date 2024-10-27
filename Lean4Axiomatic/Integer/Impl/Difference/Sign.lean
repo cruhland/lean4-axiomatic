@@ -64,7 +64,7 @@ theorem neg_diff_lt {n m : ℕ} : Negative (n——m) ↔ n < m := by
     have : n——m ≃ 0——k := Rel.trans ‹n——m ≃ -1 * coe k› (Rel.symm neg_diff)
     have : n + k ≃ 0 + m := ‹n——m ≃ 0——k›
     have : m ≃ n + k := calc
-      m     ≃ _ := Rel.symm AA.identL
+      m     ≃ _ := Rel.symm Natural.zero_add
       0 + m ≃ _ := Rel.symm ‹n + k ≃ 0 + m›
       n + k ≃ _ := Rel.refl
     exact Exists.intro k (And.intro ‹Positive k› ‹m ≃ n + k›)
@@ -83,7 +83,7 @@ theorem neg_diff_lt {n m : ℕ} : Negative (n——m) ↔ n < m := by
     show n + k ≃ 0 + m
     calc
       n + k ≃ _ := Rel.symm ‹m ≃ n + k›
-      m     ≃ _ := Rel.symm AA.identL
+      m     ≃ _ := Rel.symm Natural.zero_add
       0 + m ≃ _ := Rel.refl
 
 /--

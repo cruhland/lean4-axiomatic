@@ -59,11 +59,32 @@ variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Core ℤ] [Addition (ℕ := ℕ) ℤ]
 
 /--
+Non-typeclass version of `add_substitutive.substitutiveL`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+theorem add_substL {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → a₁ + b ≃ a₂ + b := AA.substL
+
+/--
+Non-typeclass version of `add_substitutive.substitutiveR`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+theorem add_substR {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → b + a₁ ≃ b + a₂ := AA.substR
+
+/--
 Non-typeclass version of `add_associative`.
 
 Eventually, this should become the axiom and the typeclass should be derived.
 -/
 theorem add_assoc {a b c : ℤ} : (a + b) + c ≃ a + (b + c) := AA.assoc
+
+/--
+Non-typeclass version of `add_commutative`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+theorem add_comm {a b : ℤ} : a + b ≃ b + a := AA.comm
 
 /--
 In the integers, one plus one is two.

@@ -45,8 +45,8 @@ theorem add_compat_from_integer
   show (a + b)//1 ≃ a//1 + b//1
   have : a//1 + b//1 ≃ (a + b)//1 := calc
     a//1 + b//1              ≃ _ := eqv_refl
-    (a * 1 + 1 * b)//(1 * 1) ≃ _ := substN (AA.substL AA.identR)
-    (a + 1 * b)//(1 * 1)     ≃ _ := substN (AA.substR AA.identL)
+    (a * 1 + 1 * b)//(1 * 1) ≃ _ := substN (Integer.add_substL AA.identR)
+    (a + 1 * b)//(1 * 1)     ≃ _ := substN (Integer.add_substR AA.identL)
     (a + b)//(1 * 1)         ≃ _ := substD AA.identL
     (a + b)//1               ≃ _ := eqv_refl
   exact eqv_symm this
@@ -65,9 +65,9 @@ theorem add_comm {p q : Fraction ℤ} : p + q ≃ q + p := by
   show pn//pd + qn//qd ≃ qn//qd + pn//pd
   calc
     pn//pd + qn//qd                ≃ _ := eqv_refl
-    (pn * qd + pd * qn)//(pd * qd) ≃ _ := substN (AA.substL AA.comm)
-    (qd * pn + pd * qn)//(pd * qd) ≃ _ := substN (AA.substR AA.comm)
-    (qd * pn + qn * pd)//(pd * qd) ≃ _ := substN AA.comm
+    (pn * qd + pd * qn)//(pd * qd) ≃ _ := substN (Integer.add_substL AA.comm)
+    (qd * pn + pd * qn)//(pd * qd) ≃ _ := substN (Integer.add_substR AA.comm)
+    (qd * pn + qn * pd)//(pd * qd) ≃ _ := substN Integer.add_comm
     (qn * pd + qd * pn)//(pd * qd) ≃ _ := substD AA.comm
     (qn * pd + qd * pn)//(qd * pd) ≃ _ := eqv_refl
     qn//qd + pn//pd                ≃ _ := eqv_refl
@@ -97,25 +97,25 @@ theorem add_substL {p₁ p₂ q : Fraction ℤ} : p₁ ≃ p₂ → p₁ + q ≃
     ((p₁n * qd + p₁d * qn) * p₂d) * qd
       ≃ _ := AA.substL AA.distribR
     ((p₁n * qd) * p₂d + (p₁d * qn) * p₂d) * qd
-      ≃ _ := AA.substL (AA.substL (AA.substL AA.comm))
+      ≃ _ := AA.substL (Integer.add_substL (AA.substL AA.comm))
     ((qd * p₁n) * p₂d + (p₁d * qn) * p₂d) * qd
-      ≃ _ := AA.substL (AA.substL AA.assoc)
+      ≃ _ := AA.substL (Integer.add_substL AA.assoc)
     (qd * (p₁n * p₂d) + (p₁d * qn) * p₂d) * qd
-      ≃ _ := AA.substL (AA.substL (AA.substR ‹p₁n * p₂d ≃ p₂n * p₁d›))
+      ≃ _ := AA.substL (Integer.add_substL (AA.substR ‹p₁n * p₂d ≃ p₂n * p₁d›))
     (qd * (p₂n * p₁d) + (p₁d * qn) * p₂d) * qd
-      ≃ _ := AA.substL (AA.substL (Rel.symm AA.assoc))
+      ≃ _ := AA.substL (Integer.add_substL (Rel.symm AA.assoc))
     ((qd * p₂n) * p₁d + (p₁d * qn) * p₂d) * qd
-      ≃ _ := AA.substL (AA.substR AA.assoc)
+      ≃ _ := AA.substL (Integer.add_substR AA.assoc)
     ((qd * p₂n) * p₁d + p₁d * (qn * p₂d)) * qd
-      ≃ _ := AA.substL (AA.substR AA.comm)
+      ≃ _ := AA.substL (Integer.add_substR AA.comm)
     ((qd * p₂n) * p₁d + (qn * p₂d) * p₁d) * qd
       ≃ _ := AA.substL (Rel.symm AA.distribR)
     ((qd * p₂n + qn * p₂d) * p₁d) * qd
       ≃ _ := AA.assoc
     (qd * p₂n + qn * p₂d) * (p₁d * qd)
-      ≃ _ := AA.substL (AA.substL AA.comm)
+      ≃ _ := AA.substL (Integer.add_substL AA.comm)
     (p₂n * qd + qn * p₂d) * (p₁d * qd)
-      ≃ _ := AA.substL (AA.substR AA.comm)
+      ≃ _ := AA.substL (Integer.add_substR AA.comm)
     (p₂n * qd + p₂d * qn) * (p₁d * qd)
       ≃ _ := Rel.refl
 
@@ -158,17 +158,17 @@ theorem add_assoc {p q r : Fraction ℤ} : (p + q) + r ≃ p + (q + r) := by
     (pn * qd + pd * qn)//(pd * qd) + rn//rd
       ≃ _ := eqv_refl
     ((pn * qd + pd * qn) * rd + (pd * qd) * rn)//((pd * qd) * rd)
-      ≃ _ := substN (AA.substL AA.distribR)
+      ≃ _ := substN (Integer.add_substL AA.distribR)
     (((pn * qd) * rd + (pd * qn) * rd) + (pd * qd) * rn)//((pd * qd) * rd)
-      ≃ _ := substN (AA.substL (AA.substL AA.assoc))
+      ≃ _ := substN (Integer.add_substL (Integer.add_substL AA.assoc))
     ((pn * (qd * rd) + (pd * qn) * rd) + (pd * qd) * rn)//((pd * qd) * rd)
-      ≃ _ := substN (AA.substL (AA.substR AA.assoc))
+      ≃ _ := substN (Integer.add_substL (Integer.add_substR AA.assoc))
     ((pn * (qd * rd) + pd * (qn * rd)) + (pd * qd) * rn)//((pd * qd) * rd)
-      ≃ _ := substN (AA.substR AA.assoc)
+      ≃ _ := substN (Integer.add_substR AA.assoc)
     ((pn * (qd * rd) + pd * (qn * rd)) + pd * (qd * rn))//((pd * qd) * rd)
-      ≃ _ := substN AA.assoc
+      ≃ _ := substN Integer.add_assoc
     (pn * (qd * rd) + (pd * (qn * rd) + pd * (qd * rn)))//((pd * qd) * rd)
-      ≃ _ := substN (AA.substR (Rel.symm AA.distribL))
+      ≃ _ := substN (Integer.add_substR (Rel.symm AA.distribL))
     (pn * (qd * rd) + pd * (qn * rd + qd * rn))//((pd * qd) * rd)
       ≃ _ := substD AA.assoc
     (pn * (qd * rd) + pd * (qn * rd + qd * rn))//(pd * (qd * rd))
@@ -191,7 +191,7 @@ theorem add_identL {p : Fraction ℤ} : 0 + p ≃ p := by
   show 0//1 + pn//pd ≃ pn//pd
   calc
     (0 : ℤ)//1 + pn//pd         ≃ _ := eqv_refl
-    (0 * pd + 1 * pn)//(1 * pd) ≃ _ := substN (AA.substL AA.absorbL)
+    (0 * pd + 1 * pn)//(1 * pd) ≃ _ := substN (Integer.add_substL AA.absorbL)
     (0 + 1 * pn)//(1 * pd)      ≃ _ := substN AA.identL
     (1 * pn)//(1 * pd)          ≃ _ := substN AA.identL
     pn//(1 * pd)                ≃ _ := substD AA.identL

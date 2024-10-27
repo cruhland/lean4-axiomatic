@@ -46,9 +46,8 @@ instance ofNatIdent [EqvOp α] [CA.Monoid.Monoid α] : OfNat α 1 := {
 
 /-- Properties of exponentiation for a monoid type α to a natural number. -/
 class Exponentiation.Props
-    {α : Type} {ℕ : outParam Type}
-    [Core ℕ] [Addition ℕ] [Multiplication ℕ] [EqvOp α] [Ops α ℕ]
-    [CA.Monoid.Monoid α]
+    {ℕ : outParam Type} [Core ℕ]
+    {α : Type} [EqvOp α] [Ops α ℕ] [CA.Monoid.Monoid α]
     :=
   /-- Any number raised to the power zero is the monoid identity of α. -/
   pow_zero {x : α} : x ^ (0:ℕ) ≃ 1
@@ -59,9 +58,7 @@ export Exponentiation.Props (pow_step pow_zero)
 
 /-- All exponentiation axioms. -/
 class Exponentiation
-    (ℕ : outParam Type) (α : Type)
-    [Core ℕ] [Addition ℕ] [Multiplication ℕ] [EqvOp α]
-    [CA.Monoid.Monoid α]
+    (ℕ : outParam Type) [Core ℕ] (α : Type) [EqvOp α] [CA.Monoid.Monoid α]
     :=
   toOps : Exponentiation.Ops α ℕ
   toProps : Exponentiation.Props (α := α)
@@ -71,16 +68,13 @@ attribute [instance] Exponentiation.toProps
 
 /-! ## Derived properties -/
 
-variable
-  {ℕ : Type}
-    [Core ℕ] [Induction.{0} ℕ] [Addition ℕ] [Sign ℕ] [Multiplication ℕ]
+variable {ℕ : Type} [Core ℕ] [Induction.{0} ℕ]
 
 section general
 
 /-! ### General properties for any base type -/
 
-variable
-  {α : Type} [EqvOp α] [CA.Monoid.Monoid α] [Exponentiation ℕ α]
+variable {α : Type} [EqvOp α] [CA.Monoid.Monoid α] [Exponentiation ℕ α]
 
 /--
 Equivalent values can be substituted for the base (left operand) in an
@@ -162,69 +156,6 @@ theorem pow_substR {x : α} {n₁ n₂ : ℕ} : n₁ ≃ n₂ → x ^ n₁ ≃ x
         _ ≃ x ^ step n₂' := Rel.symm pow_step
 
 /--
-Exponents add when powers of the same base are multiplied.
-
-**Property intuition**: Exponentiation is repeated multiplication; the exponent
-is the count of repeats; counts are combined by adding.
-
-**Proof intuition**: Induction and algebra.
--/
-theorem pow_compatL_add
-    [AA.Commutative (α := α) (· * ·)]
-    {x : α} {n m : ℕ} : x^(n + m) ≃ x^n * x^m
-    := by
-  apply ind_on n
-  case zero =>
-    show x^(0 + m) ≃ x^(0:ℕ) * x^m
-    calc
-      _ ≃ x^(0 + m)     := Rel.refl
-      _ ≃ x^m           := pow_substR AA.identL
-      _ ≃ 1 * x^m       := Rel.symm identL
-      _ ≃ x^(0:ℕ) * x^m := AA.substL (Rel.symm pow_zero)
-  case step =>
-    intro n' (ih : x^(n' + m) ≃ x^n' * x^m)
-    show x^(step n' + m) ≃ x^(step n') * x^m
-    calc
-      _ ≃ x^(step n' + m)   := Rel.refl
-      _ ≃ x^(step (n' + m)) := pow_substR (Rel.symm AA.scompatL)
-      _ ≃ x^(n' + m) * x    := pow_step
-      _ ≃ (x^n' * x^m) * x  := AA.substL ih
-      _ ≃ x^n' * (x^m * x)  := AA.assoc
-      _ ≃ x^n' * (x * x^m)  := AA.substR AA.comm
-      _ ≃ (x^n' * x) * x^m  := Rel.symm AA.assoc
-      _ ≃ x^(step n') * x^m := AA.substL (Rel.symm pow_step)
-
-/--
-Left-associated powers can be flattened into a single power of the prouct of
-the original exponents.
-
-**Property intuition**: Having an expression with `n` repetitions of `x`, and
-repeating that expression `m` times, gives `n * m` repetitions in total.
-
-**Proof intuition**: Induction and algebra.
--/
-theorem pow_flatten
-    [AA.Commutative (α := α) (· * ·)] {x : α} {n m : ℕ} : (x^n)^m ≃ x^(n * m)
-    := by
-  apply ind_on m
-  case zero =>
-    show (x^n)^0 ≃ x^(n * 0)
-    calc
-      _ ≃ (x^n)^0   := Rel.refl
-      _ ≃ 1         := pow_zero
-      _ ≃ x^0       := Rel.symm pow_zero
-      _ ≃ x^(n * 0) := pow_substR (Rel.symm mul_zero)
-  case step =>
-    intro m' (ih : (x^n)^m' ≃ x^(n * m'))
-    show (x^n)^(step m') ≃ x^(n * step m')
-    calc
-      _ ≃ (x^n)^(step m')  := Rel.refl
-      _ ≃ (x^n)^m' * x^n   := pow_step
-      _ ≃ x^(n * m') * x^n := AA.substL ih
-      _ ≃ x^(n * m' + n)   := Rel.symm pow_compatL_add
-      _ ≃ x^(n * step m')  := pow_substR (Rel.symm mul_step)
-
-/--
 Exponents distribute over multiplication.
 
 **Property intuition**: This is a simple regrouping of factors via the
@@ -291,39 +222,6 @@ theorem pow_inputs_for_output_zero
     exact And.intro ‹x ≃ 0› ‹step n' ≄ 0›
 
 /--
-Describes the exact conditions on exponentiation's inputs that cause it to
-output the value zero.
-
-**Property intuition**: A product is zero only when at least one factor is
-zero. And the empty product (raising to the zero power) is `1`.
-
-**Proof intuition**: See `pow_inputs_for_output_zero` for the forward
-direction. In the reverse direction, the resulting product must have at least
-one factor (because the exponent is nonzero), and since that factor is zero,
-the result is zero by absorption.
--/
-theorem pow_eqv_zero
-    [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) (· * ·)]
-    [AA.Absorbing (0:α) (· * ·)]
-    {x : α} {n : ℕ} : x^n ≃ 0 ↔ x ≃ 0 ∧ n ≄ 0
-    := by
-  apply Iff.intro
-  case mp =>
-    show x^n ≃ 0 → x ≃ 0 ∧ n ≄ 0
-    exact pow_inputs_for_output_zero
-  case mpr =>
-    intro (And.intro (_ : x ≃ 0) (_ : n ≄ 0))
-    show x^n ≃ 0
-    have : Positive n := Signed.positive_defn.mpr ‹n ≄ 0›
-    have (Exists.intro (n' : ℕ) (_ : step n' ≃ n)) := positive_step this
-    calc
-      _ ≃ x^n         := Rel.refl
-      _ ≃ x^(step n') := pow_substR (Rel.symm ‹step n' ≃ n›)
-      _ ≃ x^n' * x    := pow_step
-      _ ≃ x^n' * 0    := AA.substR ‹x ≃ 0›
-      _ ≃ 0           := AA.absorbR
-
-/--
 Raising a nonzero number to any natural number power always gives a nonzero
 result.
 
@@ -355,28 +253,6 @@ instance pow_preserves_nonzero_base_inst
     {x : α} {n : ℕ} [AP (x ≄ 0)] : AP (x^n ≄ 0)
     :=
   ‹AP (x ≄ 0)›.map pow_preserves_nonzero_base
-
-/--
-A power of zero is either zero or one.
-
-**Property and proof intuition**: If the exponent is zero, the result is one.
-Otherwise, the exponent is positive, and any nonempty product of zeros is zero.
--/
-theorem pow_of_zero
-    [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) (· * ·)]
-    [AA.Absorbing (α := α) 0 (· * ·)] {n : ℕ} : (0:α)^n ≃ 0 ∨ (0:α)^n ≃ 1
-    := by
-  have : n ≃ 0 ∨ n ≄ 0 := (n ≃? 0).em
-  match this with
-  | Or.inl (_ : n ≃ 0) =>
-    have : (0:α)^n ≃ 1 := calc
-      _ = (0:α)^n := rfl
-      _ ≃ 0^0     := pow_substR ‹n ≃ 0›
-      _ ≃ 1       := pow_zero
-    exact Or.inr ‹(0:α)^n ≃ 1›
-  | Or.inr (_ : n ≄ 0) =>
-    have : (0:α)^n ≃ 0 := pow_eqv_zero.mpr (And.intro Rel.refl ‹n ≄ 0›)
-    exact Or.inl ‹(0:α)^n ≃ 0›
 
 /--
 Raising a number to the natural number one leaves the number unchanged.
@@ -426,6 +302,129 @@ theorem pow_absorbL {n : ℕ} : (1:α)^n ≃ 1 := by
       _ ≃ (1:α)^n' * 1    := pow_step
       _ ≃ (1:α)^n'        := identR
       _ ≃ 1               := ih
+
+/--
+Describes the exact conditions on exponentiation's inputs that cause it to
+output the value zero.
+
+**Property intuition**: A product is zero only when at least one factor is
+zero. And the empty product (raising to the zero power) is `1`.
+
+**Proof intuition**: See `pow_inputs_for_output_zero` for the forward
+direction. In the reverse direction, the resulting product must have at least
+one factor (because the exponent is nonzero), and since that factor is zero,
+the result is zero by absorption.
+-/
+theorem pow_eqv_zero
+  [Sign ℕ] [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) (· * ·)]
+  [AA.Absorbing (0:α) (· * ·)] {x : α} {n : ℕ}
+  : x^n ≃ 0 ↔ x ≃ 0 ∧ n ≄ 0
+  := by
+  apply Iff.intro
+  case mp =>
+    show x^n ≃ 0 → x ≃ 0 ∧ n ≄ 0
+    exact pow_inputs_for_output_zero
+  case mpr =>
+    intro (And.intro (_ : x ≃ 0) (_ : n ≄ 0))
+    show x^n ≃ 0
+    have : Positive n := Signed.positive_defn.mpr ‹n ≄ 0›
+    have (Exists.intro (n' : ℕ) (_ : step n' ≃ n)) := positive_step this
+    calc
+      _ ≃ x^n         := Rel.refl
+      _ ≃ x^(step n') := pow_substR (Rel.symm ‹step n' ≃ n›)
+      _ ≃ x^n' * x    := pow_step
+      _ ≃ x^n' * 0    := AA.substR ‹x ≃ 0›
+      _ ≃ 0           := AA.absorbR
+
+/--
+A power of zero is either zero or one.
+
+**Property and proof intuition**: If the exponent is zero, the result is one.
+Otherwise, the exponent is positive, and any nonempty product of zeros is zero.
+-/
+theorem pow_of_zero
+  [Sign ℕ] [OfNat α 0] [AP ((1:α) ≄ 0)] [AA.ZeroProduct (α := α) (· * ·)]
+  [AA.Absorbing (0:α) (· * ·)] {n : ℕ}
+  : (0:α)^n ≃ 0 ∨ (0:α)^n ≃ 1
+  := by
+  have : n ≃ 0 ∨ n ≄ 0 := (n ≃? 0).em
+  match this with
+  | Or.inl (_ : n ≃ 0) =>
+    have : (0:α)^n ≃ 1 := calc
+      _ = (0:α)^n := rfl
+      _ ≃ 0^0     := pow_substR ‹n ≃ 0›
+      _ ≃ 1       := pow_zero
+    exact Or.inr ‹(0:α)^n ≃ 1›
+  | Or.inr (_ : n ≄ 0) =>
+    have : (0:α)^n ≃ 0 := pow_eqv_zero.mpr (And.intro Rel.refl ‹n ≄ 0›)
+    exact Or.inl ‹(0:α)^n ≃ 0›
+
+variable [Addition ℕ]
+
+/--
+Exponents add when powers of the same base are multiplied.
+
+**Property intuition**: Exponentiation is repeated multiplication; the exponent
+is the count of repeats; counts are combined by adding.
+
+**Proof intuition**: Induction and algebra.
+-/
+theorem pow_compatL_add
+    [AA.Commutative (α := α) (· * ·)]
+    {x : α} {n m : ℕ} : x^(n + m) ≃ x^n * x^m
+    := by
+  apply ind_on n
+  case zero =>
+    show x^(0 + m) ≃ x^(0:ℕ) * x^m
+    calc
+      _ ≃ x^(0 + m)     := Rel.refl
+      _ ≃ x^m           := pow_substR AA.identL
+      _ ≃ 1 * x^m       := Rel.symm identL
+      _ ≃ x^(0:ℕ) * x^m := AA.substL (Rel.symm pow_zero)
+  case step =>
+    intro n' (ih : x^(n' + m) ≃ x^n' * x^m)
+    show x^(step n' + m) ≃ x^(step n') * x^m
+    calc
+      _ ≃ x^(step n' + m)   := Rel.refl
+      _ ≃ x^(step (n' + m)) := pow_substR (Rel.symm AA.scompatL)
+      _ ≃ x^(n' + m) * x    := pow_step
+      _ ≃ (x^n' * x^m) * x  := AA.substL ih
+      _ ≃ x^n' * (x^m * x)  := AA.assoc
+      _ ≃ x^n' * (x * x^m)  := AA.substR AA.comm
+      _ ≃ (x^n' * x) * x^m  := Rel.symm AA.assoc
+      _ ≃ x^(step n') * x^m := AA.substL (Rel.symm pow_step)
+
+variable [Multiplication ℕ]
+
+/--
+Left-associated powers can be flattened into a single power of the prouct of
+the original exponents.
+
+**Property intuition**: Having an expression with `n` repetitions of `x`, and
+repeating that expression `m` times, gives `n * m` repetitions in total.
+
+**Proof intuition**: Induction and algebra.
+-/
+theorem pow_flatten
+    [AA.Commutative (α := α) (· * ·)] {x : α} {n m : ℕ} : (x^n)^m ≃ x^(n * m)
+    := by
+  apply ind_on m
+  case zero =>
+    show (x^n)^0 ≃ x^(n * 0)
+    calc
+      _ ≃ (x^n)^0   := Rel.refl
+      _ ≃ 1         := pow_zero
+      _ ≃ x^0       := Rel.symm pow_zero
+      _ ≃ x^(n * 0) := pow_substR (Rel.symm mul_zero)
+  case step =>
+    intro m' (ih : (x^n)^m' ≃ x^(n * m'))
+    show (x^n)^(step m') ≃ x^(n * step m')
+    calc
+      _ ≃ (x^n)^(step m')  := Rel.refl
+      _ ≃ (x^n)^m' * x^n   := pow_step
+      _ ≃ x^(n * m') * x^n := AA.substL ih
+      _ ≃ x^(n * m' + n)   := Rel.symm pow_compatL_add
+      _ ≃ x^(n * step m')  := pow_substR (Rel.symm mul_step)
 
 end general
 

@@ -36,8 +36,8 @@ theorem add_comm {a b : Difference ℕ} : a + b ≃ b + a := by
   apply AA.subst₁
   show (a₁ + b₁, a₂ + b₂) ≃ (b₁ + a₁, b₂ + a₂)
   calc
-    (a₁ + b₁, a₂ + b₂) ≃ _ := AA.substL AA.comm
-    (b₁ + a₁, a₂ + b₂) ≃ _ := AA.substR AA.comm
+    (a₁ + b₁, a₂ + b₂) ≃ _ := AA.substL Natural.add_comm
+    (b₁ + a₁, a₂ + b₂) ≃ _ := AA.substR Natural.add_comm
     (b₁ + a₁, b₂ + a₂) ≃ _ := Rel.refl
 
 instance add_commutative : AA.Commutative (α := Difference ℕ) (· + ·) := {
@@ -61,9 +61,9 @@ theorem add_substL {a₁ a₂ b : Difference ℕ} : a₁ ≃ a₂ → a₁ + b �
   show (n + p)——(m + q) ≃ (k + p)——(j + q)
   show (n + p) + (j + q) ≃ (k + p) + (m + q)
   calc
-    (n + p) + (j + q) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
-    (n + j) + (p + q) ≃ _ := AA.substL ‹n + j ≃ k + m›
-    (k + m) + (p + q) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
+    (n + p) + (j + q) ≃ _ := AA.expr_xxfxxff_lr_swap_rl (f := (· + ·))
+    (n + j) + (p + q) ≃ _ := Natural.add_substL ‹n + j ≃ k + m›
+    (k + m) + (p + q) ≃ _ := AA.expr_xxfxxff_lr_swap_rl (f := (· + ·))
     (k + p) + (m + q) ≃ _ := Rel.refl
 
 def add_substitutiveL
@@ -98,8 +98,8 @@ def add_assoc {a b c : Difference ℕ} : (a + b) + c ≃ a + (b + c) := by
   apply AA.subst₁
   show ((n + k) + p, (m + j) + q) ≃ (n + (k + p), m + (j + q))
   calc
-    ((n + k) + p, (m + j) + q) ≃ _ := AA.substL AA.assoc
-    (n + (k + p), (m + j) + q) ≃ _ := AA.substR AA.assoc
+    ((n + k) + p, (m + j) + q) ≃ _ := AA.substL Natural.add_assoc
+    (n + (k + p), (m + j) + q) ≃ _ := AA.substR Natural.add_assoc
     (n + (k + p), m + (j + q)) ≃ _ := Rel.refl
 
 def add_associative : AA.Associative (α := Difference ℕ) (· + ·) := {
@@ -122,8 +122,8 @@ theorem add_identL {a : Difference ℕ} : 0 + a ≃ a := by
   apply AA.subst₁
   show (0 + n, 0 + m) ≃ (n, m)
   calc
-    (0 + n, 0 + m) ≃ _ := AA.substL AA.identL
-    (n, 0 + m)     ≃ _ := AA.substR AA.identL
+    (0 + n, 0 + m) ≃ _ := AA.substL Natural.zero_add
+    (n, 0 + m)     ≃ _ := AA.substR Natural.zero_add
     (n, m)         ≃ _ := Rel.refl
 
 def add_identityL : AA.IdentityOn Hand.L (α := Difference ℕ) 0 (· + ·) := {
@@ -150,7 +150,7 @@ theorem add_compat_natural
   show (n + m)——0 ≃ n——0 + m——0
   show (n + m)——0 ≃ (n + m)——(0 + 0)
   show (n + m) + (0 + 0) ≃ (n + m) + 0
-  exact AA.substR AA.identR
+  exact Natural.add_substR Natural.add_zero
 
 def add_compatible_from_natural
     : AA.Compatible₂ (α := ℕ) (β := Difference ℕ) (↑·) (· + ·) (· + ·)

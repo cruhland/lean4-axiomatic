@@ -20,7 +20,7 @@ section prelim
 
 variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Core (ℕ := ℕ) ℤ]
-variable [Addition ℤ] [Multiplication ℤ] [Negation ℤ]
+variable [Addition ℤ] [Multiplication ℤ]
 
 /--
 Square root of unity: an integer whose square is one.
@@ -76,24 +76,6 @@ instance sqrt1_one : Sqrt1 (1 : ℤ) := {
 }
 
 /--
-Negative one is a square root of unity.
-
-**Property and proof intuition**: Multiplying two negative numbers gives a
-positive result, and if the magnitudes are `1`, the result will also be `1`.
--/
-theorem neg_one_mul_neg_one_eqv_one : (-1 : ℤ) * (-1) ≃ 1 := by
-  calc
-    (-1 : ℤ) * (-1) ≃ _ := Rel.symm AA.scompatL
-    (-(1 * (-1)))   ≃ _ := AA.subst₁ (Rel.symm AA.scompatR)
-    (-(-(1 * 1)))   ≃ _ := neg_involutive
-    1 * 1           ≃ _ := one_mul_one_eqv_one
-    1               ≃ _ := Rel.refl
-
-instance sqrt1_neg_one : Sqrt1 (-1 : ℤ) := {
-  elim := neg_one_mul_neg_one_eqv_one
-}
-
-/--
 The product of square roots of unity is also a square root of unity.
 
 This is an important result; it means that positive and negative signs can be
@@ -118,21 +100,6 @@ instance mul_preserves_sqrt1
     1 * (b * b)       ≃ _ := AA.substR ‹Sqrt1 b›.elim
     1 * 1             ≃ _ := one_mul_one_eqv_one
     1                 ≃ _ := Rel.refl
-
-/--
-The negation of a square root of unity is also a square root of unity.
-
-**Property intuition**: Squaring removes negation, so anything that results in
-one when squared will give the same result even if negated.
-
-**Proof intuition**: Negation is the same as multiplication by -1. Since -1 is
-a square root of unity, the result follows because a product of square roots of
-unity is also a square root of unity.
--/
-instance neg_preserves_sqrt1 {a : ℤ} [Sqrt1 a] : Sqrt1 (-a) := by
-  have : Sqrt1 (-1 * a) := inferInstance
-  have : Sqrt1 (-a) := AA.substFn mul_neg_one ‹Sqrt1 (-1 * a)›
-  exact this
 
 /--
 Demonstrates that a nonzero integer can be factored into _sign_ and _magnitude_
@@ -242,38 +209,6 @@ theorem mul_preserves_nonzeroWithSign
     (am * bm) ‹Positive (am * bm)› ‹a * b ≃ (as * bs) * coe (am * bm)›
 
 /--
-Negation can be exchanged between the value and the sign of `NonzeroWithSign`.
-
-**Property intuition**: If `-a` has sign `s`, then `a` must have the opposite
-sign `-s`.
-
-**Proof intuition**: Expand the definition of `NonzeroWithSign` and perform
-some algebra on the equivalence involving `a` and `s`.
--/
-theorem nonzeroWithSign_swap_neg
-    {a s : ℤ} {_ : Sqrt1 s} : NonzeroWithSign (-a) s ↔ NonzeroWithSign a (-s)
-    := by
-  apply Iff.intro
-  case mp =>
-    intro (NonzeroWithSign.intro (n : ℕ) (_ : Positive n) (_ : -a ≃ s * coe n))
-    show NonzeroWithSign a (-s)
-    have : a ≃ -s * coe n := calc
-      a              ≃ _ := Rel.symm neg_involutive
-      (-(-a))        ≃ _ := AA.subst₁ ‹-a ≃ s * coe n›
-      (-(s * coe n)) ≃ _ := AA.scompatL
-      (-s) * coe n   ≃ _ := Rel.refl
-    exact NonzeroWithSign.intro n ‹Positive n› ‹a ≃ -s * coe n›
-  case mpr =>
-    intro (NonzeroWithSign.intro (n : ℕ) (_ : Positive n) (_ : a ≃ -s * coe n))
-    show NonzeroWithSign (-a) s
-    have : -a ≃ s * coe n := calc
-      (-a)            ≃ _ := AA.subst₁ ‹a ≃ -s * coe n›
-      (-(-s * coe n)) ≃ _ := AA.scompatL
-      (-(-s)) * coe n ≃ _ := AA.substL neg_involutive
-      s * coe n       ≃ _ := Rel.refl
-    exact NonzeroWithSign.intro n ‹Positive n› ‹-a ≃ s * coe n›
-
-/--
 Evidence that an integer is not zero, with no other details.
 
 Same as `NonzeroWithSign`, but the sign is a field instead of a parameter.
@@ -347,6 +282,103 @@ instance mul_preserves_nonzero_inst
     {a b : ℤ} [Nonzero a] [Nonzero b] : Nonzero (a * b)
     :=
   mul_preserves_nonzero ‹Nonzero a› ‹Nonzero b›
+
+/--
+Every nonzero integer's square is equivalent to some positive natural number's
+square.
+
+**Property intuition**: Every square integer has two square roots: one positive
+and one negative, but with the same magnitude. The positive root is the natural
+number whose square is the same as the square integer.
+
+**Proof intuition**: Expand the definition of `Nonzero` until the
+"signed-magnitude" form is reached. Show that squaring the signed-magnitude
+form causes the sign to disappear, leaving the square of the natural number
+magnitude.
+-/
+theorem nonzero_squared_eqv_positive_nat_squared
+    {a : ℤ} : Nonzero a → ∃ (n : ℕ), Positive n ∧ a * a ≃ (n * n : ℕ)
+    := by
+  intro (_ : Nonzero a)
+  show ∃ (n : ℕ), Positive n ∧ a * a ≃ (n * n : ℕ)
+  have (Nonzero.intro (sa : ℤ) (_ : Sqrt1 sa) nws) := ‹Nonzero a›
+  have (NonzeroWithSign.intro (n : ℕ) (_ : Positive n) (_ : a ≃ sa * n)) := nws
+  have : a * a ≃ (n * n : ℕ) := calc
+    a * a               ≃ _ := AA.substL ‹a ≃ sa * n›
+    (sa * n) * a        ≃ _ := AA.substR ‹a ≃ sa * n›
+    (sa * n) * (sa * n) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
+    (sa * sa) * (n * n) ≃ _ := AA.substL ‹Sqrt1 sa›.elim
+    (1 : ℤ) * (n * n)   ≃ _ := AA.identL
+    (n : ℤ) * n         ≃ _ := Rel.symm AA.compat₂
+    ((n * n : ℕ) : ℤ)   ≃ _ := Rel.refl
+  exact Exists.intro n (And.intro ‹Positive n› ‹a * a ≃ (n * n : ℕ)›)
+
+variable [Negation ℤ]
+
+/--
+Negative one is a square root of unity.
+
+**Property and proof intuition**: Multiplying two negative numbers gives a
+positive result, and if the magnitudes are `1`, the result will also be `1`.
+-/
+theorem neg_one_mul_neg_one_eqv_one : (-1 : ℤ) * (-1) ≃ 1 := by
+  calc
+    (-1 : ℤ) * (-1) ≃ _ := Rel.symm AA.scompatL
+    (-(1 * (-1)))   ≃ _ := AA.subst₁ (Rel.symm AA.scompatR)
+    (-(-(1 * 1)))   ≃ _ := neg_involutive
+    1 * 1           ≃ _ := one_mul_one_eqv_one
+    1               ≃ _ := Rel.refl
+
+instance sqrt1_neg_one : Sqrt1 (-1 : ℤ) := {
+  elim := neg_one_mul_neg_one_eqv_one
+}
+
+/--
+The negation of a square root of unity is also a square root of unity.
+
+**Property intuition**: Squaring removes negation, so anything that results in
+one when squared will give the same result even if negated.
+
+**Proof intuition**: Negation is the same as multiplication by -1. Since -1 is
+a square root of unity, the result follows because a product of square roots of
+unity is also a square root of unity.
+-/
+instance neg_preserves_sqrt1 {a : ℤ} [Sqrt1 a] : Sqrt1 (-a) := by
+  have : Sqrt1 (-1 * a) := inferInstance
+  have : Sqrt1 (-a) := AA.substFn mul_neg_one ‹Sqrt1 (-1 * a)›
+  exact this
+
+/--
+Negation can be exchanged between the value and the sign of `NonzeroWithSign`.
+
+**Property intuition**: If `-a` has sign `s`, then `a` must have the opposite
+sign `-s`.
+
+**Proof intuition**: Expand the definition of `NonzeroWithSign` and perform
+some algebra on the equivalence involving `a` and `s`.
+-/
+theorem nonzeroWithSign_swap_neg
+    {a s : ℤ} {_ : Sqrt1 s} : NonzeroWithSign (-a) s ↔ NonzeroWithSign a (-s)
+    := by
+  apply Iff.intro
+  case mp =>
+    intro (NonzeroWithSign.intro (n : ℕ) (_ : Positive n) (_ : -a ≃ s * coe n))
+    show NonzeroWithSign a (-s)
+    have : a ≃ -s * coe n := calc
+      a              ≃ _ := Rel.symm neg_involutive
+      (-(-a))        ≃ _ := AA.subst₁ ‹-a ≃ s * coe n›
+      (-(s * coe n)) ≃ _ := AA.scompatL
+      (-s) * coe n   ≃ _ := Rel.refl
+    exact NonzeroWithSign.intro n ‹Positive n› ‹a ≃ -s * coe n›
+  case mpr =>
+    intro (NonzeroWithSign.intro (n : ℕ) (_ : Positive n) (_ : a ≃ -s * coe n))
+    show NonzeroWithSign (-a) s
+    have : -a ≃ s * coe n := calc
+      (-a)            ≃ _ := AA.subst₁ ‹a ≃ -s * coe n›
+      (-(-s * coe n)) ≃ _ := AA.scompatL
+      (-(-s)) * coe n ≃ _ := AA.substL neg_involutive
+      s * coe n       ≃ _ := Rel.refl
+    exact NonzeroWithSign.intro n ‹Positive n› ‹-a ≃ s * coe n›
 
 /--
 The negation of a nonzero integer is nonzero.
@@ -1125,36 +1157,6 @@ theorem nonzero_factors_if_nonzero_product
   have : Nonzero a := nonzero_iff_neqv_zero.mpr ‹a ≄ 0›
   have : Nonzero b := nonzero_iff_neqv_zero.mpr ‹b ≄ 0›
   exact And.intro ‹Nonzero a› ‹Nonzero b›
-
-/--
-Every nonzero integer's square is equivalent to some positive natural number's
-square.
-
-**Property intuition**: Every square integer has two square roots: one positive
-and one negative, but with the same magnitude. The positive root is the natural
-number whose square is the same as the square integer.
-
-**Proof intuition**: Expand the definition of `Nonzero` until the
-"signed-magnitude" form is reached. Show that squaring the signed-magnitude
-form causes the sign to disappear, leaving the square of the natural number
-magnitude.
--/
-theorem nonzero_squared_eqv_positive_nat_squared
-    {a : ℤ} : Nonzero a → ∃ (n : ℕ), Positive n ∧ a * a ≃ (n * n : ℕ)
-    := by
-  intro (_ : Nonzero a)
-  show ∃ (n : ℕ), Positive n ∧ a * a ≃ (n * n : ℕ)
-  have (Nonzero.intro (sa : ℤ) (_ : Sqrt1 sa) nws) := ‹Nonzero a›
-  have (NonzeroWithSign.intro (n : ℕ) (_ : Positive n) (_ : a ≃ sa * n)) := nws
-  have : a * a ≃ (n * n : ℕ) := calc
-    a * a               ≃ _ := AA.substL ‹a ≃ sa * n›
-    (sa * n) * a        ≃ _ := AA.substR ‹a ≃ sa * n›
-    (sa * n) * (sa * n) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
-    (sa * sa) * (n * n) ≃ _ := AA.substL ‹Sqrt1 sa›.elim
-    (1 : ℤ) * (n * n)   ≃ _ := AA.identL
-    (n : ℤ) * n         ≃ _ := Rel.symm AA.compat₂
-    ((n * n : ℕ) : ℤ)   ≃ _ := Rel.refl
-  exact Exists.intro n (And.intro ‹Positive n› ‹a * a ≃ (n * n : ℕ)›)
 
 /--
 If a product of integers is a square root of unity, then both factors must also

@@ -18,76 +18,7 @@ open Signed (Positive)
 
 variable
   {ℕ ℤ : Type} [Natural ℕ] [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ]
-  [Negation ℤ] [Subtraction ℤ] [Sign ℤ] [Order ℤ] [Natural.Exponentiation ℕ ℤ]
-
-/--
-The operations of `sgn` and `·^n` (i.e. raising to a natural number power) give
-the same result when applied to an integer in either order.
-
-**Property and proof intuition**: Take the property that `sgn` is compatible
-with multiplication (`sgn (a * b) ≃ sgn a * sgn b`) and repeatedly apply it to
-the product formed by `a^n`.
--/
-theorem sgn_pow {a : ℤ} {n : ℕ} : sgn (a^n) ≃ (sgn a)^n := by
-  apply Natural.ind_on n
-  case zero =>
-    show sgn (a^0) ≃ (sgn a)^0
-    calc
-      _ = sgn (a^0) := rfl
-      _ ≃ sgn (1:ℤ) := sgn_subst Natural.pow_zero
-      _ ≃ 1         := sgn_positive.mp one_positive
-      _ ≃ (sgn a)^0 := Rel.symm Natural.pow_zero
-  case step =>
-    intro (n' : ℕ) (ih : sgn (a^n') ≃ (sgn a)^n')
-    show sgn (a^(step n')) ≃ (sgn a)^(step n')
-    calc
-      _ = sgn (a^(step n'))  := rfl
-      _ ≃ sgn (a^n' * a)     := sgn_subst Natural.pow_step
-      _ ≃ sgn (a^n') * sgn a := sgn_compat_mul
-      _ ≃ (sgn a)^n' * sgn a := AA.substL ih
-      _ ≃ (sgn a)^(step n')  := Rel.symm Natural.pow_step
-
-/--
-All integer squares are nonnegative.
-
-**Property intuition**: A negative times a negative is positive.
-
-**Proof intuition**: Direct corollary of `nonneg_square`.
--/
-theorem sqr_nonneg {a : ℤ} : a^2 ≥ 0 := by
-  have : sgn (a * a) ≄ -1 := nonneg_square
-  calc
-    _ = a^2   := rfl
-    _ ≃ a * a := Natural.pow_two
-    _ ≥ 0     := ge_zero_sgn.mpr ‹sgn (a * a) ≄ -1›
-
-/--
-Zero and one are the only integers that are identical to their squares.
-
-**Property intuition**: Negative integers become positive when squared, and all
-integers greater than one increase in magnitude.
-
-**Proof intuition**: Corollary of `mul_identR_reasons`.
--/
-theorem sqr_idemp_reasons {a : ℤ} : a^2 ≃ a ↔ a ≃ 0 ∨ a ≃ 1 := calc
-  _ ↔ a^2 ≃ a       := Iff.rfl
-  _ ↔ a * a ≃ a     := AA.eqv_substL_iff Natural.pow_two
-  _ ↔ a ≃ 0 ∨ a ≃ 1 := mul_identR_reasons
-
-/--
-Squaring the sign of an integer leaves it the same iff the integer is
-nonnegative.
-
-**Property and proof intuition**: Only zero and one stay the same when squared,
-and those are the two sign values of nonnegative integers.
--/
-theorem sgn_sqr_nonneg {a : ℤ} : (sgn a)^2 ≃ sgn a ↔ a ≥ 0 := calc
-  _ ↔ (sgn a)^2 ≃ sgn a     := Iff.rfl
-  _ ↔ sgn a ≃ 0 ∨ sgn a ≃ 1 := sqr_idemp_reasons
-  _ ↔ a ≃ 0 ∨ sgn a ≃ 1     := iff_subst_covar or_mapL sgn_zero.symm
-  _ ↔ a ≃ 0 ∨ a > 0         := iff_subst_covar or_mapR gt_zero_sgn.symm
-  _ ↔ a > 0 ∨ a ≃ 0         := Or.comm
-  _ ↔ a ≥ 0                 := ge_split.symm
+  [Natural.Exponentiation ℕ ℤ]
 
 /--
 Raising an integer to _any_ positive natural number power has no effect if
@@ -124,6 +55,27 @@ theorem pow_absorbL {a : ℤ} {n : ℕ} : n ≥ 1 → a^2 ≃ a → a^n ≃ a :=
       _ ≃ a          := ‹a^2 ≃ a›
 
 /--
+The factors of `a^3` can be arranged as `a * a^2`.
+
+This trivial lemma is useful for several integer exponentiation theorems.
+
+**Property intuition**: `a^3 ≃ a * a * a ≃ a * (a * a) ≃ a * a^2`
+
+**Proof intuition**: Convert `3` to `step 2` so that `pow_step` can be used to
+separate a factor of `a`.
+-/
+theorem cube_splitL {a : ℤ} : a^3 ≃ a * a^2 := calc
+  _ = a^3        := rfl
+  _ ≃ a^(step 2) := Natural.pow_substR Natural.literal_step
+  _ ≃ a^2 * a    := Natural.pow_step
+  _ ≃ a * a^2    := AA.comm
+
+variable [Negation ℤ]
+
+section sub_only
+variable [Subtraction ℤ]
+
+/--
 The difference of two integer squares can be rewritten as the product of two
 factors linear in the original integers.
 
@@ -157,145 +109,6 @@ theorem factor_diff_sqr {a b : ℤ} : a^2 - b^2 ≃ (a - b) * (a + b) := by
     _ ≃ a^2 + (0 - b^2)               := AA.substR (AA.substL sub_same)
     _ ≃ a^2 + (-b^2)                  := AA.substR sub_identL
     _ ≃ a^2 - b^2                     := Rel.symm sub_defn
-
-/--
-Squaring preserves the relative ordering of nonnegative integers.
-
-**Property intuition**: Multiplication by a constant already has this property;
-squaring merely increases the distance between integers proportionally to their
-value.
-
-**Proof intuition**: Factor `a^2 - b^2` as `(a - b) * (a + b)`. We would obtain
-the goal if we could drop `a + b` from the product. So, first demonstrate that
-`sgn (a - b) ≃ 0 ∨ sgn (a + b) ≃ 1` —— the left side happens when `a ≃ b ≃ 0`,
-and the right side happens in all other cases. Then use that to invoke
-`mul_identR_reasons` and complete the proof.
--/
-theorem sgn_diff_sqr
-    {a b : ℤ} : a ≥ 0 → b ≥ 0 → sgn (a^2 - b^2) ≃ sgn (a - b)
-    := by
-  intro (_ : a ≥ 0) (_ : b ≥ 0)
-  show sgn (a^2 - b^2) ≃ sgn (a - b)
-  have : a + b ≥ 0 := calc
-    _ = a + b := rfl
-    _ ≥ 0 + b := ge_addR.mp ‹a ≥ 0›
-    _ ≥ 0 + 0 := ge_addL.mp ‹b ≥ 0›
-    _ ≃ 0     := AA.identL
-  have : a + b > 0 ∨ a + b ≃ 0 := ge_split.mp ‹a + b ≥ 0›
-  have diff_zero_sum_one : sgn (a - b) ≃ 0 ∨ sgn (a + b) ≃ 1 := match this with
-  | Or.inl (_ : a + b > 0) =>
-    have : sgn (a + b) ≃ 1 := gt_zero_sgn.mp ‹a + b > 0›
-    Or.inr ‹sgn (a + b) ≃ 1›
-  | Or.inr (_ : a + b ≃ 0) =>
-    have (And.intro (_ : a ≃ 0) (_ : b ≃ 0)) :=
-      (zero_sum_split ‹a ≥ 0› ‹b ≥ 0›).mp ‹a + b ≃ 0›
-    have : a ≃ b := Rel.trans ‹a ≃ 0› (Rel.symm ‹b ≃ 0›)
-    have : a - b ≃ 0 := zero_diff_iff_eqv.mpr ‹a ≃ b›
-    have : sgn (a - b) ≃ 0 := sgn_zero.mp ‹a - b ≃ 0›
-    Or.inl ‹sgn (a - b) ≃ 0›
-  calc
-    _ = sgn (a^2 - b^2)           := rfl
-    _ ≃ sgn ((a - b) * (a + b))   := sgn_subst factor_diff_sqr
-    _ ≃ sgn (a - b) * sgn (a + b) := sgn_compat_mul
-    _ ≃ sgn (a - b)               := mul_identR_reasons.mpr diff_zero_sum_one
-
-/--
-The factors of `a^3` can be arranged as `a * a^2`.
-
-This trivial lemma is useful for several integer exponentiation theorems.
-
-**Property intuition**: `a^3 ≃ a * a * a ≃ a * (a * a) ≃ a * a^2`
-
-**Proof intuition**: Convert `3` to `step 2` so that `pow_step` can be used to
-separate a factor of `a`.
--/
-theorem cube_splitL {a : ℤ} : a^3 ≃ a * a^2 := calc
-  _ = a^3        := rfl
-  _ ≃ a^(step 2) := Natural.pow_substR Natural.literal_step
-  _ ≃ a^2 * a    := Natural.pow_step
-  _ ≃ a * a^2    := AA.comm
-
-/--
-Zero, one, and negative one are the only integers that are identical to their
-cubes.
-
-**Property intuition**: The cubes of integers less than negative one or greater
-than one will have absolute value greater than one. Negative one squared is
-one, so adding another factor of `-1` to cube it makes the result negative one
-as well. Zero and one stay the same when raised to any positive power.
-
-**Proof intuition**: Rearrange `a^3 ≃ a` as `a^3 - a ≃ 0`. Factor the left hand
-side into `a * (a - 1) * (a + 1)` using algebra and `factor_diff_squares`. Then
-apply `mul_split_zero` twice and rearrange to get the result.
--/
-theorem cube_idemp_reasons {a : ℤ} : a^3 ≃ a ↔ a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1 := by
-  have : a ≃ a * 1^2 := calc
-    _ = a       := rfl
-    _ ≃ a * 1   := Rel.symm AA.identR
-    _ ≃ a * 1^2 := AA.substR (Rel.symm Natural.pow_absorbL)
-  have factor : a * a^2 - a * 1^2 ≃ a * ((a - 1) * (a + 1)) := calc
-    _ = a * a^2 - a * 1^2       := rfl
-    _ ≃ a * (a^2 - 1^2)         := Rel.symm mul_distribL_sub
-    _ ≃ a * ((a - 1) * (a + 1)) := AA.substR factor_diff_sqr
-  have : a + 1 ≃ 0 ↔ a ≃ -1 := calc
-    _ ↔ a + 1 ≃ 0 := Iff.rfl
-    _ ↔ a ≃ 0 - 1 := subR_moveL_addR.symm
-    _ ↔ a ≃ -1    := AA.eqv_substR_iff sub_identL
-  have nonzero_values : (a - 1) * (a + 1) ≃ 0 ↔ a ≃ 1 ∨ a ≃ -1 := calc
-    _ ↔ (a - 1) * (a + 1) ≃ 0 := Iff.rfl
-    _ ↔ a - 1 ≃ 0 ∨ a + 1 ≃ 0 := mul_split_zero
-    _ ↔ a ≃ 1 ∨ a + 1 ≃ 0     := iff_subst_covar or_mapL zero_diff_iff_eqv
-    _ ↔ a ≃ 1 ∨ a ≃ -1        := iff_subst_covar or_mapR ‹a + 1 ≃ 0 ↔ a ≃ -1›
-  calc
-    _ ↔ a^3 ≃ a                       := Iff.rfl
-    _ ↔ a * a^2 ≃ a                   := AA.eqv_substL_iff cube_splitL
-    _ ↔ a * a^2 ≃ a * 1^2             := AA.eqv_substR_iff ‹a ≃ a * 1^2›
-    _ ↔ a * a^2 - a * 1^2 ≃ 0         := zero_diff_iff_eqv.symm
-    _ ↔ a * ((a - 1) * (a + 1)) ≃ 0   := AA.eqv_substL_iff factor
-    _ ↔ a ≃ 0 ∨ (a - 1) * (a + 1) ≃ 0 := mul_split_zero
-    _ ↔ a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1        := iff_subst_covar or_mapR nonzero_values
-
-/--
-Cubing the sign of an integer has no effect.
-
-**Property and proof intuition**: An integer's sign can only be zero, one, or
-negative one. All three of those numbers remain the same when cubed, by
-`cube_idemp_reasons`.
--/
-theorem sgn_cubed {a : ℤ} : (sgn a)^3 ≃ sgn a := by
-  have : sgn a ≃ 0 ∨ sgn a ≃ 1 ∨ sgn a ≃ -1 := match sgn_trichotomy a with
-  | AA.OneOfThree₁.first (_ : sgn a ≃ 0) =>
-    Or.inl ‹sgn a ≃ 0›
-  | AA.OneOfThree₁.second (_ : sgn a ≃ 1) =>
-    Or.inr (Or.inl ‹sgn a ≃ 1›)
-  | AA.OneOfThree₁.third (_ : sgn a ≃ -1) =>
-    Or.inr (Or.inr ‹sgn a ≃ -1›)
-  have : (sgn a)^3 ≃ sgn a := cube_idemp_reasons.mpr this
-  exact this
-
-/--
-The only values that are identical to their cube are the outputs of `sgn`.
-
-**Property and proof intuition**: From `sgn_cubed`, we know that the outputs of
-`sgn` are identical to their cube. And from `cube_idemp_reasons`, we know that
-the values identical to their cube are the outputs of `sgn`.
--/
-theorem cube_idemp_iff_sgn {a : ℤ} : a^3 ≃ a ↔ ∃ (b : ℤ), a ≃ sgn b := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : a^3 ≃ a)
-    show ∃ (b : ℤ), a ≃ sgn b
-    have : a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1 := cube_idemp_reasons.mp ‹a^3 ≃ a›
-    have : sgn a ≃ a := sgn_fixed_points.mpr ‹a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1›
-    exact Exists.intro a (Rel.symm ‹sgn a ≃ a›)
-  case mpr =>
-    intro (Exists.intro (b : ℤ) (_ : a ≃ sgn b))
-    show a^3 ≃ a
-    calc
-      _ = a^3       := rfl
-      _ ≃ (sgn b)^3 := Natural.pow_substL ‹a ≃ sgn b›
-      _ ≃ sgn b     := sgn_cubed
-      _ ≃ a         := Rel.symm ‹a ≃ sgn b›
 
 /--
 A binary operation that sums its operands, then subtracts an "error term".
@@ -396,6 +209,207 @@ theorem sse_compat_mul
     _ ≃ a * (b + c) - a * (b * c^2)         := sub_substR pull_out_a
     _ ≃ a * (b + c - b * c^2)               := Rel.symm AA.distribL
     _ = a * sum_sub_err b c                 := rfl
+
+end sub_only
+section sign_only
+variable [Sign ℤ]
+
+/--
+The operations of `sgn` and `·^n` (i.e. raising to a natural number power) give
+the same result when applied to an integer in either order.
+
+**Property and proof intuition**: Take the property that `sgn` is compatible
+with multiplication (`sgn (a * b) ≃ sgn a * sgn b`) and repeatedly apply it to
+the product formed by `a^n`.
+-/
+theorem sgn_pow {a : ℤ} {n : ℕ} : sgn (a^n) ≃ (sgn a)^n := by
+  apply Natural.ind_on n
+  case zero =>
+    show sgn (a^0) ≃ (sgn a)^0
+    calc
+      _ = sgn (a^0) := rfl
+      _ ≃ sgn (1:ℤ) := sgn_subst Natural.pow_zero
+      _ ≃ 1         := sgn_positive.mp one_positive
+      _ ≃ (sgn a)^0 := Rel.symm Natural.pow_zero
+  case step =>
+    intro (n' : ℕ) (ih : sgn (a^n') ≃ (sgn a)^n')
+    show sgn (a^(step n')) ≃ (sgn a)^(step n')
+    calc
+      _ = sgn (a^(step n'))  := rfl
+      _ ≃ sgn (a^n' * a)     := sgn_subst Natural.pow_step
+      _ ≃ sgn (a^n') * sgn a := sgn_compat_mul
+      _ ≃ (sgn a)^n' * sgn a := AA.substL ih
+      _ ≃ (sgn a)^(step n')  := Rel.symm Natural.pow_step
+
+end sign_only
+variable [Subtraction ℤ] [Sign ℤ]
+
+/--
+Zero and one are the only integers that are identical to their squares.
+
+**Property intuition**: Negative integers become positive when squared, and all
+integers greater than one increase in magnitude.
+
+**Proof intuition**: Corollary of `mul_identR_reasons`.
+-/
+theorem sqr_idemp_reasons {a : ℤ} : a^2 ≃ a ↔ a ≃ 0 ∨ a ≃ 1 := calc
+  _ ↔ a^2 ≃ a       := Iff.rfl
+  _ ↔ a * a ≃ a     := AA.eqv_substL_iff Natural.pow_two
+  _ ↔ a ≃ 0 ∨ a ≃ 1 := mul_identR_reasons
+
+/--
+Zero, one, and negative one are the only integers that are identical to their
+cubes.
+
+**Property intuition**: The cubes of integers less than negative one or greater
+than one will have absolute value greater than one. Negative one squared is
+one, so adding another factor of `-1` to cube it makes the result negative one
+as well. Zero and one stay the same when raised to any positive power.
+
+**Proof intuition**: Rearrange `a^3 ≃ a` as `a^3 - a ≃ 0`. Factor the left hand
+side into `a * (a - 1) * (a + 1)` using algebra and `factor_diff_squares`. Then
+apply `mul_split_zero` twice and rearrange to get the result.
+-/
+theorem cube_idemp_reasons {a : ℤ} : a^3 ≃ a ↔ a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1 := by
+  have : a ≃ a * 1^2 := calc
+    _ = a       := rfl
+    _ ≃ a * 1   := Rel.symm AA.identR
+    _ ≃ a * 1^2 := AA.substR (Rel.symm Natural.pow_absorbL)
+  have factor : a * a^2 - a * 1^2 ≃ a * ((a - 1) * (a + 1)) := calc
+    _ = a * a^2 - a * 1^2       := rfl
+    _ ≃ a * (a^2 - 1^2)         := Rel.symm mul_distribL_sub
+    _ ≃ a * ((a - 1) * (a + 1)) := AA.substR factor_diff_sqr
+  have : a + 1 ≃ 0 ↔ a ≃ -1 := calc
+    _ ↔ a + 1 ≃ 0 := Iff.rfl
+    _ ↔ a ≃ 0 - 1 := subR_moveL_addR.symm
+    _ ↔ a ≃ -1    := AA.eqv_substR_iff sub_identL
+  have nonzero_values : (a - 1) * (a + 1) ≃ 0 ↔ a ≃ 1 ∨ a ≃ -1 := calc
+    _ ↔ (a - 1) * (a + 1) ≃ 0 := Iff.rfl
+    _ ↔ a - 1 ≃ 0 ∨ a + 1 ≃ 0 := mul_split_zero
+    _ ↔ a ≃ 1 ∨ a + 1 ≃ 0     := iff_subst_covar or_mapL zero_diff_iff_eqv
+    _ ↔ a ≃ 1 ∨ a ≃ -1        := iff_subst_covar or_mapR ‹a + 1 ≃ 0 ↔ a ≃ -1›
+  calc
+    _ ↔ a^3 ≃ a                       := Iff.rfl
+    _ ↔ a * a^2 ≃ a                   := AA.eqv_substL_iff cube_splitL
+    _ ↔ a * a^2 ≃ a * 1^2             := AA.eqv_substR_iff ‹a ≃ a * 1^2›
+    _ ↔ a * a^2 - a * 1^2 ≃ 0         := zero_diff_iff_eqv.symm
+    _ ↔ a * ((a - 1) * (a + 1)) ≃ 0   := AA.eqv_substL_iff factor
+    _ ↔ a ≃ 0 ∨ (a - 1) * (a + 1) ≃ 0 := mul_split_zero
+    _ ↔ a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1        := iff_subst_covar or_mapR nonzero_values
+
+/--
+Cubing the sign of an integer has no effect.
+
+**Property and proof intuition**: An integer's sign can only be zero, one, or
+negative one. All three of those numbers remain the same when cubed, by
+`cube_idemp_reasons`.
+-/
+theorem sgn_cubed {a : ℤ} : (sgn a)^3 ≃ sgn a := by
+  have : sgn a ≃ 0 ∨ sgn a ≃ 1 ∨ sgn a ≃ -1 := match sgn_trichotomy a with
+  | AA.OneOfThree₁.first (_ : sgn a ≃ 0) =>
+    Or.inl ‹sgn a ≃ 0›
+  | AA.OneOfThree₁.second (_ : sgn a ≃ 1) =>
+    Or.inr (Or.inl ‹sgn a ≃ 1›)
+  | AA.OneOfThree₁.third (_ : sgn a ≃ -1) =>
+    Or.inr (Or.inr ‹sgn a ≃ -1›)
+  have : (sgn a)^3 ≃ sgn a := cube_idemp_reasons.mpr this
+  exact this
+
+/--
+The only values that are identical to their cube are the outputs of `sgn`.
+
+**Property and proof intuition**: From `sgn_cubed`, we know that the outputs of
+`sgn` are identical to their cube. And from `cube_idemp_reasons`, we know that
+the values identical to their cube are the outputs of `sgn`.
+-/
+theorem cube_idemp_iff_sgn {a : ℤ} : a^3 ≃ a ↔ ∃ (b : ℤ), a ≃ sgn b := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a^3 ≃ a)
+    show ∃ (b : ℤ), a ≃ sgn b
+    have : a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1 := cube_idemp_reasons.mp ‹a^3 ≃ a›
+    have : sgn a ≃ a := sgn_fixed_points.mpr ‹a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1›
+    exact Exists.intro a (Rel.symm ‹sgn a ≃ a›)
+  case mpr =>
+    intro (Exists.intro (b : ℤ) (_ : a ≃ sgn b))
+    show a^3 ≃ a
+    calc
+      _ = a^3       := rfl
+      _ ≃ (sgn b)^3 := Natural.pow_substL ‹a ≃ sgn b›
+      _ ≃ sgn b     := sgn_cubed
+      _ ≃ a         := Rel.symm ‹a ≃ sgn b›
+
+variable [Order ℤ]
+
+/--
+All integer squares are nonnegative.
+
+**Property intuition**: A negative times a negative is positive.
+
+**Proof intuition**: Direct corollary of `nonneg_square`.
+-/
+theorem sqr_nonneg {a : ℤ} : a^2 ≥ 0 := by
+  have : sgn (a * a) ≄ -1 := nonneg_square
+  calc
+    _ = a^2   := rfl
+    _ ≃ a * a := Natural.pow_two
+    _ ≥ 0     := ge_zero_sgn.mpr ‹sgn (a * a) ≄ -1›
+
+/--
+Squaring the sign of an integer leaves it the same iff the integer is
+nonnegative.
+
+**Property and proof intuition**: Only zero and one stay the same when squared,
+and those are the two sign values of nonnegative integers.
+-/
+theorem sgn_sqr_nonneg {a : ℤ} : (sgn a)^2 ≃ sgn a ↔ a ≥ 0 := calc
+  _ ↔ (sgn a)^2 ≃ sgn a     := Iff.rfl
+  _ ↔ sgn a ≃ 0 ∨ sgn a ≃ 1 := sqr_idemp_reasons
+  _ ↔ a ≃ 0 ∨ sgn a ≃ 1     := iff_subst_covar or_mapL sgn_zero.symm
+  _ ↔ a ≃ 0 ∨ a > 0         := iff_subst_covar or_mapR gt_zero_sgn.symm
+  _ ↔ a > 0 ∨ a ≃ 0         := Or.comm
+  _ ↔ a ≥ 0                 := ge_split.symm
+
+/--
+Squaring preserves the relative ordering of nonnegative integers.
+
+**Property intuition**: Multiplication by a constant already has this property;
+squaring merely increases the distance between integers proportionally to their
+value.
+
+**Proof intuition**: Factor `a^2 - b^2` as `(a - b) * (a + b)`. We would obtain
+the goal if we could drop `a + b` from the product. So, first demonstrate that
+`sgn (a - b) ≃ 0 ∨ sgn (a + b) ≃ 1` —— the left side happens when `a ≃ b ≃ 0`,
+and the right side happens in all other cases. Then use that to invoke
+`mul_identR_reasons` and complete the proof.
+-/
+theorem sgn_diff_sqr
+    {a b : ℤ} : a ≥ 0 → b ≥ 0 → sgn (a^2 - b^2) ≃ sgn (a - b)
+    := by
+  intro (_ : a ≥ 0) (_ : b ≥ 0)
+  show sgn (a^2 - b^2) ≃ sgn (a - b)
+  have : a + b ≥ 0 := calc
+    _ = a + b := rfl
+    _ ≥ 0 + b := ge_addR.mp ‹a ≥ 0›
+    _ ≥ 0 + 0 := ge_addL.mp ‹b ≥ 0›
+    _ ≃ 0     := AA.identL
+  have : a + b > 0 ∨ a + b ≃ 0 := ge_split.mp ‹a + b ≥ 0›
+  have diff_zero_sum_one : sgn (a - b) ≃ 0 ∨ sgn (a + b) ≃ 1 := match this with
+  | Or.inl (_ : a + b > 0) =>
+    have : sgn (a + b) ≃ 1 := gt_zero_sgn.mp ‹a + b > 0›
+    Or.inr ‹sgn (a + b) ≃ 1›
+  | Or.inr (_ : a + b ≃ 0) =>
+    have (And.intro (_ : a ≃ 0) (_ : b ≃ 0)) :=
+      (zero_sum_split ‹a ≥ 0› ‹b ≥ 0›).mp ‹a + b ≃ 0›
+    have : a ≃ b := Rel.trans ‹a ≃ 0› (Rel.symm ‹b ≃ 0›)
+    have : a - b ≃ 0 := zero_diff_iff_eqv.mpr ‹a ≃ b›
+    have : sgn (a - b) ≃ 0 := sgn_zero.mp ‹a - b ≃ 0›
+    Or.inl ‹sgn (a - b) ≃ 0›
+  calc
+    _ = sgn (a^2 - b^2)           := rfl
+    _ ≃ sgn ((a - b) * (a + b))   := sgn_subst factor_diff_sqr
+    _ ≃ sgn (a - b) * sgn (a + b) := sgn_compat_mul
+    _ ≃ sgn (a - b)               := mul_identR_reasons.mpr diff_zero_sum_one
 
 /--
 Express the sign of the sum of two integers in terms of their individual signs.

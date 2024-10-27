@@ -40,9 +40,9 @@ theorem neg_subst {a₁ a₂ : Difference ℕ} : a₁ ≃ a₂ → -a₁ ≃ -a�
   show m——n ≃ j——k
   show m + k ≃ j + n
   calc
-    m + k ≃ _ := AA.comm
+    m + k ≃ _ := Natural.add_comm
     k + m ≃ _ := Rel.symm ‹n + j ≃ k + m›
-    n + j ≃ _ := AA.comm
+    n + j ≃ _ := Natural.add_comm
     j + n ≃ _ := Rel.refl
 
 def neg_substitutive
@@ -70,7 +70,7 @@ theorem neg_invL {a : Difference ℕ} : (-a) + a ≃ 0 := by
   show (m + n) + 0 ≃ 0 + (n + m)
   apply Natural.add_swapped_zeros_eqv.mpr
   show m + n ≃ n + m
-  exact AA.comm
+  exact Natural.add_comm
 
 def neg_inverseL : AA.InverseOn Hand.L (α := Difference ℕ) (-·) (· + ·) := {
   inverse := neg_invL

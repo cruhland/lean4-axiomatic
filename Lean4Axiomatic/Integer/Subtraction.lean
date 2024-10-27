@@ -45,9 +45,7 @@ attribute [instance] Subtraction.toProps
 
 variable
   {ℕ : Type} [Natural ℕ]
-  {ℤ : Type}
-    [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ]
-    [Negation ℤ] [Sign ℤ] [Subtraction ℤ]
+  {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
 
 /--
 Subtraction is left-substitutive.
@@ -194,22 +192,6 @@ theorem sub_assoc_addR {a b c : ℤ} : (a - b) + c ≃ a + (c - b) := calc
   _ ≃ a + (c - b)  := AA.substR (Rel.symm sub_defn)
 
 /--
-Subtraction "associates" with subtraction to its right.
-
-**Property intuition**: Subtracting `b` from `a`, and then `c` from the result,
-is equivalent to subtracting `b` and `c` from `a` together.
-
-**Proof intuition**: Expand subtraction into addition; rearrange.
--/
-theorem sub_assoc_subR {a b c : ℤ} : (a - b) - c ≃ a - (b + c) := calc
-  _ = (a - b) - c   := rfl
-  _ ≃ (a - b) + -c  := sub_defn
-  _ ≃ (a + -b) + -c := AA.substL sub_defn
-  _ ≃ a + (-b + -c) := AA.assoc
-  _ ≃ a + -(b + c)  := AA.substR (Rel.symm neg_compat_add)
-  _ ≃ a - (b + c)   := Rel.symm sub_defn
-
-/--
 Move a subtraction's right operand to an addition's right operand, from left to
 right across an equivalence (or the reverse).
 
@@ -286,6 +268,41 @@ theorem sub_swap_add {a b c d : ℤ} : a - b ≃ c - d ↔ a + d ≃ c + b := ca
   _ ↔ a + d ≃ c + b       := subR_moveL_addR
 
 /--
+The simplest example of a "telescoping" sum: adding two differences with a
+common middle value results in the difference of the endpoints.
+
+**Property and proof intuition**: The middle value is positive in one of the
+sum's arguments, and negative in the other. Those are additive inverses so they
+sum to zero and disappear from the result.
+-/
+theorem add_sub_telescope {a b c : ℤ} : (a - b) + (b - c) ≃ a - c := calc
+  (a - b) + (b - c)   ≃ _ := AA.substL sub_defn
+  (a + -b) + (b - c)  ≃ _ := AA.substR sub_defn
+  (a + -b) + (b + -c) ≃ _ := AA.expr_xxfxxff_lr_swap_rr
+  (a + -c) + (b + -b) ≃ _ := AA.substR AA.inverseR
+  (a + -c) + 0        ≃ _ := AA.identR
+  a + -c              ≃ _ := Rel.symm sub_defn
+  a - c               ≃ _ := Rel.refl
+
+variable [Multiplication ℤ]
+
+/--
+Subtraction "associates" with subtraction to its right.
+
+**Property intuition**: Subtracting `b` from `a`, and then `c` from the result,
+is equivalent to subtracting `b` and `c` from `a` together.
+
+**Proof intuition**: Expand subtraction into addition; rearrange.
+-/
+theorem sub_assoc_subR {a b c : ℤ} : (a - b) - c ≃ a - (b + c) := calc
+  _ = (a - b) - c   := rfl
+  _ ≃ (a - b) + -c  := sub_defn
+  _ ≃ (a + -b) + -c := AA.substL sub_defn
+  _ ≃ a + (-b + -c) := AA.assoc
+  _ ≃ a + -(b + c)  := AA.substR (Rel.symm neg_compat_add)
+  _ ≃ a - (b + c)   := Rel.symm sub_defn
+
+/--
 A sum of differences is equivalent to a difference of sums.
 
 **Property and proof intuition**: Differences are just sums of negated
@@ -327,26 +344,6 @@ instance mul_distributive_sub : AA.Distributive (α := ℤ) (· * ·) (· - ·) 
 }
 
 /--
-The only way for multiplication on the right to have no effect on the left
-value, is if the left value is zero or the right value is one.
-
-**Property intuition**: The reverse direction is trivial. The forward direction
-makes sense because multiplication by any values that are not zero or one will
-change the magnitude of the result or the sign of the result.
-
-**Proof intuition**: Rewrite the equivalence into `a * (b - 1) ≃ 0` using
-algebra. Then `mul_split_zero` implies at least one of the factors is zero, and
-with trivial algebra this gives the result.
--/
-theorem mul_identR_reasons {a b : ℤ} : a * b ≃ a ↔ a ≃ 0 ∨ b ≃ 1 := calc
-  _ ↔ a * b ≃ a         := Iff.rfl
-  _ ↔ a * b ≃ a * 1     := AA.eqv_substR_iff (Rel.symm AA.identR)
-  _ ↔ a * b - a * 1 ≃ 0 := zero_diff_iff_eqv.symm
-  _ ↔ a * (b - 1) ≃ 0   := AA.eqv_substL_iff (Rel.symm mul_distribL_sub)
-  _ ↔ a ≃ 0 ∨ b - 1 ≃ 0 := mul_split_zero
-  _ ↔ a ≃ 0 ∨ b ≃ 1     := iff_subst_covar or_mapR zero_diff_iff_eqv
-
-/--
 When subtracting two sums, if they both have the same right-hand operand, it
 can be removed, leaving just the difference of the left-hand operands.
 
@@ -365,21 +362,46 @@ theorem sub_sums_sameR {a b c : ℤ} : a + c - (b + c) ≃ a - b := calc
   a - b                     ≃ _ := Rel.refl
 
 /--
-The simplest example of a "telescoping" sum: adding two differences with a
-common middle value results in the difference of the endpoints.
+Negation of subtraction swaps the operands.
 
-**Property and proof intuition**: The middle value is positive in one of the
-sum's arguments, and negative in the other. Those are additive inverses so they
-sum to zero and disappear from the result.
+**Property intuition**: The result of subtraction depends on the ordering of
+the two operands. Negating the result is equivalent to reversing the operands'
+order.
+
+**Proof intuition**: Represent subtraction as addition; the negation operator
+distributes to both operands. It undoes the negation of one operand, and adds
+negation to the other. With negation swapped, the sum is still equivalent to
+subtraction, but in the opposite order.
 -/
-theorem add_sub_telescope {a b c : ℤ} : (a - b) + (b - c) ≃ a - c := calc
-  (a - b) + (b - c)   ≃ _ := AA.substL sub_defn
-  (a + -b) + (b - c)  ≃ _ := AA.substR sub_defn
-  (a + -b) + (b + -c) ≃ _ := AA.expr_xxfxxff_lr_swap_rr
-  (a + -c) + (b + -b) ≃ _ := AA.substR AA.inverseR
-  (a + -c) + 0        ≃ _ := AA.identR
-  a + -c              ≃ _ := Rel.symm sub_defn
-  a - c               ≃ _ := Rel.refl
+theorem sub_neg_flip {a b : ℤ} : -(a - b) ≃ b - a := calc
+  (-(a - b))   ≃ _ := AA.subst₁ sub_defn
+  (-(a + -b))  ≃ _ := neg_compat_add
+  (-a) + -(-b) ≃ _ := AA.substR neg_involutive
+  (-a) + b     ≃ _ := AA.comm
+  b + -a       ≃ _ := Rel.symm sub_defn
+  b - a        ≃ _ := Rel.refl
+
+variable [Sign ℤ]
+
+/--
+The only way for multiplication on the right to have no effect on the left
+value, is if the left value is zero or the right value is one.
+
+**Property intuition**: The reverse direction is trivial. The forward direction
+makes sense because multiplication by any values that are not zero or one will
+change the magnitude of the result or the sign of the result.
+
+**Proof intuition**: Rewrite the equivalence into `a * (b - 1) ≃ 0` using
+algebra. Then `mul_split_zero` implies at least one of the factors is zero, and
+with trivial algebra this gives the result.
+-/
+theorem mul_identR_reasons {a b : ℤ} : a * b ≃ a ↔ a ≃ 0 ∨ b ≃ 1 := calc
+  _ ↔ a * b ≃ a         := Iff.rfl
+  _ ↔ a * b ≃ a * 1     := AA.eqv_substR_iff (Rel.symm AA.identR)
+  _ ↔ a * b - a * 1 ≃ 0 := zero_diff_iff_eqv.symm
+  _ ↔ a * (b - 1) ≃ 0   := AA.eqv_substL_iff (Rel.symm mul_distribL_sub)
+  _ ↔ a ≃ 0 ∨ b - 1 ≃ 0 := mul_split_zero
+  _ ↔ a ≃ 0 ∨ b ≃ 1     := iff_subst_covar or_mapR zero_diff_iff_eqv
 
 /--
 Multiplication by a nonzero value on the left is injective.
@@ -469,25 +491,5 @@ instance eqv? (a b : ℤ) : Decidable (a ≃ b) := by
     have : a ≄ b := mt zero_diff_iff_eqv.mpr this
     have : Decidable (a ≃ b) := isFalse this
     exact this
-
-/--
-Negation of subtraction swaps the operands.
-
-**Property intuition**: The result of subtraction depends on the ordering of
-the two operands. Negating the result is equivalent to reversing the operands'
-order.
-
-**Proof intuition**: Represent subtraction as addition; the negation operator
-distributes to both operands. It undoes the negation of one operand, and adds
-negation to the other. With negation swapped, the sum is still equivalent to
-subtraction, but in the opposite order.
--/
-theorem sub_neg_flip {a b : ℤ} : -(a - b) ≃ b - a := calc
-  (-(a - b))   ≃ _ := AA.subst₁ sub_defn
-  (-(a + -b))  ≃ _ := neg_compat_add
-  (-a) + -(-b) ≃ _ := AA.substR neg_involutive
-  (-a) + b     ≃ _ := AA.comm
-  b + -a       ≃ _ := Rel.symm sub_defn
-  b - a        ≃ _ := Rel.refl
 
 end Lean4Axiomatic.Integer

@@ -179,8 +179,80 @@ attribute [instance] Division.toProps
 
 variable {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
 variable {ℚ : Type}
-  [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
-  [Negation ℚ] [Reciprocation ℚ] [Division ℚ]
+  [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Reciprocation ℚ]
+
+section neg_only
+variable [Negation ℚ]
+
+/--
+Square roots of unity are their own reciprocals.
+
+**Property intuition**: Taking the reciprocal of a number doesn't change its
+sign, and the only fraction that would be unchanged when flipping it is `1/1`,
+i.e. the rational number `1`. Thus `1` and `-1` should be the only numbers to
+satisfy this property.
+
+**Proof intuition**: The defining proprty of square roots of unity,
+`s * s ≃ 1`, is cruical for this proof because it introduces two factors of
+`s`. One of them gets canceled by the reciprocal, leaving the other as the
+result.
+-/
+theorem recip_sqrt1 {s : ℚ} [Sqrt1 s] : s⁻¹ ≃ s := calc
+  s⁻¹           ≃ _ := eqv_symm mul_identL
+  1 * s⁻¹       ≃ _ := mul_substL (eqv_symm ‹Sqrt1 s›.elim)
+  (s * s) * s⁻¹ ≃ _ := mul_assoc
+  s * (s * s⁻¹) ≃ _ := mul_substR mul_inverseR
+  s * 1         ≃ _ := mul_identR
+  s             ≃ _ := eqv_refl
+
+/--
+The reciprocal of a nonzero rational is itself nonzero.
+
+**Property and proof intuition**: For `p * p⁻¹ ≃ 1` to hold, neither factor can
+be zero.
+-/
+theorem recip_preserves_nonzero {p : ℚ} [AP (p ≄ 0)] : p⁻¹ ≄ 0 := by
+  intro (_ : p⁻¹ ≃ 0)
+  show False
+  have : p ≃ 0 := calc
+    _ ≃ p             := eqv_refl
+    _ ≃ p * 1         := eqv_symm mul_identR
+    _ ≃ p * (p * p⁻¹) := mul_substR (eqv_symm mul_inverseR)
+    _ ≃ p * (p * 0)   := mul_substR (mul_substR ‹p⁻¹ ≃ 0›)
+    _ ≃ p * 0         := mul_substR mul_absorbR
+    _ ≃ 0             := mul_absorbR
+  exact absurd ‹p ≃ 0› ‹AP (p ≄ 0)›.ev
+
+/--
+Instance equivalent of `recip_preserves_nonzero`.
+
+Enables easy syntax for nested reciprocals, or reciprocals in denominators.
+-/
+instance recip_preserves_nonzero_inst
+    {p : ℚ} [AP (p ≄ 0)] : AP (p⁻¹ ≄ 0)
+    :=
+  AP.mk recip_preserves_nonzero
+
+/--
+Double reciprocation is idempotent.
+
+**Property intuition**: "Flipping over" a fraction twice brings back the
+original fraction.
+
+**Proof intuition**: Uses multiplicative inverse twice: first to introduce `p`
+and `p⁻¹`, then to cancel `p⁻¹` and `(p⁻¹)⁻¹`, leaving `p` behind.
+-/
+theorem recip_idemp {p : ℚ} [AP (p ≄ 0)] : (p⁻¹)⁻¹ ≃ p := calc
+  _ ≃ (p⁻¹)⁻¹             := eqv_refl
+  _ ≃ 1 * (p⁻¹)⁻¹         := eqv_symm mul_identL
+  _ ≃ (p * p⁻¹) * (p⁻¹)⁻¹ := mul_substL (eqv_symm mul_inverseR)
+  _ ≃ p * (p⁻¹ * (p⁻¹)⁻¹) := mul_assoc
+  _ ≃ p * 1               := mul_substR mul_inverseR
+  _ ≃ p                   := mul_identR
+
+end neg_only
+section div_only
+variable [Division ℚ]
 
 /--
 Equivalent to `Division.Props.ind_fraction` but with a more convenient argument
@@ -238,27 +310,6 @@ theorem as_ratio (p : ℚ) : AsRatio p := by
   exact AsRatio.intro a b ‹Integer.Nonzero b› eqv_refl
 
 /--
-Square roots of unity are their own reciprocals.
-
-**Property intuition**: Taking the reciprocal of a number doesn't change its
-sign, and the only fraction that would be unchanged when flipping it is `1/1`,
-i.e. the rational number `1`. Thus `1` and `-1` should be the only numbers to
-satisfy this property.
-
-**Proof intuition**: The defining proprty of square roots of unity,
-`s * s ≃ 1`, is cruical for this proof because it introduces two factors of
-`s`. One of them gets canceled by the reciprocal, leaving the other as the
-result.
--/
-theorem recip_sqrt1 {s : ℚ} [Sqrt1 s] : s⁻¹ ≃ s := calc
-  s⁻¹           ≃ _ := eqv_symm mul_identL
-  1 * s⁻¹       ≃ _ := mul_substL (eqv_symm ‹Sqrt1 s›.elim)
-  (s * s) * s⁻¹ ≃ _ := mul_assoc
-  s * (s * s⁻¹) ≃ _ := mul_substR mul_inverseR
-  s * 1         ≃ _ := mul_identR
-  s             ≃ _ := eqv_refl
-
-/--
 Division respects equivalence over its left operand.
 
 **Property intuition**: Necessary for division to be a valid function on
@@ -313,20 +364,6 @@ theorem div_identL {p : ℚ} [AP (p ≄ 0)] : 1/p ≃ p⁻¹ := calc
   _ ≃ p⁻¹     := mul_identL
 
 /--
-Dividing a rational number by one gives that number back.
-
-**Property intuition**: Dividing a quantity into a single piece has no effect.
-
-**Proof intuition**: Expand division into multiplication by reciprocal. The
-reciprocal of one is one, which disappears, leaving the original number.
--/
-theorem div_identR {p : ℚ} : p/1 ≃ p := calc
-  _ ≃ p/1     := eqv_refl
-  _ ≃ p * 1⁻¹ := div_mul_recip
-  _ ≃ p * 1   := mul_substR recip_sqrt1
-  _ ≃ p       := mul_identR
-
-/--
 Dividing a rational number by itself gives one.
 
 **Property and proof intuition**: Self-division is equivalent to multiplication
@@ -370,48 +407,50 @@ theorem div_eqv_1 {p q : ℚ} [AP (q ≄ 0)] : p/q ≃ 1 ↔ p ≃ q := by
       _ ≃ 1   := div_same
 
 /--
-The reciprocal of a nonzero rational is itself nonzero.
+Division by a rational number distributes over addition of rational numbers.
 
-**Property and proof intuition**: For `p * p⁻¹ ≃ 1` to hold, neither factor can
-be zero.
+**Property intuition**: The result of the division is the same, whether the
+numbers are added before dividing them or after.
+
+**Proof intuition**: Expand division into multiplication by a reciprocal. The
+reciprocal factor distributes over addition. Then convert the two terms back to
+division.
 -/
-theorem recip_preserves_nonzero {p : ℚ} [AP (p ≄ 0)] : p⁻¹ ≄ 0 := by
-  intro (_ : p⁻¹ ≃ 0)
-  show False
-  have : p ≃ 0 := calc
-    _ ≃ p             := eqv_refl
-    _ ≃ p * 1         := eqv_symm mul_identR
-    _ ≃ p * (p * p⁻¹) := mul_substR (eqv_symm mul_inverseR)
-    _ ≃ p * (p * 0)   := mul_substR (mul_substR ‹p⁻¹ ≃ 0›)
-    _ ≃ p * 0         := mul_substR mul_absorbR
-    _ ≃ 0             := mul_absorbR
-  exact absurd ‹p ≃ 0› ‹AP (p ≄ 0)›.ev
+theorem div_distribR {p q r : ℚ} [AP (r ≄ 0)] : (p + q)/r ≃ p/r + q/r := calc
+  _ = (p + q)/r         := rfl
+  _ ≃ (p + q) * r⁻¹     := div_mul_recip
+  _ ≃ p * r⁻¹ + q * r⁻¹ := mul_distribR
+  _ ≃ p/r + q * r⁻¹     := add_substL (eqv_symm div_mul_recip)
+  _ ≃ p/r + q/r         := add_substR (eqv_symm div_mul_recip)
+
+end div_only
+variable [Negation ℚ] [Division ℚ]
 
 /--
-Instance equivalent of `recip_preserves_nonzero`.
+Dividing a rational number by one gives that number back.
 
-Enables easy syntax for nested reciprocals, or reciprocals in denominators.
+**Property intuition**: Dividing a quantity into a single piece has no effect.
+
+**Proof intuition**: Expand division into multiplication by reciprocal. The
+reciprocal of one is one, which disappears, leaving the original number.
 -/
-instance recip_preserves_nonzero_inst
-    {p : ℚ} [AP (p ≄ 0)] : AP (p⁻¹ ≄ 0)
-    :=
-  AP.mk recip_preserves_nonzero
+theorem div_identR {p : ℚ} : p/1 ≃ p := calc
+  _ ≃ p/1     := eqv_refl
+  _ ≃ p * 1⁻¹ := div_mul_recip
+  _ ≃ p * 1   := mul_substR recip_sqrt1
+  _ ≃ p       := mul_identR
 
 /--
-Double reciprocation is idempotent.
+Negation can be moved between the "outside" of a division operation and the
+"inside", specifically its left operand.
 
-**Property intuition**: "Flipping over" a fraction twice brings back the
-original fraction.
-
-**Proof intuition**: Uses multiplicative inverse twice: first to introduce `p`
-and `p⁻¹`, then to cancel `p⁻¹` and `(p⁻¹)⁻¹`, leaving `p` behind.
+**Property and proof intuition**: The same property holds for multiplication,
+and division is a form of multiplication.
 -/
-theorem recip_idemp {p : ℚ} [AP (p ≄ 0)] : (p⁻¹)⁻¹ ≃ p := calc
-  _ ≃ (p⁻¹)⁻¹             := eqv_refl
-  _ ≃ 1 * (p⁻¹)⁻¹         := eqv_symm mul_identL
-  _ ≃ (p * p⁻¹) * (p⁻¹)⁻¹ := mul_substL (eqv_symm mul_inverseR)
-  _ ≃ p * (p⁻¹ * (p⁻¹)⁻¹) := mul_assoc
-  _ ≃ p * 1               := mul_substR mul_inverseR
-  _ ≃ p                   := mul_identR
+theorem neg_scompatL_div {p q : ℚ} [AP (q ≄ 0)] : -(p / q) ≃ (-p) / q := calc
+  (-(p / q))   ≃ _ := neg_subst div_mul_recip
+  (-(p * q⁻¹)) ≃ _ := neg_scompatL_mul
+  (-p) * q⁻¹   ≃ _ := eqv_symm div_mul_recip
+  (-p) / q     ≃ _ := eqv_refl
 
 end Lean4Axiomatic.Rational

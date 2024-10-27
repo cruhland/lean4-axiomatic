@@ -95,8 +95,7 @@ attribute [instance] Metric.toProps
 variable {ℕ ℤ ℚ : Type}
   [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
   [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Negation ℚ] [Subtraction ℚ]
-  [Multiplication ℚ] [Reciprocation ℚ] [Division ℚ]
-  [Sign ℚ] [Order ℚ] [MinMax ℚ] [Metric ℚ]
+  [Multiplication ℚ] [Sign ℚ] [Order ℚ] [Metric ℚ]
 
 /--
 The absolute value function preserves equivalence over its argument.
@@ -115,20 +114,6 @@ theorem abs_subst {p₁ p₂ : ℚ} : p₁ ≃ p₂ → abs p₁ ≃ abs p₂ :=
     p₂ * sgn p₁ ≃ _ := mul_substR (from_integer_subst (sgn_subst ‹p₁ ≃ p₂›))
     p₂ * sgn p₂ ≃ _ := eqv_symm abs_sgn
     abs p₂      ≃ _ := eqv_refl
-
-/--
-The sign of a rational number's absolute value is the squared sign of the
-rational number.
-
-**Property and proof intuition**: The absolute value of a number is that number
-times its sign; taking the `sgn` of that gives the result.
--/
-theorem sgn_abs {p : ℚ} : sgn (abs p) ≃ sgn p * sgn p := calc
-  sgn (abs p)             ≃ _ := sgn_subst abs_sgn
-  sgn (p * sgn p)         ≃ _ := sgn_compat_mul
-  sgn p * sgn (sgn p : ℚ) ≃ _ := AA.substR sgn_from_integer
-  sgn p * sgn (sgn p)     ≃ _ := AA.substR sgn_idemp
-  sgn p * sgn p           ≃ _ := Rel.refl
 
 /--
 Zero is the only rational number that has an absolute value of zero.
@@ -241,25 +226,6 @@ theorem abs_cases {p : ℚ} : abs p ≃ p ∨ abs p ≃ -p := by
     exact (Or.inr this)
 
 /--
-The absolute value of a rational number is nonnegative.
-
-**Property intuition**: The absolute value discards the sign of a number and
-returns its magnitude, so we'd expect it to be nonnegative.
-
-**Proof intuition**: The sign of a rational number's absolute value is that
-number's sign squared. A square can never be negative, thus the absolute value
-must be positive or zero.
--/
-theorem abs_nonneg {p : ℚ} : abs p ≥ 0 := by
-  have : sgn (p * p) ≃ sgn (abs p) := calc
-    _ ≃ sgn (p * p)   := Rel.refl
-    _ ≃ sgn p * sgn p := sgn_compat_mul
-    _ ≃ sgn (abs p)   := Rel.symm sgn_abs
-  have : sgn (abs p) ≄ -1 := AA.neqv_substL this nonneg_square
-  have : abs p ≥ 0 := ge_zero_sgn.mpr this
-  exact this
-
-/--
 A rational number is always less than or equivalent to its absolute value.
 
 This lemma is useful for the proof of `abs_upper_bound`.
@@ -313,70 +279,6 @@ theorem neg_abs_le_self {p : ℚ} : -abs p ≤ p := by
   exact this
 
 /--
-Convert between an inequality on the absolute value of a rational number and
-inequalities on the rational number itself.
-
-**Property intuition**: Viewing the absolute value as the "distance from zero",
-if a rational number's absolute value is below some quantity, that's equivalent
-to the underlying rational number being within that quantity of zero, in either
-the positive or negative direction.
-
-**Proof intuition**: Not much to provide aside from just reading the proof; it
-seems to require handling "positive" and "negative" cases separately.
--/
-theorem abs_upper_bound {p q : ℚ} : abs p ≤ q ↔ -q ≤ p ∧ p ≤ q := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : abs p ≤ q)
-    show -q ≤ p ∧ p ≤ q
-    have : -q ≤ p := calc
-      _ ≃ -q       := eqv_refl
-      _ ≤ (-abs p) := le_subst_neg ‹abs p ≤ q›
-      _ ≤ p        := neg_abs_le_self
-    have : p ≤ q := calc
-      _ ≃ p     := eqv_refl
-      _ ≤ abs p := abs_ge_self
-      _ ≤ q     := ‹abs p ≤ q›
-    exact And.intro ‹-q ≤ p› ‹p ≤ q›
-  case mpr =>
-    intro (And.intro (_ : -q ≤ p) (_ : p ≤ q))
-    show abs p ≤ q
-    have : abs p ≃ p ∨ abs p ≃ -p := abs_cases
-    match this with
-    | Or.inl (_ : abs p ≃ p) =>
-      calc
-        _ ≃ abs p := eqv_refl
-        _ ≃ p     := ‹abs p ≃ p›
-        _ ≤ q     := ‹p ≤ q›
-    | Or.inr (_ : abs p ≃ -p) =>
-      calc
-        _ ≃ abs p   := eqv_refl
-        _ ≃ (-p)    := ‹abs p ≃ -p›
-        _ ≤ (-(-q)) := le_subst_neg ‹-q ≤ p›
-        _ ≃ q       := neg_involutive
-
-/--
-The [triangle inequality](https://w.wiki/6VUr); i.e. how absolute value behaves
-over addition.
-
-**Property intuition**: The sum of two absolute values will always be
-non-negative, while the sum of any two rationals can have smaller magnitude due
-to negative values.
-
-**Proof intuition**: Expand `abs` in terms of `sgn`. The key substitution is
-that a rational number times an arbitrary sign value will never be greater than
-that rational number times its own sign, i.e. the number's absolute value.
--/
-theorem abs_compat_add {p q : ℚ} : abs (p + q) ≤ abs p + abs q := calc
-  _ ≃ abs (p + q)                       := eqv_refl
-  _ ≃ (p + q) * sgn (p + q)             := abs_sgn
-  _ ≃ p * sgn (p + q) + q * sgn (p + q) := mul_distribR
-  _ ≤ p * sgn p + q * sgn (p + q)       := le_substL_add mul_sgn_self_max
-  _ ≤ p * sgn p + q * sgn q             := le_substR_add mul_sgn_self_max
-  _ ≃ abs p + q * sgn q                 := add_substL (eqv_symm abs_sgn)
-  _ ≃ abs p + abs q                     := add_substR (eqv_symm abs_sgn)
-
-/--
 A rational number product's absolute value is the product of the absolute
 values of its factors.
 
@@ -399,34 +301,6 @@ theorem abs_compat_mul {p q : ℚ} : abs (p * q) ≃ abs p * abs q := by
     _ ≃ abs p * (q * sgn q)                   := mul_substL (eqv_symm abs_sgn)
     _ ≃ abs p * abs q                         := mul_substR (eqv_symm abs_sgn)
   exact this
-
-/--
-Swap the order of two operations on a nonzero rational number: taking the
-reciprocal, and the absolute value.
--/
-theorem abs_compat_recip {p : ℚ} [AP (p ≄ 0)] : abs (p⁻¹) ≃ (abs p)⁻¹ := calc
-  _ = abs (p⁻¹)         := rfl
-  -- V begin key steps V
-  _ ≃ p⁻¹ * sgn (p⁻¹)   := abs_sgn
-  _ ≃ p⁻¹ * (sgn p:ℚ)⁻¹ := mul_substR sgn_swap_recip
-  -- ^  end key steps  ^
-  _ ≃ (p * sgn p)⁻¹     := eqv_symm recip_compat_mul
-  _ ≃ (abs p)⁻¹         := recip_subst (eqv_symm abs_sgn)
-
-/--
-Swap the order of two operations on two rational numbers: division, and taking
-the absolute value.
--/
-theorem abs_compat_div
-    {p q : ℚ} [AP (q ≄ 0)] : abs (p / q) ≃ abs p / abs q
-    := calc
-  _ = abs (p / q)       := rfl
-  _ ≃ abs (p * q⁻¹)     := abs_subst div_mul_recip
-  -- V begin key steps V
-  _ ≃ abs p * abs (q⁻¹) := abs_compat_mul
-  _ ≃ abs p * (abs q)⁻¹ := mul_substR abs_compat_recip
-  -- ^  end key steps  ^
-  _ ≃ abs p / abs q     := eqv_symm div_mul_recip
 
 /--
 The absolute values of a rational number and its negation are the same.
@@ -481,20 +355,6 @@ theorem dist_substR {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → dist q p₁ ≃ dist
     _ ≃ dist q p₂    := eqv_symm dist_abs
 
 /--
-The distance between two rational numbers is always nonnegative.
-
-**Property intuition**: Distance measures how "far apart" two numbers are. It's
-not possible for numbers to be closer than zero distance.
-
-**Proof intutition**: Distance is defined as an absolute value, which is also
-guaranteed to be nonnegative.
--/
-theorem dist_nonneg {p q : ℚ} : dist p q ≥ 0 := calc
-  _ ≃ dist p q    := eqv_refl
-  _ ≃ abs (p - q) := dist_abs
-  _ ≥ 0           := abs_nonneg
-
-/--
 Equivalent rational numbers are the only ones that can be a distance of zero
 apart.
 
@@ -538,24 +398,6 @@ theorem dist_comm {p q : ℚ} : dist p q ≃ dist q p := calc
   _ ≃ abs (-(q - p)) := abs_subst (eqv_symm neg_sub)
   _ ≃ abs (q - p)    := abs_absorb_neg
   _ ≃ dist q p       := eqv_symm dist_abs
-
-/--
-The [triangle inequality for distance](https://w.wiki/6hbw).
-
-**Property intuition**: The direct distance between two numbers is never more
-than the distance from one of them, to a third number, then back to the other.
-
-**Proof intuition**: Expand distance into absolute value of a difference; the
-result follows from the triangle inequality for absolute value and the
-telescoping addition of differences.
--/
-theorem dist_triangle {p q r : ℚ} : dist p r ≤ dist p q + dist q r := calc
-  _ ≃ dist p q + dist q r       := eqv_refl
-  _ ≃ abs (p - q) + dist q r    := add_substL dist_abs
-  _ ≃ abs (p - q) + abs (q - r) := add_substR dist_abs
-  _ ≥ abs ((p - q) + (q - r))   := abs_compat_add
-  _ ≃ abs (p - r)               := abs_subst add_sub_telescope
-  _ ≃ dist p r                  := eqv_symm dist_abs
 
 /--
 The distance between two values is unchanged after removing a common term added
@@ -648,87 +490,6 @@ theorem dist_cancel_neg {p q : ℚ} : dist (-p) (-q) ≃ dist p q := calc
   _ ≃ dist p q               := mul_identL
 
 /--
-Two rational numbers are "at most" a distance of zero apart iff they are
-equivalent.
-
-**Property intuition**: If there's no distance between the numbers, they must
-be the same.
-
-**Proof intuition**: Expand 0-close into its distance definition and use
-properties of order.
--/
-theorem close_zero {p q : ℚ} : p ⊢0⊣ q ↔ p ≃ q := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : p ⊢0⊣ q)
-    show p ≃ q
-    have : dist p q ≤ 0 := close_dist.mp ‹p ⊢0⊣ q›
-    have : dist p q ≥ 0 := dist_nonneg
-    have : dist p q ≃ 0 := le_antisymm ‹dist p q ≤ 0› ‹dist p q ≥ 0›
-    have : p ≃ q := dist_zero.mp this
-    exact this
-  case mpr =>
-    intro (_ : p ≃ q)
-    show p ⊢0⊣ q
-    have : dist p q ≃ 0 := dist_zero.mpr ‹p ≃ q›
-    have : dist p q ≤ 0 := le_cases.mpr (Or.inr this)
-    have : p ⊢0⊣ q := close_dist.mpr this
-    exact this
-
-/--
-The `ε` in ε-closeness is nonnegative.
-
-**Property and proof intuition**: Distance is nonnegative.
--/
-theorem close_nonneg {ε p q : ℚ} : p ⊢ε⊣ q → ε ≥ 0 := by
-  intro (_ : p ⊢ε⊣ q)
-  show ε ≥ 0
-  calc
-    _ ≃ ε        := eqv_refl
-    _ ≥ dist p q := close_dist.mp ‹p ⊢ε⊣ q›
-    _ ≥ 0        := dist_nonneg
-
-/--
-Two rational numbers are equivalent exactly when they are closer together than
-any positive distance.
-
-**Proof intuition**: In the forward direction, suppose that `dist p q` is
-positive (otherwise it's zero, and the claim holds). But then we can supply
-half of that distance, which is still positive, to the hypothesis to show that
-`p` and `q` must be closer than we assumed: contradiction. The reverse
-direction follows immediately from definitions.
--/
-theorem close_eqv {p q : ℚ} : ({ε : ℚ} → ε > 0 → p ⊢ε⊣ q) ↔ p ≃ q := by
-  apply Iff.intro
-  case mp =>
-    intro (hyp : {ε : ℚ} → ε > 0 → p ⊢ε⊣ q)
-    show p ≃ q
-    have : dist p q ≥ 0 := dist_nonneg
-    have : dist p q > 0 ∨ dist p q ≃ 0 := ge_cases.mp this
-    match this with
-    | Or.inl (_ : dist p q > 0) =>
-      let ε := dist p q
-      have : AP ((2:ℚ) ≄ 0) := AP.mk (nonzero_if_pos sgn_two)
-      have (And.intro (_ : ε > ε/2) (_ : ε/2 > 0)) := halve ‹ε > 0›
-      have : p ⊢ε/2⊣ q := hyp ‹ε/2 > 0›
-      have : dist p q ≤ ε/2 := close_dist.mp this
-      have : ε ≤ ε/2 := this
-      have : p ≃ q := (le_gt_false ‹ε ≤ ε/2› ‹ε > ε/2›).elim
-      exact this
-    | Or.inr (_ : dist p q ≃ 0) =>
-      have : p ≃ q := dist_zero.mp ‹dist p q ≃ 0›
-      exact this
-  case mpr =>
-    intro (_ : p ≃ q) (ε : ℚ) (_ : ε > 0)
-    show p ⊢ε⊣ q
-    have : dist p q ≤ ε := calc
-      _ ≃ dist p q := eqv_refl
-      _ ≃ 0        := dist_zero.mpr ‹p ≃ q›
-      _ ≤ ε        := le_cases.mpr (Or.inl ‹ε > 0›)
-    have : p ⊢ε⊣ q := close_dist.mpr ‹dist p q ≤ ε›
-    exact this
-
-/--
 ε-closeness is symmetric.
 
 **Property and proof intuition**: ε-closeness is a constraint on distance, and
@@ -740,27 +501,6 @@ theorem close_symm {ε p q : ℚ} : p ⊢ε⊣ q → q ⊢ε⊣ p := by
   have : dist p q ≤ ε := close_dist.mp ‹p ⊢ε⊣ q›
   have : dist q p ≤ ε := le_substL_eqv dist_comm this
   have : q ⊢ε⊣ p := close_dist.mpr this
-  exact this
-
-/--
-ε-closeness obeys a form of transitivity, where the transitive distance is the
-sum of the input distances.
-
-**Property and proof intuition**: By the triangle inequality, we know that in
-the worst case, the distance between the first and last values might be the sum
-of the intermediate distances.
--/
-theorem close_trans {ε δ p q r : ℚ} : p ⊢ε⊣ q → q ⊢δ⊣ r → p ⊢ε+δ⊣ r := by
-  intro (_ : p ⊢ε⊣ q) (_ : q ⊢δ⊣ r)
-  show p ⊢ε+δ⊣ r
-  have : dist p q ≤ ε := close_dist.mp ‹p ⊢ε⊣ q›
-  have : dist q r ≤ δ := close_dist.mp ‹q ⊢δ⊣ r›
-  have : dist p r ≤ ε + δ := calc
-    _ ≃ dist p r            := eqv_refl
-    _ ≤ dist p q + dist q r := dist_triangle
-    _ ≤ ε + dist q r        := le_substL_add ‹dist p q ≤ ε›
-    _ ≤ ε + δ               := le_substR_add ‹dist q r ≤ δ›
-  have : p ⊢ε+δ⊣ r := close_dist.mpr this
   exact this
 
 /--
@@ -903,6 +643,269 @@ theorem close_substR_sub {ε p q r : ℚ} : p ⊢ε⊣ q → r - p ⊢ε⊣ r - 
   have : r - p ⊢ε⊣ r - q := close_substR_eqv (eqv_symm sub_add_neg) this
   exact this
 
+variable [Reciprocation ℚ]
+
+/--
+Swap the order of two operations on a nonzero rational number: taking the
+reciprocal, and the absolute value.
+-/
+theorem abs_compat_recip {p : ℚ} [AP (p ≄ 0)] : abs (p⁻¹) ≃ (abs p)⁻¹ := calc
+  _ = abs (p⁻¹)         := rfl
+  -- ↓ begin key steps ↓
+  _ ≃ p⁻¹ * sgn (p⁻¹)   := abs_sgn
+  _ ≃ p⁻¹ * (sgn p:ℚ)⁻¹ := mul_substR sgn_swap_recip
+  -- ↑  end key steps  ↑
+  _ ≃ (p * sgn p)⁻¹     := eqv_symm recip_compat_mul
+  _ ≃ (abs p)⁻¹         := recip_subst (eqv_symm abs_sgn)
+
+variable [Division ℚ]
+
+/--
+Convert between an inequality on the absolute value of a rational number and
+inequalities on the rational number itself.
+
+**Property intuition**: Viewing the absolute value as the "distance from zero",
+if a rational number's absolute value is below some quantity, that's equivalent
+to the underlying rational number being within that quantity of zero, in either
+the positive or negative direction.
+
+**Proof intuition**: Not much to provide aside from just reading the proof; it
+seems to require handling "positive" and "negative" cases separately.
+-/
+theorem abs_upper_bound {p q : ℚ} : abs p ≤ q ↔ -q ≤ p ∧ p ≤ q := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : abs p ≤ q)
+    show -q ≤ p ∧ p ≤ q
+    have : -q ≤ p := calc
+      _ ≃ -q       := eqv_refl
+      _ ≤ (-abs p) := le_subst_neg ‹abs p ≤ q›
+      _ ≤ p        := neg_abs_le_self
+    have : p ≤ q := calc
+      _ ≃ p     := eqv_refl
+      _ ≤ abs p := abs_ge_self
+      _ ≤ q     := ‹abs p ≤ q›
+    exact And.intro ‹-q ≤ p› ‹p ≤ q›
+  case mpr =>
+    intro (And.intro (_ : -q ≤ p) (_ : p ≤ q))
+    show abs p ≤ q
+    have : abs p ≃ p ∨ abs p ≃ -p := abs_cases
+    match this with
+    | Or.inl (_ : abs p ≃ p) =>
+      calc
+        _ ≃ abs p := eqv_refl
+        _ ≃ p     := ‹abs p ≃ p›
+        _ ≤ q     := ‹p ≤ q›
+    | Or.inr (_ : abs p ≃ -p) =>
+      calc
+        _ ≃ abs p   := eqv_refl
+        _ ≃ (-p)    := ‹abs p ≃ -p›
+        _ ≤ (-(-q)) := le_subst_neg ‹-q ≤ p›
+        _ ≃ q       := neg_involutive
+
+/--
+The [triangle inequality](https://w.wiki/6VUr); i.e. how absolute value behaves
+over addition.
+
+**Property intuition**: The sum of two absolute values will always be
+non-negative, while the sum of any two rationals can have smaller magnitude due
+to negative values.
+
+**Proof intuition**: Expand `abs` in terms of `sgn`. The key substitution is
+that a rational number times an arbitrary sign value will never be greater than
+that rational number times its own sign, i.e. the number's absolute value.
+-/
+theorem abs_compat_add {p q : ℚ} : abs (p + q) ≤ abs p + abs q := calc
+  _ ≃ abs (p + q)                       := eqv_refl
+  _ ≃ (p + q) * sgn (p + q)             := abs_sgn
+  _ ≃ p * sgn (p + q) + q * sgn (p + q) := mul_distribR
+  _ ≤ p * sgn p + q * sgn (p + q)       := le_substL_add mul_sgn_self_max
+  _ ≤ p * sgn p + q * sgn q             := le_substR_add mul_sgn_self_max
+  _ ≃ abs p + q * sgn q                 := add_substL (eqv_symm abs_sgn)
+  _ ≃ abs p + abs q                     := add_substR (eqv_symm abs_sgn)
+
+/--
+The sign of a rational number's absolute value is the squared sign of the
+rational number.
+
+**Property and proof intuition**: The absolute value of a number is that number
+times its sign; taking the `sgn` of that gives the result.
+-/
+theorem sgn_abs {p : ℚ} : sgn (abs p) ≃ sgn p * sgn p := calc
+  sgn (abs p)             ≃ _ := sgn_subst abs_sgn
+  sgn (p * sgn p)         ≃ _ := sgn_compat_mul
+  sgn p * sgn (sgn p : ℚ) ≃ _ := AA.substR sgn_from_integer
+  sgn p * sgn (sgn p)     ≃ _ := AA.substR sgn_idemp
+  sgn p * sgn p           ≃ _ := Rel.refl
+
+/--
+The absolute value of a rational number is nonnegative.
+
+**Property intuition**: The absolute value discards the sign of a number and
+returns its magnitude, so we'd expect it to be nonnegative.
+
+**Proof intuition**: The sign of a rational number's absolute value is that
+number's sign squared. A square can never be negative, thus the absolute value
+must be positive or zero.
+-/
+theorem abs_nonneg {p : ℚ} : abs p ≥ 0 := by
+  have : sgn (p * p) ≃ sgn (abs p) := calc
+    _ ≃ sgn (p * p)   := Rel.refl
+    _ ≃ sgn p * sgn p := sgn_compat_mul
+    _ ≃ sgn (abs p)   := Rel.symm sgn_abs
+  have : sgn (abs p) ≄ -1 := AA.neqv_substL this nonneg_square
+  have : abs p ≥ 0 := ge_zero_sgn.mpr this
+  exact this
+
+/--
+Swap the order of two operations on two rational numbers: division, and taking
+the absolute value.
+-/
+theorem abs_compat_div
+    {p q : ℚ} [AP (q ≄ 0)] : abs (p / q) ≃ abs p / abs q
+    := calc
+  _ = abs (p / q)       := rfl
+  _ ≃ abs (p * q⁻¹)     := abs_subst div_mul_recip
+  -- V begin key steps V
+  _ ≃ abs p * abs (q⁻¹) := abs_compat_mul
+  _ ≃ abs p * (abs q)⁻¹ := mul_substR abs_compat_recip
+  -- ^  end key steps  ^
+  _ ≃ abs p / abs q     := eqv_symm div_mul_recip
+
+/--
+The distance between two rational numbers is always nonnegative.
+
+**Property intuition**: Distance measures how "far apart" two numbers are. It's
+not possible for numbers to be closer than zero distance.
+
+**Proof intutition**: Distance is defined as an absolute value, which is also
+guaranteed to be nonnegative.
+-/
+theorem dist_nonneg {p q : ℚ} : dist p q ≥ 0 := calc
+  _ ≃ dist p q    := eqv_refl
+  _ ≃ abs (p - q) := dist_abs
+  _ ≥ 0           := abs_nonneg
+
+/--
+The [triangle inequality for distance](https://w.wiki/6hbw).
+
+**Property intuition**: The direct distance between two numbers is never more
+than the distance from one of them, to a third number, then back to the other.
+
+**Proof intuition**: Expand distance into absolute value of a difference; the
+result follows from the triangle inequality for absolute value and the
+telescoping addition of differences.
+-/
+theorem dist_triangle {p q r : ℚ} : dist p r ≤ dist p q + dist q r := calc
+  _ ≃ dist p q + dist q r       := eqv_refl
+  _ ≃ abs (p - q) + dist q r    := add_substL dist_abs
+  _ ≃ abs (p - q) + abs (q - r) := add_substR dist_abs
+  _ ≥ abs ((p - q) + (q - r))   := abs_compat_add
+  _ ≃ abs (p - r)               := abs_subst add_sub_telescope
+  _ ≃ dist p r                  := eqv_symm dist_abs
+
+/--
+ε-closeness obeys a form of transitivity, where the transitive distance is the
+sum of the input distances.
+
+**Property and proof intuition**: By the triangle inequality, we know that in
+the worst case, the distance between the first and last values might be the sum
+of the intermediate distances.
+-/
+theorem close_trans {ε δ p q r : ℚ} : p ⊢ε⊣ q → q ⊢δ⊣ r → p ⊢ε+δ⊣ r := by
+  intro (_ : p ⊢ε⊣ q) (_ : q ⊢δ⊣ r)
+  show p ⊢ε+δ⊣ r
+  have : dist p q ≤ ε := close_dist.mp ‹p ⊢ε⊣ q›
+  have : dist q r ≤ δ := close_dist.mp ‹q ⊢δ⊣ r›
+  have : dist p r ≤ ε + δ := calc
+    _ ≃ dist p r            := eqv_refl
+    _ ≤ dist p q + dist q r := dist_triangle
+    _ ≤ ε + dist q r        := le_substL_add ‹dist p q ≤ ε›
+    _ ≤ ε + δ               := le_substR_add ‹dist q r ≤ δ›
+  have : p ⊢ε+δ⊣ r := close_dist.mpr this
+  exact this
+
+/--
+Two rational numbers are "at most" a distance of zero apart iff they are
+equivalent.
+
+**Property intuition**: If there's no distance between the numbers, they must
+be the same.
+
+**Proof intuition**: Expand 0-close into its distance definition and use
+properties of order.
+-/
+theorem close_zero {p q : ℚ} : p ⊢0⊣ q ↔ p ≃ q := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : p ⊢0⊣ q)
+    show p ≃ q
+    have : dist p q ≤ 0 := close_dist.mp ‹p ⊢0⊣ q›
+    have : dist p q ≥ 0 := dist_nonneg
+    have : dist p q ≃ 0 := le_antisymm ‹dist p q ≤ 0› ‹dist p q ≥ 0›
+    have : p ≃ q := dist_zero.mp this
+    exact this
+  case mpr =>
+    intro (_ : p ≃ q)
+    show p ⊢0⊣ q
+    have : dist p q ≃ 0 := dist_zero.mpr ‹p ≃ q›
+    have : dist p q ≤ 0 := le_cases.mpr (Or.inr this)
+    have : p ⊢0⊣ q := close_dist.mpr this
+    exact this
+
+/--
+The `ε` in ε-closeness is nonnegative.
+
+**Property and proof intuition**: Distance is nonnegative.
+-/
+theorem close_nonneg {ε p q : ℚ} : p ⊢ε⊣ q → ε ≥ 0 := by
+  intro (_ : p ⊢ε⊣ q)
+  show ε ≥ 0
+  calc
+    _ ≃ ε        := eqv_refl
+    _ ≥ dist p q := close_dist.mp ‹p ⊢ε⊣ q›
+    _ ≥ 0        := dist_nonneg
+
+/--
+Two rational numbers are equivalent exactly when they are closer together than
+any positive distance.
+
+**Proof intuition**: In the forward direction, suppose that `dist p q` is
+positive (otherwise it's zero, and the claim holds). But then we can supply
+half of that distance, which is still positive, to the hypothesis to show that
+`p` and `q` must be closer than we assumed: contradiction. The reverse
+direction follows immediately from definitions.
+-/
+theorem close_eqv {p q : ℚ} : ({ε : ℚ} → ε > 0 → p ⊢ε⊣ q) ↔ p ≃ q := by
+  apply Iff.intro
+  case mp =>
+    intro (hyp : {ε : ℚ} → ε > 0 → p ⊢ε⊣ q)
+    show p ≃ q
+    have : dist p q ≥ 0 := dist_nonneg
+    have : dist p q > 0 ∨ dist p q ≃ 0 := ge_cases.mp this
+    match this with
+    | Or.inl (_ : dist p q > 0) =>
+      let ε := dist p q
+      have : AP ((2:ℚ) ≄ 0) := AP.mk (nonzero_if_pos sgn_two)
+      have (And.intro (_ : ε > ε/2) (_ : ε/2 > 0)) := halve ‹ε > 0›
+      have : p ⊢ε/2⊣ q := hyp ‹ε/2 > 0›
+      have : dist p q ≤ ε/2 := close_dist.mp this
+      have : ε ≤ ε/2 := this
+      have : p ≃ q := (le_gt_false ‹ε ≤ ε/2› ‹ε > ε/2›).elim
+      exact this
+    | Or.inr (_ : dist p q ≃ 0) =>
+      have : p ≃ q := dist_zero.mp ‹dist p q ≃ 0›
+      exact this
+  case mpr =>
+    intro (_ : p ≃ q) (ε : ℚ) (_ : ε > 0)
+    show p ⊢ε⊣ q
+    have : dist p q ≤ ε := calc
+      _ ≃ dist p q := eqv_refl
+      _ ≃ 0        := dist_zero.mpr ‹p ≃ q›
+      _ ≤ ε        := le_cases.mpr (Or.inl ‹ε > 0›)
+    have : p ⊢ε⊣ q := close_dist.mpr ‹dist p q ≤ ε›
+    exact this
+
 /--
 Statements of ε-closeness can be added argument-by-argument.
 
@@ -978,127 +981,6 @@ theorem close_endpoints {ε p q : ℚ} : p ⊢ε⊣ q ↔ p-ε ≤ q ∧ q ≤ p
   _ ↔ p-ε ≤ q ∧ q ≤ p+ε  := iff_subst_covar and_mapR le_diff_upper
 
 /--
-Convert "ordered betweenness" to and from a "min-max" representation of "full"
-betweenness.
-
-This theorem holds the common logic for the ordered/min-max corollaries below.
-
-**Property intuition**: The hypothesis that provides the ordering of the
-exterior values is only needed for the reverse direction, to simplify `min` and
-`max`. The forward direction is true just from the ordering implied by
-"ordered betweenness".
-
-**Proof intuition**: Use the hypothesis that orders the exterior values to
-create equivalences for the `min` and `max` expressions. Then substitute those
-equivalences on one side of the iff to produce the other.
--/
-theorem order_iff_min_max
-    {p q r : ℚ} : p ≤ q → (p ≤ r ∧ r ≤ q ↔ min p q ≤ r ∧ r ≤ max p q)
-    := by
-  intro (_ : p ≤ q)
-  show p ≤ r ∧ r ≤ q ↔ min p q ≤ r ∧ r ≤ max p q
-  have : p ≃ min p q := eqv_symm (min_le.mpr ‹p ≤ q›)
-  have : q ≃ max p q := eqv_symm (max_le.mpr ‹p ≤ q›)
-  have p_min : p ≤ r ↔ min p q ≤ r := iff_subst_eqv le_substL_eqv ‹p ≃ min p q›
-  have q_max : r ≤ q ↔ r ≤ max p q := iff_subst_eqv le_substR_eqv ‹q ≃ max p q›
-  calc
-    _ ↔ p ≤ r ∧ r ≤ q             := Iff.rfl
-    _ ↔ min p q ≤ r ∧ r ≤ q       := iff_subst_covar and_mapL p_min
-    _ ↔ min p q ≤ r ∧ r ≤ max p q := iff_subst_covar and_mapR q_max
-
-/--
-Convert "ordered betweenness" to the "min-max" form of betweenness.
-
-**Property and proof intuition**: Directly follows from `order_iff_min_max`;
-the exterior values ordering hypothesis of that theorem can be derived from
-"ordered betweenness".
--/
-theorem min_max_from_order
-    {p q r : ℚ} : p ≤ r ∧ r ≤ q → min p q ≤ r ∧ r ≤ max p q
-    := by
-  intro (order : p ≤ r ∧ r ≤ q)
-  show min p q ≤ r ∧ r ≤ max p q
-  have (And.intro (_ : p ≤ r) (_ : r ≤ q)) := order
-  have : p ≤ q := le_trans ‹p ≤ r› ‹r ≤ q›
-  have : min p q ≤ r ∧ r ≤ max p q := (order_iff_min_max this).mp order
-  exact this
-
-/--
-Convert the "min-max" form of betweenness to "ordered betweenness", given an
-ordering of the exterior values.
-
-**Property and proof intuition**: Directly follows from `order_iff_min_max`.
--/
-theorem order_from_min_max
-    {p q r : ℚ} : min p q ≤ r ∧ r ≤ max p q → p ≤ q → p ≤ r ∧ r ≤ q
-    := by
-  intro (_ : min p q ≤ r ∧ r ≤ max p q) (_ : p ≤ q)
-  show p ≤ r ∧ r ≤ q
-  exact (order_iff_min_max ‹p ≤ q›).mpr ‹min p q ≤ r ∧ r ≤ max p q›
-
-/--
-A lemma that reverses the order of the operands in the "min-max" form of
-betweenness.
-
-**Property and proof intuition**: We already know that the `min` and `max`
-functions are commutative; this is a trivial application of that property and
-substitution.
--/
-theorem min_max_comm
-    {p q r : ℚ} : min p r ≤ q ∧ q ≤ max p r → min r p ≤ q ∧ q ≤ max r p
-    := by
-  intro (And.intro (_ : min p r ≤ q) (_ : q ≤ max p r))
-  show min r p ≤ q ∧ q ≤ max r p
-  have : min r p ≤ q := le_substL_eqv min_comm ‹min p r ≤ q›
-  have : q ≤ max r p := le_substR_eqv max_comm ‹q ≤ max p r›
-  exact And.intro ‹min r p ≤ q› ‹q ≤ max r p›
-
-/--
-Betweenness can be expressed as two inequalities involving the `min` and `max`
-functions.
-
-**Property intuition**: If a value `q` is between boundary values `p` and `r`,
-that means it's greater than the smaller boundary value and less than the
-larger boundary value.
-
-**Proof intuition**: We use the "order" representation of betweenness, which
-has two cases, one for each possible ordering of the boundary values. In the
-forward direction, for each "order" case, replace the specific boundary values
-with their minimum and maximum. In the reverse direction, start with the two
-possible orderings of the boundary values, and in each case, convert the
-minimum and maximum to the specific values for the corresponding "order" case.
--/
-theorem between_min_max {p q r : ℚ} : p⊣ q ⊢r ↔ min p r ≤ q ∧ q ≤ max p r := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : p⊣ q ⊢r)
-    show min p r ≤ q ∧ q ≤ max p r
-    have : p ≤ q ∧ q ≤ r ∨ r ≤ q ∧ q ≤ p := between_order.mp ‹p⊣ q ⊢r›
-    match this with
-    | Or.inl (_ : p ≤ q ∧ q ≤ r) =>
-      have : min p r ≤ q ∧ q ≤ max p r := min_max_from_order ‹p ≤ q ∧ q ≤ r›
-      exact this
-    | Or.inr (_ : r ≤ q ∧ q ≤ p) =>
-      have : min r p ≤ q ∧ q ≤ max r p := min_max_from_order ‹r ≤ q ∧ q ≤ p›
-      have : min p r ≤ q ∧ q ≤ max p r := min_max_comm this
-      exact this
-  case mpr =>
-    intro (min_max : min p r ≤ q ∧ q ≤ max p r)
-    show p⊣ q ⊢r
-    have : p ≤ r ∨ r ≤ p := le_dichotomy
-    have : p ≤ q ∧ q ≤ r ∨ r ≤ q ∧ q ≤ p :=
-      match ‹p ≤ r ∨ r ≤ p› with
-      | Or.inl (_ : p ≤ r) =>
-        have : p ≤ q ∧ q ≤ r := order_from_min_max min_max ‹p ≤ r›
-        Or.inl this
-      | Or.inr (_ : r ≤ p) =>
-        have : min r p ≤ q ∧ q ≤ max r p := min_max_comm min_max
-        have : r ≤ q ∧ q ≤ p := order_from_min_max this ‹r ≤ p›
-        Or.inr this
-    have : p⊣ q ⊢r := between_order.mpr ‹p ≤ q ∧ q ≤ r ∨ r ≤ q ∧ q ≤ p›
-    exact this
-
-/--
 Convert ε-closeness into "lying between extremes".
 
 **Property and proof intuition**: The values that are as far as possible from
@@ -1112,94 +994,6 @@ theorem between_from_close {ε p q : ℚ} : p ⊢ε⊣ q → p-ε⊣ q ⊢p+ε :
   have : p-ε ≤ q ∧ q ≤ p+ε := close_endpoints.mp ‹p ⊢ε⊣ q›
   have : (p-ε ≤ q ∧ q ≤ p+ε) ∨ (p+ε ≤ q ∧ q ≤ p-ε) := Or.inl this
   have : p-ε⊣ q ⊢p+ε := between_order.mpr this
-  exact this
-
-/--
-Convert "lying between extremes" into ε-closeness.
-
-**Property intuition**: The values that are as far as possible from `p`, while
-still being `ε`-close to it, are `p-ε` and `p+ε`; they are the only two values
-that are exactly `ε` away from `p`. Thus any value `q` that is `ε`-close to `p`
-must lie between those extremes. We require a nonnegative `ε` for `ε`-closeness
-to be meaningful.
-
-**Proof intuition**: We can easily produce `ε`-closeness from betweeness if we
-know which of `p-ε` and `p+ε` are greater. This can be deduced from `ε`'s
-nonnegativity, which implies `-ε ≤ ε`.
--/
-theorem close_from_between {ε p q : ℚ} : ε ≥ 0 → p-ε⊣ q ⊢p+ε → p ⊢ε⊣ q := by
-  intro (_ : ε ≥ 0) (_ : p-ε⊣ q ⊢p+ε)
-  show p ⊢ε⊣ q
-  have : -ε ≤ ε := le_neg_nonneg ‹ε ≥ 0›
-  have : p-ε ≤ p+ε := calc
-    _ ≃ p - ε    := eqv_refl
-    _ ≃ p + (-ε) := sub_add_neg
-    _ ≤ p + ε    := le_substR_add ‹-ε ≤ ε›
-  have : min (p-ε) (p+ε) ≤ q ∧ q ≤ max (p-ε) (p+ε) :=
-    between_min_max.mp ‹p-ε⊣ q ⊢p+ε›
-  have : p-ε ≤ q ∧ q ≤ p+ε := order_from_min_max this ‹p-ε ≤ p+ε›
-  have : p ⊢ε⊣ q := close_endpoints.mpr this
-  exact this
-
-/--
-A transitivity-like property of betweenness.
-
-**Property intuition**: Call `p` and `t` "outer values", and `q` and `s`
-"middle values", because the latter are between the former. We also have an
-"inner value" `r` that sits between the middle values. Then `r` must also be
-between the outer values.
-
-**Proof intuition**: Both the outer values and the middle values have one value
-smaller† than the other. The smaller outer value is less than the smaller
-middle value, which is less than the inner value. By transitivity of order, the
-smaller outer value is less than the inner value. A similar argument for the
-larger values implies that the inner value is less than the larger outer value.
-Thus the inner value is between the outer values.
-
-†Or equivalent to, but it's easier to explain the general solution using strict
-order.
--/
-theorem between_trans
-    {p q r s t : ℚ} : p⊣ q ⊢t → p⊣ s ⊢t → q⊣ r ⊢s → p⊣ r ⊢t
-    := by
-  intro (_ : p⊣ q ⊢t) (_ : p⊣ s ⊢t) (_ : q⊣ r ⊢s)
-  show p⊣ r ⊢t
-  have (And.intro (_ : min p t ≤ q) (_ : q ≤ max p t)) :=
-    between_min_max.mp ‹p⊣ q ⊢t›
-  have (And.intro (_ : min p t ≤ s) (_ : s ≤ max p t)) :=
-    between_min_max.mp ‹p⊣ s ⊢t›
-  have (And.intro (_ : min q s ≤ r) (_ : r ≤ max q s)) :=
-    between_min_max.mp ‹q⊣ r ⊢s›
-  have : min p t ≤ min q s := min_le_both ‹min p t ≤ q› ‹min p t ≤ s›
-  have : max q s ≤ max p t := max_le_both ‹q ≤ max p t› ‹s ≤ max p t›
-  have : min p t ≤ r := le_trans ‹min p t ≤ min q s› ‹min q s ≤ r›
-  have : r ≤ max p t := le_trans ‹r ≤ max q s› ‹max q s ≤ max p t›
-  have : min p t ≤ r ∧ r ≤ max p t := And.intro ‹min p t ≤ r› ‹r ≤ max p t›
-  have : p⊣ r ⊢t := between_min_max.mpr this
-  exact this
-
-/--
-Derive an ε-closeness property for a value between two others.
-
-**Property intuition**: Any value between `q` and `s` would have to be
-`ε`-close to `p`, since `q` and `s` themselves are; if there were some values
-between that weren't `ε`-close to `p`, then at least one of `q` and `s` would
-not be `ε`-close to `p` anymore.
-
-**Proof intuition**: Reframe the `ε`-closeness of `q` and `s` to `p` as each of
-them being between `p-ε` and `p+ε`. Then `r` must also be between `p-ε` and
-`p+ε`, because it's between `q` and `s`. Therefore `r` is `ε`-close to `p`.
--/
-theorem between_preserves_close
-    {ε p q r s : ℚ} : p ⊢ε⊣ q → p ⊢ε⊣ s → q⊣ r ⊢s → p ⊢ε⊣ r
-    := by
-  intro (_ : p ⊢ε⊣ q) (_ : p ⊢ε⊣ s) (_ : q⊣ r ⊢s)
-  show p ⊢ε⊣ r
-  have : ε ≥ 0 := close_nonneg ‹p ⊢ε⊣ q›
-  have : p-ε⊣ q ⊢p+ε := between_from_close ‹p ⊢ε⊣ q›
-  have : p-ε⊣ s ⊢p+ε := between_from_close ‹p ⊢ε⊣ s›
-  have : p-ε⊣ r ⊢p+ε := between_trans ‹p-ε⊣ q ⊢p+ε› ‹p-ε⊣ s ⊢p+ε› ‹q⊣ r ⊢s›
-  have : p ⊢ε⊣ r := close_from_between ‹ε ≥ 0› ‹p-ε⊣ r ⊢p+ε›
   exact this
 
 /--
@@ -1341,6 +1135,141 @@ theorem close_mul_pointwise
     _ ≤ ε * abs r + δ * abs p + abs (a * b) := le_substL_add abs_pb_ar
     _ ≤ ε * abs r + δ * abs p + ε * δ       := le_substR_add abs_ab
   have : p * r ⊢ε * abs r + δ * abs p + ε * δ⊣ q * s := close_dist.mpr this
+  exact this
+
+variable [MinMax ℚ]
+
+/--
+Betweenness can be expressed as two inequalities involving the `min` and `max`
+functions.
+
+**Property intuition**: If a value `q` is between boundary values `p` and `r`,
+that means it's greater than the smaller boundary value and less than the
+larger boundary value.
+
+**Proof intuition**: We use the "order" representation of betweenness, which
+has two cases, one for each possible ordering of the boundary values. In the
+forward direction, for each "order" case, replace the specific boundary values
+with their minimum and maximum. In the reverse direction, start with the two
+possible orderings of the boundary values, and in each case, convert the
+minimum and maximum to the specific values for the corresponding "order" case.
+-/
+theorem between_min_max {p q r : ℚ} : p⊣ q ⊢r ↔ min p r ≤ q ∧ q ≤ max p r := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : p⊣ q ⊢r)
+    show min p r ≤ q ∧ q ≤ max p r
+    have : p ≤ q ∧ q ≤ r ∨ r ≤ q ∧ q ≤ p := between_order.mp ‹p⊣ q ⊢r›
+    match this with
+    | Or.inl (_ : p ≤ q ∧ q ≤ r) =>
+      have : min p r ≤ q ∧ q ≤ max p r := min_max_from_order ‹p ≤ q ∧ q ≤ r›
+      exact this
+    | Or.inr (_ : r ≤ q ∧ q ≤ p) =>
+      have : min r p ≤ q ∧ q ≤ max r p := min_max_from_order ‹r ≤ q ∧ q ≤ p›
+      have : min p r ≤ q ∧ q ≤ max p r := min_max_comm this
+      exact this
+  case mpr =>
+    intro (min_max : min p r ≤ q ∧ q ≤ max p r)
+    show p⊣ q ⊢r
+    have : p ≤ r ∨ r ≤ p := le_dichotomy
+    have : p ≤ q ∧ q ≤ r ∨ r ≤ q ∧ q ≤ p :=
+      match ‹p ≤ r ∨ r ≤ p› with
+      | Or.inl (_ : p ≤ r) =>
+        have : p ≤ q ∧ q ≤ r := order_from_min_max min_max ‹p ≤ r›
+        Or.inl this
+      | Or.inr (_ : r ≤ p) =>
+        have : min r p ≤ q ∧ q ≤ max r p := min_max_comm min_max
+        have : r ≤ q ∧ q ≤ p := order_from_min_max this ‹r ≤ p›
+        Or.inr this
+    have : p⊣ q ⊢r := between_order.mpr ‹p ≤ q ∧ q ≤ r ∨ r ≤ q ∧ q ≤ p›
+    exact this
+
+/--
+Convert "lying between extremes" into ε-closeness.
+
+**Property intuition**: The values that are as far as possible from `p`, while
+still being `ε`-close to it, are `p-ε` and `p+ε`; they are the only two values
+that are exactly `ε` away from `p`. Thus any value `q` that is `ε`-close to `p`
+must lie between those extremes. We require a nonnegative `ε` for `ε`-closeness
+to be meaningful.
+
+**Proof intuition**: We can easily produce `ε`-closeness from betweeness if we
+know which of `p-ε` and `p+ε` are greater. This can be deduced from `ε`'s
+nonnegativity, which implies `-ε ≤ ε`.
+-/
+theorem close_from_between {ε p q : ℚ} : ε ≥ 0 → p-ε⊣ q ⊢p+ε → p ⊢ε⊣ q := by
+  intro (_ : ε ≥ 0) (_ : p-ε⊣ q ⊢p+ε)
+  show p ⊢ε⊣ q
+  have : -ε ≤ ε := le_neg_nonneg ‹ε ≥ 0›
+  have : p-ε ≤ p+ε := calc
+    _ ≃ p - ε    := eqv_refl
+    _ ≃ p + (-ε) := sub_add_neg
+    _ ≤ p + ε    := le_substR_add ‹-ε ≤ ε›
+  have : min (p-ε) (p+ε) ≤ q ∧ q ≤ max (p-ε) (p+ε) :=
+    between_min_max.mp ‹p-ε⊣ q ⊢p+ε›
+  have : p-ε ≤ q ∧ q ≤ p+ε := order_from_min_max this ‹p-ε ≤ p+ε›
+  have : p ⊢ε⊣ q := close_endpoints.mpr this
+  exact this
+
+/--
+A transitivity-like property of betweenness.
+
+**Property intuition**: Call `p` and `t` "outer values", and `q` and `s`
+"middle values", because the latter are between the former. We also have an
+"inner value" `r` that sits between the middle values. Then `r` must also be
+between the outer values.
+
+**Proof intuition**: Both the outer values and the middle values have one value
+smaller† than the other. The smaller outer value is less than the smaller
+middle value, which is less than the inner value. By transitivity of order, the
+smaller outer value is less than the inner value. A similar argument for the
+larger values implies that the inner value is less than the larger outer value.
+Thus the inner value is between the outer values.
+
+†Or equivalent to, but it's easier to explain the general solution using strict
+order.
+-/
+theorem between_trans
+    {p q r s t : ℚ} : p⊣ q ⊢t → p⊣ s ⊢t → q⊣ r ⊢s → p⊣ r ⊢t
+    := by
+  intro (_ : p⊣ q ⊢t) (_ : p⊣ s ⊢t) (_ : q⊣ r ⊢s)
+  show p⊣ r ⊢t
+  have (And.intro (_ : min p t ≤ q) (_ : q ≤ max p t)) :=
+    between_min_max.mp ‹p⊣ q ⊢t›
+  have (And.intro (_ : min p t ≤ s) (_ : s ≤ max p t)) :=
+    between_min_max.mp ‹p⊣ s ⊢t›
+  have (And.intro (_ : min q s ≤ r) (_ : r ≤ max q s)) :=
+    between_min_max.mp ‹q⊣ r ⊢s›
+  have : min p t ≤ min q s := min_le_both ‹min p t ≤ q› ‹min p t ≤ s›
+  have : max q s ≤ max p t := max_le_both ‹q ≤ max p t› ‹s ≤ max p t›
+  have : min p t ≤ r := le_trans ‹min p t ≤ min q s› ‹min q s ≤ r›
+  have : r ≤ max p t := le_trans ‹r ≤ max q s› ‹max q s ≤ max p t›
+  have : min p t ≤ r ∧ r ≤ max p t := And.intro ‹min p t ≤ r› ‹r ≤ max p t›
+  have : p⊣ r ⊢t := between_min_max.mpr this
+  exact this
+
+/--
+Derive an ε-closeness property for a value between two others.
+
+**Property intuition**: Any value between `q` and `s` would have to be
+`ε`-close to `p`, since `q` and `s` themselves are; if there were some values
+between that weren't `ε`-close to `p`, then at least one of `q` and `s` would
+not be `ε`-close to `p` anymore.
+
+**Proof intuition**: Reframe the `ε`-closeness of `q` and `s` to `p` as each of
+them being between `p-ε` and `p+ε`. Then `r` must also be between `p-ε` and
+`p+ε`, because it's between `q` and `s`. Therefore `r` is `ε`-close to `p`.
+-/
+theorem between_preserves_close
+    {ε p q r s : ℚ} : p ⊢ε⊣ q → p ⊢ε⊣ s → q⊣ r ⊢s → p ⊢ε⊣ r
+    := by
+  intro (_ : p ⊢ε⊣ q) (_ : p ⊢ε⊣ s) (_ : q⊣ r ⊢s)
+  show p ⊢ε⊣ r
+  have : ε ≥ 0 := close_nonneg ‹p ⊢ε⊣ q›
+  have : p-ε⊣ q ⊢p+ε := between_from_close ‹p ⊢ε⊣ q›
+  have : p-ε⊣ s ⊢p+ε := between_from_close ‹p ⊢ε⊣ s›
+  have : p-ε⊣ r ⊢p+ε := between_trans ‹p-ε⊣ q ⊢p+ε› ‹p-ε⊣ s ⊢p+ε› ‹q⊣ r ⊢s›
+  have : p ⊢ε⊣ r := close_from_between ‹ε ≥ 0› ‹p-ε⊣ r ⊢p+ε›
   exact this
 
 end Lean4Axiomatic.Rational

@@ -103,13 +103,13 @@ theorem trans {a b c : Difference ℕ} : a ≃ b → b ≃ c → a ≃ c := by
   intro (_ : a₁ + b₂ ≃ b₁ + a₂) (_ : b₁ + c₂ ≃ c₁ + b₂)
   show a₁ + c₂ ≃ c₁ + a₂
   have : (a₁ + c₂) + (b₂ + b₁) ≃ (c₁ + a₂) + (b₂ + b₁) := calc
-    (a₁ + c₂) + (b₂ + b₁) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
-    (a₁ + b₂) + (c₂ + b₁) ≃ _ := AA.substL ‹a₁ + b₂ ≃ b₁ + a₂›
-    (b₁ + a₂) + (c₂ + b₁) ≃ _ := AA.substL AA.comm
-    (a₂ + b₁) + (c₂ + b₁) ≃ _ := AA.substR AA.comm
-    (a₂ + b₁) + (b₁ + c₂) ≃ _ := AA.substR ‹b₁ + c₂ ≃ c₁ + b₂›
-    (a₂ + b₁) + (c₁ + b₂) ≃ _ := AA.comm
-    (c₁ + b₂) + (a₂ + b₁) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
+    (a₁ + c₂) + (b₂ + b₁) ≃ _ := AA.expr_xxfxxff_lr_swap_rl (f := (· + ·))
+    (a₁ + b₂) + (c₂ + b₁) ≃ _ := Natural.add_substL ‹a₁ + b₂ ≃ b₁ + a₂›
+    (b₁ + a₂) + (c₂ + b₁) ≃ _ := Natural.add_substL Natural.add_comm
+    (a₂ + b₁) + (c₂ + b₁) ≃ _ := Natural.add_substR Natural.add_comm
+    (a₂ + b₁) + (b₁ + c₂) ≃ _ := Natural.add_substR ‹b₁ + c₂ ≃ c₁ + b₂›
+    (a₂ + b₁) + (c₁ + b₂) ≃ _ := Natural.add_comm
+    (c₁ + b₂) + (a₂ + b₁) ≃ _ := AA.expr_xxfxxff_lr_swap_rl (f := (· + ·))
     (c₁ + a₂) + (b₂ + b₁) ≃ _ := Rel.refl
   exact AA.cancelR ‹(a₁ + c₂) + (b₂ + b₁) ≃ (c₁ + a₂) + (b₂ + b₁)›
 
@@ -141,8 +141,8 @@ instance from_prod_substitutive
   have (And.intro (_ : n ≃ k) (_ : m ≃ j)) :=
     Relation.Equivalence.Impl.Prod.eqv_defn.mp ‹(n, m) ≃ (k, j)›
   calc
-    n + j ≃ _ := AA.substL ‹n ≃ k›
-    k + j ≃ _ := AA.substR (Rel.symm ‹m ≃ j›)
+    n + j ≃ _ := Natural.add_substL ‹n ≃ k›
+    k + j ≃ _ := Natural.add_substR (Rel.symm ‹m ≃ j›)
     k + m ≃ _ := Rel.refl
 
 instance equivalence : Equivalence (Difference ℕ) := {
@@ -161,7 +161,7 @@ equivalence of differences.
 theorem diff_substL {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁——m ≃ n₂——m := by
   intro (_ : n₁ ≃ n₂)
   show n₁——m ≃ n₂——m
-  have : n₁ + m ≃ n₂ + m := AA.substL ‹n₁ ≃ n₂›
+  have : n₁ + m ≃ n₂ + m := Natural.add_substL ‹n₁ ≃ n₂›
   have : n₁——m ≃ n₂——m := this
   exact this
 
@@ -177,7 +177,7 @@ equivalence of differences.
 theorem diff_substR {n m₁ m₂ : ℕ} : m₁ ≃ m₂ → n——m₁ ≃ n——m₂ := by
   intro (_ : m₁ ≃ m₂)
   show n——m₁ ≃ n——m₂
-  have : n + m₂ ≃ n + m₁ := AA.substR (Rel.symm ‹m₁ ≃ m₂›)
+  have : n + m₂ ≃ n + m₁ := Natural.add_substR (Rel.symm ‹m₁ ≃ m₂›)
   have : n——m₁ ≃ n——m₂ := this
   exact this
 
@@ -237,9 +237,9 @@ theorem from_ℕ_inject {n₁ n₂ : ℕ} : (↑n₁ : Difference ℕ) ≃ ↑n�
   show n₁ ≃ n₂
   have : n₁ + 0 ≃ n₂ + 0 := ‹n₁——0 ≃ n₂——0›
   calc
-    n₁     ≃ _ := Rel.symm AA.identR
+    n₁     ≃ _ := Rel.symm Natural.add_zero
     n₁ + 0 ≃ _ := ‹n₁ + 0 ≃ n₂ + 0›
-    n₂ + 0 ≃ _ := AA.identR
+    n₂ + 0 ≃ _ := Natural.add_zero
     n₂     ≃ _ := Rel.refl
 
 instance from_natural_injective

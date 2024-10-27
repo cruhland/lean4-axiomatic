@@ -43,11 +43,119 @@ export Negation (negOp)
 
 variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Core (ℕ := ℕ) ℤ]
-variable [Addition ℤ] [Multiplication ℤ] [Negation ℤ]
+variable [Addition ℤ] [Negation ℤ]
 
 open Coe (coe)
 open Natural (step)
 open Signed (Positive)
+
+/--
+Non-typeclass version of `neg_inverse.inverseL`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+theorem neg_invL {a : ℤ} : -a + a ≃ 0 := AA.inverseL
+
+/--
+Negation is an involution: applying it twice is equivalent to not applying it
+at all.
+
+**Property intuition**: Negation transforms an integer into its "mirror image"
+reflection across zero. Reflecting twice gives back the original integer.
+
+**Proof intuition**: The value `-a` is the additive inverse of `-(-a)` and also
+`a`. Thus, it can be used as an intermediate to replace one with the other.
+-/
+theorem neg_involutive {a : ℤ} : -(-a) ≃ a := calc
+  -(-a)            ≃ _ := Rel.symm AA.identL
+  0 + -(-a)        ≃ _ := AA.substL (Rel.symm AA.inverseR)
+  (a + -a) + -(-a) ≃ _ := AA.assoc
+  a + (-a + -(-a)) ≃ _ := AA.substR AA.inverseR
+  a + 0            ≃ _ := AA.identR
+  a                ≃ _ := Rel.refl
+
+/--
+Negation is an injection: it sends distinct inputs to distinct outputs.
+
+**Property intuition**: We expect this to be true because negation doesn't
+change the magnitude of an integer, just its sign.
+
+**Proof intuition**: Invoke involution to rewrite the integers in a form that
+allows the assumption `-a₁ ≃ -a₂` to be used.
+-/
+theorem neg_inject {a₁ a₂ : ℤ} : -a₁ ≃ -a₂ → a₁ ≃ a₂ := by
+  intro (_ : -a₁ ≃ -a₂)
+  show a₁ ≃ a₂
+  calc
+    a₁       ≃ _ := Rel.symm neg_involutive
+    (-(-a₁)) ≃ _ := AA.subst₁ ‹-a₁ ≃ -a₂›
+    (-(-a₂)) ≃ _ := neg_involutive
+    a₂       ≃ _ := Rel.refl
+
+instance neg_injective : AA.Injective (α := ℤ) (-·) (· ≃ ·) (· ≃ ·) := {
+  inject := neg_inject
+}
+
+/--
+Remove a common left operand of addition from both sides of an equivalence.
+
+**Property and proof intuition**: Add the operand's additive inverse to both
+sides, and simplify.
+-/
+theorem add_cancelL {a b₁ b₂ : ℤ} : a + b₁ ≃ a + b₂ → b₁ ≃ b₂ := by
+  intro (_ : a + b₁ ≃ a + b₂)
+  show b₁ ≃ b₂
+  have reduce {x y : ℤ} : -x + (x + y) ≃ y := calc
+    _ = -x + (x + y) := rfl
+    _ ≃ (-x + x) + y := Rel.symm AA.assoc
+    _ ≃ 0 + y        := AA.substL AA.inverseL
+    _ ≃ y            := AA.identL
+  calc
+    _ = b₁            := rfl
+    _ ≃ -a + (a + b₁) := Rel.symm reduce
+    _ ≃ -a + (a + b₂) := AA.substR ‹a + b₁ ≃ a + b₂›
+    _ ≃ b₂            := reduce
+
+/--
+Remove a common right operand of addition from both sides of an equivalence.
+
+**Property and proof intuition**: Follows from left cancellation due to
+addition's commutativity.
+-/
+theorem add_cancelR {a₁ a₂ b : ℤ} : a₁ + b ≃ a₂ + b → a₁ ≃ a₂ := by
+  intro (_ : a₁ + b ≃ a₂ + b)
+  show a₁ ≃ a₂
+  have : b + a₁ ≃ b + a₂ := calc
+    _ = b + a₁ := rfl
+    _ ≃ a₁ + b := AA.comm
+    _ ≃ a₂ + b := ‹a₁ + b ≃ a₂ + b›
+    _ ≃ b + a₂ := AA.comm
+  have : a₁ ≃ a₂ := add_cancelL ‹b + a₁ ≃ b + a₂›
+  exact this
+
+/--
+Add or remove a left operand to addition on both sides of an equivalence.
+
+Useful when working with chains of `· ↔ ·` relations.
+
+**Property and proof intuition**: Combines left substitution and left
+cancellation of addition.
+-/
+theorem add_bijectL {a b₁ b₂ : ℤ} : b₁ ≃ b₂ ↔ a + b₁ ≃ a + b₂ :=
+  Iff.intro AA.substR add_cancelL
+
+/--
+Add or remove a right operand to addition on both sides of an equivalence.
+
+Useful when working with chains of `· ↔ ·` relations.
+
+**Property and proof intuition**: Combines right substitution and right
+cancellation of addition.
+-/
+theorem add_bijectR {a₁ a₂ b : ℤ} : a₁ ≃ a₂ ↔ a₁ + b ≃ a₂ + b :=
+  Iff.intro AA.substL add_cancelR
+
+variable [Multiplication ℤ]
 
 /--
 The integer negative one (`-1`) is not equivalent to zero.
@@ -73,19 +181,19 @@ The integer negative one (`-1`) is not equivalent to one.
 `0 ≃ 2`. Convert into natural numbers, `coe 0 ≃ coe 2`, then contradict with
 the axiom `step n ≄ 0` to prove the negation.
 -/
-theorem neg_one_neqv_one : -1 ≄ (1 : ℤ) := by
-  intro (_ : -1 ≃ (1 : ℤ))
+theorem neg_one_neqv_one : -1 ≄ (1:ℤ) := by
+  intro (_ : -1 ≃ (1:ℤ))
   show False
   have : step 0 ≃ 1 := Rel.symm Natural.literal_step
-  have : (step 1 : ℤ) ≃ (0 : ℤ) := calc
-    (step 1 : ℤ)           ≃ _ := AA.subst₁ (AA.subst₁ (Rel.symm AA.identR))
-    (step (1 + 0) : ℤ)     ≃ _ := AA.subst₁ AA.scompatR
-    ((1 + step 0 : ℕ) : ℤ) ≃ _ := AA.subst₁ (AA.substR ‹step 0 ≃ 1›)
-    ((1 + 1 : ℕ) : ℤ)      ≃ _ := AA.compat₂
-    (1 : ℤ) + (1 : ℤ)      ≃ _ := AA.substR (Rel.symm ‹-1 ≃ (1 : ℤ)›)
-    1 + -1                 ≃ _ := AA.inverseR
-    0                      ≃ _ := Rel.refl
-  have : step 1 ≃ 0 := AA.inject ‹((step 1 : ℕ) : ℤ) ≃ ((0 : ℕ) : ℤ)›
+  have : (step 1:ℤ) ≃ (0:ℤ) := calc
+    (step 1:ℤ)         ≃ _ := AA.subst₁ (AA.subst₁ (Rel.symm Natural.add_zero))
+    (step (1 + 0):ℤ)   ≃ _ := AA.subst₁ AA.scompatR
+    ((1 + step 0:ℕ):ℤ) ≃ _ := AA.subst₁ (Natural.add_substR ‹step 0 ≃ 1›)
+    ((1 + 1:ℕ):ℤ)      ≃ _ := AA.compat₂
+    (1:ℤ) + (1:ℤ)      ≃ _ := AA.substR (Rel.symm ‹-1 ≃ (1 : ℤ)›)
+    1 + -1             ≃ _ := AA.inverseR
+    0                  ≃ _ := Rel.refl
+  have : step 1 ≃ 0 := AA.inject ‹((step 1:ℕ):ℤ) ≃ ((0:ℕ):ℤ)›
   have : step 1 ≄ 0 := Natural.step_neqv_zero
   exact absurd ‹step 1 ≃ 0› ‹step 1 ≄ 0›
 
@@ -105,13 +213,6 @@ theorem signs_distinct {a : ℤ} : ¬ AA.TwoOfThree (a ≃ 0) (a ≃ 1) (a ≃ -
     exact Rel.trans_failR ‹a ≃ -1› neg_one_neqv_zero ‹a ≃ 0›
   | AA.TwoOfThree.twoAndThree (_ : a ≃ 1) (_ : a ≃ -1) =>
     exact Rel.trans_failR ‹a ≃ -1› neg_one_neqv_one ‹a ≃ 1›
-
-/--
-Non-typeclass version of `neg_inverse.inverseL`.
-
-Eventually, this should become the axiom and the typeclass should be derived.
--/
-theorem neg_invL {a : ℤ} : -a + a ≃ 0 := AA.inverseL
 
 /--
 Zero is a left absorbing element for multiplication.
@@ -203,46 +304,6 @@ theorem mul_neg_one {a : ℤ} : -1 * a ≃ -a := calc
   (-a)       ≃ _ := Rel.refl
 
 /--
-Negation is an involution: applying it twice is equivalent to not applying it
-at all.
-
-**Property intuition**: Negation transforms an integer into its "mirror image"
-reflection across zero. Reflecting twice gives back the original integer.
-
-**Proof intuition**: The value `-a` is the additive inverse of `-(-a)` and also
-`a`. Thus, it can be used as an intermediate to replace one with the other.
--/
-theorem neg_involutive {a : ℤ} : -(-a) ≃ a := calc
-  -(-a)            ≃ _ := Rel.symm AA.identL
-  0 + -(-a)        ≃ _ := AA.substL (Rel.symm AA.inverseR)
-  (a + -a) + -(-a) ≃ _ := AA.assoc
-  a + (-a + -(-a)) ≃ _ := AA.substR AA.inverseR
-  a + 0            ≃ _ := AA.identR
-  a                ≃ _ := Rel.refl
-
-/--
-Negation is an injection: it sends distinct inputs to distinct outputs.
-
-**Property intuition**: We expect this to be true because negation doesn't
-change the magnitude of an integer, just its sign.
-
-**Proof intuition**: Invoke involution to rewrite the integers in a form that
-allows the assumption `-a₁ ≃ -a₂` to be used.
--/
-theorem neg_inject {a₁ a₂ : ℤ} : -a₁ ≃ -a₂ → a₁ ≃ a₂ := by
-  intro (_ : -a₁ ≃ -a₂)
-  show a₁ ≃ a₂
-  calc
-    a₁       ≃ _ := Rel.symm neg_involutive
-    (-(-a₁)) ≃ _ := AA.subst₁ ‹-a₁ ≃ -a₂›
-    (-(-a₂)) ≃ _ := neg_involutive
-    a₂       ≃ _ := Rel.refl
-
-instance neg_injective : AA.Injective (α := ℤ) (-·) (· ≃ ·) (· ≃ ·) := {
-  inject := neg_inject
-}
-
-/--
 Negation is compatible with addition; i.e., it distributes over addition.
 
 **Property intuition**: Visualizing integers as vectors, the theorem says that
@@ -258,64 +319,5 @@ theorem neg_compat_add {a b : ℤ} : -(a + b) ≃ -a + -b := calc
   (-1) * a + (-1) * b ≃ _ := AA.substL mul_neg_one
   (-a) + (-1) * b     ≃ _ := AA.substR mul_neg_one
   (-a) + -b           ≃ _ := Rel.refl
-
-/--
-Remove a common left operand of addition from both sides of an equivalence.
-
-**Property and proof intuition**: Add the operand's additive inverse to both
-sides, and simplify.
--/
-theorem add_cancelL {a b₁ b₂ : ℤ} : a + b₁ ≃ a + b₂ → b₁ ≃ b₂ := by
-  intro (_ : a + b₁ ≃ a + b₂)
-  show b₁ ≃ b₂
-  have reduce {x y : ℤ} : -x + (x + y) ≃ y := calc
-    _ = -x + (x + y) := rfl
-    _ ≃ (-x + x) + y := Rel.symm AA.assoc
-    _ ≃ 0 + y        := AA.substL AA.inverseL
-    _ ≃ y            := AA.identL
-  calc
-    _ = b₁            := rfl
-    _ ≃ -a + (a + b₁) := Rel.symm reduce
-    _ ≃ -a + (a + b₂) := AA.substR ‹a + b₁ ≃ a + b₂›
-    _ ≃ b₂            := reduce
-
-/--
-Remove a common right operand of addition from both sides of an equivalence.
-
-**Property and proof intuition**: Follows from left cancellation due to
-addition's commutativity.
--/
-theorem add_cancelR {a₁ a₂ b : ℤ} : a₁ + b ≃ a₂ + b → a₁ ≃ a₂ := by
-  intro (_ : a₁ + b ≃ a₂ + b)
-  show a₁ ≃ a₂
-  have : b + a₁ ≃ b + a₂ := calc
-    _ = b + a₁ := rfl
-    _ ≃ a₁ + b := AA.comm
-    _ ≃ a₂ + b := ‹a₁ + b ≃ a₂ + b›
-    _ ≃ b + a₂ := AA.comm
-  have : a₁ ≃ a₂ := add_cancelL ‹b + a₁ ≃ b + a₂›
-  exact this
-
-/--
-Add or remove a left operand to addition on both sides of an equivalence.
-
-Useful when working with chains of `· ↔ ·` relations.
-
-**Property and proof intuition**: Combines left substitution and left
-cancellation of addition.
--/
-theorem add_bijectL {a b₁ b₂ : ℤ} : b₁ ≃ b₂ ↔ a + b₁ ≃ a + b₂ :=
-  Iff.intro AA.substR add_cancelL
-
-/--
-Add or remove a right operand to addition on both sides of an equivalence.
-
-Useful when working with chains of `· ↔ ·` relations.
-
-**Property and proof intuition**: Combines right substitution and right
-cancellation of addition.
--/
-theorem add_bijectR {a₁ a₂ b : ℤ} : a₁ ≃ a₂ ↔ a₁ + b ≃ a₂ + b :=
-  Iff.intro AA.substL add_cancelR
 
 end Lean4Axiomatic.Integer

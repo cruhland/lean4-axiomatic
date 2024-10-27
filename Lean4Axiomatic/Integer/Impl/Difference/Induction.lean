@@ -27,8 +27,8 @@ theorem sub_eqv_diff
   _ ≃ (n——0) + -(m——0)     := sub_defn
   _ = (n——0) + (0——m)      := rfl
   _ = (n + 0)——(0 + m)     := rfl
-  _ ≃ n——(0 + m)           := diff_substL AA.identR
-  _ ≃ n——m                 := diff_substR AA.identL
+  _ ≃ n——(0 + m)           := diff_substL Natural.add_zero
+  _ ≃ n——m                 := diff_substR Natural.zero_add
 
 /--
 Implementation of integer "difference" induction for formal differences.

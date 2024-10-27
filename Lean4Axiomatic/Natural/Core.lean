@@ -163,7 +163,18 @@ export Induction (ind ind_step ind_zero)
 ## Derived properties
 -/
 
-variable {ℕ : Type} [Core ℕ] [Induction ℕ]
+variable {ℕ : Type} [Core ℕ]
+
+/-- The natural 1 is not equal to 0. -/
+theorem one_neqv_zero : (1 : ℕ) ≄ 0 := by
+  intro (_ : (1 : ℕ) ≃ 0)
+  show False
+  have : (1 : ℕ) ≃ (0 : ℕ) := ‹(1 : ℕ) ≃ 0›
+  have : Natural.step (0 : ℕ) ≃ 0 :=
+    Rel.trans (Rel.symm Natural.literal_step) ‹(1 : ℕ) ≃ 0›
+  exact absurd ‹Natural.step (0 : ℕ) ≃ 0› Natural.step_neqv_zero
+
+variable [Induction ℕ]
 
 /--
 Equivalent to `ind` but with a more convenient argument order when using the

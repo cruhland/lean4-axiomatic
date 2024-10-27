@@ -24,8 +24,7 @@ variable
   {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
   {ℚ : Type}
     [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
-    [Negation ℚ] [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ]
-    [Sign ℚ] [Order ℚ] [Metric ℚ] [Natural.Exponentiation ℕ ℚ]
+    [Natural.Exponentiation ℕ ℚ]
 
 /--
 Casting an integer to a rational number is left-semicompatible with natural
@@ -60,6 +59,43 @@ theorem pow_scompatL_from_integer {a : ℤ} {n : ℕ} : ((a^n:ℤ):ℚ) ≃ (a:�
       _ ≃ (a:ℚ)^n' * (a:ℚ)     := mul_substL ih
       _ ≃ (a:ℚ)^(step n')      := eqv_symm Natural.pow_step
 
+variable [Negation ℚ] [Sign ℚ]
+section metric_only
+variable [Subtraction ℚ] [Order ℚ] [Metric ℚ]
+
+/--
+Absolute value is semicompatible with the base argument of exponentiation.
+
+**Property intuition**: Absolute value is compatible with multiplication, so
+applying it to repeated multiplication means that it gets applied to every
+factor in the expression.
+
+**Proof intuition**: Induction and algebra.
+-/
+theorem pow_nat_scompatL_abs {p : ℚ} {n : ℕ} : abs (p^n) ≃ (abs p)^n := by
+  apply Natural.ind_on n
+  case zero =>
+    show abs (p^0) ≃ (abs p)^0
+    have : sgn (1:ℚ) ≃ 1 := sgn_one
+    have : abs (1:ℚ) ≃ 1 := abs_positive this
+    calc
+      _ ≃ abs (p^0) := eqv_refl
+      _ ≃ abs 1     := abs_subst pow_zero
+      _ ≃ 1         := ‹abs (1:ℚ) ≃ 1›
+      _ ≃ (abs p)^0 := eqv_symm pow_zero
+  case step =>
+    intro (n' : ℕ) (ih : abs (p^n') ≃ (abs p)^n')
+    show abs (p^(step n')) ≃ (abs p)^(step n')
+    calc
+      _ ≃ abs (p^(step n'))  := eqv_refl
+      _ ≃ abs (p^n' * p)     := abs_subst pow_step
+      _ ≃ abs (p^n') * abs p := abs_compat_mul
+      _ ≃ (abs p)^n' * abs p := mul_substL ih
+      _ ≃ (abs p)^(step n')  := eqv_symm pow_step
+
+end metric_only
+variable [Reciprocation ℚ]
+
 /--
 Raising rationals to natural number powers is semicompatible with reciprocation
 on the left operand.
@@ -91,6 +127,8 @@ theorem pow_scompatL_recip
       _ ≃ (p^n')⁻¹ * p⁻¹  := recip_compat_mul
       _ ≃ (p⁻¹)^n' * p⁻¹  := mul_substL ih
       _ ≃ (p⁻¹)^(step n') := eqv_symm pow_step
+
+variable [Division ℚ]
 
 /--
 A natural number exponent distributes over division.
@@ -154,6 +192,8 @@ theorem sgn_pow_nat {p : ℚ} {n : ℕ} : (sgn (p^n):ℚ) ≃ (sgn p:ℚ)^n := c
   -- This is the key step
   _ ≃ (((sgn p)^n:ℤ):ℚ) := from_integer_subst sgn_int_pow_nat
   _ ≃ (sgn p:ℚ)^n       := pow_scompatL_from_integer
+
+variable [Subtraction ℚ] [Order ℚ]
 
 /--
 A positive rational number raised to a natural number power is still positive.
@@ -414,36 +454,6 @@ theorem pow_preserves_ge_nonneg
     have : p^n ≥ q^n := ge_cases.mpr (Or.inr ‹p^n ≃ q^n›)
     exact this
 
-/--
-Absolute value is semicompatible with the base argument of exponentiation.
-
-**Property intuition**: Absolute value is compatible with multiplication, so
-applying it to repeated multiplication means that it gets applied to every
-factor in the expression.
-
-**Proof intuition**: Induction and algebra.
--/
-theorem pow_nat_scompatL_abs {p : ℚ} {n : ℕ} : abs (p^n) ≃ (abs p)^n := by
-  apply Natural.ind_on n
-  case zero =>
-    show abs (p^0) ≃ (abs p)^0
-    have : sgn (1:ℚ) ≃ 1 := sgn_one
-    have : abs (1:ℚ) ≃ 1 := abs_positive this
-    calc
-      _ ≃ abs (p^0) := eqv_refl
-      _ ≃ abs 1     := abs_subst pow_zero
-      _ ≃ 1         := ‹abs (1:ℚ) ≃ 1›
-      _ ≃ (abs p)^0 := eqv_symm pow_zero
-  case step =>
-    intro (n' : ℕ) (ih : abs (p^n') ≃ (abs p)^n')
-    show abs (p^(step n')) ≃ (abs p)^(step n')
-    calc
-      _ ≃ abs (p^(step n'))  := eqv_refl
-      _ ≃ abs (p^n' * p)     := abs_subst pow_step
-      _ ≃ abs (p^n') * abs p := abs_compat_mul
-      _ ≃ (abs p)^n' * abs p := mul_substL ih
-      _ ≃ (abs p)^(step n')  := eqv_symm pow_step
-
 end pow_nat
 
 /-! ## Axioms for exponentiation to an integer -/
@@ -509,8 +519,8 @@ variable
   {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
   {ℚ : Type}
     [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ]
-    [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ] [Sign ℚ] [Order ℚ]
-    [Metric ℚ] [Natural.Exponentiation ℕ ℚ] [Exponentiation ℚ]
+    [Reciprocation ℚ] [Division ℚ] [Sign ℚ]
+    [Natural.Exponentiation ℕ ℚ] [Exponentiation ℚ]
 
 /--
 Rational number exponentiation to an integer respects equivalence of the base
@@ -649,8 +659,8 @@ theorem pow_compatL_add
     Integer.as_diff b
   have : a + b ≃ (n + k : ℕ) - (m + j : ℕ) := calc
     _ = a + b                     := rfl
-    _ ≃ (n - m) + b               := AA.substL ‹a ≃ n - m›
-    _ ≃ (n - m) + (k - j)         := AA.substR ‹b ≃ k - j›
+    _ ≃ (n - m) + b               := Integer.add_substL ‹a ≃ n - m›
+    _ ≃ (n - m) + (k - j)         := Integer.add_substR ‹b ≃ k - j›
     _ ≃ (n + k) - (m + j)         := Integer.sub_xchg_add
     _ ≃ (n + k : ℕ) - (m + j)     := AA.substL (Rel.symm AA.compat₂)
     _ ≃ (n + k : ℕ) - (m + j : ℕ) := AA.substR (Rel.symm AA.compat₂)
@@ -708,24 +718,25 @@ theorem pow_flatten {p : ℚ} [AP (p ≄ 0)] {a b : ℤ} : (p^a)^b ≃ p^(a * b)
   have multi_compat {w x y z : ℕ} : ((w*x + y*z : ℕ):ℤ) ≃ (w:ℤ)*x + y*z := calc
     _ = ((w*x + y*z : ℕ):ℤ)           := rfl
     _ ≃ ((w*x : ℕ):ℤ) + ((y*z : ℕ):ℤ) := AA.compat₂
-    _ ≃ (w:ℤ)*x + ((y*z : ℕ):ℤ)       := AA.substL AA.compat₂
-    _ ≃ (w:ℤ)*x + y*z                 := AA.substR AA.compat₂
+    _ ≃ (w:ℤ)*x + ((y*z : ℕ):ℤ)       := Integer.add_substL AA.compat₂
+    _ ≃ (w:ℤ)*x + y*z                 := Integer.add_substR AA.compat₂
   have diff_expand
       {w x y z : ℤ} : (w-x) * (y-z) ≃ (w*y + x*z) - (x*y + w*z)
       := by
     let wy := w*y; let wz := w*z; let xy := x*y; let xz := x*z
+    have : -xy + -wz ≃ -(xy + wz) := Rel.symm Integer.neg_compat_add
     calc
       _ = (w-x) * (y-z)           := rfl
       _ ≃ w * (y-z) - x * (y-z)   := AA.distribR
       _ ≃ (wy - wz) - x * (y-z)   := AA.substL AA.distribL
       _ ≃ (wy - wz) - (xy - xz)   := AA.substR AA.distribL
       _ ≃ (wy - wz) + -(xy - xz)  := Integer.sub_defn
-      _ ≃ (wy - wz) + (xz - xy)   := AA.substR Integer.sub_neg_flip
-      _ ≃ (wy + -wz) + (xz - xy)  := AA.substL Integer.sub_defn
-      _ ≃ (wy + -wz) + (xz + -xy) := AA.substR Integer.sub_defn
-      _ ≃ (wy + xz) + (-wz + -xy) := AA.expr_xxfxxff_lr_swap_rl
-      _ ≃ (wy + xz) + (-xy + -wz) := AA.substR AA.comm
-      _ ≃ (wy + xz) + -(xy + wz)  := AA.substR (Rel.symm Integer.neg_compat_add)
+      _ ≃ (wy - wz) + (xz - xy)   := Integer.add_substR Integer.sub_neg_flip
+      _ ≃ (wy + -wz) + (xz - xy)  := Integer.add_substL Integer.sub_defn
+      _ ≃ (wy + -wz) + (xz + -xy) := Integer.add_substR Integer.sub_defn
+      _ ≃ (wy + xz) + (-wz + -xy) := AA.expr_xxfxxff_lr_swap_rl (f := (· + ·))
+      _ ≃ (wy + xz) + (-xy + -wz) := Integer.add_substR Integer.add_comm
+      _ ≃ (wy + xz) + -(xy + wz)  := Integer.add_substR ‹-xy + -wz ≃ -(xy + wz)›
       _ ≃ (wy + xz) - (xy + wz)   := Rel.symm Integer.sub_defn
   have pow_reduce : ((n*k + m*j : ℕ):ℤ) - ((m*k + n*j : ℕ):ℤ) ≃ a * b := calc
     _ = ((n*k + m*j : ℕ):ℤ) - ((m*k + n*j : ℕ):ℤ) := rfl
@@ -817,6 +828,8 @@ theorem sgn_pow_int
     _ ≃ (sgn p:ℚ)^n/(sgn p:ℚ)^m     := div_substR sgn_pow_nat
     _ ≃ (sgn p:ℚ)^((n:ℤ) - m)       := eqv_symm pow_diff
     _ ≃ (sgn p:ℚ)^a                 := pow_substR (Rel.symm ‹a ≃ n - m›)
+
+variable [Subtraction ℚ] [Order ℚ]
 
 /-- A positive rational, raised to an integer power, is also positive. -/
 theorem pow_preserves_pos_base
@@ -1033,6 +1046,8 @@ theorem pow_bijectL
     _ ↔ sgn (p - q) ≃ 0             := or_identR
     _ ↔ p - q ≃ 0                   := sgn_zero.symm
     _ ↔ p ≃ q                       := sub_eqv_zero_iff_eqv
+
+variable [Metric ℚ]
 
 /--
 Swap the order of two operations on a nonzero rational number: raising it to an

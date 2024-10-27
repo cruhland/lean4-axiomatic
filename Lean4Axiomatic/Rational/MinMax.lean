@@ -4,7 +4,9 @@ import Lean4Axiomatic.Rational.Order
 
 namespace Lean4Axiomatic.Rational
 
+open Logic (and_mapL and_mapR iff_subst_covar)
 open Ordered (max min)
+open Rel (iff_subst_eqv)
 open Signed (sgn)
 
 /-! ## Axioms -/
@@ -68,7 +70,7 @@ attribute [instance] MinMax.toProps
 variable {ℕ ℤ ℚ : Type}
   [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
   [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ]
-  [Sign ℚ] [Subtraction ℚ] [Reciprocation ℚ] [Division ℚ] [Order ℚ] [MinMax ℚ]
+  [Sign ℚ] [Subtraction ℚ] [Order ℚ] [MinMax ℚ]
 
 /--
 Ties the ordering of `min`'s operands to its result.
@@ -296,5 +298,83 @@ theorem max_comm {p q : ℚ} : max p q ≃ max q p := by
       have : max p q ≃ max q p :=
         opposite_eqv ‹max p q ≃ q› ‹max q p ≃ p› ‹p ≤ max p q› ‹q ≤ max q p›
       exact this
+
+/--
+Convert "ordered betweenness" to and from a "min-max" representation of "full"
+betweenness.
+
+This theorem holds the common logic for the ordered/min-max corollaries below.
+
+**Property intuition**: The hypothesis that provides the ordering of the
+exterior values is only needed for the reverse direction, to simplify `min` and
+`max`. The forward direction is true just from the ordering implied by
+"ordered betweenness".
+
+**Proof intuition**: Use the hypothesis that orders the exterior values to
+create equivalences for the `min` and `max` expressions. Then substitute those
+equivalences on one side of the iff to produce the other.
+-/
+theorem order_iff_min_max
+    {p q r : ℚ} : p ≤ q → (p ≤ r ∧ r ≤ q ↔ min p q ≤ r ∧ r ≤ max p q)
+    := by
+  intro (_ : p ≤ q)
+  show p ≤ r ∧ r ≤ q ↔ min p q ≤ r ∧ r ≤ max p q
+  have : p ≃ min p q := eqv_symm (min_le.mpr ‹p ≤ q›)
+  have : q ≃ max p q := eqv_symm (max_le.mpr ‹p ≤ q›)
+  have p_min : p ≤ r ↔ min p q ≤ r := iff_subst_eqv le_substL_eqv ‹p ≃ min p q›
+  have q_max : r ≤ q ↔ r ≤ max p q := iff_subst_eqv le_substR_eqv ‹q ≃ max p q›
+  calc
+    _ ↔ p ≤ r ∧ r ≤ q             := Iff.rfl
+    _ ↔ min p q ≤ r ∧ r ≤ q       := iff_subst_covar and_mapL p_min
+    _ ↔ min p q ≤ r ∧ r ≤ max p q := iff_subst_covar and_mapR q_max
+
+/--
+Convert the "min-max" form of betweenness to "ordered betweenness", given an
+ordering of the exterior values.
+
+**Property and proof intuition**: Directly follows from `order_iff_min_max`.
+-/
+theorem order_from_min_max
+    {p q r : ℚ} : min p q ≤ r ∧ r ≤ max p q → p ≤ q → p ≤ r ∧ r ≤ q
+    := by
+  intro (_ : min p q ≤ r ∧ r ≤ max p q) (_ : p ≤ q)
+  show p ≤ r ∧ r ≤ q
+  exact (order_iff_min_max ‹p ≤ q›).mpr ‹min p q ≤ r ∧ r ≤ max p q›
+
+/--
+A lemma that reverses the order of the operands in the "min-max" form of
+betweenness.
+
+**Property and proof intuition**: We already know that the `min` and `max`
+functions are commutative; this is a trivial application of that property and
+substitution.
+-/
+theorem min_max_comm
+    {p q r : ℚ} : min p r ≤ q ∧ q ≤ max p r → min r p ≤ q ∧ q ≤ max r p
+    := by
+  intro (And.intro (_ : min p r ≤ q) (_ : q ≤ max p r))
+  show min r p ≤ q ∧ q ≤ max r p
+  have : min r p ≤ q := le_substL_eqv min_comm ‹min p r ≤ q›
+  have : q ≤ max r p := le_substR_eqv max_comm ‹q ≤ max p r›
+  exact And.intro ‹min r p ≤ q› ‹q ≤ max r p›
+
+variable [Reciprocation ℚ] [Division ℚ]
+
+/--
+Convert "ordered betweenness" to the "min-max" form of betweenness.
+
+**Property and proof intuition**: Directly follows from `order_iff_min_max`;
+the exterior values ordering hypothesis of that theorem can be derived from
+"ordered betweenness".
+-/
+theorem min_max_from_order
+    {p q r : ℚ} : p ≤ r ∧ r ≤ q → min p q ≤ r ∧ r ≤ max p q
+    := by
+  intro (order : p ≤ r ∧ r ≤ q)
+  show min p q ≤ r ∧ r ≤ max p q
+  have (And.intro (_ : p ≤ r) (_ : r ≤ q)) := order
+  have : p ≤ q := le_trans ‹p ≤ r› ‹r ≤ q›
+  have : min p q ≤ r ∧ r ≤ max p q := (order_iff_min_max this).mp order
+  exact this
 
 end Lean4Axiomatic.Rational

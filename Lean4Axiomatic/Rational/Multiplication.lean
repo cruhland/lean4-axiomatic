@@ -73,45 +73,7 @@ attribute [instance] Multiplication.toProps
 /-! ## Derived properties -/
 
 variable {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
-variable {ℚ : Type} [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
-
-/-- Enables the use of `AA.substL`, `AA.substR`, etc. for multiplication. -/
-instance mul_subst_inst
-    : AA.Substitutive₂ (α := ℚ) (· * ·) AA.tc (· ≃ ·) (· ≃ ·)
-    := {
-  substitutiveL := { subst₂ := λ (_ : True) => mul_substL }
-  substitutiveR := { subst₂ := λ (_ : True) => mul_substR }
-}
-
-/-- Enables the use of `AA.comm` for commutativity of multiplication. -/
-instance mul_comm_inst : AA.Commutative (α := ℚ) (· * ·) := {
-  comm := mul_comm
-}
-
-/-- Enables the use of `AA.assoc` for associativity of multiplication. -/
-instance mul_assoc_inst : AA.Associative (α := ℚ) (· * ·) := {
-  assoc := mul_assoc
-}
-
-/-- Enables the use of `AA.identL` and `AA.identR` for multiplication. -/
-instance mul_ident_inst : AA.Identity (1:ℚ) (· * ·) := {
-  identityL := { ident := mul_identL }
-  identityR := { ident := mul_identR }
-}
-
-/--
-Doubling a rational number can be written either as a sum or a product.
-
-**Property intuition**: This is essentially the definition of multiplication.
-
-**Proof intuition**: Split `2` into `1 + 1`; use the distributive property.
--/
-theorem mul_two_add {p : ℚ} : 2 * p ≃ p + p := calc
-  _ ≃ 2 * p         := eqv_refl
-  _ ≃ (1 + 1) * p   := mul_substL (eqv_symm add_one_one)
-  _ ≃ 1 * p + 1 * p := mul_distribR
-  _ ≃ p + 1 * p     := add_substL mul_identL
-  _ ≃ p + p         := add_substR mul_identL
+variable {ℚ : Type} [Core (ℤ := ℤ) ℚ]
 
 /--
 Holds for the rational numbers that are square roots of unity, i.e. that result
@@ -131,27 +93,6 @@ def Sqrt1.from_integer
     {a : ℤ} {p : ℚ} [Integer.Sqrt1 a] : p ≃ (a : ℚ) → Sqrt1 p
     :=
   from_integer_intro a ‹Integer.Sqrt1 a›
-
-/--
-The defining property of square roots of unity.
-
-**Proof intuition**: Expand the definition of `Sqrt1` to obtain the underlying
-integer. Then show the property is preserved by conversion to rational numbers.
--/
-theorem Sqrt1.elim {p : ℚ} : Sqrt1 p → p * p ≃ 1 := by
-  intro (_ : Sqrt1 p)
-  show p * p ≃ 1
-  have (Sqrt1.from_integer_intro (a : ℤ) (_ : Integer.Sqrt1 a) eqv) :=
-    ‹Sqrt1 p›
-  have : p ≃ (a : ℚ) := eqv
-  have : p * p ≃ 1 := calc
-    p * p             ≃ _ := mul_substL ‹p ≃ (a : ℚ)›
-    (a : ℚ) * p       ≃ _ := mul_substR ‹p ≃ (a : ℚ)›
-    (a : ℚ) * (a : ℚ) ≃ _ := eqv_symm mul_compat_from_integer
-    ((a * a : ℤ) : ℚ) ≃ _ := from_integer_subst ‹Integer.Sqrt1 a›.elim
-    (1 : ℚ)           ≃ _ := eqv_refl
-    1                 ≃ _ := eqv_refl
-  exact this
 
 /--
 The `Sqrt1` predicate respects equivalence of rational numbers.
@@ -198,6 +139,67 @@ theorem from_integer_preserves_sqrt1
     intro (_ : Integer.Sqrt1 a)
     show Sqrt1 (a : ℚ)
     exact Sqrt1.from_integer eqv_refl
+
+variable [Addition ℚ] [Multiplication ℚ]
+
+/--
+The defining property of square roots of unity.
+
+**Proof intuition**: Expand the definition of `Sqrt1` to obtain the underlying
+integer. Then show the property is preserved by conversion to rational numbers.
+-/
+theorem Sqrt1.elim {p : ℚ} : Sqrt1 p → p * p ≃ 1 := by
+  intro (_ : Sqrt1 p)
+  show p * p ≃ 1
+  have (Sqrt1.from_integer_intro (a : ℤ) (_ : Integer.Sqrt1 a) eqv) :=
+    ‹Sqrt1 p›
+  have : p ≃ (a : ℚ) := eqv
+  have : p * p ≃ 1 := calc
+    p * p             ≃ _ := mul_substL ‹p ≃ (a : ℚ)›
+    (a : ℚ) * p       ≃ _ := mul_substR ‹p ≃ (a : ℚ)›
+    (a : ℚ) * (a : ℚ) ≃ _ := eqv_symm mul_compat_from_integer
+    ((a * a : ℤ) : ℚ) ≃ _ := from_integer_subst ‹Integer.Sqrt1 a›.elim
+    (1 : ℚ)           ≃ _ := eqv_refl
+    1                 ≃ _ := eqv_refl
+  exact this
+
+/-- Enables the use of `AA.substL`, `AA.substR`, etc. for multiplication. -/
+instance mul_subst_inst
+    : AA.Substitutive₂ (α := ℚ) (· * ·) AA.tc (· ≃ ·) (· ≃ ·)
+    := {
+  substitutiveL := { subst₂ := λ (_ : True) => mul_substL }
+  substitutiveR := { subst₂ := λ (_ : True) => mul_substR }
+}
+
+/-- Enables the use of `AA.comm` for commutativity of multiplication. -/
+instance mul_comm_inst : AA.Commutative (α := ℚ) (· * ·) := {
+  comm := mul_comm
+}
+
+/-- Enables the use of `AA.assoc` for associativity of multiplication. -/
+instance mul_assoc_inst : AA.Associative (α := ℚ) (· * ·) := {
+  assoc := mul_assoc
+}
+
+/-- Enables the use of `AA.identL` and `AA.identR` for multiplication. -/
+instance mul_ident_inst : AA.Identity (1:ℚ) (· * ·) := {
+  identityL := { ident := mul_identL }
+  identityR := { ident := mul_identR }
+}
+
+/--
+Doubling a rational number can be written either as a sum or a product.
+
+**Property intuition**: This is essentially the definition of multiplication.
+
+**Proof intuition**: Split `2` into `1 + 1`; use the distributive property.
+-/
+theorem mul_two_add {p : ℚ} : 2 * p ≃ p + p := calc
+  _ ≃ 2 * p         := eqv_refl
+  _ ≃ (1 + 1) * p   := mul_substL (eqv_symm add_one_one)
+  _ ≃ 1 * p + 1 * p := mul_distribR
+  _ ≃ p + 1 * p     := add_substL mul_identL
+  _ ≃ p + p         := add_substR mul_identL
 
 /--
 The rational number `1` is a square root of unity.
