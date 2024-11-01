@@ -165,14 +165,19 @@ export Induction (ind ind_step ind_zero)
 
 variable {ℕ : Type} [Core ℕ]
 
-/-- The natural 1 is not equal to 0. -/
+/-- The natural 1 is not equivalent to 0. -/
 theorem one_neqv_zero : (1 : ℕ) ≄ 0 := by
-  intro (_ : (1 : ℕ) ≃ 0)
-  show False
-  have : (1 : ℕ) ≃ (0 : ℕ) := ‹(1 : ℕ) ≃ 0›
-  have : Natural.step (0 : ℕ) ≃ 0 :=
-    Rel.trans (Rel.symm Natural.literal_step) ‹(1 : ℕ) ≃ 0›
-  exact absurd ‹Natural.step (0 : ℕ) ≃ 0› Natural.step_neqv_zero
+  have : step 0 ≃ 1 := Rel.symm literal_step
+  have : step 0 ≄ 0 := step_neqv_zero
+  have : (1:ℕ) ≄ 0 := AA.substLFn (f := (· ≄ ·)) ‹step 0 ≃ 1› ‹step 0 ≄ 0›
+  exact this
+
+/-- The natural 2 is not equivalent to 0. -/
+theorem two_neqv_zero : (2:ℕ) ≄ 0 := by
+  have : step 1 ≃ 2 := Rel.symm literal_step
+  have : step 1 ≄ 0 := step_neqv_zero
+  have : (2:ℕ) ≄ 0 := AA.substLFn (f := (· ≄ ·)) ‹step 1 ≃ 2› ‹step 1 ≄ 0›
+  exact this
 
 variable [Induction ℕ]
 

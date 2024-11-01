@@ -114,57 +114,65 @@ variable {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
 variable {ℚ : Type} [Core (ℤ := ℤ) ℚ]
 
 /--
-If `Integer.Nonzero` holds for an integer, then `· ≄ 0` holds for its rational
-equivalent.
-
-**Property intuition**: Since the integers are embedded in the rationals, we
-expect that integer properties hold for their embedded versions.
-
-**Proof intuition**: We assume `(a : ℚ) ≃ 0` because we are trying to show its
-negation. This implies that `a ≃ 0` (as an integer), but this contradicts the
-`Integer.Nonzero` assumption.
--/
-theorem from_integer_preserves_nonzero
-    {a : ℤ} : Integer.Nonzero a → (a : ℚ) ≄ 0
-    := by
-  intro (_ : Integer.Nonzero a) (_ : (a : ℚ) ≃ 0)
-  show False
-  have : a ≄ 0 := Integer.nonzero_iff_neqv_zero.mp ‹Integer.Nonzero a›
-  have : (a : ℚ) ≃ (0 : ℚ) := ‹(a : ℚ) ≃ 0›
-  have : a ≃ 0 := from_integer_inject this
-  exact absurd ‹a ≃ 0› ‹a ≄ 0›
-
-/-- Make `from_integer_preserves_nonzero` available for instance search. -/
-instance from_integer_preserves_nonzero_inst
-    {a : ℤ} [Integer.Nonzero a] : AP ((a : ℚ) ≄ 0)
-    :=
-  AP.mk (from_integer_preserves_nonzero ‹Integer.Nonzero a›)
-
-/--
 Allows the integer-to-rational conversion syntax `((·:ℤ):ℚ)` to be used in
 places that require a nonzero value, such as under a division operator, as long
 as the underlying integer value is also nonzero.
 -/
 instance from_integer_preserves_neqv_zero_inst
     {a : ℤ} [AP (a ≄ 0)] : AP ((a:ℚ) ≄ 0)
+    :=
+  ‹AP (a ≄ 0)›.map (mt from_integer_inject)
+
+/--
+If `Integer.Nonzero` holds for an integer, then `· ≄ 0` holds for its rational
+equivalent.
+-/
+theorem from_integer_preserves_nonzero
+    {a : ℤ} : Integer.Nonzero a → (a:ℚ) ≄ 0
     := by
-  have : a ≄ 0 := ‹AP (a ≄ 0)›.ev
-  have : Integer.Nonzero a := Integer.nonzero_iff_neqv_zero.mpr ‹a ≄ 0›
-  have : (a:ℚ) ≄ 0 := from_integer_preserves_nonzero ‹Integer.Nonzero a›
-  exact AP.mk ‹(a:ℚ) ≄ 0›
+  intro (_ : Integer.Nonzero a)
+  show (a:ℚ) ≄ 0
+  have : a ≄ 0 := Integer.nonzero_iff_neqv_zero.mp ‹Integer.Nonzero a›
+  have : (a:ℚ) ≄ 0 := mt from_integer_inject ‹a ≄ 0›
+  exact this
 
-/--
-One and zero are distinct rational numbers.
+/-- Make `from_integer_preserves_nonzero` available for instance search. -/
+instance from_integer_preserves_nonzero_inst
+    {a : ℤ} [Integer.Nonzero a] : AP ((a:ℚ) ≄ 0)
+    :=
+  AP.mk (from_integer_preserves_nonzero ‹Integer.Nonzero a›)
 
-**Intuition**: They are also distinct integers, and their rational number
-equivalents obey the same properties.
+/-- One and zero are distinct rational numbers. -/
+theorem nonzero_one : (1:ℚ) ≄ 0 :=
+  mt from_integer_inject Integer.one_neqv_zero
+
+/-- Two and zero are distinct rational numbers. -/
+theorem nonzero_two : (2:ℚ) ≄ 0 :=
+  mt from_integer_inject Integer.two_neqv_zero
+
+/-!
+### Instances for `OfNat` literals
+
+Lean's instance search appears to distinguish between `OfNat` expressions with
+literal values (e.g. `(3:ℚ)`) and `OfNat` expressions with variables (e.g.
+`(n:ℚ)`, where `n : Nat`). This makes it impossible to write an instance
+parameterized over some `n : Nat` that works for expressions like `(3:ℚ)`.
+
+I haven't uncovered the root cause for this, but I suspect it has something to
+do with how the syntax for `Nat` literals interacts with the `OfNat` syntax.
+Assuming the expression `(n:ℚ)` is expanded to `(OfNat.ofNat n : ℚ)`, then the
+expression `(3:ℚ)` should be expanded to `(OfNat.ofNat 3 : ℚ)` as well. But
+that has a bare literal value, which is likely expanded again to
+`(OfNat.ofNat (nat_lit 3) : Nat)`. And because `nat_lit` is a macro, it only
+accepts syntax representing literals, so there's no way to write a theorem with
+a variable `n : Nat` that has a subexpression `nat_lit n`.
+
+The workaround is to declare an instance for each literal natural number that
+we need one for. Even a macro-based solution would amount to the same thing,
+just with less boilerplate.
 -/
-theorem nonzero_one : (1 : ℚ) ≄ 0 := from_integer_preserves_nonzero_inst.ev
 
-/--
-For some reason Lean's instance search won't derive this from
-`from_integer_preserves_nonzero_inst`, so we need it defined explicitly.
--/
-instance nonzero_one_inst : AP ((1 : ℚ) ≄ 0) := AP.mk nonzero_one
+instance nonzero_one_inst : AP ((1:ℚ) ≄ 0) := AP.mk nonzero_one
+instance nonzero_two_inst : AP ((2:ℚ) ≄ 0) := AP.mk nonzero_two
 
 end Lean4Axiomatic.Rational
