@@ -1047,6 +1047,91 @@ theorem pow_bijectL
     _ ↔ p - q ≃ 0                   := sgn_zero.symm
     _ ↔ p ≃ q                       := sub_eqv_zero_iff_eqv
 
+/--
+Sufficient conditions for an integer power of the rational number two being no
+smaller than its exponent.
+
+For a more general result with no restrictions on the value of the exponent,
+see `pow_lower_bound`.
+-/
+theorem pow_two_lower_bound {a : ℤ} : a ≥ 1 → (2:ℚ)^a ≥ a := by
+  /-
+  By constraining the exponent to be strictly positive, even though the
+  result would hold for any integer value, this proof becomes substantially
+  simpler. And it's an exact match for the assumptions in scope where this
+  result is used in the proof of `pow_lower_bound`. In short, this theorem is
+  really a lemma that's precisely tuned for a single purpose.
+  -/
+  intro (_ : a ≥ 1)
+  show (2:ℚ)^a ≥ a
+
+  let motive := λ (x : ℤ) => (2:ℚ)^x ≥ x
+  have motive_subst {c₁ c₂ : ℤ} : c₁ ≃ c₂ → motive c₁ → motive c₂ := by
+    intro (_ : c₁ ≃ c₂) (_ : (2:ℚ)^c₁ ≥ c₁)
+    show (2:ℚ)^c₂ ≥ c₂
+    calc
+      _ = (2:ℚ)^c₂ := rfl
+      _ ≃ (2:ℚ)^c₁ := pow_substR (Rel.symm ‹c₁ ≃ c₂›)
+      _ ≥ c₁       := ‹(2:ℚ)^c₁ ≥ c₁›
+      _ ≃ c₂       := from_integer_subst ‹c₁ ≃ c₂›
+
+  apply Integer.ind_from motive_subst ‹a ≥ 1›
+  case base =>
+    show (2:ℚ)^(1:ℤ) ≥ 1
+    calc
+      _ = (2:ℚ)^(1:ℤ) := rfl
+      _ ≃ (2:ℚ)^(1:ℕ) := pow_nonneg
+      _ ≃ 2           := Natural.pow_one
+      _ ≥ 1           := ge_cases.mpr (Or.inl two_gt_one)
+  case next =>
+    intro (c : ℤ) (_ : c ≥ 1) (_ : (2:ℚ)^c ≥ c)
+    show (2:ℚ)^(c + 1) ≥ ((c + 1 : ℤ):ℚ)
+    have : (c:ℚ) ≥ 1 := le_respects_from_integer.mp ‹c ≥ 1›
+    calc
+      _ = (2:ℚ)^(c + 1)         := rfl
+      _ ≃ (2:ℚ)^c * (2:ℚ)^(1:ℤ) := pow_compatL_add
+      _ ≃ (2:ℚ)^c * (2:ℚ)^(1:ℕ) := mul_substR pow_nonneg
+      -- ↓ begin key steps ↓
+      _ ≃ (2:ℚ)^c * 2           := mul_substR Natural.pow_one
+      _ ≥ (c:ℚ) * 2             := le_substL_mul_pos two_pos ‹(2:ℚ)^c ≥ c›
+      _ ≃ (2:ℚ) * c             := mul_comm
+      _ ≃ (c:ℚ) + c             := mul_two_add
+      _ ≥ (c:ℚ) + 1             := le_substR_add ‹(c:ℚ) ≥ 1›
+      -- ↑  end key steps  ↑
+      _ ≃ ((c + 1 : ℤ):ℚ)       := eqv_symm add_compat_from_integer
+
+/--
+Sufficient conditions for an integer power of a rational number being no
+smaller than its exponent.
+-/
+theorem pow_lower_bound
+    {p : ℚ} {a : ℤ} (p_ge : p ≥ 2)
+    : have : (2:ℚ) > 0 := two_pos
+      have : p > 0 := trans ‹p ≥ 2› ‹(2:ℚ) > 0›
+      have : AP (p ≄ 0) := AP.mk (pos_nonzero ‹p > 0›)
+      p^a ≥ a
+    := by
+  intro (_ : (2:ℚ) > 0) (_ : p > 0) (_ : AP (p ≄ 0))
+  show p^a ≥ a
+  have : a ≤ 0 ∨ a > 0 := Integer.le_or_gt
+  match ‹a ≤ 0 ∨ a > 0› with
+  | Or.inl (_ : a ≤ 0) =>
+    -- ↓ begin key steps ↓
+    have : p^a > 0 := pow_preserves_pos_base ‹p > 0›
+    -- ↑  end key steps  ↑
+    have : p^a ≥ 0 := ge_cases.mpr (Or.inl ‹p^a > 0›)
+    have : (a:ℚ) ≤ 0 := le_respects_from_integer.mp ‹a ≤ 0›
+    have : p^a ≥ a := trans ‹p^a ≥ 0› ‹(0:ℚ) ≥ a›
+    exact this
+  | Or.inr (_ : a > 0) =>
+    have : a ≥ 1 := Integer.pos_gt_iff_ge.mp ‹a > 0›
+    -- ↓ begin key steps ↓
+    have : (2:ℚ)^a ≥ a := pow_two_lower_bound ‹a ≥ 1›
+    have : p^a ≥ (2:ℚ)^a := pow_pos_preserves_ge_pos ‹(2:ℚ) > 0› ‹a > 0› ‹p ≥ 2›
+    -- ↑  end key steps  ↑
+    have : p^a ≥ a := trans ‹p^a ≥ (2:ℚ)^a› ‹(2:ℚ)^a ≥ a›
+    exact this
+
 variable [Metric ℚ]
 
 /--

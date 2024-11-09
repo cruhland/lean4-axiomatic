@@ -165,19 +165,27 @@ export Induction (ind ind_step ind_zero)
 
 variable {ℕ : Type} [Core ℕ]
 
-/-- The natural 1 is not equivalent to 0. -/
-theorem one_neqv_zero : (1 : ℕ) ≄ 0 := by
-  have : step 0 ≃ 1 := Rel.symm literal_step
-  have : step 0 ≄ 0 := step_neqv_zero
-  have : (1:ℕ) ≄ 0 := AA.substLFn (f := (· ≄ ·)) ‹step 0 ≃ 1› ‹step 0 ≄ 0›
+/--
+Alternative form of `step_neqv_zero` that's useful for showing natural number
+literals are nonzero.
+-/
+theorem eqv_step_neqv_zero {n m : ℕ} : n ≃ step m → n ≄ 0 := by
+  intro (_ : n ≃ step m)
+  show n ≄ 0
+  have : step m ≃ n := Rel.symm ‹n ≃ step m›
+  have : step m ≄ 0 := step_neqv_zero
+  have : n ≄ 0 := AA.substLFn (f := (· ≄ ·)) ‹step m ≃ n› ‹step m ≄ 0›
   exact this
 
-/-- The natural 2 is not equivalent to 0. -/
-theorem two_neqv_zero : (2:ℕ) ≄ 0 := by
-  have : step 1 ≃ 2 := Rel.symm literal_step
-  have : step 1 ≄ 0 := step_neqv_zero
-  have : (2:ℕ) ≄ 0 := AA.substLFn (f := (· ≄ ·)) ‹step 1 ≃ 2› ‹step 1 ≄ 0›
-  exact this
+/-- The natural number 1 is nonzero. -/
+theorem one_neqv_zero : (1:ℕ) ≄ 0 :=
+  have : (1:ℕ) ≃ step 0 := literal_step
+  eqv_step_neqv_zero ‹(1:ℕ) ≃ step 0›
+
+/-- The natural number 2 is nonzero. -/
+theorem two_neqv_zero : (2:ℕ) ≄ 0 :=
+  have : (2:ℕ) ≃ step 1 := literal_step
+  eqv_step_neqv_zero ‹(2:ℕ) ≃ step 1›
 
 variable [Induction ℕ]
 

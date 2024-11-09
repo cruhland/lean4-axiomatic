@@ -158,6 +158,12 @@ theorem gt_zero_sgn {p : ℚ} : p > 0 ↔ sgn p ≃ 1 := by
     have : p > 0 := gt_sgn.mpr ‹sgn (p - 0) ≃ 1›
     exact this
 
+/-- The rational number two is positive. -/
+theorem two_pos : (2:ℚ) > 0 := by
+  have : sgn (2:ℚ) ≃ 1 := sgn_two
+  have : (2:ℚ) > 0 := gt_zero_sgn.mpr ‹sgn (2:ℚ) ≃ 1›
+  exact this
+
 /--
 Positive rationals are nonzero.
 
@@ -482,23 +488,39 @@ theorem le_dichotomy {p q : ℚ} : p ≤ q ∨ q ≤ p := by
 /--
 The _less than_ relation on rationals is consistent with its integer
 equivalent.
-
-**Property intuition**: The rationals contain the integers, so we'd expect the
-ordering of the embedded integers to be preserved.
-
-**Proof intuition**: Convert ordering to `sgn` expressions and use properties
-of integer conversion for subtraction and `sgn`.
 -/
-theorem lt_subst_from_integer {a b : ℤ} : a < b → (a:ℚ) < (b:ℚ) := by
-  intro (_ : a < b)
-  show (a:ℚ) < (b:ℚ)
-  have : sgn ((a:ℚ) - (b:ℚ)) ≃ -1 := calc
-    _ ≃ sgn ((a:ℚ) - (b:ℚ)) := Rel.refl
-    _ ≃ sgn (((a - b):ℤ):ℚ) := sgn_subst (eqv_symm sub_compat_from_integer)
-    _ ≃ sgn (a - b)         := sgn_from_integer
-    _ ≃ -1                  := Integer.lt_sgn.mp ‹a < b›
-  have : (a:ℚ) < (b:ℚ) := lt_sgn.mpr this
-  exact this
+theorem lt_respects_from_integer {a b : ℤ} : a < b ↔ (a:ℚ) < (b:ℚ) := by
+  have lift_eqv {c₁ c₂ d : ℤ} : c₁ ≃ c₂ → (c₁ ≃ d ↔ c₂ ≃ d ) :=
+    Rel.iff_subst_eqv AA.eqv_substL
+  have : sgn (a-b) ≃ sgn ((a:ℚ)-(b:ℚ)) := sgn_diff_respects_from_integer
+  calc
+    _ ↔ a < b                    := Iff.rfl
+    -- ↓ begin key lines ↓
+    _ ↔ sgn (a - b) ≃ -1         := Integer.lt_sgn
+    _ ↔ sgn ((a:ℚ) - (b:ℚ)) ≃ -1 := lift_eqv ‹sgn (a-b) ≃ sgn ((a:ℚ)-(b:ℚ))›
+    -- ↑  end key lines  ↑
+    _ ↔ (a:ℚ) < (b:ℚ)            := lt_sgn.symm
+
+/-- The rational number two is greater than one. -/
+theorem two_gt_one : (2:ℚ) > 1 :=
+  have : (2:ℚ) = ((2:ℕ):ℚ) := rfl
+  lt_respects_from_integer.mp Integer.two_gt_one
+
+/--
+Conversion between integers and rationals preserves the _less than or
+equivalent to_ relation.
+-/
+theorem le_respects_from_integer {a b : ℤ} : a ≤ b ↔ (a:ℚ) ≤ (b:ℚ) := by
+  have lift_neqv {c₁ c₂ d : ℤ} : c₁ ≃ c₂ → (c₁ ≄ d ↔ c₂ ≄ d ) :=
+    Rel.iff_subst_eqv AA.neqv_substL
+  have : sgn (a-b) ≃ sgn ((a:ℚ)-(b:ℚ)) := sgn_diff_respects_from_integer
+  calc
+    _ ↔ a ≤ b                   := Iff.rfl
+    -- ↓ begin key lines ↓
+    _ ↔ sgn (a - b) ≄ 1         := Integer.le_sgn
+    _ ↔ sgn ((a:ℚ) - (b:ℚ)) ≄ 1 := lift_neqv ‹sgn (a-b) ≃ sgn ((a:ℚ)-(b:ℚ))›
+    -- ↑  end key lines  ↑
+    _ ↔ (a:ℚ) ≤ (b:ℚ)           := le_sgn.symm
 
 /--
 One is greater than or equivalent to zero in the rationals.
@@ -507,7 +529,7 @@ One is greater than or equivalent to zero in the rationals.
 -/
 theorem one_ge_zero : (1:ℚ) ≥ 0 := by
   have : (1:ℤ) > 0 := Integer.zero_lt_one
-  have : (1:ℚ) > 0 := lt_subst_from_integer this
+  have : (1:ℚ) > 0 := lt_respects_from_integer.mp this
   have : (1:ℚ) ≥ 0 := ge_cases.mpr (Or.inl this)
   exact this
 
@@ -1013,7 +1035,7 @@ Negative one is less than zero in the rationals.
 theorem neg_one_lt_zero : (-1:ℚ) < 0 := calc
   _ ≃ (-1:ℚ)     := eqv_refl
   _ ≃ ((-1:ℤ):ℚ) := eqv_symm neg_compat_from_integer
-  _ < 0          := lt_subst_from_integer Integer.neg_one_lt_zero
+  _ < 0          := lt_respects_from_integer.mp Integer.neg_one_lt_zero
 
 /--
 Negate both operands of _less than_, reversing their ordering.
@@ -1631,7 +1653,7 @@ inductive NonnegRatio (p : ℚ) : Prop :=
     (a_nneg : a ≥ 0)
     (b_pos : b > 0)
     (b_nz : AP ((b:ℚ) ≄ 0) :=
-      have : (b:ℚ) > 0 := lt_subst_from_integer ‹b > 0›
+      have : (b:ℚ) > 0 := lt_respects_from_integer.mp ‹b > 0›
       have : (b:ℚ) ≄ 0 := pos_nonzero ‹(b:ℚ) > 0›
       AP.mk ‹(b:ℚ) ≄ 0›)
     (p_eqv : p ≃ a/b)

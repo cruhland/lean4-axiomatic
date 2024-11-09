@@ -430,6 +430,12 @@ theorem lt_step {n : ℕ} : n < step n := by
   · show n ≄ step n
     exact Rel.symm step_neqv
 
+/-- The natural number two is greater than one. -/
+theorem two_gt_one : (2:ℕ) > 1 := by
+  have : step 1 > 1 := lt_step
+  have : (2:ℕ) > 1 := lt_eqv_subst (Rel.symm literal_step) ‹step 1 > 1›
+  exact this
+
 /--
 The same number can be added (on the right) to both sides of a _less than_
 relation, preserving the ordering of the left operands.
@@ -713,7 +719,7 @@ result is given by the `motive m` base case. For the successor case, we have
 follows from the inductive hypothesis; the second option follows from the given
 base case `motive m`.
 -/
-def ind_from
+theorem ind_from
     {motive : ℕ → Prop}
     (motive_subst : {k₁ k₂ : ℕ} → k₁ ≃ k₂ → motive k₁ → motive k₂)
     {n m : ℕ} (n_ge_m : n ≥ m)

@@ -45,6 +45,57 @@ variable {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Order ℤ]
 /-! ## Derived properties -/
 
 /--
+Natural numbers maintain their _less than or equivalent to_ relationship when
+converted to integers.
+-/
+theorem from_natural_respects_le {n m : ℕ} : n ≤ m ↔ (n:ℤ) ≤ (m:ℤ) := by
+  /-
+  This proof could be much simpler if `(· ≤ ·)` for integers was defined in
+  terms of `sgn`.
+  -/
+  apply Iff.intro
+  case mp =>
+    intro (_ : n ≤ m)
+    show (n:ℤ) ≤ (m:ℤ)
+    have (Exists.intro (k : ℕ) (_ : n + k ≃ m)) := Natural.le_defn.mp ‹n ≤ m›
+    have : (m:ℤ) ≃ (n:ℤ) + k := calc
+      _ = (m:ℤ)           := rfl
+      _ ≃ ((n + k : ℕ):ℤ) := AA.subst₁ (Rel.symm ‹n + k ≃ m›)
+      _ ≃ (n:ℤ) + k       := AA.compat₂
+    have : ∃ (k : ℕ), (m:ℤ) ≃ (n:ℤ) + k := Exists.intro k ‹(m:ℤ) ≃ (n:ℤ) + k›
+    have : (n:ℤ) ≤ (m:ℤ) := le_iff_add_nat.mpr ‹∃ (k : ℕ), (m:ℤ) ≃ (n:ℤ) + k›
+    exact this
+  case mpr =>
+    intro (_ : (n:ℤ) ≤ (m:ℤ))
+    show n ≤ m
+    have (Exists.intro (k : ℕ) (_ : (m:ℤ) ≃ (n:ℤ) + k)) :=
+      le_iff_add_nat.mp ‹(n:ℤ) ≤ (m:ℤ)›
+    have : ((n + k : ℕ):ℤ) ≃ (m:ℤ) := calc
+      _ = ((n + k : ℕ):ℤ) := rfl
+      _ ≃ (n:ℤ) + k       := AA.compat₂
+      _ ≃ (m:ℤ)           := Rel.symm ‹(m:ℤ) ≃ (n:ℤ) + k›
+    have : n + k ≃ m := AA.inject ‹((n + k : ℕ):ℤ) ≃ (m:ℤ)›
+    have : n ≤ m := Natural.le_defn.mpr (Exists.intro k ‹n + k ≃ m›)
+    exact this
+
+/--
+Natural numbers maintain their _less than_ relationship when converted to
+integers.
+-/
+theorem from_natural_respects_lt {n m : ℕ} : n < m ↔ (n:ℤ) < (m:ℤ) := by
+  have : n ≤ m ↔ (n:ℤ) ≤ m := from_natural_respects_le
+  have : n ≄ m ↔ (n:ℤ) ≄ m := Iff.intro (mt AA.inject) (mt AA.subst₁)
+  calc
+    _ ↔ n < m                 := Iff.rfl
+    _ ↔ n ≤ m ∧ n ≄ m         := Natural.lt_defn
+    _ ↔ (n:ℤ) ≤ m ∧ n ≄ m     := iff_subst_covar and_mapL ‹n ≤ m ↔ (n:ℤ) ≤ m›
+    _ ↔ (n:ℤ) ≤ m ∧ (n:ℤ) ≄ m := iff_subst_covar and_mapR ‹n ≄ m ↔ (n:ℤ) ≄ m›
+    _ ↔ (n:ℤ) < (m:ℤ)         := lt_iff_le_neqv.symm
+
+/-- The integer two is greater than one. -/
+theorem two_gt_one : (2:ℤ) > 1 := from_natural_respects_lt.mp Natural.two_gt_one
+
+/--
 Equivalent integers can be substituted on the left of the `· ≤ ·` relation.
 
 **Property intuition**: This must be true for `· ≤ ·` to be a valid integer
@@ -1123,6 +1174,23 @@ theorem order_trichotomy
     exact absurd abTwo abNotTwo
 
 /--
+Two integers are either in a _less than or equivalent to_ relation, or a
+_greater than_ relation.
+-/
+theorem le_or_gt {a b : ℤ} : a ≤ b ∨ a > b := by
+  have : AA.OneOfThree (a < b) (a ≃ b) (a > b) :=
+    (order_trichotomy a b).atLeastOne
+  match ‹AA.OneOfThree (a < b) (a ≃ b) (a > b)› with
+  | AA.OneOfThree.first (_ : a < b) =>
+    have : a ≤ b := le_split.mpr (Or.inl ‹a < b›)
+    exact Or.inl ‹a ≤ b›
+  | AA.OneOfThree.second (_ : a ≃ b) =>
+    have : a ≤ b := le_split.mpr (Or.inr ‹a ≃ b›)
+    exact Or.inl ‹a ≤ b›
+  | AA.OneOfThree.third (_ : a > b) =>
+    exact Or.inr ‹a > b›
+
+/--
 The _less than or equivalent to_ relation is reversed with negated operands.
 
 **Property and proof intuition**: Equivalence is symmetric and preserved by
@@ -1230,20 +1298,74 @@ theorem neg_one_lt_zero : (-1 : ℤ) < 0 := by
   exact this
 
 /--
-One way of converting _less than or equivalent to_ into _less than_ requires
-incrementing the right operand.
-
-**Property and proof intuition**: We must have `a ≄ b + 1` because `b < b + 1`.
+Convert between _less than_ and _less than or equivalent to_ by incrementing or
+decrementing the left operand.
 -/
-theorem le_widen_lt {a b : ℤ} : a ≤ b → a < b + 1 := by
-  intro (_ : a ≤ b)
-  show a < b + 1
-  have : b < b + 1 := lt_inc
-  have : a < b ∨ a ≃ b := le_split.mp ‹a ≤ b›
-  have : a < b + 1 := match ‹a < b ∨ a ≃ b› with
-  | Or.inl (_ : a < b) => Rel.trans ‹a < b› ‹b < b + 1›
-  | Or.inr (_ : a ≃ b) => AA.substLFn (Rel.symm ‹a ≃ b›) ‹b < b + 1›
-  exact this
+theorem lt_iff_le_incL {a b : ℤ} : a < b ↔ a + 1 ≤ b := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a < b)
+    show a + 1 ≤ b
+    have (And.intro (_ : a ≤ b) (_ : a ≄ b)) := lt_iff_le_neqv.mp ‹a < b›
+    have (Exists.intro (n : ℕ) (_ : b ≃ a + n)) := le_iff_add_nat.mp ‹a ≤ b›
+    have : n ≃ 0 ∨ ∃ (m : ℕ), n ≃ step m := Natural.split_cases n
+    match ‹n ≃ 0 ∨ ∃ (m : ℕ), n ≃ step m› with
+    | Or.inl (_ : n ≃ 0) =>
+      have : a ≃ b := Rel.symm $ calc
+        _ = b     := rfl
+        _ ≃ a + n := ‹b ≃ a + n›
+        _ ≃ a + 0 := AA.substR (AA.subst₁ ‹n ≃ 0›)
+        _ ≃ a     := AA.identR
+      exact absurd ‹a ≃ b› ‹a ≄ b›
+    | Or.inr (Exists.intro (m : ℕ) (_ : n ≃ step m)) =>
+      have : step m ≃ m + 1 := Rel.symm Natural.add_one_step
+      have : b ≃ (a + 1) + m := calc
+        _ = b                   := rfl
+        _ ≃ a + n               := ‹b ≃ a + n›
+        _ ≃ a + step m          := AA.substR (AA.subst₁ ‹n ≃ step m›)
+        _ ≃ a + ((m + 1 : ℕ):ℤ) := AA.substR (AA.subst₁ ‹step m ≃ m + 1›)
+        _ ≃ a + (m + 1)         := AA.substR AA.compat₂
+        _ ≃ a + (1 + m)         := AA.substR AA.comm
+        _ ≃ (a + 1) + m         := Rel.symm AA.assoc
+      have : ∃ (m : ℕ), b ≃ (a + 1) + m := Exists.intro m ‹b ≃ (a + 1) + m›
+      have : a + 1 ≤ b := le_iff_add_nat.mpr ‹∃ (m : ℕ), b ≃ (a + 1) + m›
+      exact this
+  case mpr =>
+    intro (_ : a + 1 ≤ b)
+    show a < b
+    calc
+      _ = a     := rfl
+      _ < a + 1 := lt_inc
+      _ ≤ b     := ‹a + 1 ≤ b›
+
+/--
+Convert between _less than or equivalent to_ and _less than_ by incrementing or
+decrementing the right operand.
+-/
+theorem le_iff_lt_incR {a b : ℤ} : a ≤ b ↔ a < b + 1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a ≤ b)
+    show a < b + 1
+    calc
+      _ = a     := rfl
+      _ ≤ b     := ‹a ≤ b›
+      _ < b + 1 := lt_inc
+  case mpr =>
+    intro (_ : a < b + 1)
+    show a ≤ b
+    have : a + 1 ≤ b + 1 := lt_iff_le_incL.mp ‹a < b + 1›
+    have : a ≤ b := ge_addR.mpr ‹a + 1 ≤ b + 1›
+    exact this
+
+/--
+Equivalent expressions of positive integers, using _less than_ and _less than
+or equivalent to_.
+-/
+theorem pos_gt_iff_ge {a : ℤ} : a > 0 ↔ a ≥ 1 := calc
+  _ ↔ a > 0     := Iff.rfl
+  _ ↔ a ≥ 0 + 1 := lt_iff_le_incL
+  _ ↔ a ≥ 1     := Rel.iff_subst_eqv le_substL_eqv AA.identL
 
 /--
 Every nonnegative integer is equivalent to a natural number.
@@ -1395,5 +1517,50 @@ theorem mul_preserves_nonneg {a b : ℤ} : a ≥ 0 → b ≥ 0 → a * b ≥ 0 :
     _ = a * b := rfl
     _ ≥ 0 * b := ge_mulR_nonneg ‹b ≥ 0› ‹a ≥ 0›
     _ ≃ 0     := AA.absorbL
+
+/-- Induction on integers greater than or equivalent to a starting value. -/
+theorem ind_from
+    {motive : ℤ → Prop}
+    (motive_subst : {c₁ c₂ : ℤ} → c₁ ≃ c₂ → motive c₁ → motive c₂)
+    {a b : ℤ} (a_ge_b : a ≥ b)
+    (base : motive b) (next : {c : ℤ} → c ≥ b → motive c → motive (c + 1))
+    : motive a
+    := by
+  /- Proof strategy: natural number induction -/
+
+  -- Introduce induction variable
+  have : a - b ≥ 0 := ge_iff_diff_nonneg.mp ‹a ≥ b›
+  have (Exists.intro (n : ℕ) (_ : a - b ≃ n)) := ge_zero_eqv_nat ‹a - b ≥ 0›
+  have : n + b ≃ a := Rel.symm (subR_moveR_addR.mp ‹a - b ≃ n›)
+
+  -- Motive, base case, and successor case for the induction
+  let motive' := λ (k : ℕ) => motive (k + b)
+  have : motive (0 + b) := motive_subst (Rel.symm AA.identL) base
+  have zero_case : motive' 0 := ‹motive (0 + b)›
+  have step_case (m : ℕ) : motive' m → motive' (step m) := by
+    intro (_ : motive' m)
+    show motive' (step m)
+    have : m + b ≥ b := calc
+      _ = m + b := rfl
+      _ ≥ 0 + b := ge_addR.mp (from_natural_respects_le.mp Natural.ge_zero)
+      _ ≃ b     := AA.identL
+    have : (m + b) + 1 ≃ step m + b := calc
+      _ = (m + b) + 1         := rfl
+      _ ≃ m + (b + 1)         := add_assoc
+      _ ≃ m + (1 + b)         := add_substR add_comm
+      _ ≃ (m + 1) + b         := Rel.symm add_assoc
+      _ ≃ ((m + 1 : ℕ):ℤ) + b := add_substL (Rel.symm AA.compat₂)
+      _ ≃ step m + b          := add_substL (AA.subst₁ Natural.add_one_step)
+    have : motive (m + b) := ‹motive' m›
+    have : motive ((m + b) + 1) := next ‹m + b ≥ b› ‹motive (m + b)›
+    have : motive (step m + b) := motive_subst ‹(m + b) + 1 ≃ step m + b› this
+    have : motive' (step m) := ‹motive (step m + b)›
+    exact this
+
+  -- Perform the induction and convert the result into the expected form
+  have : motive' n := Natural.ind zero_case step_case n
+  have : motive (n + b) := ‹motive' n›
+  have : motive a := motive_subst ‹n + b ≃ a› ‹motive (n + b)›
+  exact this
 
 end Lean4Axiomatic.Integer

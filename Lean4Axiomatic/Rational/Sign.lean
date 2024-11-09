@@ -456,6 +456,18 @@ theorem eqv_sgn {p q : ℚ} : p ≃ q ↔ sgn (p - q) ≃ 0 := by
     have : p ≃ q := sub_eqv_zero_iff_eqv.mp this
     exact this
 
+/--
+When computing the sign of the difference of two integers, the result is the
+same if the values are converted to rational numbers first.
+-/
+theorem sgn_diff_respects_from_integer
+    {a b : ℤ} : sgn (a - b) ≃ sgn ((a:ℚ) - (b:ℚ))
+    := Rel.symm $ calc
+  /- An explicit proof for this should be unnecessary with better tactics. -/
+  _ = sgn ((a:ℚ) - (b:ℚ)) := rfl
+  _ ≃ sgn (((a - b):ℤ):ℚ) := sgn_subst (eqv_symm sub_compat_from_integer)
+  _ ≃ sgn (a - b)         := sgn_from_integer
+
 end sub_only
 variable [Reciprocation ℚ]
 
