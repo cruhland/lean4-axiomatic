@@ -1563,4 +1563,6 @@ theorem ind_from
   have : motive a := motive_subst ‹n + b ≃ a› ‹motive (n + b)›
   exact this
 
+theorem not_ge_iff_lt {a b : ℤ} : ¬(a ≥ b) ↔ a < b := sorry
+
 end Lean4Axiomatic.Integer
