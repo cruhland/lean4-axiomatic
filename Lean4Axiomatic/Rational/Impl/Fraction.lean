@@ -3,6 +3,7 @@ import Lean4Axiomatic.Rational
 import Lean4Axiomatic.Rational.Impl.Fraction.Sign
 import Lean4Axiomatic.Rational.Impl.Fraction.Induction
 import Lean4Axiomatic.Rational.Impl.Generic.Exponentiation
+import Lean4Axiomatic.Rational.Impl.Generic.FloorCeil
 import Lean4Axiomatic.Rational.Impl.Generic.Metric
 import Lean4Axiomatic.Rational.Impl.Generic.MinMax
 import Lean4Axiomatic.Rational.Impl.Generic.Order
@@ -34,6 +35,7 @@ instance rational : Rational (ℤ := ℤ) (Fraction ℤ) :=
     toOrder := order
     toMinMax := Generic.minmax
     toMetric := Generic.metric
+    toFloorCeil := Generic.floor_ceil
   }
 
 end Lean4Axiomatic.Rational.Impl.Fraction
