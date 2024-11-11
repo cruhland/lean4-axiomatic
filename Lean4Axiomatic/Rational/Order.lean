@@ -1120,6 +1120,8 @@ theorem le_diff_upper {ε p q : ℚ} : q - p ≤ ε ↔ q ≤ p + ε := calc
   _ ↔          q ≤ ε + p := by srw [add_assoc, add_inverseL, add_identR]
   _ ↔          q ≤ p + ε := by srw [add_comm]
 
+theorem not_ge_iff_lt {p q : ℚ} : ¬(p ≥ q) ↔ p < q := sorry
+
 variable [Reciprocation ℚ] [Division ℚ]
 
 /--
