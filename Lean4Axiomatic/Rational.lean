@@ -1,4 +1,5 @@
 import Lean4Axiomatic.Rational.Exponentiation
+import Lean4Axiomatic.Rational.FloorCeil
 import Lean4Axiomatic.Rational.Induction
 import Lean4Axiomatic.Rational.Metric
 
@@ -31,10 +32,12 @@ class Rational
   toOrder : Rational.Order ℚ
   toMinMax : Rational.MinMax ℚ
   toMetric : Rational.Metric ℚ
+  toFloorCeil : Rational.FloorCeil ℚ
 
 attribute [instance] Rational.toAddition
 attribute [instance] Rational.toCore
 attribute [instance] Rational.toDivision
+attribute [instance] Rational.toFloorCeil
 attribute [instance] Rational.toIntegerExponentiation
 attribute [instance] Rational.toMetric
 attribute [instance] Rational.toMinMax
