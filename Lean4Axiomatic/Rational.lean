@@ -1,4 +1,5 @@
 import Lean4Axiomatic.Rational.Exponentiation
+import Lean4Axiomatic.Rational.Induction
 import Lean4Axiomatic.Rational.Metric
 
 /-! # Rational numbers -/
