@@ -1200,6 +1200,45 @@ theorem le_diff_upper {ε p q : ℚ} : q - p ≤ ε ↔ q ≤ p + ε := by
 variable [Reciprocation ℚ] [Division ℚ]
 
 /--
+The comparison of reciprocals of two rational numbers gives the opposite result
+as comparison of the original numbers, when both numbers have the same nonzero
+sign.
+
+**Property intuition**: `2 < 3`, but `1/2 > 1/3`.
+
+**Proof intuition**: Simplify the subtraction of reciprocals into an expression
+with a single division. Computing its sign converts the division into
+multiplication. The former denominator is positive and drops out, leaving the
+former numerator which gives the result.
+-/
+theorem sgn_sub_recip
+    {p q : ℚ} (pq_pos : p * q > 0)
+    : have : p * q ≄ 0 := pos_nonzero ‹p * q > 0›
+      have : p ≄ 0 ∧ q ≄ 0 := mul_split_nonzero.mp ‹p * q ≄ 0›
+      have : AP (p ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.1
+      have : AP (q ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.2
+      sgn (p⁻¹ - q⁻¹) ≃ sgn (q - p)
+    := by
+  intro _ _ (_ : AP (p ≄ 0)) (_ : AP (q ≄ 0))
+  show sgn (p⁻¹ - q⁻¹) ≃ sgn (q - p)
+
+  have sub_recips : p⁻¹ - q⁻¹ ≃ (q - p)/(p * q) := calc
+    _ = p⁻¹ - q⁻¹               := rfl
+    _ ≃ 1/p - q⁻¹               := sub_substL (eqv_symm div_identL)
+    _ ≃ 1/p - 1/q               := sub_substR (eqv_symm div_identL)
+    _ ≃ (1 * q - p * 1)/(p * q) := sub_fractions
+    _ ≃ (q - p * 1)/(p * q)     := div_substL (sub_substL mul_identL)
+    _ ≃ (q - p)/(p * q)         := div_substL (sub_substR mul_identR)
+  calc
+    _ = sgn (p⁻¹ - q⁻¹)           := rfl
+    _ ≃ sgn ((q - p)/(p * q))     := sgn_subst sub_recips
+    _ ≃ sgn (q - p) * sgn (p * q) := sgn_div
+    _ ≃ sgn (q - p) * 1           := AA.substR (gt_zero_sgn.mp ‹p * q > 0›)
+    _ ≃ sgn (q - p)               := AA.identR
+
+variable [Induction ℚ]
+
+/--
 A rational number is greater than zero iff its sign is greater than zero.
 
 **Property and proof intuition**: Rationals greater than zero have sign value
@@ -1529,43 +1568,6 @@ theorem lt_substD_div_neg
   exact this
 
 /--
-The comparison of reciprocals of two rational numbers gives the opposite result
-as comparison of the original numbers, when both numbers have the same nonzero
-sign.
-
-**Property intuition**: `2 < 3`, but `1/2 > 1/3`.
-
-**Proof intuition**: Simplify the subtraction of reciprocals into an expression
-with a single division. Computing its sign converts the division into
-multiplication. The former denominator is positive and drops out, leaving the
-former numerator which gives the result.
--/
-theorem sgn_sub_recip
-    {p q : ℚ} (pq_pos : p * q > 0)
-    : have : p * q ≄ 0 := pos_nonzero ‹p * q > 0›
-      have : p ≄ 0 ∧ q ≄ 0 := mul_split_nonzero.mp ‹p * q ≄ 0›
-      have : AP (p ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.1
-      have : AP (q ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.2
-      sgn (p⁻¹ - q⁻¹) ≃ sgn (q - p)
-    := by
-  intro _ _ (_ : AP (p ≄ 0)) (_ : AP (q ≄ 0))
-  show sgn (p⁻¹ - q⁻¹) ≃ sgn (q - p)
-
-  have sub_recips : p⁻¹ - q⁻¹ ≃ (q - p)/(p * q) := calc
-    _ = p⁻¹ - q⁻¹               := rfl
-    _ ≃ 1/p - q⁻¹               := sub_substL (eqv_symm div_identL)
-    _ ≃ 1/p - 1/q               := sub_substR (eqv_symm div_identL)
-    _ ≃ (1 * q - p * 1)/(p * q) := sub_fractions
-    _ ≃ (q - p * 1)/(p * q)     := div_substL (sub_substL mul_identL)
-    _ ≃ (q - p)/(p * q)         := div_substL (sub_substR mul_identR)
-  calc
-    _ = sgn (p⁻¹ - q⁻¹)           := rfl
-    _ ≃ sgn ((q - p)/(p * q))     := sgn_subst sub_recips
-    _ ≃ sgn (q - p) * sgn (p * q) := sgn_div
-    _ ≃ sgn (q - p) * 1           := AA.substR (gt_zero_sgn.mp ‹p * q > 0›)
-    _ ≃ sgn (q - p)               := AA.identR
-
-/--
 The average of two nonequivalent rational numbers lies strictly between them.
 
 **Property intuition**: Averaging finds the value that both numbers would have
@@ -1681,8 +1683,8 @@ to show that both must be nonnegative.
 theorem as_nonneg_ratio {p : ℚ} : p ≥ 0 → NonnegRatio p := by
   intro (_ : p ≥ 0)
   show NonnegRatio p
-  have (AsRatio.intro (x : ℤ) (y : ℤ) (_ : Integer.Nonzero y) p_eqv) :=
-    as_ratio p
+  have (AsRatio.mk (x : ℤ) (y : ℤ) (_ : AP (y ≄ 0)) p_eqv) := as_ratio p
+  have : Integer.Nonzero y := Integer.nonzero_iff_neqv_zero.mpr ‹AP (y ≄ 0)›.ev
   have : p ≃ x/y := p_eqv
   let a := x * sgn y
   let b := y * sgn y
