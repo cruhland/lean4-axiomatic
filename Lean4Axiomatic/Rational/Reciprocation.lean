@@ -114,25 +114,6 @@ Defined with high priority to avoid conflicts with `Div`'s syntax.
 -/
 infixl:70 (priority := high) " / " => div
 
-/--
-An inductive predicate expressing that a rational number can be represented as
-a ratio of integers.
-
-A value of `AsRatio p`, for some rational number `p`, is an existence proof
-that there are two integers `a` and `b` whose ratio `a / b` is equivalent to
-`p`.
--/
-inductive AsRatio
-    {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
-    {ℚ : Type} [Core (ℤ := ℤ) ℚ] [Division.Ops ℚ] (p : ℚ)
-    : Prop
-    :=
-  /-- Construct a value of `AsRatio p`. -/
-| intro
-    (a b : ℤ)
-    (b_nonzero : Integer.Nonzero b)
-    (eqv_ratio : p ≃ a / b)
-
 /-- Properties of rational number division. -/
 class Division.Props
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
@@ -146,22 +127,7 @@ class Division.Props
   -/
   div_mul_recip {p q : ℚ} [AP (q ≄ 0)] : p / q ≃ p * q⁻¹
 
-  /--
-  An induction/recursion principle for rationals.
-
-  It states that any predicate (that is substitutive wrt `≃` on rationals) that
-  holds for all rationals of the form `a / b` (where `a` and `b` are integers)
-  will also hold for any rational. In particular, this implies that all
-  rationals can be represented in the form `a / b`, which is formalized below
-  in the theorem `as_ratio`. In other words, it excludes any rationals
-  not of this form. This axiom is inspired by the
-  [induction axiom](https://w.wiki/7hJp) of the Peano axioms.
-  -/
-  ind_fraction
-    {motive : ℚ → Prop} [AA.Substitutive₁ (α := ℚ) motive (· ≃ ·) (· → ·)]
-    : ((a b : ℤ) → [Integer.Nonzero b] → motive (a / b)) → (p : ℚ) → motive p
-
-export Division.Props (div_mul_recip ind_fraction)
+export Division.Props (div_mul_recip)
 
 /-- All rational number division axioms. -/
 class Division
@@ -253,61 +219,6 @@ theorem recip_idemp {p : ℚ} [AP (p ≄ 0)] : (p⁻¹)⁻¹ ≃ p := calc
 end neg_only
 section div_only
 variable [Division ℚ]
-
-/--
-Equivalent to `Division.Props.ind_fraction` but with a more convenient argument
-order when using the `apply` tactic.
--/
-def ind_fraction_on
-    {motive : ℚ → Prop}
-    [AA.Substitutive₁ (α := ℚ) motive (· ≃ ·) (· → ·)] (p : ℚ)
-    (on_int_frac : (a b : ℤ) → [Integer.Nonzero b] → motive ((a:ℚ) / b))
-    : motive p
-    :=
-  ind_fraction on_int_frac p
-
-/--
-The predicate AsRatio satisfies a substitutive property with respect to the
-equivalence relation `≃`.
-I.e. if two rationals `a` and `b` are equivalent and `a` can be expressed as an
-integer ratio, `a ≃ n / d`, then `b` can be expressed in the same way.
--/
-theorem AsRatio_subst {a b : ℚ} : a ≃ b → AsRatio a → AsRatio b := by
-  intro (_ : a ≃ b) (_ : AsRatio a)
-  -- Decompose `a` into a ratio of integers
-  have (AsRatio.intro (n : ℤ) (d : ℤ) (_ : Integer.Nonzero d) eqv)
-    := ‹AsRatio a›
-  have : a ≃ n / d := eqv
-  have : b ≃ n / d := calc
-    _ ≃ b     := eqv_refl
-    _ ≃ a     := eqv_symm ‹a ≃ b›
-    _ ≃ n / d := ‹a ≃ n / d›
-  exact AsRatio.intro n d ‹Integer.Nonzero d› ‹b ≃ n / d›
-
-instance AsRatio_subst_inst
-    : AA.Substitutive₁ (α := ℚ) AsRatio (· ≃ ·) (· → ·)
-    := {
-  subst₁ := AsRatio_subst
-}
-
-  /--
-  Every rational number can be expressed as a ratio of integers.
-
-  Given any two integers, we can easily make a rational number; convert both of
-  them to rationals using `from_integer`, then divide them. This theorem tells us
-  that we can also do the reverse: given any rational, there are two integers
-  that produce it when put into a ratio.
-
-  It's a useful property because it provides a way to "deconstruct" a rational
-  number into simpler pieces, which may be easier to work with. Although, it's
-  preferable to work with rational numbers directly, and use this only when
-  necessary.
-  -/
-theorem as_ratio (p : ℚ) : AsRatio p := by
-  apply ind_fraction_on p
-  intro (a : ℤ) (b : ℤ) (_ : Integer.Nonzero b)
-  show AsRatio ((a:ℚ) / b)
-  exact AsRatio.intro a b ‹Integer.Nonzero b› eqv_refl
 
 /--
 Division respects equivalence over its left operand.

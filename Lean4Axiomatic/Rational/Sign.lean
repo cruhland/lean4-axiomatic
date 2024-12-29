@@ -1,4 +1,4 @@
-import Lean4Axiomatic.Rational.Reciprocation
+import Lean4Axiomatic.Rational.Induction
 
 /-! # Rational numbers: sign -/
 
@@ -222,6 +222,8 @@ theorem mul_split_zero {p q : ℚ} : p * q ≃ 0 ↔ p ≃ 0 ∨ q ≃ 0 := by
     intro (_ : p * q ≃ 0)
     show p ≃ 0 ∨ q ≃ 0
     have : sgn p * sgn q ≃ 0 := calc
+      -- TODO: We shouldn't need to use `sgn_compat_mul` to prove this; use
+      -- rational induction instead
       sgn p * sgn q ≃ _ := Rel.symm sgn_compat_mul
       sgn (p * q)   ≃ _ := sgn_zero.mp ‹p * q ≃ 0›
       0             ≃ _ := Rel.refl
@@ -277,6 +279,20 @@ instance mul_split_nonzero_mpr_inst
     {p q : ℚ} [AP (p ≄ 0)] [AP (q ≄ 0)] : AP (p * q ≄ 0)
     :=
   AP.mk (mul_split_nonzero.mpr (And.intro ‹AP (p ≄ 0)›.ev ‹AP (q ≄ 0)›.ev))
+
+/-- Helper to get the left factor out of the `mul_split_nonzero` result. -/
+theorem mul_split_nonzero_left {p q : ℚ} : p * q ≄ 0 → p ≄ 0 := by
+  intro (_ : p * q ≄ 0)
+  show p ≄ 0
+  have (And.intro (_ : p ≄ 0) _) := mul_split_nonzero.mp ‹p * q ≄ 0›
+  exact ‹p ≄ 0›
+
+/-- Helper to get the right factor out of the `mul_split_nonzero` result. -/
+theorem mul_split_nonzero_right {p q : ℚ} : p * q ≄ 0 → q ≄ 0 := by
+  intro (_ : p * q ≄ 0)
+  show q ≄ 0
+  have (And.intro _ (_ : q ≄ 0)) := mul_split_nonzero.mp ‹p * q ≄ 0›
+  exact ‹q ≄ 0›
 
 /--
 The largest sign value is one.
@@ -611,96 +627,6 @@ theorem sgn_div_integers
   _ ≃ sgn a * sgn b         := AA.substR sgn_from_integer
 
 /--
-The _signum_ function is idempotent: applying it twice is the same as applying
-it once.
-
-**Property intuition**: The `sgn` function has only three possible results, and
-each of them is a fixed point.
-
-**Proof intuition**: Instead of using trichotomy to do tedious case analysis,
-convert the rational into its fraction form and reduce it to an expression with
-integer `sgn`, which we already know is idempotent.
--/
-theorem sgn_idemp {p : ℚ} : sgn (sgn p) ≃ sgn p := by
-  have (AsRatio.intro (a : ℤ) (b : ℤ) (_ : Integer.Nonzero b) eqv) :=
-    as_ratio p
-  have : p ≃ a/b := eqv
-  calc
-    sgn (sgn p)               ≃ _ := Integer.sgn_subst (sgn_subst ‹p ≃ a/b›)
-    sgn (sgn ((a : ℚ)/b))     ≃ _ := Integer.sgn_subst sgn_div_integers
-    sgn (sgn a * sgn b)       ≃ _ := Integer.sgn_compat_mul
-    sgn (sgn a) * sgn (sgn b) ≃ _ := AA.substL Integer.sgn_idemp
-    sgn a * sgn (sgn b)       ≃ _ := AA.substR Integer.sgn_idemp
-    sgn a * sgn b             ≃ _ := Rel.symm sgn_div_integers
-    sgn ((a : ℚ)/b)           ≃ _ := sgn_subst (eqv_symm ‹p ≃ a/b›)
-    sgn p                     ≃ _ := Rel.refl
-
-/--
-Only the nonzero rational numbers have signs that are square roots of unity.
-
-**Property intuition**: The nonzero sign values are `1` and `-1`, which are the
-square roots of unity.
-
-**Proof intuition**: Signs that are square roots of unity are nonzero, which
-implies their originating numbers are also nonzero.
--/
-theorem sgn_sqrt1_iff_nonzero {p : ℚ} : Integer.Sqrt1 (sgn p) ↔ p ≄ 0 := by
-  have : Integer.Sqrt1 (sgn (sgn p)) ↔ Integer.Sqrt1 (sgn p) :=
-    Rel.iff_subst_eqv Integer.sqrt1_subst sgn_idemp
-  calc
-    _ ↔ Integer.Sqrt1 (sgn p)       := Rel.refl
-    _ ↔ Integer.Sqrt1 (sgn (sgn p)) := this.symm
-    _ ↔ Integer.Nonzero (sgn p)     := Integer.sgn_nonzero.symm
-    _ ↔ sgn p ≄ 0                   := Integer.nonzero_iff_neqv_zero
-    _ ↔ p ≄ 0                       := Logic.iff_subst_contra mt sgn_zero.symm
-
-/--
-A positive rational is nonzero.
-
-**Proof intuition**: Rationals with square roots of unity as their signs are
-nonzero; positive rationals have a sign of one.
--/
-theorem nonzero_if_pos {p : ℚ} : sgn p ≃ 1 → p ≄ 0 := by
-  intro (_ : sgn p ≃ 1)
-  show p ≄ 0
-  have : Integer.Sqrt1 (sgn p) := Integer.sqrt1_cases.mpr (Or.inl ‹sgn p ≃ 1›)
-  have : p ≄ 0 := sgn_sqrt1_iff_nonzero.mp ‹Integer.Sqrt1 (sgn p)›
-  exact this
-
-/--
-A negative rational is nonzero.
-
-**Proof intuition**: Rationals with square roots of unity as their signs are
-nonzero; negative rationals have a sign of negative one.
--/
-theorem nonzero_if_neg {p : ℚ} : sgn p ≃ -1 → p ≄ 0 := by
-  intro (_ : sgn p ≃ -1)
-  have : Integer.Sqrt1 (sgn p) := Integer.sqrt1_cases.mpr (Or.inr ‹sgn p ≃ -1›)
-  have : p ≄ 0 := sgn_sqrt1_iff_nonzero.mp this
-  exact this
-
-/--
-The square of a rational number is nonnegative.
-
-**Property intuition**: The product of two negative numbers is positive, and
-zero times anything is zero.
-
-**Proof intuition**: An equivalent expression for the sign of the squared
-rational is `sgn (sgn p * sgn p)`, because `sgn` is idempotent. That new
-expression is nonnegative, by `Integer.nonneg_square`, and thus the original
-expression is too.
--/
-theorem nonneg_square {p : ℚ} : sgn (p * p) ≄ -1 := by
-  have : sgn (sgn p * sgn p) ≃ sgn (p * p) := calc
-    _ = sgn (sgn p * sgn p) := rfl
-    _ ≃ sgn (sgn (p * p))   := Integer.sgn_subst (Rel.symm sgn_compat_mul)
-    _ ≃ sgn (p * p)         := sgn_idemp
-  have : sgn (sgn p * sgn p) ≄ -1 := Integer.nonneg_square
-  have : sgn (p * p) ≄ -1 :=
-    AA.neqv_substL ‹sgn (sgn p * sgn p) ≃ sgn (p * p)› this
-  exact this
-
-/--
 Negation can be moved between the "outside" of a division operation and the
 "inside", specifically its right operand.
 
@@ -809,6 +735,24 @@ theorem div_mul_swap
   _ ≃ (p * r) * (q⁻¹ * s⁻¹) := AA.expr_xxfxxff_lr_swap_rl
   _ ≃ (p * r) * (q * s)⁻¹   := mul_substR (eqv_symm recip_compat_mul)
   _ ≃ (p * r)/(q * s)       := eqv_symm div_mul_recip
+
+/--
+A common factor on the right can be dropped from the division of two rational
+numbers.
+-/
+theorem div_cancelR_mul
+    {p q r : ℚ} [AP (q * r ≄ 0)]
+    : have : AP (q ≄ 0) := ‹AP (q * r ≄ 0)›.map mul_split_nonzero_left
+      (p * r)/(q * r) ≃ p/q
+    := by
+  intro (_ : AP (q ≄ 0))
+  show (p * r)/(q * r) ≃ p/q
+  have : AP (r ≄ 0) := ‹AP (q * r ≄ 0)›.map mul_split_nonzero_right
+  calc
+    _ = (p * r)/(q * r) := rfl
+    _ ≃ (p/q) * (r/r)   := eqv_symm div_mul_swap
+    _ ≃ (p/q) * 1       := mul_substR div_same
+    _ ≃ p/q             := mul_identR
 
 /--
 A rational number can be multiplied (on the left) and divided by another
@@ -934,6 +878,58 @@ theorem div_div_div
   _ ≃ (p * s)/(q * r) := div_mul_swap
 
 /--
+The result of adding two ratios of rational numbers can be written as a single
+ratio.
+
+**Property and proof intuition**: Multiply both terms by ratios of factors that
+cancel to `1`, so that a common denominator value can be reached. Then directly
+add the numerators via `div_distribR`.
+-/
+theorem add_fractions
+    {p q r s : ℚ} [AP (q ≄ 0)] [AP (s ≄ 0)]
+    : p/q + r/s ≃ (p * s + q * r)/(q * s)
+    := calc
+  _ = p/q + r/s                 := rfl
+  _ ≃ (p/q) * 1 + r/s           := add_substL (eqv_symm mul_identR)
+  _ ≃ (p/q)*(s/s) + r/s         := add_substL (mul_substR (eqv_symm div_same))
+  _ ≃ (p*s)/(q*s) + r/s         := add_substL div_mul_swap
+  _ ≃ (p*s)/(q*s) + 1 * (r/s)   := add_substR (eqv_symm mul_identL)
+  _ ≃ (p*s)/(q*s) + (q/q)*(r/s) := add_substR (mul_substL (eqv_symm div_same))
+  _ ≃ (p*s)/(q*s) + (q*r)/(q*s) := add_substR div_mul_swap
+  _ ≃ (p*s + q*r)/(q*s)         := eqv_symm div_distribR
+
+section
+variable [Subtraction ℚ]
+
+/--
+The result of subtracting two ratios of rational numbers can be written as a
+single ratio.
+
+**Property and proof intuition**: Convert subtraction into addition of a
+negated value. Move the negation to the numerator of the ratio, then add the
+ratios via `add_fractions`. Move the negation in the result to cover an entire
+additive term, then convert back to subtraction.
+-/
+theorem sub_fractions
+    {p q r s : ℚ} [AP (q ≄ 0)] [AP (s ≄ 0)]
+    : p/q - r/s ≃ (p * s - q * r)/(q * s)
+    := by
+  have neg_to_sub : p * s + q * (-r) ≃ p * s - q * r := calc
+    _ = p * s + q * (-r) := rfl
+    _ ≃ p * s + -(q * r) := add_substR (eqv_symm neg_scompatR_mul)
+    _ ≃ p * s - q * r    := eqv_symm sub_add_neg
+  calc
+    _ = p/q - r/s                  := rfl
+    _ ≃ p/q + -(r/s)               := sub_add_neg
+    _ ≃ p/q + (-r/s)               := add_substR neg_scompatL_div
+    _ ≃ (p * s + q * (-r))/(q * s) := add_fractions
+    _ ≃ (p * s - q * r)/(q * s)    := div_substL neg_to_sub
+
+end
+
+variable [Induction ℚ]
+
+/--
 If two rational numbers have the same sign value, their sum will as well.
 
 **Property intuition**: If we visualize rational numbers as arrows on a number
@@ -954,10 +950,10 @@ theorem add_preserves_sign
     := by
   intro (_ : sgn p ≃ s) (_ : sgn q ≃ s)
   show sgn (p + q) ≃ s
-  have (AsRatio.intro (a : ℤ) (b : ℤ) (_ : Integer.Nonzero b) p_eqv) :=
-    as_ratio p
-  have (AsRatio.intro (c : ℤ) (d : ℤ) (_ : Integer.Nonzero d) q_eqv) :=
-    as_ratio q
+  have (AsRatio.mk (a : ℤ) (b : ℤ) (_ : AP (b ≄ 0)) p_eqv) := as_ratio p
+  have (AsRatio.mk (c : ℤ) (d : ℤ) (_ : AP (d ≄ 0)) q_eqv) := as_ratio q
+  have : Integer.Nonzero b := Integer.nonzero_iff_neqv_zero.mpr ‹AP (b ≄ 0)›.ev
+  have : Integer.Nonzero d := Integer.nonzero_iff_neqv_zero.mpr ‹AP (d ≄ 0)›.ev
   have : p ≃ a/b := p_eqv
   have : q ≃ c/d := q_eqv
   have : Integer.Sqrt1 (sgn b) := Integer.sgn_nonzero.mp ‹Integer.Nonzero b›
@@ -1012,25 +1008,94 @@ theorem add_preserves_sign
   exact this
 
 /--
-The result of adding two ratios of rational numbers can be written as a single
-ratio.
+The _signum_ function is idempotent: applying it twice is the same as applying
+it once.
 
-**Property and proof intuition**: Multiply both terms by ratios of factors that
-cancel to `1`, so that a common denominator value can be reached. Then directly
-add the numerators via `div_distribR`.
+**Property intuition**: The `sgn` function has only three possible results, and
+each of them is a fixed point.
+
+**Proof intuition**: Instead of using trichotomy to do tedious case analysis,
+convert the rational into its fraction form and reduce it to an expression with
+integer `sgn`, which we already know is idempotent.
 -/
-theorem add_fractions
-    {p q r s : ℚ} [AP (q ≄ 0)] [AP (s ≄ 0)]
-    : p/q + r/s ≃ (p * s + q * r)/(q * s)
-    := calc
-  _ = p/q + r/s                 := rfl
-  _ ≃ (p/q) * 1 + r/s           := add_substL (eqv_symm mul_identR)
-  _ ≃ (p/q)*(s/s) + r/s         := add_substL (mul_substR (eqv_symm div_same))
-  _ ≃ (p*s)/(q*s) + r/s         := add_substL div_mul_swap
-  _ ≃ (p*s)/(q*s) + 1 * (r/s)   := add_substR (eqv_symm mul_identL)
-  _ ≃ (p*s)/(q*s) + (q/q)*(r/s) := add_substR (mul_substL (eqv_symm div_same))
-  _ ≃ (p*s)/(q*s) + (q*r)/(q*s) := add_substR div_mul_swap
-  _ ≃ (p*s + q*r)/(q*s)         := eqv_symm div_distribR
+theorem sgn_idemp {p : ℚ} : sgn (sgn p) ≃ sgn p := by
+  have (AsRatio.mk (a : ℤ) (b : ℤ) (_ : AP (b ≄ 0)) eqv) := as_ratio p
+  have : Integer.Nonzero b := Integer.nonzero_iff_neqv_zero.mpr ‹AP (b ≄ 0)›.ev
+  have : p ≃ a/b := eqv
+  calc
+    sgn (sgn p)               ≃ _ := Integer.sgn_subst (sgn_subst ‹p ≃ a/b›)
+    sgn (sgn ((a : ℚ)/b))     ≃ _ := Integer.sgn_subst sgn_div_integers
+    sgn (sgn a * sgn b)       ≃ _ := Integer.sgn_compat_mul
+    sgn (sgn a) * sgn (sgn b) ≃ _ := AA.substL Integer.sgn_idemp
+    sgn a * sgn (sgn b)       ≃ _ := AA.substR Integer.sgn_idemp
+    sgn a * sgn b             ≃ _ := Rel.symm sgn_div_integers
+    sgn ((a : ℚ)/b)           ≃ _ := sgn_subst (eqv_symm ‹p ≃ a/b›)
+    sgn p                     ≃ _ := Rel.refl
+
+/--
+Only the nonzero rational numbers have signs that are square roots of unity.
+
+**Property intuition**: The nonzero sign values are `1` and `-1`, which are the
+square roots of unity.
+
+**Proof intuition**: Signs that are square roots of unity are nonzero, which
+implies their originating numbers are also nonzero.
+-/
+theorem sgn_sqrt1_iff_nonzero {p : ℚ} : Integer.Sqrt1 (sgn p) ↔ p ≄ 0 := by
+  have : Integer.Sqrt1 (sgn (sgn p)) ↔ Integer.Sqrt1 (sgn p) :=
+    Rel.iff_subst_eqv Integer.sqrt1_subst sgn_idemp
+  calc
+    _ ↔ Integer.Sqrt1 (sgn p)       := Rel.refl
+    _ ↔ Integer.Sqrt1 (sgn (sgn p)) := this.symm
+    _ ↔ Integer.Nonzero (sgn p)     := Integer.sgn_nonzero.symm
+    _ ↔ sgn p ≄ 0                   := Integer.nonzero_iff_neqv_zero
+    _ ↔ p ≄ 0                       := Logic.iff_subst_contra mt sgn_zero.symm
+
+/--
+A positive rational is nonzero.
+
+**Proof intuition**: Rationals with square roots of unity as their signs are
+nonzero; positive rationals have a sign of one.
+-/
+theorem nonzero_if_pos {p : ℚ} : sgn p ≃ 1 → p ≄ 0 := by
+  intro (_ : sgn p ≃ 1)
+  show p ≄ 0
+  have : Integer.Sqrt1 (sgn p) := Integer.sqrt1_cases.mpr (Or.inl ‹sgn p ≃ 1›)
+  have : p ≄ 0 := sgn_sqrt1_iff_nonzero.mp ‹Integer.Sqrt1 (sgn p)›
+  exact this
+
+/--
+A negative rational is nonzero.
+
+**Proof intuition**: Rationals with square roots of unity as their signs are
+nonzero; negative rationals have a sign of negative one.
+-/
+theorem nonzero_if_neg {p : ℚ} : sgn p ≃ -1 → p ≄ 0 := by
+  intro (_ : sgn p ≃ -1)
+  have : Integer.Sqrt1 (sgn p) := Integer.sqrt1_cases.mpr (Or.inr ‹sgn p ≃ -1›)
+  have : p ≄ 0 := sgn_sqrt1_iff_nonzero.mp this
+  exact this
+
+/--
+The square of a rational number is nonnegative.
+
+**Property intuition**: The product of two negative numbers is positive, and
+zero times anything is zero.
+
+**Proof intuition**: An equivalent expression for the sign of the squared
+rational is `sgn (sgn p * sgn p)`, because `sgn` is idempotent. That new
+expression is nonnegative, by `Integer.nonneg_square`, and thus the original
+expression is too.
+-/
+theorem nonneg_square {p : ℚ} : sgn (p * p) ≄ -1 := by
+  have : sgn (sgn p * sgn p) ≃ sgn (p * p) := calc
+    _ = sgn (sgn p * sgn p) := rfl
+    _ ≃ sgn (sgn (p * p))   := Integer.sgn_subst (Rel.symm sgn_compat_mul)
+    _ ≃ sgn (p * p)         := sgn_idemp
+  have : sgn (sgn p * sgn p) ≄ -1 := Integer.nonneg_square
+  have : sgn (p * p) ≄ -1 :=
+    AA.neqv_substL ‹sgn (sgn p * sgn p) ≃ sgn (p * p)› this
+  exact this
 
 /--
 The only sign value greater than zero, is one.
@@ -1106,29 +1171,5 @@ theorem sgn_sub_cancelR_div_neg
     _ ≃ sgn (p * r⁻¹ - q/r)     := sgn_subst (sub_substL div_mul_recip)
     _ ≃ sgn (p * r⁻¹ - q * r⁻¹) := sgn_subst (sub_substR div_mul_recip)
     _ ≃ sgn (q - p)             := sgn_sub_cancelR_mul_neg this
-
-/--
-The result of subtracting two ratios of rational numbers can be written as a
-single ratio.
-
-**Property and proof intuition**: Convert subtraction into addition of a
-negated value. Move the negation to the numerator of the ratio, then add the
-ratios via `add_fractions`. Move the negation in the result to cover an entire
-additive term, then convert back to subtraction.
--/
-theorem sub_fractions
-    {p q r s : ℚ} [AP (q ≄ 0)] [AP (s ≄ 0)]
-    : p/q - r/s ≃ (p * s - q * r)/(q * s)
-    := by
-  have neg_to_sub : p * s + q * (-r) ≃ p * s - q * r := calc
-    _ = p * s + q * (-r) := rfl
-    _ ≃ p * s + -(q * r) := add_substR (eqv_symm neg_scompatR_mul)
-    _ ≃ p * s - q * r    := eqv_symm sub_add_neg
-  calc
-    _ = p/q - r/s                  := rfl
-    _ ≃ p/q + -(r/s)               := sub_add_neg
-    _ ≃ p/q + (-r/s)               := add_substR neg_scompatL_div
-    _ ≃ (p * s + q * (-r))/(q * s) := add_fractions
-    _ ≃ (p * s - q * r)/(q * s)    := div_substL neg_to_sub
 
 end Lean4Axiomatic.Rational

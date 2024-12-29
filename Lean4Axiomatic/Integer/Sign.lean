@@ -1089,6 +1089,14 @@ theorem nonzero_iff_neqv_zero {a : ℤ} : Nonzero a ↔ a ≄ 0 := by
     | Or.inr (_ : Nonzero a) =>
       exact ‹Nonzero a›
 
+/-- A positive integer is not equivalent to zero. -/
+theorem neqv_zero_from_positive {a : ℤ} : Positive a → a ≄ 0 := by
+  intro (_ : Positive a)
+  show a ≄ 0
+  have : Nonzero a := nonzero_from_positive ‹Positive a›
+  have : a ≄ 0 := nonzero_iff_neqv_zero.mp ‹Nonzero a›
+  exact this
+
 /--
 For a product of integers to be zero, at least one of its factors must be zero.
 

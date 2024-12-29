@@ -1,7 +1,7 @@
 import Lean4Axiomatic.Natural.Impl.Generic
 import Lean4Axiomatic.Rational
-import Lean4Axiomatic.Rational.Impl.Fraction.Reciprocation
 import Lean4Axiomatic.Rational.Impl.Fraction.Sign
+import Lean4Axiomatic.Rational.Impl.Fraction.Induction
 import Lean4Axiomatic.Rational.Impl.Generic.Exponentiation
 import Lean4Axiomatic.Rational.Impl.Generic.Metric
 import Lean4Axiomatic.Rational.Impl.Generic.MinMax
@@ -28,6 +28,7 @@ instance rational : Rational (ℤ := ℤ) (Fraction ℤ) :=
     toSubtraction := subtraction
     toReciprocation := reciprocation
     toDivision := division
+    toInduction := induction
     toSign := sign
     toIntegerExponentiation := Generic.integer_exponentiation
     toOrder := order

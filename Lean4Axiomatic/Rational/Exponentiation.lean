@@ -149,13 +149,14 @@ theorem pow_distribR_div
   _ ≃ p^n * (q^n)⁻¹ := mul_substR (eqv_symm pow_scompatL_recip)
   _ ≃ p^n / q^n     := eqv_symm div_mul_recip
 
+variable [Induction ℚ]
+
 /--
 Swap the order of two operations on a rational number: raising it to a natural
 number power, and extracting its sign.
 -/
 theorem sgn_int_pow_nat {p : ℚ} {n : ℕ} : sgn (p^n) ≃ (sgn p)^n := by
-  have (AsRatio.intro (a : ℤ) (b : ℤ) (_ : Integer.Nonzero b) p_eqv) :=
-    as_ratio p
+  have (AsRatio.mk (a : ℤ) (b : ℤ) (_ : AP (b ≄ 0)) p_eqv) := as_ratio p
   have : p ≃ a/b := p_eqv
 
   -- Helpers to keep the main proof short and avoid repetition
@@ -808,6 +809,34 @@ theorem one_pow {a : ℤ} : (1:ℚ)^a ≃ 1 := by
     _ ≃ (1:ℚ)^n           := div_identR
     _ ≃ 1                 := Natural.pow_absorbL
 
+section
+variable [Subtraction ℚ] [Order ℚ] [Metric ℚ]
+
+/--
+Swap the order of two operations on a nonzero rational number: raising it to an
+integer power, and computing its absolute value.
+-/
+theorem pow_int_scompatL_abs
+    {p : ℚ} [AP (p ≄ 0)] {a : ℤ} : abs (p^a) ≃ (abs p)^a
+    := by
+  have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : a ≃ n - m)) :=
+    Integer.as_diff a
+
+  calc
+    _ = abs (p^a)             := rfl
+    _ ≃ abs (p^((n:ℤ)-m))     := abs_subst (pow_substR ‹a ≃ n - m›)
+    _ ≃ abs (p^n/p^m)         := abs_subst pow_diff
+    -- ↓ begin key steps ↓
+    _ ≃ abs (p^n) / abs (p^m) := abs_compat_div
+    _ ≃ (abs p)^n / abs (p^m) := div_substL pow_nat_scompatL_abs
+    _ ≃ (abs p)^n / (abs p)^m := div_substR pow_nat_scompatL_abs
+    -- ↑  end key steps  ↑
+    _ ≃ (abs p)^((n:ℤ)-m)     := eqv_symm pow_diff
+    _ ≃ (abs p)^a             := pow_substR (Rel.symm ‹a ≃ n - m›)
+
+end
+variable [Induction ℚ]
+
 /--
 Swap the order of two operations on a nonzero rational number: raising it to an
 integer power, and extracting its (rational-valued) sign.
@@ -1131,29 +1160,5 @@ theorem pow_lower_bound
     -- ↑  end key steps  ↑
     have : p^a ≥ a := trans ‹p^a ≥ (2:ℚ)^a› ‹(2:ℚ)^a ≥ a›
     exact this
-
-variable [Metric ℚ]
-
-/--
-Swap the order of two operations on a nonzero rational number: raising it to an
-integer power, and computing its absolute value.
--/
-theorem pow_int_scompatL_abs
-    {p : ℚ} [AP (p ≄ 0)] {a : ℤ} : abs (p^a) ≃ (abs p)^a
-    := by
-  have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : a ≃ n - m)) :=
-    Integer.as_diff a
-
-  calc
-    _ = abs (p^a)             := rfl
-    _ ≃ abs (p^((n:ℤ)-m))     := abs_subst (pow_substR ‹a ≃ n - m›)
-    _ ≃ abs (p^n/p^m)         := abs_subst pow_diff
-    -- V begin key steps V
-    _ ≃ abs (p^n) / abs (p^m) := abs_compat_div
-    _ ≃ (abs p)^n / abs (p^m) := div_substL pow_nat_scompatL_abs
-    _ ≃ (abs p)^n / (abs p)^m := div_substR pow_nat_scompatL_abs
-    -- ^  end key steps  ^
-    _ ≃ (abs p)^((n:ℤ)-m)     := eqv_symm pow_diff
-    _ ≃ (abs p)^a             := pow_substR (Rel.symm ‹a ≃ n - m›)
 
 end Lean4Axiomatic.Rational

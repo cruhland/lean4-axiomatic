@@ -247,7 +247,7 @@ def Induction.Context.ind_diff_subst
     (ctx : Context motive) {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂)
     : fsubst ‹a₁ ≃ a₂› (ctx.ind_diff a₁) ≃ ctx.ind_diff a₂
     :=
-  Induction.Props.ind_diff_subst (ctx := ctx) (a_eqv := a_eqv)
+  Induction.Props.ind_diff_subst
 
 /--
 Recursion principle for integers: if a value of some type `X` can be computed

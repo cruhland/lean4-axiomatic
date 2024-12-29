@@ -117,8 +117,7 @@ numerators are not equivalent to zero; a positive numerator is nonzero.
 theorem nonzero_from_positive_numer
     {a b : ℤ} [AP (Positive a)] [AP (Positive b)] : a//b ≄ 0
     := by
-  have : Integer.Nonzero a := Integer.nonzero_from_positive_inst
-  have : a ≄ 0 := Integer.nonzero_iff_neqv_zero.mp this
+  have : a ≄ 0 := Integer.neqv_zero_from_positive ‹AP (Positive a)›.ev
   have : a//b ≄ 0 := mt eqv_zero_iff_numerator_eqv_zero.mp this
   exact this
 
@@ -168,65 +167,8 @@ instance division_ops : Division.Ops (Fraction ℤ) := {
   div := div
 }
 
-/--
-Converting two integers to fractions and then dividing them is equivalent to
-forming a fraction directly from the integers.
-
-**Property intuition**: Making this property true is one of the reasons for
-introducing formal fractions to begin with: to have a consistent inverse of
-multiplication for integers.
-
-**Proof intuition**: Expanding the defintions of fractions and division, and
-then simplifying via algebraic identities, gives the result.
--/
-theorem div_eqv_fraction
-    {a b : ℤ} [AP (Positive b)] : (a : Fraction ℤ) / b ≃ a//b
-    := calc
-  (a : Fraction ℤ) / b ≃ _ := eqv_refl
-  (a//1) / (b//1)      ≃ _ := eqv_refl
-  (a//1) * (b//1)⁻¹    ≃ _ := mul_substR recip_positive
-  (a//1) * (1//b)      ≃ _ := eqv_refl
-  (a * 1)//(1 * b)     ≃ _ := substN AA.identR
-  a//(1 * b)           ≃ _ := substD AA.identL
-  a//b                 ≃ _ := eqv_refl
-
-/--
-Every fraction satisfies the rational induction axiom, that is if a predicate
-holds for all formal fractions of the form `a / b`, with `a` and `b` being
-integers, then it holds for all formal fractions.
-
-**Property intuition**: When `a` and `b` are integers and `b ≄ 0`, they can be
-converted/coerced to formal fractions `f₁ = a // 1` and `f₂ = b // 1` via
-function `from_integer`. Dividing, we have `f₁ / f₂ ≃ a // b`. Since formal
-fractions are just expressions of this form, it follows that if a predicate
-holds for all such expressions `a / b`, it should hold for all formal
-fractions, that is all elements of `Fraction ℤ`. Note `a / b` is the same as
-`(from_integer a) / (from_integer b)`, since coercion happens implicitly.
-Technically, this result is guaranteed only for predicates that are
-compatible/substitutive with respect to the equivalence relation `≃`.
-
-**Proof intuition**: Expand the definitions of formal fractions, division on
-them, and the previous fundamental result `div_eqv_fraction`, to show that an
-arbitrary formal fraction `a//b ≃ (a : Fraction ℤ) / b`. Now if a predicate
-(called `motive` below) holds for all expressions like `(a : Fraction ℤ) / b`
-and it is compatible with `≃` (see the `AA.Substitutive₁` argument below), then
-clearly it holds for all formal fractions, specifically all elements of
-`Fraction ℤ`.
---/
-def ind_fraction
-    {motive : Fraction ℤ → Prop} [AA.Substitutive₁ motive (· ≃ ·) (· → ·)] :
-    ((a b : ℤ) → [Integer.Nonzero b] → motive (a / b)) →
-    (p : Fraction ℤ) → motive p
-    := by
-  intro motive_on_div (a//b)
-  have : Integer.Nonzero b := Integer.nonzero_from_positive_inst
-  have : motive (a / b) := motive_on_div a b
-  have : motive (a//b) := AA.substFn div_eqv_fraction this
-  exact this
-
 instance division_props : Division.Props (Fraction ℤ) := {
   div_mul_recip := eqv_refl
-  ind_fraction := ind_fraction
 }
 
 instance division : Division (Fraction ℤ) := {

@@ -661,6 +661,23 @@ theorem abs_compat_recip {p : ℚ} [AP (p ≄ 0)] : abs (p⁻¹) ≃ (abs p)⁻�
 variable [Division ℚ]
 
 /--
+Swap the order of two operations on two rational numbers: division, and taking
+the absolute value.
+-/
+theorem abs_compat_div
+    {p q : ℚ} [AP (q ≄ 0)] : abs (p / q) ≃ abs p / abs q
+    := calc
+  _ = abs (p / q)       := rfl
+  _ ≃ abs (p * q⁻¹)     := abs_subst div_mul_recip
+  -- ↓ begin key steps ↓
+  _ ≃ abs p * abs (q⁻¹) := abs_compat_mul
+  _ ≃ abs p * (abs q)⁻¹ := mul_substR abs_compat_recip
+  -- ↑  end key steps  ↑
+  _ ≃ abs p / abs q     := eqv_symm div_mul_recip
+
+variable [Induction ℚ]
+
+/--
 Convert between an inequality on the absolute value of a rational number and
 inequalities on the rational number itself.
 
@@ -756,21 +773,6 @@ theorem abs_nonneg {p : ℚ} : abs p ≥ 0 := by
   have : sgn (abs p) ≄ -1 := AA.neqv_substL this nonneg_square
   have : abs p ≥ 0 := ge_zero_sgn.mpr this
   exact this
-
-/--
-Swap the order of two operations on two rational numbers: division, and taking
-the absolute value.
--/
-theorem abs_compat_div
-    {p q : ℚ} [AP (q ≄ 0)] : abs (p / q) ≃ abs p / abs q
-    := calc
-  _ = abs (p / q)       := rfl
-  _ ≃ abs (p * q⁻¹)     := abs_subst div_mul_recip
-  -- V begin key steps V
-  _ ≃ abs p * abs (q⁻¹) := abs_compat_mul
-  _ ≃ abs p * (abs q)⁻¹ := mul_substR abs_compat_recip
-  -- ^  end key steps  ^
-  _ ≃ abs p / abs q     := eqv_symm div_mul_recip
 
 /--
 The distance between two rational numbers is always nonnegative.
