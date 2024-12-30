@@ -4,12 +4,17 @@ import Lean4Axiomatic.Rational.FloorCeil
 
 namespace Lean4Axiomatic.Rational.Impl.Generic
 
+open Logic (AP)
+
 variable
   {ℕ ℤ ℚ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
-  [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
-  [Negation ℚ] [Sign ℚ] [Subtraction ℚ] [Order ℚ]
+  [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ] [Sign ℚ]
+  [Subtraction ℚ] [Order ℚ] [Reciprocation ℚ] [Division ℚ] [Induction.{1} ℚ]
 
-def floor (p : ℚ) : ℤ := sorry
+/-- The greatest integer less than or equivalent to the given value. -/
+def floor (p : ℚ) : ℤ :=
+  have (AsRatio.mk (a : ℤ) (b : ℤ) (_ : AP (b ≄ 0)) _) := as_ratio p
+  (Integer.divide a b).quotient
 
 def ceil (p : ℚ) : ℤ := sorry
 
