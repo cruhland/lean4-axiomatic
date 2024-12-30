@@ -17,6 +17,7 @@ variable
   {ℤ : Type} [Integer (ℕ := ℕ) ℤ] [Integer.Induction.{1} ℤ]
 
 instance rational : Rational (ℤ := ℤ) (Fraction ℤ) :=
+  let induction₁ := induction.{1}
   let order := Generic.order
   let natural_exponentiation := Natural.Impl.Generic.exponentiation
 
@@ -29,7 +30,8 @@ instance rational : Rational (ℤ := ℤ) (Fraction ℤ) :=
     toSubtraction := subtraction
     toReciprocation := reciprocation
     toDivision := division
-    toInduction := induction
+    toInduction₀ := induction
+    toInduction₁ := induction₁
     toSign := sign
     toIntegerExponentiation := Generic.integer_exponentiation
     toOrder := order
