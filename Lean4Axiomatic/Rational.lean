@@ -27,7 +27,8 @@ class Rational
   toSubtraction : Rational.Subtraction ℚ
   toReciprocation : Rational.Reciprocation ℚ
   toDivision : Rational.Division ℚ
-  toInduction : Rational.Induction ℚ
+  toInduction₀ : Rational.Induction.{0} ℚ
+  toInduction₁ : Rational.Induction.{1} ℚ
   toSign : Rational.Sign ℚ
   toIntegerExponentiation : Rational.Exponentiation ℚ
   toOrder : Rational.Order ℚ
@@ -39,7 +40,8 @@ attribute [instance] Rational.toAddition
 attribute [instance] Rational.toCore
 attribute [instance] Rational.toDivision
 attribute [instance] Rational.toFloorCeil
-attribute [instance] Rational.toInduction
+attribute [instance] Rational.toInduction₀
+attribute [instance] Rational.toInduction₁
 attribute [instance] Rational.toIntegerExponentiation
 attribute [instance] Rational.toMetric
 attribute [instance] Rational.toMinMax
