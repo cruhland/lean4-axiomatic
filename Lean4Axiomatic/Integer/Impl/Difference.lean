@@ -16,6 +16,7 @@ instance integer : Integer (ℕ := ℕ) (Difference ℕ) :=
   {
     toAddition := addition
     toCore := core
+    toDivision := sorry
     toExponentiation := Natural.Impl.Generic.exponentiation
     toInduction := induction
     toMultiplication := multiplication
