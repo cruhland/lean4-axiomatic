@@ -12,6 +12,7 @@ variable {ℕ : Type} [Natural ℕ] [Natural.Induction.{1} ℕ]
 instance integer : Integer (ℕ := ℕ) (Difference ℕ) := {
   toAddition := addition
   toCore := core
+  toDivision := sorry
   toExponentiation := Natural.Impl.Generic.exponentiation
   toInduction := induction
   toMetric := sorry
