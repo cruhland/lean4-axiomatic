@@ -52,6 +52,8 @@ class Division.Props
   -/
   remainder_ub {a b : ℤ} [AP (b ≄ 0)] : (divide a b).remainder < abs b
 
+export Division.Props (divide_eqv remainder_lb remainder_ub)
+
 /-- All integer Euclidean division axioms. -/
 class Division
     {ℕ : outParam Type} [Natural ℕ]
