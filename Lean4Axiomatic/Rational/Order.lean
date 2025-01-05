@@ -1462,6 +1462,17 @@ theorem lt_substN_div_pos
   exact this
 
 /--
+Divide both operands of _less than or equivalent to_ by the same positive
+value.
+-/
+theorem le_substN_div_pos
+    {p q r : ℚ} (r_pos : r > 0)
+    : have : AP (r ≄ 0) := AP.mk sorry
+      p ≤ q → p/r ≤ q/r
+    := by
+  admit
+
+/--
 Divide both operands of _less than_ by the same negative value, reversing their
 ordering.
 
