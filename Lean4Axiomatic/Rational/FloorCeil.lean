@@ -7,7 +7,7 @@ namespace Lean4Axiomatic.Rational
 /-! ## Axioms -/
 
 /-- Floor and ceiling functions on rational numbers. -/
-class FloorCeil.Ops (ℤ : Type) (ℚ : Type) :=
+class FloorCeil.Ops (ℤ : outParam Type) (ℚ : Type) :=
   /-- The greatest integer less than or equivalent to the given value. -/
   floor : ℚ → ℤ
 
@@ -17,12 +17,12 @@ class FloorCeil.Ops (ℤ : Type) (ℚ : Type) :=
 export FloorCeil.Ops (ceil floor)
 
 class FloorCeil.Props
-    {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
+    {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ]
     [Sign ℚ] [Subtraction ℚ] [Order ℚ] [Ops ℤ ℚ]
     :=
   /-- A rational is no smaller than its floor. -/
-  floor_ub {p : ℚ} : (floor p : ℤ) ≤ p
+  floor_ub {p : ℚ} : floor p ≤ p
 
   /--
   A rational's floor is the greatest integer not greater than the rational
@@ -31,7 +31,7 @@ class FloorCeil.Props
   floor_lb {p : ℚ} {a : ℤ} : a ≤ p → a ≤ floor p
 
   /-- A rational is no larger than its ceiling. -/
-  ceil_lb {p : ℚ} : p ≤ (ceil p : ℤ)
+  ceil_lb {p : ℚ} : p ≤ ceil p
 
   /--
   A rational's ceiling is the least integer not less than the rational itself.
@@ -41,7 +41,7 @@ class FloorCeil.Props
 export FloorCeil.Props (ceil_lb ceil_ub floor_lb floor_ub)
 
 class FloorCeil
-    {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
+    {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ]
     [Sign ℚ] [Subtraction ℚ] [Order ℚ]
     :=
@@ -77,17 +77,16 @@ theorem floor_lb_mt {p : ℚ} {a : ℤ} : floor p < a → p < a := by
 
 /-- Every rational number is located between consecutive integers. -/
 theorem between_integers {p : ℚ} : ∃ (a : ℤ), a ≤ p ∧ p < a + 1 := by
-  have : (floor p : ℤ) ≤ p := floor_ub
-  have : (floor p : ℤ) < floor p + 1 := Integer.lt_inc
-  have : p < (floor p : ℤ) + 1 := calc
+  have : floor p ≤ p := floor_ub
+  have : floor p < floor p + 1 := Integer.lt_inc
+  have : p < floor p + 1 := calc
     -- ↓ begin key steps ↓
     _ = p                 := rfl
-    _ < (floor p + 1 : ℤ) := floor_lb_mt ‹(floor p : ℤ) < floor p + 1›
+    _ < (floor p + 1 : ℤ) := floor_lb_mt ‹floor p < floor p + 1›
     -- ↑  end key steps  ↑
-    _ ≃ (floor p : ℤ) + 1 := add_compat_from_integer
+    _ ≃ floor p + 1       := add_compat_from_integer
   have : ∃ (a : ℤ), a ≤ p ∧ p < a + 1 :=
-    -- TODO: Do we need all of these annotations?
-    Exists.intro (floor p) (And.intro ‹(floor p : ℤ) ≤ p› ‹p < (floor p : ℤ) + 1›)
+    Exists.intro (floor p) (And.intro ‹floor p ≤ p› ‹p < floor p + 1›)
   exact this
 
 end Lean4Axiomatic.Rational
