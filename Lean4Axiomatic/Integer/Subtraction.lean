@@ -9,7 +9,7 @@ open Logic (iff_subst_covar or_mapR)
 /-! ## Axioms -/
 
 /-- Operations pertaining to integer subtraction. -/
-class Subtraction.Ops (ℤ : Type) :=
+class Subtraction.Ops (ℤ : Type) where
   /-- Subtraction of integers. -/
   sub : ℤ → ℤ → ℤ
 
@@ -24,7 +24,7 @@ instance sub_op_inst {ℤ : Type} [Subtraction.Ops ℤ] : Sub ℤ := {
 class Subtraction.Props
     {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Ops ℤ]
-    :=
+    where
   /-- Subtraction is equivalent to addition of a negated second argument. -/
   sub_defn {a b : ℤ} : a - b ≃ a + (-b)
 
@@ -34,7 +34,7 @@ export Subtraction.Props (sub_defn)
 class Subtraction
     {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ]
-    :=
+    where
   toOps : Subtraction.Ops ℤ
   toProps : Subtraction.Props ℤ
 

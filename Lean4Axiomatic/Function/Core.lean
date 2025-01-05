@@ -21,7 +21,7 @@ See `Swappable.swap` for details about the actual property.
 -/
 class Swappable
     {α : Sort u} {β : Sort v} (f : α → α → β) (R : β → β → Sort w)
-    :=
+    where
   /--
   The relation `R` holds between any two invocations of `f` that have the same
   arguments, but provided in the opposite order as each other.

@@ -58,7 +58,7 @@ For more information see `AbsorbingOn.absorb` or
 -/
 class AbsorbingOn
     (hand : Hand) {α : Sort u} [EqvOp α] (z : α) (f : α → α → α)
-    :=
+    where
   /--
   The left- or right-handed absorption property of a distinguished element `z`
   and a binary operation `f` defined over a sort `α`.
@@ -99,7 +99,7 @@ absorbing element.
 
 See `AbsorbingOn` for detailed documentation.
 -/
-class Absorbing {α : Sort u} [EqvOp α] (z : α) (f : α → α → α) :=
+class Absorbing {α : Sort u} [EqvOp α] (z : α) (f : α → α → α) where
   absorbingL : AbsorbingOn Hand.L z f
   absorbingR : AbsorbingOn Hand.R z f
 
@@ -156,7 +156,7 @@ For more information see `IdentityOn.ident` or
 -/
 class IdentityOn
     (hand : Hand) {α : Sort u} [EqvOp α] (e : outParam α) (f : α → α → α)
-    :=
+    where
   /--
   The left- or right-handed identity property of a distinguished element `e`
   and a binary operation `f` defined over a sort `α`.
@@ -202,7 +202,7 @@ Convenience class for types, values, and operations that satisfy the full
 
 See `IdentityOn` for detailed documentation.
 -/
-class Identity {α : Sort u} [EqvOp α] (e : outParam α) (f : α → α → α) :=
+class Identity {α : Sort u} [EqvOp α] (e : outParam α) (f : α → α → α) where
   identityL : IdentityOn Hand.L e f
   identityR : IdentityOn Hand.R e f
 
@@ -257,7 +257,7 @@ For more information see `InverseOn.inverse` or
 class InverseOn
     (hand : Hand) {α : Sort u} {e : α} (inv : outParam (α → α)) (f : α → α → α)
     [EqvOp α] [IdentityOn hand e f]
-    :=
+    where
   /--
   The left- or right-handed inverse property of an inverse operation `inv` and
   a binary operation `f` defined over a sort `α`.
@@ -304,7 +304,8 @@ See `InverseOn` for detailed documentation.
 -/
 class Inverse
     {α : Sort u} {e : α} (inv : outParam (α → α)) (f : α → α → α)
-    [EqvOp α] [Identity e f] :=
+    [EqvOp α] [Identity e f]
+    where
   inverseL : InverseOn Hand.L inv f
   inverseR : InverseOn Hand.R inv f
 
@@ -359,7 +360,7 @@ This property doesn't seem to have a standard name. For more information see
 -/
 class SemicompatibleOn
     (hand : Hand) {α : Sort u} [EqvOp α] (f : α → α) (g : α → α → α)
-    :=
+    where
   /--
   The left- or right-handed semicompatibility property of two operations `f`
   and `g` defined over a sort `α`.
@@ -406,7 +407,7 @@ right-handed) semicompatibility property.
 
 See `SemicompatibleOn` for detailed documentation.
 -/
-class Semicompatible {α : Sort u} [EqvOp α] (f : α → α) (g : α → α → α) :=
+class Semicompatible {α : Sort u} [EqvOp α] (f : α → α) (g : α → α → α) where
   semicompatibleL : SemicompatibleOn Hand.L f g
   semicompatibleR : SemicompatibleOn Hand.R f g
 
@@ -479,7 +480,7 @@ structures.
 class Compatible₂
     {α β : Sort u} [EqvOp β]
     (f : α → β) (g : α → α → α) (h : outParam (β → β → β))
-    :=
+    where
   /--
   The compatibility property of an unary operation `f` with two binary
   operations `g` and `h` that are defined over sorts `α` and `β`, respectively.
@@ -709,7 +710,7 @@ Inhabited when exactly one of its three propositions is true.
 
 Can be used to express the various "trichotomy" properties in algebra.
 -/
-structure ExactlyOneOfThree (α β γ : Prop) : Prop :=
+structure ExactlyOneOfThree (α β γ : Prop) : Prop where
   atLeastOne :   OneOfThree α β γ
   atMostOne  : ¬ TwoOfThree α β γ
 
@@ -776,7 +777,7 @@ Class for types and operations that satisfy the
 - `EqvOp α`: necessary because the property expresses an equivalence on `α`.
 - `OfNat α 0`: necessary because the property requires `α` to contain zero.
 -/
-class ZeroProduct {α : Type u} [EqvOp α] [OfNat α 0] (f : α → α → α) :=
+class ZeroProduct {α : Type u} [EqvOp α] [OfNat α 0] (f : α → α → α) where
   /--
   The zero-product property of a product operation `f` defined over a type `α`.
 

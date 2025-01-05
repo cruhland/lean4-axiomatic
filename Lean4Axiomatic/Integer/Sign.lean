@@ -36,7 +36,7 @@ multiplication.
 **Named parameters**
 - `a`: The integer satisfying the property.
 -/
-class Sqrt1 (a : ℤ) : Prop :=
+class Sqrt1 (a : ℤ) : Prop where
   /-- The underlying property expressed by `Sqrt1`. -/
   elim : a * a ≃ 1
 
@@ -216,7 +216,7 @@ Same as `NonzeroWithSign`, but the sign is a field instead of a parameter.
 **Parameters**
 - `a`: The integer that is not zero.
 -/
-class inductive Nonzero (a : ℤ) : Prop :=
+class inductive Nonzero (a : ℤ) : Prop where
 | /--
   Construct evidence that the integer `a` is nonzero.
 
@@ -473,7 +473,7 @@ class Sign.Props
     (ℤ : Type)
       [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ] [Negation ℤ]
       [Signed.Ops ℤ]
-    :=
+    where
   /-- An integer is positive iff it has sign `1`. -/
   positive_iff_sign_pos1 {a : ℤ} : Signed.Positive a ↔ NonzeroWithSign a 1
 
@@ -493,7 +493,7 @@ export Sign.Props (
 )
 
 /-- Operations pertaining to the _signum_ function. -/
-class Sgn.Ops {ℤ : outParam Type} (α : Type) :=
+class Sgn.Ops {ℤ : outParam Type} (α : Type) where
   /--
   The [signum function](https://en.wikipedia.org/wiki/Sign_function).
 
@@ -509,7 +509,7 @@ class Sgn.Props
     {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type)
       [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Signed.Ops ℤ] [Ops ℤ]
-    :=
+    where
   /-- Zero is the only integer with sign value zero. -/
   sgn_zero {a : ℤ} : a ≃ 0 ↔ sgn a ≃ (0:ℤ)
 
@@ -533,7 +533,7 @@ export Sgn.Props (
 class Sign
     {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type) [Core ℤ] [Addition ℤ] [Multiplication ℤ] [Negation (ℕ := ℕ) ℤ]
-    :=
+    where
   toSignedOps : Signed.Ops ℤ
   toSignProps : Sign.Props ℤ
   toSgnOps : Sgn.Ops ℤ
@@ -887,7 +887,7 @@ theorem nonzeroWithSign_sign_inject
     exact absurd ‹Positive a ∧ Negative a› not_positive_and_negative
 
 /-- Evidence that two integers have the same sign. -/
-inductive SameSign (a b : ℤ) : Prop :=
+inductive SameSign (a b : ℤ) : Prop where
 | /--
   Create an instance of `SameSign`.
 

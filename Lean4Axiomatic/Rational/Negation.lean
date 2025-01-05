@@ -9,7 +9,7 @@ open Logic (AP)
 /-! ## Axioms -/
 
 /-- Operations pertaining to rational number negation. -/
-class Negation.Ops (ℚ : Type) :=
+class Negation.Ops (ℚ : Type) where
   /-- Negation of rational numbers. -/
   neg : ℚ → ℚ
 
@@ -24,7 +24,7 @@ instance neg_op_inst {ℚ : Type} [Negation.Ops ℚ] : Neg ℚ := {
 class Negation.Props
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Ops ℚ]
-    :=
+    where
   /-- Negation respects equivalence over its operand. -/
   neg_subst {p₁ p₂ : ℚ} : p₁ ≃ p₂ → -p₁ ≃ -p₂
 
@@ -45,7 +45,7 @@ export Negation.Props (
 class Negation
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ]
-    :=
+    where
   toOps : Negation.Ops ℚ
   toProps : Negation.Props ℚ
 
@@ -53,7 +53,7 @@ attribute [instance] Negation.toOps
 attribute [instance] Negation.toProps
 
 /-- Operations pertaining to rational number subtraction. -/
-class Subtraction.Ops (ℚ : Type) :=
+class Subtraction.Ops (ℚ : Type) where
   /-- Subtraction of rational numbers. -/
   sub : ℚ → ℚ → ℚ
 
@@ -68,7 +68,7 @@ instance sub_op_inst {ℚ : Type} [Subtraction.Ops ℚ] : Sub ℚ := {
 class Subtraction.Props
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Negation ℚ] [Ops ℚ]
-    :=
+    where
   /-- Subtraction is equivalent to addition of a negated second argument. -/
   sub_add_neg {p q : ℚ} : p - q ≃ p + (-q)
 
@@ -78,7 +78,7 @@ export Subtraction.Props (sub_add_neg)
 class Subtraction
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Negation ℚ]
-    :=
+    where
   toOps : Subtraction.Ops ℚ
   toProps : Subtraction.Props ℚ
 

@@ -24,7 +24,7 @@ All other properties of multiplication can be derived from these.
 class Multiplication
     {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ]
-    :=
+    where
   /-- Definition of and syntax for multiplication. -/
   mulOp : Mul ℤ
 

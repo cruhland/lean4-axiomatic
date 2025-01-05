@@ -20,7 +20,7 @@ operator is a monoid.
 /--
 Operations for Monoid, namely the binary operation and identity element.
 -/
-class Ops (α : Type) :=
+class Ops (α : Type) where
   binop : α → α → α
   ident : α
 export Ops (ident binop)
@@ -31,7 +31,7 @@ local instance monoid_mul_op_inst {α : Type} [Monoid.Ops α] : Mul α := {
 }
 
 /-- Properties of Monoid. -/
-class Props (α : Type) [EqvOp α] [Ops α] :=
+class Props (α : Type) [EqvOp α] [Ops α] where
   substL {x y z : α} : x ≃ y → x * z ≃ y * z
   substR {x y z : α} : x ≃ y → z * x ≃ z * y
   assoc {x y z : α} : (x * y) * z ≃ x * (y * z)
@@ -40,7 +40,7 @@ class Props (α : Type) [EqvOp α] [Ops α] :=
 export Props (substL substR assoc identL identR)
 
 /-- All axioms for generic types to form a Monoid. -/
-class Monoid (α : Type) [EqvOp α] :=
+class Monoid (α : Type) [EqvOp α] where
   toOps : Monoid.Ops α
   toProps : Monoid.Props α
 

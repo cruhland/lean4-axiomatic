@@ -22,7 +22,7 @@ Given a type of natural numbers `ℕ`, integers can be defined as values of
 `Difference ℕ` under an equivalence relation that considers two differences to
 be equal when they denote the same value according to an interpretation above.
 -/
-structure Difference (α : Type) : Type :=
+structure Difference (α : Type) : Type where
   init : α
   take : α
 

@@ -4,7 +4,7 @@
 namespace Lean4Axiomatic.Ordered
 
 /-- Provides canonical functions for minimum and maximum. -/
-class Ops (α : Type u) :=
+class Ops (α : Type u) where
   /-- Selects the minimum of its two arguments. -/
   min : α → α → α
 

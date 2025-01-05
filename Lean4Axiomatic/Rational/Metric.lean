@@ -14,7 +14,7 @@ open Signed (sgn)
 /-! ## Axioms -/
 
 /-- Operations pertaining to metrics on rational numbers. -/
-class Metric.Ops (ℚ : Type) :=
+class Metric.Ops (ℚ : Type) where
   /-- Absolute value. -/
   _abs : ℚ → ℚ
 
@@ -53,7 +53,7 @@ class Metric.Props
     (ℚ : Type)
       [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
       [Negation ℚ] [Sign ℚ] [Subtraction ℚ] [Order ℚ] [Ops ℚ]
-    :=
+    where
   /--
   The absolute value of a rational number is equivalent to the product of that
   number with its sign.
@@ -83,7 +83,7 @@ class Metric
     (ℚ : Type)
       [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
       [Negation ℚ] [Sign ℚ] [Subtraction ℚ] [Order ℚ]
-    :=
+    where
   toOps : Metric.Ops ℚ
   toProps : Metric.Props ℚ
 

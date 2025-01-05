@@ -12,7 +12,7 @@ open Signed (sgn)
 /-! ## Axioms -/
 
 /-- Minimum and maximum functions on rational numbers. -/
-class MinMax.Ops (ℚ : Type) :=
+class MinMax.Ops (ℚ : Type) where
   /-- Minimum. -/
   _min : ℚ → ℚ → ℚ
 
@@ -31,7 +31,7 @@ class MinMax.Props
     (ℚ : Type)
       [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
       [Negation ℚ] [Sign ℚ] [Subtraction ℚ] [Order ℚ] [Ops ℚ]
-    :=
+    where
   /-- `min`'s result can only be one of its inputs. -/
   min_cases {p q : ℚ} : min p q ≃ p ∨ min p q ≃ q
 
@@ -58,7 +58,7 @@ class MinMax
     (ℚ : Type)
       [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
       [Negation ℚ] [Sign ℚ] [Subtraction ℚ] [Order ℚ]
-    :=
+    where
   toOps : MinMax.Ops ℚ
   toProps : MinMax.Props ℚ
 

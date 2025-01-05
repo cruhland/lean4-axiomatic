@@ -19,7 +19,7 @@ Definition of the _less than or equal to_ and _less than_ relations.
 
 All other properties of ordering on natural numbers can be derived from this.
 -/
-class Order (ℕ : Type) [Core ℕ] [Addition ℕ] :=
+class Order (ℕ : Type) [Core ℕ] [Addition ℕ] where
   /-- Definition of and syntax for the _less than or equal to_ relation. -/
   leOp : LE ℕ
 
@@ -959,7 +959,7 @@ Defines `compare`, a comparison function on natural numbers, that determines
 the ordering between any two of them: whether one is less than, equivalent to,
 or greater than the other.
 -/
-class Compare (ℕ : Type) [Core ℕ] [Addition ℕ] [Order ℕ] extends Ord ℕ :=
+class Compare (ℕ : Type) [Core ℕ] [Addition ℕ] [Order ℕ] extends Ord ℕ where
   /--
   Replacing `compare`'s left operand with an equivalent natural number gives an
   identical result.

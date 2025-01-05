@@ -15,7 +15,7 @@ open Relation.Equivalence (EqvOp)
 -/
 
 /-- Defines the primitive building blocks of all natural numbers. -/
-class Constructor.Ops (ℕ : outParam Type) :=
+class Constructor.Ops (ℕ : outParam Type) where
   /--
   **Peano axiom 1**: `zero` is a natural number.
 
@@ -40,7 +40,7 @@ class Constructor.Ops (ℕ : outParam Type) :=
 export Constructor.Ops (zero step)
 
 /-- Definitions pertaining to equality of natural number values. -/
-class Equality (ℕ : Type) :=
+class Equality (ℕ : Type) where
   /-- Natural numbers have a decidable equality relation. -/
   eqvOp? : Relation.Equivalence.EqvOp? ℕ
 
@@ -49,7 +49,7 @@ attribute [instance] Equality.eqvOp?
 export Equality (eqvOp?)
 
 /-- Definitions pertaining to numeric literal support for natural numbers. -/
-class Literals (ℕ : outParam Type) [Constructor.Ops ℕ] [Equality ℕ] :=
+class Literals (ℕ : outParam Type) [Constructor.Ops ℕ] [Equality ℕ] where
   /--
   Enables representation of natural numbers by numeric literals.
 
@@ -82,7 +82,7 @@ export Literals (literal literal_step literal_zero)
 /-- Properties that the natural number constructors must satisfy. -/
 class Constructor.Props
     (ℕ : outParam Type) [Ops ℕ] [Equality ℕ] [Literals ℕ]
-    :=
+    where
   /-- **Peano axiom 3**: zero is not the successor of any natural number. -/
   step_neqv_zero {n : ℕ} : step n ≄ 0
 
@@ -125,7 +125,7 @@ The solution is to include only the level-`0` instance in `Natural` by default,
 since it's used very frequently. Code that needs the level-`1` instance for
 recursion must specificially request it.
 -/
-class Induction (ℕ : outParam Type) [Core ℕ] :=
+class Induction (ℕ : outParam Type) [Core ℕ] where
   /--
   **Peano axiom 5**: the principle of mathematical induction.
 

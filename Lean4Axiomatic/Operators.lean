@@ -15,7 +15,7 @@ Intended to be used for equality or equivalence relations.
 **Named parameters**
 - `α`: the `Sort` of the operator's arguments.
 -/
-class TildeDash (α : Sort u) :=
+class TildeDash (α : Sort u) where
   /-- The `· ≃ ·` operator. -/
   tildeDash : α → α → Prop
 
@@ -49,7 +49,7 @@ equality or equivalence.
 - `α`: the `Sort` of the operator's arguments.
 - `β`: the decidable relation.
 -/
-class TildeDashQuestion {α : Sort u} (β : α → α → Prop) :=
+class TildeDashQuestion {α : Sort u} (β : α → α → Prop) where
   /--
   The `· ≃? ·` operator, a decision procedure for `β`.
 

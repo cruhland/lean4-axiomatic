@@ -54,7 +54,7 @@ class Induction.Context
     {ℕ : outParam Type} [Natural ℕ]
     {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     (motive : ℤ → Sort u) [IndexedFamily motive]
-    :=
+    where
   /--
   The motive holds for every integer of the form `n - m`, where `n` and `m` are
   natural numbers.
@@ -85,7 +85,7 @@ class Induction.Context
 class Induction.Ops
     {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    :=
+    where
   /--
   Induction principle for integers: if a property holds for all differences of
   two natural numbers, then it holds for all integers.
@@ -133,7 +133,7 @@ class Induction.Props
     {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     [Ops ℤ]
-    :=
+    where
   /--
   The computational behavior of integer induction: when evaluated on a
   difference of two natural numbers, the result is given by applying the
@@ -166,7 +166,7 @@ class Induction.Props
 class Induction
     {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
-    :=
+    where
   toOps : Induction.Ops ℤ
   toProps : Induction.Props ℤ
 

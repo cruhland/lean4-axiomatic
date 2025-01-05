@@ -24,7 +24,7 @@ documentation for more details.
 - `α`: The `Sort` of `R`'s parameters.
 - `R`: The homogeneous binary relation obeying the reflexive property.
 -/
-class Reflexive {α : Sort u} (R : α → α → Prop) :=
+class Reflexive {α : Sort u} (R : α → α → Prop) where
   /--
   The reflexive property of a homogeneous binary relation `R` on a sort `α`.
 
@@ -83,7 +83,7 @@ documentation for more details.
 - `α`: The `Sort` of `R`'s parameters.
 - `R`: The homogeneous binary relation obeying the symmetric property.
 -/
-class Symmetric {α : Sort u} (R : α → α → Prop) :=
+class Symmetric {α : Sort u} (R : α → α → Prop) where
   /--
   The symmetric property of a homogeneous binary relation `R` on a sort `α`.
 
@@ -180,7 +180,7 @@ documentation for more details.
 - `α`: The `Sort` of `R`'s parameters.
 - `R`: The homogeneous binary relation obeying the transitive property.
 -/
-class Transitive {α : Sort u} (R : α → α → Prop) :=
+class Transitive {α : Sort u} (R : α → α → Prop) where
   /--
   The transitive property of a homogeneous binary relation `R` on a sort `α`.
 

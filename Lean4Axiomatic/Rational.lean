@@ -17,7 +17,7 @@ better organized.
 -/
 class Rational
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ] (ℚ : Type)
-    :=
+    where
   toCore : Rational.Core (ℤ := ℤ) ℚ
   toAddition : Rational.Addition ℚ
   toMultiplication : Rational.Multiplication ℚ

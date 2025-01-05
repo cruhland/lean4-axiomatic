@@ -7,7 +7,7 @@ namespace Lean4Axiomatic.Rational
 /-! ## Axioms -/
 
 /-- Operations pertaining to rational number addition. -/
-class Addition.Ops (ℚ : Type) :=
+class Addition.Ops (ℚ : Type) where
   /-- Addition of rational numbers. -/
   add : ℚ → ℚ → ℚ
 
@@ -22,7 +22,7 @@ instance add_op_inst {ℚ : Type} [Addition.Ops ℚ] : Add ℚ := {
 class Addition.Props
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Ops ℚ]
-    :=
+    where
   /-- Addition respects equivalence over its left operand. -/
   add_substL {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → p₁ + q ≃ p₂ + q
 
@@ -53,7 +53,7 @@ export Addition.Props (
 class Addition
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ]
-    :=
+    where
   toOps : Addition.Ops ℚ
   toProps : Addition.Props ℚ
 

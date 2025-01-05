@@ -16,7 +16,7 @@ Definition of addition, and properties that it must satisfy.
 
 All other properties of addition can be derived from these.
 -/
-class Addition (ℕ : Type) [Core ℕ] :=
+class Addition (ℕ : Type) [Core ℕ] where
   /-- Definition of and syntax for addition. -/
   addOp : Add ℕ
 

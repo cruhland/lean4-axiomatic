@@ -16,7 +16,7 @@ family, as it allows the use of substitution. For example, indexed families
 can be viewed as predicates on the indexing type, which makes them commonly
 used for induction proofs.
 -/
-class IndexedFamily {α : Type} [EqvOp α] (fam : α → Sort u) :=
+class IndexedFamily {α : Type} [EqvOp α] (fam : α → Sort u) where
   /-- Each Sort in the indexed family obeys its own equivalence relation. -/
   fam_eqv {x : α} : EqvOp (fam x)
 

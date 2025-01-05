@@ -23,7 +23,7 @@ predicates don't behave as expected, this shouldn't matter much in practice
 because any code that requires correct behavior will depend on `Positivity`
 instead.
 -/
-class Positivity.Ops (α : Type u) :=
+class Positivity.Ops (α : Type u) where
   /-- Predicate that holds only for positive values. -/
   Positive : α → Prop
 
@@ -33,7 +33,7 @@ export Positivity.Ops (Positive)
 class Positivity
     (α : Type u) [outParam (EqvOp α)] [outParam (OfNat α 0)]
     extends Positivity.Ops α
-    :=
+    where
   /-- All values other than zero are positive. -/
   positive_defn {a : α} : Positive a ↔ a ≄ 0
 
@@ -51,7 +51,7 @@ While it's possible to define instances of this class whose predicates don't
 behave as expected, this shouldn't matter much in practice because any code
 that requires correct behavior will depend on `Signed` instead.
 -/
-class Ops (α : Type u) extends Positivity.Ops α :=
+class Ops (α : Type u) extends Positivity.Ops α where
   /-- Predicate that holds only for negative values. -/
   Negative : α → Prop
 
@@ -68,7 +68,7 @@ open Signed (Negative Nonzero Positive)
 class Signed
     (α : Type u) [outParam (EqvOp α)] [outParam (OfNat α 0)]
     extends Signed.Ops α
-    :=
+    where
   /--
   Positivity respects equivalence: if two values are equivalent and one of them
   is positive, then the other one must be positive.

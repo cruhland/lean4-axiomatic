@@ -20,7 +20,7 @@ Definition of multiplication, and properties that it must satisfy.
 
 All other properties of multiplication can be derived from these.
 -/
-class Multiplication (ℕ : Type) [Core ℕ] [Addition ℕ] :=
+class Multiplication (ℕ : Type) [Core ℕ] [Addition ℕ] where
   /-- Definition of and syntax for multiplication. -/
   mulOp : Mul ℕ
 

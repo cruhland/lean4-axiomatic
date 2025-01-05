@@ -22,7 +22,7 @@ for "normal" fractions still apply to these unrestricted ones. But there are
 also some important differences, showing why restricting the denominator is
 needed.
 -/
-structure Fraction (α : Type) : Type :=
+structure Fraction (α : Type) : Type where
   numerator : α
   denominator : α
 

@@ -21,7 +21,7 @@ Definition of positive natural numbers.
 
 All other properties of positive natural numbers can be derived from this.
 -/
-class Sign (ℕ : Type) [Core ℕ] :=
+class Sign (ℕ : Type) [Core ℕ] where
   /-- Definition, properties, and syntax for the `Positive` predicate. -/
   positivity : Signed.Positivity ℕ
 

@@ -18,7 +18,7 @@ open Signed (Negative Positive)
 class Order
     {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ]
-    :=
+    where
   /-- Definition of and syntax for the _less than or equal to_ relation. -/
   leOp : LE ℤ
 
@@ -1312,10 +1312,10 @@ theorem lt_iff_le_incL {a b : ℤ} : a < b ↔ a + 1 ≤ b := by
     match ‹n ≃ 0 ∨ ∃ (m : ℕ), n ≃ step m› with
     | Or.inl (_ : n ≃ 0) =>
       have : a ≃ b := Rel.symm $ calc
-        _ = b     := rfl
-        _ ≃ a + n := ‹b ≃ a + n›
-        _ ≃ a + 0 := AA.substR (AA.subst₁ ‹n ≃ 0›)
-        _ ≃ a     := AA.identR
+        _ = b         := rfl
+        _ ≃ a + n     := ‹b ≃ a + n›
+        _ ≃ a + (0:ℕ) := AA.substR (AA.subst₁ ‹n ≃ 0›)
+        _ ≃ a         := AA.identR
       exact absurd ‹a ≃ b› ‹a ≄ b›
     | Or.inr (Exists.intro (m : ℕ) (_ : n ≃ step m)) =>
       have : step m ≃ m + 1 := Rel.symm Natural.add_one_step

@@ -32,7 +32,7 @@ For more information see `Substitutive₁.subst₁`.
 class Substitutive₁
     {α : Sort u} {β : Sort v} (f : semiOutParam (α → β))
     (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
-    :=
+    where
   /--
   The generalized substitution property of an unary operation `f`.
 
@@ -86,7 +86,7 @@ For more information see `Injective.inject`.
 class Injective
     {α : Sort u} {β : Sort v} (f : semiOutParam (α → β))
     (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
-    :=
+    where
   /--
   The generalized injective property of an unary operation `f`.
 
@@ -188,7 +188,7 @@ class SubstitutiveOn
     (C : outParam (hand.pick β α → Prop))
     (inputRel : outParam (hand.pick α β → hand.pick α β → Prop))
     (outputRel : γ → γ → Prop)
-    :=
+    where
   /--
   The left- or right-handed generalized substitution property of a
   heterogeneous binary operation `f`.
@@ -389,7 +389,7 @@ class HSubstitutive₂
     (CL : outParam (β → Prop)) (CR : outParam (α → Prop))
     (inputRelL : outParam (α → α → Prop)) (inputRelR : outParam (β → β → Prop))
     (outputRel : γ → γ → Prop)
-    :=
+    where
   substitutiveL : SubstitutiveOn Hand.L f CL inputRelL outputRel
   substitutiveR : SubstitutiveOn Hand.R f CR inputRelR outputRel
 
@@ -755,7 +755,7 @@ class CancellativeOn
     (hand : Hand) {α : Sort u} {β : Sort v}
     (f : α → α → β) (C : outParam (α → Prop))
     (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
-    :=
+    where
   /--
   The left- or right-handed generalized cancellation property of a binary
   operation `f`.
@@ -848,7 +848,7 @@ See `CancellativeOn` for detailed documentation.
 class Cancellative
     {α : Sort u} {β : Sort v} (f : α → α → β) (C : outParam (α → Prop))
     (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
-    :=
+    where
   cancellativeL : CancellativeOn Hand.L f C rα rβ
   cancellativeR : CancellativeOn Hand.R f C rα rβ
 

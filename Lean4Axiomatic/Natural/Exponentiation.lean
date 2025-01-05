@@ -18,7 +18,7 @@ open scoped CA.Monoid
 -/
 
 /-- Operations for raising numeric values to natural number powers. -/
-class Exponentiation.Ops (α : Type) (ℕ : outParam Type) :=
+class Exponentiation.Ops (α : Type) (ℕ : outParam Type) where
   /-- Exponentiation to a natural number power. -/
   _pow : α → ℕ → α
 
@@ -48,7 +48,7 @@ instance ofNatIdent [EqvOp α] [CA.Monoid.Monoid α] : OfNat α 1 := {
 class Exponentiation.Props
     {ℕ : outParam Type} [Core ℕ]
     {α : Type} [EqvOp α] [Ops α ℕ] [CA.Monoid.Monoid α]
-    :=
+    where
   /-- Any number raised to the power zero is the monoid identity of α. -/
   pow_zero {x : α} : x ^ (0:ℕ) ≃ 1
   /-- Adding one to the exponent multiplies the result by the base. -/
@@ -59,7 +59,7 @@ export Exponentiation.Props (pow_step pow_zero)
 /-- All exponentiation axioms. -/
 class Exponentiation
     (ℕ : outParam Type) [Core ℕ] (α : Type) [EqvOp α] [CA.Monoid.Monoid α]
-    :=
+    where
   toOps : Exponentiation.Ops α ℕ
   toProps : Exponentiation.Props (α := α)
 

@@ -44,8 +44,8 @@ we have `n//n ≃ 1`. Integers at the same scale can be added directly
 addition for fractions.
 -/
 structure Fraction
-    (α : Type) [EqvOp α] [OfNat α 0] [Positivity.Ops α]
-    : Type :=
+    (α : Type) [EqvOp α] [OfNat α 0] [Positivity.Ops α] : Type
+    where
   numerator : α
   denominator : α
   [denominator_positive : AP (Positive denominator)]

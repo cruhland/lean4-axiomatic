@@ -463,7 +463,7 @@ end pow_nat
 class Exponentiation.Ops
     {ℕ : outParam Type} (ℚ ℤ : Type)
     [Natural ℕ] [Integer (ℕ := ℕ) ℤ] [Core (ℤ := ℤ) ℚ]
-    :=
+    where
   /-- Exponentiation to an integer power. -/
   _pow (p : ℚ) [AP (p ≄ 0)] (a : ℤ) : ℚ
 
@@ -476,7 +476,7 @@ class Exponentiation.Props
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
     [Reciprocation ℚ] [Division ℚ] [Natural.Exponentiation ℕ ℚ]
     [Negation ℚ] [Sign ℚ] [Ops ℚ ℤ]
-    :=
+    where
   /--
   An equivalence between raising a rational number to the power of a
   difference, and the quotient of that rational number raised individually to
@@ -507,7 +507,7 @@ class Exponentiation
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
     [Reciprocation ℚ] [Division ℚ] [Natural.Exponentiation ℕ ℚ]
     [Negation ℚ] [Sign ℚ]
-    :=
+    where
   toOps : Exponentiation.Ops ℚ ℤ
   toProps : Exponentiation.Props ℚ
 

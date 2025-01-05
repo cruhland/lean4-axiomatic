@@ -204,7 +204,7 @@ The name `AP` was chosen to be short, and to stand for "automatic `Prop`" or
 #### Parameters
 1. `p`: The expression to turn into an instance.
 -/
-class AP (p : Prop) : Prop :=
+class AP (p : Prop) : Prop where
   /-- Evidence that `p` is true. -/
   ev : p
 

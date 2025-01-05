@@ -23,7 +23,7 @@ class Induction.Context
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     {ℚ : Type} [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
     [Reciprocation ℚ] [Division ℚ] (motive : ℚ → Sort u) [IndexedFamily motive]
-    :=
+    where
   /-- Handler for a ratio of integers (this is the only one for rationals). -/
   on_ratio (a b : ℤ) [AP (b ≄ 0)] : motive (a / b)
 
@@ -38,7 +38,7 @@ class Induction.Ops
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
     [Reciprocation ℚ] [Division ℚ]
-    :=
+    where
 
   /--
   Induction principle for rational numbers: if a property holds for all ratios
@@ -66,7 +66,7 @@ class Induction.Props
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
     [Reciprocation ℚ] [Division ℚ] [Ops ℚ]
-    :=
+    where
   /-- The computational behavior of rational number induction. -/
   ind_ratio_eval
     {motive : ℚ → Sort u} [IndexedFamily motive] (ctx : Context motive)
@@ -83,7 +83,7 @@ class Induction
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
     [Reciprocation ℚ] [Division ℚ]
-    :=
+    where
   toOps : Induction.Ops ℚ
   toProps : Induction.Props ℚ
 
@@ -165,7 +165,7 @@ theorem Induction.Context.rec_ratio_subst
   ctx.ind_ratio_subst
 
 /-- Express a rational number as a ratio of integers. -/
-structure AsRatio (p : ℚ) :=
+structure AsRatio (p : ℚ) where
   a : ℤ
   b : ℤ
   b_nonzero : AP (b ≄ 0)

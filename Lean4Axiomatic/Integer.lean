@@ -31,7 +31,7 @@ construct an instance.
 **Class parameters**
 - `Natural ℕ`: Evidence that `ℕ` implements the natural numbers.
 -/
-class Integer {ℕ : outParam Type} [Natural ℕ] (ℤ : Type) :=
+class Integer {ℕ : outParam Type} [Natural ℕ] (ℤ : Type) where
   toCore : Core (ℕ := ℕ) ℤ
   toAddition : Addition ℤ
   toMultiplication : Multiplication ℤ

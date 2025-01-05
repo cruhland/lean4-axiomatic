@@ -7,7 +7,7 @@ namespace Lean4Axiomatic.Rational
 open Logic (AP)
 
 /-- Operations pertaining to rational number equivalence. -/
-class Equivalence.Ops (ℚ : Type) :=
+class Equivalence.Ops (ℚ : Type) where
   /-- Equivalence relation; holds if the inputs have the same numeric value. -/
   eqv : ℚ → ℚ → Prop
 
@@ -21,7 +21,7 @@ instance eqv_tilde_dash_inst
 }
 
 /-- Properties of rational number equivalence. -/
-class Equivalence.Props (ℚ : Type) [Ops ℚ] :=
+class Equivalence.Props (ℚ : Type) [Ops ℚ] where
   /-- Equivalence is reflexive. -/
   eqv_refl {p : ℚ} : p ≃ p
 
@@ -56,7 +56,7 @@ other types.
 -/
 class Conversion.Ops
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ] (ℚ : Type)
-    :=
+    where
   /-- Converts an integer into its equivalent rational number value. -/
   from_integer : ℤ → ℚ
 
@@ -82,7 +82,7 @@ instance of_nat_inst
 class Conversion.Props
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Equivalence.Ops ℚ] [Ops (ℤ := ℤ) ℚ]
-    :=
+    where
   /-- Equivalent integers are converted to equivalent rationals. -/
   from_integer_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → (a₁ : ℚ) ≃ (a₂ : ℚ)
 
@@ -95,7 +95,7 @@ export Conversion.Props (from_integer_inject from_integer_subst)
 class Conversion
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Equivalence.Ops ℚ]
-    :=
+    where
   toOps : Conversion.Ops (ℤ := ℤ) ℚ
   toProps : Conversion.Props ℚ
 
@@ -103,7 +103,9 @@ attribute [instance] Conversion.toOps
 attribute [instance] Conversion.toProps
 
 /-- All fundamental rational number axioms. -/
-class Core {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ] (ℚ : Type) :=
+class Core
+    {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ] (ℚ : Type)
+    where
   toEquivalence : Equivalence ℚ
   toConversion : Conversion (ℤ := ℤ) ℚ
 

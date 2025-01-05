@@ -15,7 +15,7 @@ Definitions pertaining to equivalence of integer values.
 **Named parameters**
 - `ℤ`: The integers.
 -/
-class Equivalence (ℤ : Type) :=
+class Equivalence (ℤ : Type) where
   /--
   The standard equivalence relation on integers, expressed with the syntax
   `a ≃ b`.
@@ -38,7 +38,7 @@ Definitions pertaining to conversion of other types into or out of integers.
 - All other class parameters provide the subset of integer properties necessary
   to define the fields of this class.
 -/
-class Conversion {ℕ : Type} [Natural ℕ] (ℤ : Type) [Equivalence ℤ] :=
+class Conversion {ℕ : Type} [Natural ℕ] (ℤ : Type) [Equivalence ℤ] where
   /-- Every natural number has an integer representation. -/
   from_natural : Coe ℕ ℤ
 
@@ -48,6 +48,8 @@ class Conversion {ℕ : Type} [Natural ℕ] (ℤ : Type) [Equivalence ℤ] :=
 
   /-- Every integer representation comes from a unique natural number. -/
   from_natural_injective : AA.Injective (α := ℕ) (β := ℤ) coe (· ≃ ·) (· ≃ ·)
+
+export Conversion (from_natural_substitutive)
 
 attribute [instance] Conversion.from_natural
 attribute [instance] Conversion.from_natural_injective

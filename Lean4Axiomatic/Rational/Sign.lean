@@ -16,7 +16,7 @@ without a namespace prefix.
 -/
 class Sign.Ops
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ] (ℚ : Type)
-    :=
+    where
   /--
   The [_signum function_](https://en.wikipedia.org/wiki/Sign_function).
 
@@ -54,7 +54,7 @@ class Sign.Props
     (ℚ : Type)
       [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ]
       [Ops (ℤ := ℤ) ℚ]
-    :=
+    where
   /-- `sgn` respects rational number equivalence. -/
   sgn_subst {p₁ p₂ : ℚ} : p₁ ≃ p₂ → sgn p₁ ≃ sgn p₂
 
@@ -85,7 +85,7 @@ export Sign.Props (
 class Sign
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ]
-    :=
+    where
   toOps : Sign.Ops (ℤ := ℤ) ℚ
   toProps : Sign.Props ℚ
 

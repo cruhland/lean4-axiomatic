@@ -10,7 +10,7 @@ open Logic (AP)
 class Reciprocation.Ops
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ]
-    :=
+    where
   /-- Reciprocation of rational numbers. -/
   reciprocal (p : ℚ) [AP (p ≄ 0)] : ℚ
 
@@ -69,7 +69,7 @@ instance of_scientific_inst
 class Reciprocation.Props
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Ops ℚ]
-    :=
+    where
   /-- Reciprocation respects equivalence over its operand. -/
   recip_subst {p₁ p₂ : ℚ} [AP (p₁ ≄ 0)] [AP (p₂ ≄ 0)] : p₁ ≃ p₂ → p₁⁻¹ ≃ p₂⁻¹
 
@@ -85,7 +85,7 @@ export Reciprocation.Props (mul_inverseL mul_inverseR recip_subst)
 class Reciprocation
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
-    :=
+    where
   toOps : Reciprocation.Ops ℚ
   toProps : Reciprocation.Props ℚ
 
@@ -96,7 +96,7 @@ attribute [instance] Reciprocation.toProps
 class Division.Ops
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ]
-    :=
+    where
   /-- Division of rational numbers. -/
   div (p q : ℚ) [AP (q ≄ 0)] : ℚ
 
@@ -120,7 +120,7 @@ class Division.Props
     (ℚ : Type)
       [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Reciprocation ℚ]
       [Ops ℚ]
-    :=
+    where
   /--
   Division is equivalent to multiplication by the reciprocal of the second
   argument.
@@ -134,7 +134,7 @@ class Division
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type)
       [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Reciprocation ℚ]
-    :=
+    where
   toOps : Division.Ops ℚ
   toProps : Division.Props ℚ
 

@@ -11,7 +11,7 @@ namespace Lean4Axiomatic.Rational
 /-! ## Axioms -/
 
 /-- Operations pertaining to rational number multiplication. -/
-class Multiplication.Ops (ℚ : Type) :=
+class Multiplication.Ops (ℚ : Type) where
   /-- Multiplication of rational numbers. -/
   mul : ℚ → ℚ → ℚ
 
@@ -26,7 +26,7 @@ instance mul_op_inst {ℚ : Type} [Multiplication.Ops ℚ] : Mul ℚ := {
 class Multiplication.Props
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Ops ℚ]
-    :=
+    where
   /-- Multiplication respects equivalence over its left operand. -/
   mul_substL {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → p₁ * q ≃ p₂ * q
 
@@ -63,7 +63,7 @@ export Multiplication.Props (
 class Multiplication
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ]
-    :=
+    where
   toOps : Multiplication.Ops ℚ
   toProps : Multiplication.Props ℚ
 
@@ -81,7 +81,7 @@ in `1` when squared.
 
 See `Integer.Sqrt1` for details on why this is a useful predicate.
 -/
-class inductive Sqrt1 (p : ℚ) : Prop :=
+class inductive Sqrt1 (p : ℚ) : Prop where
 | /--
   Create `Sqrt1` for the rational equivalent of an integer square root of
   unity.

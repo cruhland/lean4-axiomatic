@@ -18,7 +18,7 @@ All other properties of negation can be derived from these.
 class Negation
     {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ]
-    :=
+    where
   /-- Definition of and syntax for negation. -/
   negOp : Neg ℤ
 

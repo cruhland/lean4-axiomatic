@@ -11,7 +11,7 @@ open Signed (sgn)
 /-! ## Axioms -/
 
 /-- Operations pertaining to rational number order. -/
-class Order.Ops (ℚ : Type) :=
+class Order.Ops (ℚ : Type) where
   /-- Less than or equivalent to. -/
   le : ℚ → ℚ → Prop
 
@@ -36,7 +36,7 @@ class Order.Props
     (ℚ : Type)
       [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
       [Negation ℚ] [Sign ℚ] [Subtraction ℚ] [Ops ℚ]
-    :=
+    where
   /--
   A rational number is less than or equivalent to another when subtracting the
   latter from the former gives a non-positive result, i.e. its sign is not one.
@@ -57,7 +57,7 @@ class Order
     (ℚ : Type)
       [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ]
       [Negation ℚ] [Sign ℚ] [Subtraction ℚ]
-    :=
+    where
   toOps : Order.Ops ℚ
   toProps : Order.Props ℚ
 
@@ -1649,7 +1649,7 @@ structures.
 
 **Why this is useful**: See `as_nonneg_ratio` below.
 -/
-inductive NonnegRatio (p : ℚ) : Prop :=
+inductive NonnegRatio (p : ℚ) : Prop where
 | intro
     (a b : ℤ)
     (a_nneg : a ≥ 0)
