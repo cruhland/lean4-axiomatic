@@ -5,6 +5,7 @@ import Lean4Axiomatic.Rational.FloorCeil
 namespace Lean4Axiomatic.Rational.Impl.Generic
 
 open Logic (AP)
+open Metric (abs)
 open Signed (Positive)
 
 variable
@@ -38,7 +39,7 @@ theorem floor_ratio
 theorem floor_subst {p₁ p₂ : ℚ} : p₁ ≃ p₂ → floor p₁ ≃ floor p₂ := sorry
 
 /--
-Evidence that a rational number can be written as a ratio, with an integer
+Evidence that a rational number can be written as a ratio of an integer
 numerator over a positive integer denominator.
 -/
 structure AsHalfPosRatio (p : ℚ) where
@@ -73,7 +74,7 @@ theorem floor_ub {p : ℚ} : floor p ≤ p := by
     -- ↑  end key lines  ↑
     _ ≃ a         := Rel.symm Integer.divide_eqv
   have : ((b * q : ℤ):ℚ)/b ≤ (a:ℚ)/b :=
-    le_substN_div_pos ‹(b:ℚ) > 0› (le_respects_from_integer.mp ‹b * q ≤ a›)
+    le_substN_div_gt_zero ‹(b:ℚ) > 0› (le_respects_from_integer.mp ‹b * q ≤ a›)
 
   calc
     _ = (floor p : ℚ)     := rfl
@@ -93,24 +94,46 @@ itself.
 theorem floor_lb {p : ℚ} {c : ℤ} : c ≤ p → c ≤ floor p := by
   intro (_ : c ≤ p)
   show c ≤ floor p
-  have (AsRatio.mk (a : ℤ) (b : ℤ) (_ : AP (b ≄ 0)) p_eqv) := as_ratio p
+
+  -- We want a positive denominator to avoid reversing the main inequality
+  have (AsHalfPosRatio.mk (a:ℤ) (b:ℤ) (_ : b > 0) (_ : AP (b ≄ 0)) p_eqv) :=
+    as_half_pos_ratio p
   have : p ≃ a/b := p_eqv
-  let d := Integer.divide a b
-  have : (c:ℚ) < d.quotient + 1 := calc
-    _ = (c:ℚ) := rfl
-    _ ≤ p := ‹c ≤ p›
-    _ ≃ a/b := ‹p ≃ a/b›
-    _ ≃ (b * d.quotient + d.remainder)/b := sorry
-    _ < ((b * d.quotient + b : ℤ):ℚ)/b := sorry
-    _ ≃ (b * (d.quotient + 1))/b := sorry
-    _ ≃ ((b:ℚ)/b) * (d.quotient + 1) := sorry
-    _ ≃ 1 * (d.quotient + 1) := sorry
-    _ ≃ d.quotient + 1 := sorry
+  have : b ≥ 0 := Integer.le_split.mpr (Or.inl ‹b > 0›)
+  have : (b:ℚ) > 0 := lt_respects_from_integer.mp ‹b > 0›
+
+  -- Use integer division properties to set up the main inequality
+  let d := Integer.divide a b; let q := d.quotient; let r := d.remainder
+  have : a < b * (q + 1) := calc
+    _ = a             := rfl
+    -- ↓ begin key lines ↓
+    _ ≃ b * q + r     := Integer.divide_eqv
+    _ < b * q + abs b := AA.substR Integer.remainder_ub
+    -- ↑  end key lines  ↑
+    _ ≃ b * q + b     := Integer.add_substR (Integer.abs_ident ‹b ≥ 0›)
+    _ ≃ b * q + b * 1 := Integer.add_substR (Rel.symm AA.identR)
+    _ ≃ b * (q + 1)   := Rel.symm AA.distribL
+  have : (a:ℚ) < (b * (q+1) : ℤ) := lt_respects_from_integer.mp ‹a < b * (q+1)›
+  have : (a:ℚ)/b < ((b * (q + 1) : ℤ):ℚ)/b :=
+    lt_substN_div_gt_zero ‹(b:ℚ) > 0› ‹(a:ℚ) < (b * (q+1) : ℤ)›
+
+  have : (c:ℚ) < (q + 1 : ℤ) := calc
+    _ = (c:ℚ)                   := rfl
+    _ ≤ p                       := ‹c ≤ p›
+    -- ↓ begin key lines ↓
+    _ ≃ a/b                     := ‹p ≃ a/b›
+    _ < ((b * (q + 1) : ℤ):ℚ)/b := ‹(a:ℚ)/b < ((b * (q + 1) : ℤ):ℚ)/b›
+    -- ↑  end key lines  ↑
+    _ ≃ (b * (q + 1 : ℤ))/b     := div_substL mul_compat_from_integer
+    _ ≃ (q + 1 : ℤ)             := mulL_div_same
+  have : c < q + 1 := lt_respects_from_integer.mpr ‹(c:ℚ) < (q + 1 : ℤ)›
   calc
-    _ = c := rfl
-    _ ≤ d.quotient := sorry
-    _ ≃ floor ((a:ℚ)/b) := sorry
-    _ ≃ floor p := sorry
+    -- ↓ begin key lines ↓
+    _ = c               := rfl
+    _ ≤ q               := Integer.le_iff_lt_incR.mpr ‹c < q + 1›
+    -- ↑  end key lines  ↑
+    _ ≃ floor ((a:ℚ)/b) := Rel.symm floor_ratio
+    _ ≃ floor p         := Rel.symm (floor_subst ‹p ≃ a/b›)
 
 /-- A rational is no larger than its ceiling. -/
 theorem ceil_lb {p : ℚ} : p ≤ ceil p := sorry
