@@ -1544,13 +1544,21 @@ theorem lt_substN_div_pos
   have : p/r < q/r := lt_sgn.mpr this
   exact this
 
+/-- Divide both operands of _less than_ by the same positive value. -/
+theorem lt_substN_div_gt_zero
+    {p q r : ℚ} (r_pos : r > 0)
+    : have : AP (r ≄ 0) := AP.mk (pos_nonzero ‹r > 0›)
+      p < q → p/r < q/r
+    := by
+  admit
+
 /--
 Divide both operands of _less than or equivalent to_ by the same positive
 value.
 -/
-theorem le_substN_div_pos
+theorem le_substN_div_gt_zero
     {p q r : ℚ} (r_pos : r > 0)
-    : have : AP (r ≄ 0) := AP.mk sorry
+    : have : AP (r ≄ 0) := AP.mk (pos_nonzero ‹r > 0›)
       p ≤ q → p/r ≤ q/r
     := by
   admit
