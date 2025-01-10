@@ -19,7 +19,7 @@ def _floor (p : ℚ) : ℤ :=
   (Integer.divide a b).quotient
 
 /-- The least integer greater than or equivalent to the given value. -/
-def _ceil (p : ℚ) : ℤ := sorry
+def _ceil (p : ℚ) : ℤ := -_floor (-p)
 
 local instance floor_ceil_ops : FloorCeil.Ops ℤ ℚ := {
   floor := _floor
@@ -136,12 +136,35 @@ theorem floor_lb {p : ℚ} {c : ℤ} : c ≤ p → c ≤ floor p := by
     _ ≃ floor p         := Rel.symm (floor_subst ‹p ≃ a/b›)
 
 /-- A rational is no larger than its ceiling. -/
-theorem ceil_lb {p : ℚ} : p ≤ ceil p := sorry
+theorem ceil_lb {p : ℚ} : p ≤ ceil p := by
+  -- ↓ begin key lines ↓
+  have : floor (-p) ≤ -p := floor_ub
+  -- ↑  end key lines  ↑
+  calc
+    _ = p                 := rfl
+    _ ≃ -(-p)             := eqv_symm neg_involutive
+    _ ≤ -(floor (-p) : ℤ) := le_subst_neg ‹floor (-p) ≤ -p›
+    _ ≃ (-floor (-p) : ℤ) := eqv_symm neg_compat_from_integer
+    _ = ceil p            := rfl
 
 /--
 A rational's ceiling is the least integer not less than the rational itself.
 -/
-theorem ceil_ub {p : ℚ} {a : ℤ} : p ≤ a → ceil p ≤ a := sorry
+theorem ceil_ub {p : ℚ} {a : ℤ} : p ≤ a → ceil p ≤ a := by
+  intro (_ : p ≤ a)
+  show ceil p ≤ a
+  have : (-a:ℤ) ≤ -p := calc
+    _ = ((-a:ℤ):ℚ) := rfl
+    _ ≃ -(a:ℚ)     := neg_compat_from_integer
+    _ ≤ -p         := le_subst_neg ‹p ≤ a›
+  -- ↓ begin key lines ↓
+  have : -a ≤ floor (-p) := floor_lb ‹(-a:ℤ) ≤ -p›
+  -- ↑  end key lines  ↑
+  calc
+    _ = ceil p      := rfl
+    _ = -floor (-p) := rfl
+    _ ≤ -(-a)       := Integer.le_neg_flip.mp ‹-a ≤ floor (-p)›
+    _ ≃ a           := Integer.neg_involutive
 
 def floor_ceil_props : FloorCeil.Props ℚ := {
   floor_ub := floor_ub
