@@ -7,7 +7,7 @@ namespace Lean4Axiomatic.Rational
 /-! ## Axioms -/
 
 /-- Floor and ceiling functions on rational numbers. -/
-class FloorCeil.Ops (ℤ : outParam Type) (ℚ : Type) :=
+class FloorCeil.Ops (ℤ : outParam Type) (ℚ : Type) where
   /-- The greatest integer less than or equivalent to the given value. -/
   floor : ℚ → ℤ
 
@@ -20,7 +20,7 @@ class FloorCeil.Props
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ]
     [Sign ℚ] [Subtraction ℚ] [Order ℚ] [Ops ℤ ℚ]
-    :=
+    where
   /-- A rational is no smaller than its floor. -/
   floor_ub {p : ℚ} : floor p ≤ p
 
@@ -44,7 +44,7 @@ class FloorCeil
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ]
     [Sign ℚ] [Subtraction ℚ] [Order ℚ]
-    :=
+    where
   toOps : FloorCeil.Ops (ℤ := ℤ) ℚ
   toProps : FloorCeil.Props ℚ
 
