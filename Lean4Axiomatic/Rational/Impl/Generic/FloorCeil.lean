@@ -11,7 +11,7 @@ open Signed (Positive sgn)
 variable
   {ℕ ℤ ℚ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
   [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ] [Sign ℚ]
-  [Subtraction ℚ] [Order ℚ] [Reciprocation ℚ] [Division ℚ] [Induction.{1} ℚ]
+  [Reciprocation ℚ] [Division ℚ] [Induction.{1} ℚ]
 
 /-- The greatest integer less than or equivalent to the given value. -/
 def _floor (p : ℚ) : ℤ :=
@@ -35,8 +35,63 @@ theorem floor_ratio
     := by
   admit
 
+theorem quotient_eqv
+    {a₁ a₂ b₁ b₂ : ℤ} [AP (b₁ ≄ 0)] [AP (b₂ ≄ 0)]
+    : a₁ * b₂ ≃ a₂ * b₁ →
+      (Integer.divide a₁ b₁).quotient ≃ (Integer.divide a₂ b₂).quotient
+    := by
+  admit
+
 /-- `floor` is a legitimate function on rationals; it respects equivalence. -/
-theorem floor_subst {p₁ p₂ : ℚ} : p₁ ≃ p₂ → floor p₁ ≃ floor p₂ := sorry
+theorem floor_subst {p₁ p₂ : ℚ} : p₁ ≃ p₂ → floor p₁ ≃ floor p₂ := by
+  intro (_ : p₁ ≃ p₂)
+  show floor p₁ ≃ floor p₂
+
+  /-
+  Convert the rational arguments into integer ratios. Can't use pattern
+  matching because the matched variables don't work in `calc` blocks.
+  -/
+  let ar₁ := as_ratio p₁; let a₁ := ar₁.a; let b₁ := ar₁.b
+  let ar₂ := as_ratio p₂; let a₂ := ar₂.a; let b₂ := ar₂.b
+  have : AP (b₁ ≄ 0) := ar₁.b_nonzero
+  have : AP (b₂ ≄ 0) := ar₂.b_nonzero
+  have : p₁ ≃ a₁/b₁ := ar₁.p_eqv
+  have : p₂ ≃ a₂/b₂ := ar₂.p_eqv
+
+  /-
+  Convert the hypothesis from an equivalence of rationals to an equivalence of
+  their integer components.
+  -/
+  have combine
+      {p : ℚ} {x y z : ℤ} [AP (y ≄ 0)] : p ≃ x/y → p * (y * z) ≃ (x * z : ℤ)
+      := by
+    intro (_ : p ≃ x/y)
+    show p * (y * z) ≃ (x * z : ℤ)
+    calc
+      _ = p * (y * z)             := rfl
+      _ ≃ (p * y) * z             := eqv_symm mul_assoc
+      _ ≃ (((x:ℚ)/y) * y) * z     := mul_substL (mul_substL ‹p ≃ x/y›)
+      _ ≃ ((x * (y:ℚ)⁻¹) * y) * z := mul_substL (mul_substL div_mul_recip)
+      _ ≃ (x * ((y:ℚ)⁻¹ * y)) * z := mul_substL mul_assoc
+      _ ≃ (x * (y * (y:ℚ)⁻¹)) * z := mul_substL (mul_substR mul_comm)
+      _ ≃ ((x * y) * (y:ℚ)⁻¹) * z := mul_substL (eqv_symm mul_assoc)
+      _ ≃ (((x:ℚ) * y)/y) * z     := mul_substL (eqv_symm div_mul_recip)
+      _ ≃ x * z                   := mul_substL mulR_div_same
+      _ ≃ (x * z : ℤ)             := eqv_symm mul_compat_from_integer
+  have : ((a₁ * b₂ : ℤ):ℚ) ≃ (a₂ * b₁ : ℤ) := calc
+    _ = ((a₁ * b₂ : ℤ):ℚ) := rfl
+    _ ≃ p₁ * (b₁ * b₂)    := eqv_symm (combine ‹p₁ ≃ a₁/b₁›)
+    _ ≃ p₂ * (b₁ * b₂)    := mul_substL ‹p₁ ≃ p₂›
+    _ ≃ p₂ * (b₂ * b₁)    := mul_substR mul_comm
+    _ ≃ (a₂ * b₁ : ℤ)     := combine ‹p₂ ≃ a₂/b₂›
+  have mul_eqv : a₁ * b₂ ≃ a₂ * b₁ :=
+    from_integer_inject ‹((a₁ * b₂ : ℤ):ℚ) ≃ (a₂ * b₁ : ℤ)›
+
+  calc
+    _ = floor p₁                        := rfl
+    _ = (Integer.divide a₁ b₁).quotient := rfl
+    _ ≃ (Integer.divide a₂ b₂).quotient := quotient_eqv ‹a₁ * b₂ ≃ a₂ * b₁›
+    _ = floor p₂                        := rfl
 
 /-- A positive integer is nonzero. -/
 theorem neqv_zero_from_gt_zero {a : ℤ} : a > 0 → a ≄ 0 := by
@@ -91,6 +146,8 @@ def as_half_pos_ratio (p : ℚ) : AsHalfPosRatio p :=
     _ = (a':ℚ)/b'                       := rfl
 
   AsHalfPosRatio.mk a' b' ‹b' > 0› ‹p ≃ a'/b'›
+
+variable [Subtraction ℚ] [Order ℚ]
 
 /-- A rational is no smaller than its floor. -/
 theorem floor_ub {p : ℚ} : floor p ≤ p := by
