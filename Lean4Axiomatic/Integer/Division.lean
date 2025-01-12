@@ -24,6 +24,8 @@ class Division.Ops
 
 export Division.Ops (divide)
 
+infix:50 " ÷ " => divide
+
 /-- Properties of integer Euclidean division. -/
 class Division.Props
     {ℕ : outParam Type} [Natural ℕ]
@@ -37,11 +39,10 @@ class Division.Props
   remainder.
   -/
   divide_eqv
-    {a b : ℤ} [AP (b ≄ 0)]
-    : let d := divide a b; a ≃ b * d.quotient + d.remainder
+    {a b : ℤ} [AP (b ≄ 0)] : let d := a ÷ b; a ≃ b * d.quotient + d.remainder
 
   /-- The remainder is always nonnegative. -/
-  remainder_lb {a b : ℤ} [AP (b ≄ 0)] : (divide a b).remainder ≥ 0
+  remainder_lb {a b : ℤ} [AP (b ≄ 0)] : (a ÷ b).remainder ≥ 0
 
   /--
   The remainder is always closer to zero than the divisor.
@@ -50,7 +51,7 @@ class Division.Props
   magnitude of the divisor subtracted from the remainder to bring it under the
   limit.
   -/
-  remainder_ub {a b : ℤ} [AP (b ≄ 0)] : (divide a b).remainder < abs b
+  remainder_ub {a b : ℤ} [AP (b ≄ 0)] : (a ÷ b).remainder < abs b
 
 export Division.Props (divide_eqv remainder_lb remainder_ub)
 
@@ -81,7 +82,7 @@ equivalent.
 -/
 theorem quotient_eqv
     {a₁ a₂ b₁ b₂ : ℤ} [AP (b₁ ≄ 0)] [AP (b₂ ≄ 0)]
-    : a₁ * b₂ ≃ a₂ * b₁ → (divide a₁ b₁).quotient ≃ (divide a₂ b₂).quotient
+    : a₁ * b₂ ≃ a₂ * b₁ → (a₁ ÷ b₁).quotient ≃ (a₂ ÷ b₂).quotient
     := by
   admit
 
