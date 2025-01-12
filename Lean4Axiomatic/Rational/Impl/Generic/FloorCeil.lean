@@ -26,6 +26,38 @@ local instance floor_ceil_ops : FloorCeil.Ops ℤ ℚ := {
   ceil := _ceil
 }
 
+variable [Subtraction ℚ]
+
+theorem eqv_divR {p q r : ℚ} [AP (r ≄ 0)] : p ≃ q ↔ p/r ≃ q/r := calc
+  _ ↔ p ≃ q := Iff.rfl
+  _ ↔ p - q ≃ 0 := sorry
+  _ ↔ (p - q)/r ≃ 0/r := sorry
+  _ ↔ (p - q)/r ≃ 0 := sorry
+  _ ↔ p/r - q/r ≃ 0 := sorry
+  _ ↔ p/r ≃ q/r := sorry
+
+theorem div_eqv_div
+    {p₁ p₂ q₁ q₂ : ℚ} [AP (q₁ ≄ 0)] [AP (q₂ ≄ 0)]
+    : p₁/q₁ ≃ p₂/q₂ ↔ p₁ * q₂ ≃ p₂ * q₁
+    := calc
+  _ ↔ p₁/q₁ ≃ p₂/q₂ := Iff.rfl
+  _ ↔ p₁/q₁ * 1 ≃ p₂/q₂ := sorry
+  _ ↔ p₁/q₁ * q₂/q₂ ≃ p₂/q₂ := sorry
+  _ ↔ (p₁ * q₂)/(q₁ * q₂) ≃ p₂/q₂ := sorry
+  _ ↔ (p₁ * q₂)/(q₁ * q₂) ≃ p₂/q₂ * 1 := sorry
+  _ ↔ (p₁ * q₂)/(q₁ * q₂) ≃ (p₂ * q₁)/(q₂ * q₁) := sorry
+  _ ↔ (p₁ * q₂)/(q₁ * q₂) ≃ (p₂ * q₁)/(q₁ * q₂) := sorry
+  _ ↔ p₁ * q₂ ≃ p₂ * q₁ := eqv_divR.symm
+
+theorem div_int_eqv_div_int
+    {a₁ a₂ b₁ b₂ : ℤ} [AP (b₁ ≄ 0)] [AP (b₂ ≄ 0)]
+    : (a₁:ℚ)/b₁ ≃ a₂/b₂ ↔ a₁ * b₂ ≃ a₂ * b₁
+    := calc
+  _ ↔ (a₁:ℚ)/b₁ ≃ a₂/b₂ := Iff.rfl
+  _ ↔ (a₁:ℚ) * b₂ ≃ a₂ * b₁ := div_eqv_div
+  _ ↔ ((a₁ * b₂ : ℤ):ℚ) ≃ (a₂ * b₁ : ℤ) := sorry
+  _ ↔ a₁ * b₂ ≃ a₂ * b₁ := Iff.intro from_integer_inject from_integer_subst
+
 /--
 Evaluate `floor` in the common case where we know the integer components of the
 rational input.
@@ -33,7 +65,17 @@ rational input.
 theorem floor_ratio
     {a b : ℤ} [AP (b ≄ 0)] : floor ((a:ℚ)/b) ≃ (a ÷ b).quotient
     := by
-  admit
+  let ar := as_ratio ((a:ℚ)/b); let a' := ar.a; let b' := ar.b
+  have : AP (b' ≄ 0) := ar.b_nonzero
+  have : (a:ℚ)/b ≃ a'/b' := ar.p_eqv
+  have : a' * b ≃ a * b' := div_int_eqv_div_int.mp (eqv_symm ‹(a:ℚ)/b ≃ a'/b'›)
+
+  -- ↓ begin key lines ↓
+  calc
+    _ = floor ((a:ℚ)/b)    := rfl
+    _ = (a' ÷ b').quotient := rfl
+    _ ≃ (a ÷ b).quotient   := Integer.quotient_eqv ‹a' * b ≃ a * b'›
+  -- ↑  end key lines  ↑
 
 /-- `floor` is a legitimate function on rationals; it respects equivalence. -/
 theorem floor_subst {p₁ p₂ : ℚ} : p₁ ≃ p₂ → floor p₁ ≃ floor p₂ := by
@@ -42,7 +84,8 @@ theorem floor_subst {p₁ p₂ : ℚ} : p₁ ≃ p₂ → floor p₁ ≃ floor p
 
   /-
   Convert the rational arguments into integer ratios. Can't use pattern
-  matching because the matched variables don't work in `calc` blocks.
+  matching because the matched variables are not considered judgmentally equal
+  to the fields of the `AsRatio` structure they came from.
   -/
   let ar₁ := as_ratio p₁; let a₁ := ar₁.a; let b₁ := ar₁.b
   let ar₂ := as_ratio p₂; let a₂ := ar₂.a; let b₂ := ar₂.b
@@ -55,36 +98,20 @@ theorem floor_subst {p₁ p₂ : ℚ} : p₁ ≃ p₂ → floor p₁ ≃ floor p
   Convert the hypothesis from an equivalence of rationals to an equivalence of
   their integer components.
   -/
-  have combine
-      {p : ℚ} {x y z : ℤ} [AP (y ≄ 0)] : p ≃ x/y → p * (y * z) ≃ (x * z : ℤ)
-      := by
-    intro (_ : p ≃ x/y)
-    show p * (y * z) ≃ (x * z : ℤ)
-    calc
-      _ = p * (y * z)             := rfl
-      _ ≃ (p * y) * z             := eqv_symm mul_assoc
-      _ ≃ (((x:ℚ)/y) * y) * z     := mul_substL (mul_substL ‹p ≃ x/y›)
-      _ ≃ ((x * (y:ℚ)⁻¹) * y) * z := mul_substL (mul_substL div_mul_recip)
-      _ ≃ (x * ((y:ℚ)⁻¹ * y)) * z := mul_substL mul_assoc
-      _ ≃ (x * (y * (y:ℚ)⁻¹)) * z := mul_substL (mul_substR mul_comm)
-      _ ≃ ((x * y) * (y:ℚ)⁻¹) * z := mul_substL (eqv_symm mul_assoc)
-      _ ≃ (((x:ℚ) * y)/y) * z     := mul_substL (eqv_symm div_mul_recip)
-      _ ≃ x * z                   := mul_substL mulR_div_same
-      _ ≃ (x * z : ℤ)             := eqv_symm mul_compat_from_integer
-  have : ((a₁ * b₂ : ℤ):ℚ) ≃ (a₂ * b₁ : ℤ) := calc
-    _ = ((a₁ * b₂ : ℤ):ℚ) := rfl
-    _ ≃ p₁ * (b₁ * b₂)    := eqv_symm (combine ‹p₁ ≃ a₁/b₁›)
-    _ ≃ p₂ * (b₁ * b₂)    := mul_substL ‹p₁ ≃ p₂›
-    _ ≃ p₂ * (b₂ * b₁)    := mul_substR mul_comm
-    _ ≃ (a₂ * b₁ : ℤ)     := combine ‹p₂ ≃ a₂/b₂›
-  have mul_eqv : a₁ * b₂ ≃ a₂ * b₁ :=
-    from_integer_inject ‹((a₁ * b₂ : ℤ):ℚ) ≃ (a₂ * b₁ : ℤ)›
+  have : (a₁:ℚ)/b₁ ≃ a₂/b₂ := calc
+    _ = (a₁:ℚ)/b₁ := rfl
+    _ ≃ p₁        := eqv_symm ‹p₁ ≃ a₁/b₁›
+    _ ≃ p₂        := ‹p₁ ≃ p₂›
+    _ ≃ a₂/b₂     := ‹p₂ ≃ a₂/b₂›
+  have : a₁ * b₂ ≃ a₂ * b₁ := div_int_eqv_div_int.mp ‹(a₁:ℚ)/b₁ ≃ a₂/b₂›
 
   calc
-    _ = floor p₁                        := rfl
+    _ = floor p₁           := rfl
+    -- ↓ begin key lines ↓
     _ = (a₁ ÷ b₁).quotient := rfl
     _ ≃ (a₂ ÷ b₂).quotient := Integer.quotient_eqv ‹a₁ * b₂ ≃ a₂ * b₁›
-    _ = floor p₂                        := rfl
+    -- ↑  end key lines  ↑
+    _ = floor p₂           := rfl
 
 /-- A positive integer is nonzero. -/
 theorem neqv_zero_from_gt_zero {a : ℤ} : a > 0 → a ≄ 0 := by
@@ -140,7 +167,7 @@ def as_half_pos_ratio (p : ℚ) : AsHalfPosRatio p :=
 
   AsHalfPosRatio.mk a' b' ‹b' > 0› ‹p ≃ a'/b'›
 
-variable [Subtraction ℚ] [Order ℚ]
+variable [Order ℚ]
 
 /-- A rational is no smaller than its floor. -/
 theorem floor_ub {p : ℚ} : floor p ≤ p := by
