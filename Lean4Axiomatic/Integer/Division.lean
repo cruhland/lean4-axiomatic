@@ -67,4 +67,22 @@ class Division
 attribute [instance] Division.toOps
 attribute [instance] Division.toProps
 
+/-! ## Derived properties -/
+
+variable
+  {ℕ : Type} [Natural ℕ]
+  {ℤ : Type}
+    [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ] [Order ℤ] [Negation ℤ]
+    [Sign ℤ] [Metric ℤ] [Division ℤ]
+
+/--
+Sufficient condition for the quotients of two integer divisions to be
+equivalent.
+-/
+theorem quotient_eqv
+    {a₁ a₂ b₁ b₂ : ℤ} [AP (b₁ ≄ 0)] [AP (b₂ ≄ 0)]
+    : a₁ * b₂ ≃ a₂ * b₁ → (divide a₁ b₁).quotient ≃ (divide a₂ b₂).quotient
+    := by
+  admit
+
 end Lean4Axiomatic.Integer
