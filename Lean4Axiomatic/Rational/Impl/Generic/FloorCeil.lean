@@ -16,7 +16,7 @@ variable
 /-- The greatest integer less than or equivalent to the given value. -/
 def _floor (p : ℚ) : ℤ :=
   have (AsRatio.mk (a : ℤ) (b : ℤ) (_ : AP (b ≄ 0)) _) := as_ratio p
-  (Integer.divide a b).quotient
+  (a ÷ b).quotient
 
 /-- The least integer greater than or equivalent to the given value. -/
 def _ceil (p : ℚ) : ℤ := -_floor (-p)
@@ -31,14 +31,7 @@ Evaluate `floor` in the common case where we know the integer components of the
 rational input.
 -/
 theorem floor_ratio
-    {a b : ℤ} [AP (b ≄ 0)] : floor ((a:ℚ)/b) ≃ (Integer.divide a b).quotient
-    := by
-  admit
-
-theorem quotient_eqv
-    {a₁ a₂ b₁ b₂ : ℤ} [AP (b₁ ≄ 0)] [AP (b₂ ≄ 0)]
-    : a₁ * b₂ ≃ a₂ * b₁ →
-      (Integer.divide a₁ b₁).quotient ≃ (Integer.divide a₂ b₂).quotient
+    {a b : ℤ} [AP (b ≄ 0)] : floor ((a:ℚ)/b) ≃ (a ÷ b).quotient
     := by
   admit
 
@@ -89,8 +82,8 @@ theorem floor_subst {p₁ p₂ : ℚ} : p₁ ≃ p₂ → floor p₁ ≃ floor p
 
   calc
     _ = floor p₁                        := rfl
-    _ = (Integer.divide a₁ b₁).quotient := rfl
-    _ ≃ (Integer.divide a₂ b₂).quotient := quotient_eqv ‹a₁ * b₂ ≃ a₂ * b₁›
+    _ = (a₁ ÷ b₁).quotient := rfl
+    _ ≃ (a₂ ÷ b₂).quotient := Integer.quotient_eqv ‹a₁ * b₂ ≃ a₂ * b₁›
     _ = floor p₂                        := rfl
 
 /-- A positive integer is nonzero. -/
@@ -158,7 +151,7 @@ theorem floor_ub {p : ℚ} : floor p ≤ p := by
   have : (b:ℚ) > 0 := lt_respects_from_integer.mp ‹b > 0›
 
   -- Use integer division properties to set up the main inequality
-  let d := Integer.divide a b; let q := d.quotient; let r := d.remainder
+  let d := a ÷ b; let q := d.quotient; let r := d.remainder
   have : b * q ≤ a := calc
     _ = b * q     := rfl
     -- ↓ begin key lines ↓
@@ -196,7 +189,7 @@ theorem floor_lb {p : ℚ} {c : ℤ} : c ≤ p → c ≤ floor p := by
   have : (b:ℚ) > 0 := lt_respects_from_integer.mp ‹b > 0›
 
   -- Use integer division properties to set up the main inequality
-  let d := Integer.divide a b; let q := d.quotient; let r := d.remainder
+  let d := a ÷ b; let q := d.quotient; let r := d.remainder
   have : a < b * (q + 1) := calc
     _ = a             := rfl
     -- ↓ begin key lines ↓
