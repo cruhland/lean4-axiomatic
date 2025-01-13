@@ -49,14 +49,26 @@ theorem div_eqv_div
   _ ↔ (p₁ * q₂)/(q₁ * q₂) ≃ (p₂ * q₁)/(q₁ * q₂) := sorry
   _ ↔ p₁ * q₂ ≃ p₂ * q₁ := eqv_divR.symm
 
+/--
+Necessary and sufficient condition for two integer ratios to be equivalent.
+-/
 theorem div_int_eqv_div_int
     {a₁ a₂ b₁ b₂ : ℤ} [AP (b₁ ≄ 0)] [AP (b₂ ≄ 0)]
     : (a₁:ℚ)/b₁ ≃ a₂/b₂ ↔ a₁ * b₂ ≃ a₂ * b₁
-    := calc
-  _ ↔ (a₁:ℚ)/b₁ ≃ a₂/b₂ := Iff.rfl
-  _ ↔ (a₁:ℚ) * b₂ ≃ a₂ * b₁ := div_eqv_div
-  _ ↔ ((a₁ * b₂ : ℤ):ℚ) ≃ (a₂ * b₁ : ℤ) := sorry
-  _ ↔ a₁ * b₂ ≃ a₂ * b₁ := Iff.intro from_integer_inject from_integer_subst
+    := by
+  have mul_compat {a b : ℤ} : (a:ℚ) * b ≃ (a * b : ℤ) :=
+    eqv_symm mul_compat_from_integer
+  have from_integer_eqv {a b : ℤ} : (a:ℚ) ≃ b ↔ a ≃ b :=
+    Iff.intro from_integer_inject from_integer_subst
+
+  calc
+    -- ↓ begin key lines ↓
+    _ ↔ (a₁:ℚ)/b₁ ≃ a₂/b₂                 := Iff.rfl
+    _ ↔ (a₁:ℚ) * b₂ ≃ a₂ * b₁             := div_eqv_div
+    -- ↑  end key lines  ↑
+    _ ↔ ((a₁ * b₂ : ℤ):ℚ) ≃ a₂ * b₁       := AA.eqv_substL_iff mul_compat
+    _ ↔ ((a₁ * b₂ : ℤ):ℚ) ≃ (a₂ * b₁ : ℤ) := AA.eqv_substR_iff mul_compat
+    _ ↔ a₁ * b₂ ≃ a₂ * b₁                 := from_integer_eqv
 
 /--
 Evaluate `floor` in the common case where we know the integer components of the
