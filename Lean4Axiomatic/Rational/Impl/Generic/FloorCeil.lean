@@ -28,65 +28,6 @@ local instance floor_ceil_ops : FloorCeil.Ops ℤ ℚ := {
 
 variable [Subtraction ℚ]
 
-theorem eqv_divR {p q r : ℚ} [AP (r ≄ 0)] : p ≃ q ↔ p/r ≃ q/r := calc
-  _ ↔ p ≃ q := Iff.rfl
-  _ ↔ p - q ≃ 0 := sorry
-  _ ↔ (p - q)/r ≃ 0/r := sorry
-  _ ↔ (p - q)/r ≃ 0 := sorry
-  _ ↔ p/r - q/r ≃ 0 := sorry
-  _ ↔ p/r ≃ q/r := sorry
-
-/--
-Necessary and sufficient condition for two rational ratios to be equivalent.
--/
-theorem div_eqv_div
-    {p₁ p₂ q₁ q₂ : ℚ} [AP (q₁ ≄ 0)] [AP (q₂ ≄ 0)]
-    : p₁/q₁ ≃ p₂/q₂ ↔ p₁ * q₂ ≃ p₂ * q₁
-    := by
-  -- Lemmas with short names that can fit on the lines of the main `calc` expr
-  have div_mulR
-      {x y z : ℚ} [AP (y ≄ 0)] [AP (z ≄ 0)] : x/y ≃ (x * z)/(y * z)
-      := calc
-    _ = x/y             := rfl
-    _ ≃ x/y * 1         := eqv_symm mul_identR
-    _ ≃ (x/y) * (z/z)   := mul_substR (eqv_symm div_same)
-    _ ≃ (x * z)/(y * z) := div_mul_swap
-  have eqvR_divR_subst
-      {x y z₁ z₂ : ℚ} [AP (z₁ ≄ 0)] [AP (z₂ ≄ 0)]
-      : z₁ ≃ z₂ → (x ≃ y/z₁ ↔ x ≃ y/z₂)
-      :=
-    AA.eqv_substR_iff ∘ div_substR
-
-  calc
-    _ ↔ p₁/q₁ ≃ p₂/q₂                             := Iff.rfl
-    _ ↔ (p₁ * q₂)/(q₁ * q₂) ≃ p₂/q₂               := AA.eqv_substL_iff div_mulR
-    _ ↔ (p₁ * q₂)/(q₁ * q₂) ≃ (p₂ * q₁)/(q₂ * q₁) := AA.eqv_substR_iff div_mulR
-    -- ↓ begin key lines ↓
-    _ ↔ (p₁ * q₂)/(q₁ * q₂) ≃ (p₂ * q₁)/(q₁ * q₂) := eqvR_divR_subst mul_comm
-    _ ↔ p₁ * q₂ ≃ p₂ * q₁                         := eqv_divR.symm
-    -- ↑  end key lines  ↑
-
-/--
-Necessary and sufficient condition for two integer ratios to be equivalent.
--/
-theorem div_int_eqv_div_int
-    {a₁ a₂ b₁ b₂ : ℤ} [AP (b₁ ≄ 0)] [AP (b₂ ≄ 0)]
-    : (a₁:ℚ)/b₁ ≃ a₂/b₂ ↔ a₁ * b₂ ≃ a₂ * b₁
-    := by
-  have mul_compat {a b : ℤ} : (a:ℚ) * b ≃ (a * b : ℤ) :=
-    eqv_symm mul_compat_from_integer
-  have from_integer_eqv {a b : ℤ} : (a:ℚ) ≃ b ↔ a ≃ b :=
-    Iff.intro from_integer_inject from_integer_subst
-
-  calc
-    -- ↓ begin key lines ↓
-    _ ↔ (a₁:ℚ)/b₁ ≃ a₂/b₂                 := Iff.rfl
-    _ ↔ (a₁:ℚ) * b₂ ≃ a₂ * b₁             := div_eqv_div
-    -- ↑  end key lines  ↑
-    _ ↔ ((a₁ * b₂ : ℤ):ℚ) ≃ a₂ * b₁       := AA.eqv_substL_iff mul_compat
-    _ ↔ ((a₁ * b₂ : ℤ):ℚ) ≃ (a₂ * b₁ : ℤ) := AA.eqv_substR_iff mul_compat
-    _ ↔ a₁ * b₂ ≃ a₂ * b₁                 := from_integer_eqv
-
 /--
 Evaluate `floor` in the common case where we know the integer components of the
 rational input.
