@@ -372,6 +372,13 @@ theorem gt_zero_iff_pos {a : ℤ} : a > 0 ↔ Positive a := calc
   _ ↔ Positive (a - 0) := gt_iff_pos_diff
   _ ↔ Positive a       := Rel.iff_subst_eqv positive_subst sub_identR
 
+/-- A positive integer is nonzero. -/
+theorem neqv_zero_from_gt_zero {a : ℤ} : a > 0 → a ≄ 0 := by
+  intro (_ : a > 0)
+  have : Positive a := gt_zero_iff_pos.mp ‹a > 0›
+  have : a ≄ 0 := neqv_zero_from_positive ‹Positive a›
+  exact this
+
 /--
 Equivalence between the _less than_ relation on integers and their
 difference being negative.
