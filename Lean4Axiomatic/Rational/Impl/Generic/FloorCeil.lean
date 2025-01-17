@@ -83,67 +83,13 @@ theorem floor_subst {p₁ p₂ : ℚ} : p₁ ≃ p₂ → floor p₁ ≃ floor p
     -- ↑  end key lines  ↑
     _ = floor p₂           := rfl
 
-/-- A positive integer is nonzero. -/
-theorem neqv_zero_from_gt_zero {a : ℤ} : a > 0 → a ≄ 0 := by
-  intro (_ : a > 0)
-  have : Positive a := Integer.gt_zero_iff_pos.mp ‹a > 0›
-  have : a ≄ 0 := Integer.neqv_zero_from_positive ‹Positive a›
-  exact this
-
-/--
-Evidence that a rational number can be written as a ratio of an integer
-numerator over a positive integer denominator.
--/
-structure AsHalfPosRatio (p : ℚ) where
-  numerator : ℤ
-  denominator : ℤ
-  denominator_gt_zero : denominator > 0
-  eqv
-    : have : denominator ≄ 0 := neqv_zero_from_gt_zero ‹denominator > 0›
-      have : AP (denominator ≄ 0) := AP.mk ‹denominator ≄ 0›
-      p ≃ numerator / denominator
-
-/--
-Any rational can be written as an integer ratio with positive denominator.
--/
-def as_half_pos_ratio (p : ℚ) : AsHalfPosRatio p :=
-  have (AsRatio.mk (a : ℤ) (b : ℤ) (_ : AP (b ≄ 0)) p_eqv) := as_ratio p
-  have : p ≃ a/b := p_eqv
-
-  -- Make a positive denominator
-  -- ↓ begin key lines ↓
-  let a' := a * sgn b
-  let b' := b * sgn b
-  have : b' > 0 := calc
-    _ = b'        := rfl
-    _ = b * sgn b := rfl
-    _ > 0         := Integer.mul_sgn_self_gt_zero ‹AP (b ≄ 0)›.ev
-  -- ↑  end key lines  ↑
-
-  -- Show the new ratio is equivalent to the input value
-  have : AP (b' ≄ 0) := AP.mk (neqv_zero_from_gt_zero ‹b' > 0›)
-  have : AP (sgn b ≄ 0) := ‹AP (b ≄ 0)›.map (mt Integer.sgn_zero.mpr)
-  have mul_compat {a b : ℤ} : (a:ℚ) * (b:ℚ) ≃ (a * b : ℤ) :=
-    eqv_symm mul_compat_from_integer
-  have : p ≃ a'/b' := calc
-    _ = p                               := rfl
-    _ ≃ a/b                             := ‹p ≃ a/b›
-    _ ≃ ((a:ℚ)/b) * 1                   := eqv_symm mul_identR
-    _ ≃ ((a:ℚ)/b) * ((sgn b : ℚ)/sgn b) := mul_substR (eqv_symm div_same)
-    _ ≃ (a * sgn b)/(b * sgn b)         := div_mul_swap
-    _ ≃ (a * sgn b : ℤ)/(b * sgn b)     := div_substL mul_compat
-    _ ≃ (a * sgn b : ℤ)/(b * sgn b : ℤ) := div_substR mul_compat
-    _ = (a':ℚ)/b'                       := rfl
-
-  AsHalfPosRatio.mk a' b' ‹b' > 0› ‹p ≃ a'/b'›
-
 variable [Order ℚ]
 
 /-- A rational is no smaller than its floor. -/
 theorem floor_ub {p : ℚ} : floor p ≤ p := by
   -- We want a positive denominator to avoid reversing the main inequality
   have (AsHalfPosRatio.mk (a:ℤ) (b:ℤ) (_ : b > 0) p_eqv) := as_half_pos_ratio p
-  have : AP (b ≄ 0) := AP.mk (neqv_zero_from_gt_zero ‹b > 0›)
+  have : AP (b ≄ 0) := AP.mk (Integer.neqv_zero_from_gt_zero ‹b > 0›)
   have : p ≃ a/b := p_eqv
   have : (b:ℚ) > 0 := lt_respects_from_integer.mp ‹b > 0›
 
@@ -180,7 +126,7 @@ theorem floor_lb {p : ℚ} {c : ℤ} : c ≤ p → c ≤ floor p := by
 
   -- We want a positive denominator to avoid reversing the main inequality
   have (AsHalfPosRatio.mk (a:ℤ) (b:ℤ) (_ : b > 0) p_eqv) := as_half_pos_ratio p
-  have : AP (b ≄ 0) := AP.mk (neqv_zero_from_gt_zero ‹b > 0›)
+  have : AP (b ≄ 0) := AP.mk (Integer.neqv_zero_from_gt_zero ‹b > 0›)
   have : p ≃ a/b := p_eqv
   have : b ≥ 0 := Integer.le_split.mpr (Or.inl ‹b > 0›)
   have : (b:ℚ) > 0 := lt_respects_from_integer.mp ‹b > 0›
