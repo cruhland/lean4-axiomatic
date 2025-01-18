@@ -1,5 +1,6 @@
 import Lean4Axiomatic.Integer.Exponentiation
 import Lean4Axiomatic.Integer.Induction
+import Lean4Axiomatic.Integer.Metric
 
 /-!
 # Combined typeclass of all integer definitions and properties
@@ -8,7 +9,7 @@ import Lean4Axiomatic.Integer.Induction
 namespace Lean4Axiomatic
 
 open Integer (
-  Addition Core Induction Multiplication Negation Order Sign Subtraction
+  Addition Core Induction Metric Multiplication Negation Order Sign Subtraction
 )
 
 /--
@@ -40,12 +41,14 @@ class Integer {ℕ : outParam Type} [Natural ℕ] (ℤ : Type) where
   toOrder : Order ℤ
   toSign : Sign ℤ
   toSubtraction : Subtraction ℤ
+  toMetric : Metric ℤ
   toInduction : Induction.{0} ℤ
 
 attribute [instance] Integer.toAddition
 attribute [instance] Integer.toCore
 attribute [instance] Integer.toExponentiation
 attribute [instance] Integer.toInduction
+attribute [instance] Integer.toMetric
 attribute [instance] Integer.toMultiplication
 attribute [instance] Integer.toNegation
 attribute [instance] Integer.toOrder
