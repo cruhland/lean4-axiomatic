@@ -10,63 +10,57 @@ open Logic (AP)
 
 /-! ## Axioms -/
 
-/-- The data returned from a Euclidean division operation. -/
-structure DivisionResult (α : Type) where
-  quotient : α
-  remainder : α
-
-/-- Operations for Euclidean division of integers. -/
-class Division.Ops
-    {ℕ : outParam Type} [Natural ℕ] (ℤ : Type) [Core (ℕ := ℕ) ℤ]
+/--
+Demonstrates a valid [Euclidean division](https://w.wiki/CnLb) of the first
+parameter by the second.
+-/
+structure EuclideanDivision
+    {ℕ : Type} [Natural ℕ]
+    {ℤ : Type}
+      [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ] [Order ℤ] [Negation ℤ]
+      [Sign ℤ] [Metric ℤ]
+    (a b : ℤ)
     where
-  /-- Euclidean division of the first argument by the second. -/
-  divide (a b : ℤ) [AP (b ≄ 0)] : DivisionResult ℤ
-
-export Division.Ops (divide)
-
-infix:50 " ÷ " => divide
-
-/-- Properties of integer Euclidean division. -/
-class Division.Props
-    {ℕ : outParam Type} [Natural ℕ]
-    (ℤ : Type)
-      [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ] [Order ℤ]
-      [Negation ℤ] [Sign ℤ] [Metric ℤ] [Ops ℤ]
-    where
+  /--
+  The [quotient](https://w.wiki/CnLh) is the number of `b`s that can be added
+  together without exceeding `a`.
+  -/
+  quotient : ℤ
 
   /--
-  How the `a` in `divide a b` is split between divisor (`b`), quotient, and
-  remainder.
+  The [remainder](https://w.wiki/CnLt) is the amount to add to `b * quotient`
+  to reach `a`.
   -/
-  divide_eqv
-    {a b : ℤ} [AP (b ≄ 0)] : let d := a ÷ b; a ≃ b * d.quotient + d.remainder
+  remainder : ℤ
 
-  /-- The remainder is always nonnegative. -/
-  remainder_lb {a b : ℤ} [AP (b ≄ 0)] : (a ÷ b).remainder ≥ 0
+  /-- How `a` is split between divisor (`b`), quotient, and remainder. -/
+  div_eqv : a ≃ b * quotient + remainder
+
+  /-- The remainder is nonnegative. -/
+  rem_lb : remainder ≥ 0
 
   /--
-  The remainder is always closer to zero than the divisor.
+  The remainder is closer to zero than the divisor (`b`).
 
-  If this were not true, the quotient could be increased by one, and the
-  magnitude of the divisor subtracted from the remainder to bring it under the
-  limit.
+  If this were not true, the quotient could be increased or decreased by one,
+  and the magnitude of the divisor subtracted from the remainder to bring it
+  under the limit.
   -/
-  remainder_ub {a b : ℤ} [AP (b ≄ 0)] : (a ÷ b).remainder < abs b
-
-export Division.Props (divide_eqv remainder_lb remainder_ub)
+  rem_ub : remainder < abs b
 
 /-- All integer Euclidean division axioms. -/
 class Division
     {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type)
-      [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ] [Order ℤ]
-      [Negation ℤ] [Sign ℤ] [Metric ℤ]
+      [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ] [Order ℤ] [Negation ℤ]
+      [Sign ℤ] [Metric ℤ]
     where
-  toOps : Division.Ops ℤ
-  toProps : Division.Props ℤ
+  /-- Computes the Euclidean division of the first argument by the second. -/
+  divide (a b : ℤ) [AP (b ≄ 0)] : EuclideanDivision a b
 
-attribute [instance] Division.toOps
-attribute [instance] Division.toProps
+export Division (divide)
+
+infix:50 " ÷ " => divide
 
 /-! ## Derived properties -/
 
