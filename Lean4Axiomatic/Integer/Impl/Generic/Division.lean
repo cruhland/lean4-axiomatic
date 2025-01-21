@@ -56,6 +56,7 @@ def pos_to_natural {a : ℤ} : a > 0 → { n : ℕ // a ≃ n ∧ n > 0 } := by
 
 variable [Metric ℤ]
 
+/-- Direct translation of natural number division to integers. -/
 def basic_divide {a b : ℤ} : a ≥ 0 → b > 0 → EuclideanDivision a b := by
   intro (_ : a ≥ 0) (_ : b > 0)
   show EuclideanDivision a b
@@ -73,7 +74,7 @@ def basic_divide {a b : ℤ} : a ≥ 0 → b > 0 → EuclideanDivision a b := by
   let d := nat_divide n m; let q := d.quotient; let r := d.remainder
   have : n ≃ m * q + r := nat_divide_eqv
 
-  have div_eqv : a ≃ b * (q:ℤ) + (r:ℤ) := calc
+  have : a ≃ b * (q:ℤ) + (r:ℤ) := calc
     _ = a                       := rfl
     _ ≃ (n:ℤ)                   := ‹a ≃ n›
     _ ≃ ((m * q + r : ℕ):ℤ)     := AA.subst₁ ‹n ≃ m * q + r›
@@ -81,12 +82,22 @@ def basic_divide {a b : ℤ} : a ≥ 0 → b > 0 → EuclideanDivision a b := by
     _ ≃ (m:ℤ) * (q:ℤ) + (r:ℤ)   := AA.substL AA.compat₂
     _ ≃ b * (q:ℤ) + (r:ℤ)       := AA.substL (AA.substL (Rel.symm ‹b ≃ m›))
 
+  have : r ≥ 0 := Natural.ge_zero
+  have : (r:ℤ) ≥ 0 := from_natural_respects_le.mp ‹r ≥ 0›
+  have : r < m := nat_remainder_ub
+  have : b ≥ 0 := ge_split.mpr (Or.inl ‹b > 0›)
+  have : (r:ℤ) < abs b := calc
+    _ = (r:ℤ) := rfl
+    _ < (m:ℤ) := from_natural_respects_lt.mp ‹r < m›
+    _ ≃ b     := Rel.symm ‹b ≃ m›
+    _ ≃ abs b := Rel.symm (abs_ident ‹b ≥ 0›)
+
   let division : EuclideanDivision a b := {
     quotient := (q:ℤ)
     remainder := (r:ℤ)
-    div_eqv := div_eqv
-    rem_lb := sorry
-    rem_ub := sorry
+    div_eqv := ‹a ≃ b * (q:ℤ) + (r:ℤ)›
+    rem_lb := ‹(r:ℤ) ≥ 0›
+    rem_ub := ‹(r:ℤ) < abs b›
   }
   exact division
 
