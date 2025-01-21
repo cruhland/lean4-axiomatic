@@ -101,6 +101,42 @@ def basic_divide {a b : ℤ} : a ≥ 0 → b > 0 → EuclideanDivision a b := by
   }
   exact division
 
+def simple_divide
+    {a : ℤ} (b : ℤ) [AP (b ≄ 0)] : a ≥ 0 → EuclideanDivision a b := by
+  intro (_ : a ≥ 0)
+  show EuclideanDivision a b
+
+  let b' := b * sgn b
+  have : Nonzero b := nonzero_iff_neqv_zero.mpr ‹AP (b ≄ 0)›.ev
+  have : Positive b' := positive_mul_sgn_self ‹Nonzero b›
+  have : b' > 0 := gt_zero_iff_pos.mpr ‹Positive b'›
+  let division' : EuclideanDivision a b' := basic_divide ‹a ≥ 0› ‹b' > 0›
+  let q := division'.quotient
+  let r := division'.remainder
+
+  have : a ≃ b * (sgn b * q) + r := calc
+    _ = a                   := rfl
+    _ ≃ b' * q + r          := division'.div_eqv
+    _ = (b * sgn b) * q + r := rfl
+    _ ≃ b * (sgn b * q) + r := AA.substL AA.assoc
+  have : r ≥ 0 := division'.rem_lb
+  have : b' ≥ 0 := ge_split.mpr (Or.inl ‹b' > 0›)
+  have : r < abs b := calc
+    _ = r         := rfl
+    _ < abs b'    := division'.rem_ub
+    _ ≃ b'        := abs_ident ‹b' ≥ 0›
+    _ = b * sgn b := rfl
+    _ ≃ abs b     := Rel.symm abs_sgn
+
+  let division : EuclideanDivision a b := {
+    quotient := sgn b * q
+    remainder := r
+    div_eqv := ‹a ≃ b * (sgn b * q) + r›
+    rem_lb := ‹r ≥ 0›
+    rem_ub := ‹r < abs b›
+  }
+  exact division
+
 /-- Definition of division -/
 def divide (a b : ℤ) [AP (b ≄ 0)] : EuclideanDivision a b := sorry
 
