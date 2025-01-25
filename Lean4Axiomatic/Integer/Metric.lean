@@ -75,4 +75,7 @@ theorem abs_ident {a : ℤ} : a ≥ 0 → abs a ≃ a := by
       _ ≃ 0         := AA.absorbL
       _ ≃ a         := Rel.symm ‹a ≃ 0›
 
+theorem abs_zero {a : ℤ} : a ≃ 0 ↔ abs a ≃ 0 := sorry
+theorem abs_nonneg {a : ℤ} : abs a ≥ 0 := sorry
+
 end Lean4Axiomatic.Integer

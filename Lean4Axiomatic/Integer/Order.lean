@@ -44,6 +44,9 @@ variable {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Order ℤ]
 
 /-! ## Derived properties -/
 
+theorem lt_from_le_neqv {a b : ℤ} : a ≤ b → a ≄ b → a < b := sorry
+theorem gt_from_ge_neqv {a b : ℤ} : a ≥ b → a ≄ b → a > b := sorry
+
 /--
 Natural numbers maintain their _less than or equivalent to_ relationship when
 converted to integers.
@@ -1189,6 +1192,8 @@ theorem le_or_gt {a b : ℤ} : a ≤ b ∨ a > b := by
     exact Or.inl ‹a ≤ b›
   | AA.OneOfThree.third (_ : a > b) =>
     exact Or.inr ‹a > b›
+
+theorem lt_or_ge {a b : ℤ} : a < b ∨ a ≥ b := sorry
 
 /--
 The _less than or equivalent to_ relation is reversed with negated operands.

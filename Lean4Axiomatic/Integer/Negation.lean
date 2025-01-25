@@ -56,6 +56,8 @@ Eventually, this should become the axiom and the typeclass should be derived.
 -/
 theorem neg_invL {a : ℤ} : -a + a ≃ 0 := AA.inverseL
 
+theorem neg_zero {a : ℤ} : a ≃ 0 ↔ a ≃ -a := sorry
+
 /--
 Negation is an involution: applying it twice is equivalent to not applying it
 at all.

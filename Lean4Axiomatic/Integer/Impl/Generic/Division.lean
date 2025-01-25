@@ -92,20 +92,17 @@ def basic_divide {a b : ℤ} : a ≥ 0 → b > 0 → EuclideanDivision a b := by
     _ ≃ b     := Rel.symm ‹b ≃ m›
     _ ≃ abs b := Rel.symm (abs_ident ‹b ≥ 0›)
 
-  let division : EuclideanDivision a b := {
+  exact show EuclideanDivision a b from {
     quotient := (q:ℤ)
     remainder := (r:ℤ)
     div_eqv := ‹a ≃ b * (q:ℤ) + (r:ℤ)›
     rem_lb := ‹(r:ℤ) ≥ 0›
     rem_ub := ‹(r:ℤ) < abs b›
   }
-  exact division
 
-def simple_divide
-    {a : ℤ} (b : ℤ) [AP (b ≄ 0)] : a ≥ 0 → EuclideanDivision a b := by
-  intro (_ : a ≥ 0)
-  show EuclideanDivision a b
-
+def nonneg_divide
+    {a : ℤ} (a_nonneg : a ≥ 0) (b : ℤ) [AP (b ≄ 0)] : EuclideanDivision a b
+    :=
   let b' := b * sgn b
   have : Nonzero b := nonzero_iff_neqv_zero.mpr ‹AP (b ≄ 0)›.ev
   have : Positive b' := positive_mul_sgn_self ‹Nonzero b›
@@ -128,17 +125,136 @@ def simple_divide
     _ = b * sgn b := rfl
     _ ≃ abs b     := Rel.symm abs_sgn
 
-  let division : EuclideanDivision a b := {
+  show EuclideanDivision a b from {
     quotient := sgn b * q
     remainder := r
     div_eqv := ‹a ≃ b * (sgn b * q) + r›
     rem_lb := ‹r ≥ 0›
     rem_ub := ‹r < abs b›
   }
-  exact division
+
+theorem le_substR_sub {a₁ a₂ b : ℤ} : a₁ ≤ a₂ → b - a₂ ≤ b - a₁ := sorry
+theorem lt_substR_sub {a₁ a₂ b : ℤ} : a₁ < a₂ → b - a₂ < b - a₁ := sorry
+
+inductive Either (α : Prop) (β : Prop) where
+| inl (p : α) : Either α β
+| inr (p : β) : Either α β
+
+def ge_decidable (a b : ℤ) : Decidable (a ≥ b) := sorry
+
+def ge_split_either {a b : ℤ} : a ≥ b → Either (a > b) (a ≃ b) := sorry
+
+def either_nonneg {a : ℤ} : Either (a ≥ 0) (-a ≥ 0) :=
+  match show Decidable (a ≥ 0) from ge_decidable a 0 with
+  | .isTrue (_ : a ≥ 0) =>
+    show Either (a ≥ 0) (-a ≥ 0) from Either.inl ‹a ≥ 0›
+  | .isFalse (_ : ¬(a ≥ 0)) =>
+    have : a < 0 ∨ a ≥ 0 := lt_or_ge
+    have : a < 0 := match show a < 0 ∨ a ≥ 0 from lt_or_ge with
+    | .inl (_ : a < 0) => ‹a < 0›
+    | .inr (_ : a ≥ 0) => show a < 0 from absurd ‹a ≥ 0› ‹¬(a ≥ 0)›
+    have : a ≤ 0 := le_split.mpr (Or.inl ‹a < 0›)
+    have : -a ≥ 0 := calc
+      _ = -a := rfl
+      _ ≥ -0 := le_neg_flip.mp ‹a ≤ 0›
+      _ ≃ 0  := Rel.symm (neg_zero.mp Rel.refl)
+    show Either (a ≥ 0) (-a ≥ 0) from Either.inr ‹-a ≥ 0›
 
 /-- Definition of division -/
-def divide (a b : ℤ) [AP (b ≄ 0)] : EuclideanDivision a b := sorry
+def divide (a b : ℤ) [AP (b ≄ 0)] : EuclideanDivision a b :=
+  match show Either (a ≥ 0) (-a ≥ 0) from either_nonneg with
+  | .inl (_ : a ≥ 0) =>
+    show EuclideanDivision a b from nonneg_divide ‹a ≥ 0› b
+  | .inr (_ : -a ≥ 0) =>
+    let d' : EuclideanDivision (-a) b := nonneg_divide ‹-a ≥ 0› b
+    let q' := d'.quotient
+    let r' := d'.remainder
+    have : a ≃ b * -q' + -r' := calc
+      _ = a               := rfl
+      _ ≃ -(-a)           := Rel.symm neg_involutive
+      _ ≃ -(b * q' + r')  := AA.subst₁ d'.div_eqv
+      _ ≃ -(b * q') + -r' := neg_compat_add
+      _ ≃ b * -q' + -r'   := AA.substL AA.scompatR
+    have : r' ≥ 0 := d'.rem_lb
+
+    match show Either (r' > 0) (r' ≃ 0) from ge_split_either ‹r' ≥ 0› with
+    | .inl (_ : r' > 0) =>
+      -- Minor lemmas needed to keep the proof of `a ≃ b * q + r` within margin
+      have split {x y z : ℤ} : x + y ≃ (x + -z) + (z + y) := calc
+        _ = x + y              := rfl
+        _ ≃ (x + 0) + y        := AA.substL (Rel.symm AA.identR)
+        _ ≃ (x + (-z + z)) + y := AA.substL (AA.substR (Rel.symm AA.inverseL))
+        _ ≃ ((x + -z) + z) + y := AA.substL (Rel.symm AA.assoc)
+        _ ≃ (x + -z) + (z + y) := AA.assoc
+      have factor {x y : ℤ} : x * -y + -abs x ≃ x * -(y + sgn x) := calc
+        _ = x * -y + -abs x       := rfl
+        _ ≃ x * -y + -(x * sgn x) := AA.substR (AA.subst₁ abs_sgn)
+        _ ≃ x * -y + x * -sgn x   := AA.substR AA.scompatR
+        _ ≃ x * (-y + -sgn x)     := Rel.symm AA.distribL
+        _ ≃ x * -(y + sgn x)      := AA.substR (Rel.symm neg_compat_add)
+
+      /-
+      Define or prove all fields of the result structure.
+
+      Although `a ≃ b * -q' + -r'`, we can't have a remainder of `-r'` because
+      it's negative. Find an equivalent positive remainder and adjust the
+      quotient to compensate.
+      -/
+      let q := -(q' + sgn b)
+      let r := abs b - r'
+      have : a ≃ b * q + r := calc
+        _ = a                                  := rfl
+        _ ≃ b * -q' + -r'                      := ‹a ≃ b * -q' + -r'›
+        _ ≃ (b * -q' + -abs b) + (abs b + -r') := split
+        _ ≃ (b * -q' + -abs b) + (abs b - r')  := AA.substR (Rel.symm sub_defn)
+        _ = (b * -q' + -abs b) + r             := rfl
+        _ ≃ b * -(q' + sgn b) + r              := AA.substL factor
+        _ = b * q + r                          := rfl
+      have : r' ≤ abs b := le_split.mpr (Or.inl d'.rem_ub)
+      have : r ≥ 0 := calc
+        _ = r             := rfl
+        _ = abs b - r'    := rfl
+        _ ≥ abs b - abs b := le_substR_sub ‹r' ≤ abs b›
+        _ ≃ 0             := sub_same
+      have : r < abs b := calc
+        _ = r          := rfl
+        _ = abs b - r' := rfl
+        _ < abs b - 0  := lt_substR_sub ‹r' > 0›
+        _ ≃ abs b      := sub_identR
+
+      show EuclideanDivision a b from {
+        quotient := q
+        remainder := r
+        div_eqv := ‹a ≃ b * q + r›
+        rem_lb := ‹r ≥ 0›
+        rem_ub := ‹r < abs b›
+      }
+
+    | .inr (_ : r' ≃ 0) =>
+      -- Define or prove all fields of the result structure
+      let q := -q'
+      let r := 0
+      have : a ≃ b * q + r := calc
+        _ = a             := rfl
+        _ ≃ b * -q' + -r' := ‹a ≃ b * -q' + -r'›
+        _ = b * q + -r'   := rfl
+        _ ≃ b * q + -0    := AA.substR (AA.subst₁ ‹r' ≃ 0›)
+        _ ≃ b * q + 0     := AA.substR (Rel.symm (neg_zero.mp Rel.refl))
+        _ = b * q + r     := rfl
+      have : r ≥ 0 := le_refl
+      have : r ≤ abs b := abs_nonneg
+      have : abs b ≄ 0 := mt abs_zero.mpr ‹AP (b ≄ 0)›.ev
+      have : r ≄ abs b := Rel.symm ‹abs b ≄ 0›
+      have : r < abs b := lt_from_le_neqv ‹r ≤ abs b› ‹r ≄ abs b›
+
+      show EuclideanDivision a b from {
+        quotient := q
+        remainder := r
+        div_eqv := ‹a ≃ b * q + r›
+        rem_lb := ‹r ≥ 0›
+        rem_ub := ‹r < abs b›
+      }
+
 
 def division : Division ℤ := {
   divide := divide
