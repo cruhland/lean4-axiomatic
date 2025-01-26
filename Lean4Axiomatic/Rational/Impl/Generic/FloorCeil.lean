@@ -99,9 +99,9 @@ theorem floor_ub {p : ℚ} : floor p ≤ p := by
     _ = b * q     := rfl
     -- ↓ begin key lines ↓
     _ ≃ b * q + 0 := Rel.symm AA.identR
-    _ ≤ b * q + r := Integer.ge_addL.mp Integer.remainder_lb
+    _ ≤ b * q + r := Integer.ge_addL.mp d.rem_lb
     -- ↑  end key lines  ↑
-    _ ≃ a         := Rel.symm Integer.divide_eqv
+    _ ≃ a         := Rel.symm d.div_eqv
   have : ((b * q : ℤ):ℚ)/b ≤ (a:ℚ)/b :=
     le_substN_div_gt_zero ‹(b:ℚ) > 0› (le_respects_from_integer.mp ‹b * q ≤ a›)
 
@@ -136,8 +136,8 @@ theorem floor_lb {p : ℚ} {c : ℤ} : c ≤ p → c ≤ floor p := by
   have : a < b * (q + 1) := calc
     _ = a             := rfl
     -- ↓ begin key lines ↓
-    _ ≃ b * q + r     := Integer.divide_eqv
-    _ < b * q + abs b := AA.substR Integer.remainder_ub
+    _ ≃ b * q + r     := d.div_eqv
+    _ < b * q + abs b := AA.substR d.rem_ub
     -- ↑  end key lines  ↑
     _ ≃ b * q + b     := Integer.add_substR (Integer.abs_ident ‹b ≥ 0›)
     _ ≃ b * q + b * 1 := Integer.add_substR (Rel.symm AA.identR)
