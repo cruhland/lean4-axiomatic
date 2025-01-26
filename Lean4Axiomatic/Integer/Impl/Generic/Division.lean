@@ -5,7 +5,7 @@ import Lean4Axiomatic.Integer.Division
 namespace Lean4Axiomatic.Integer.Impl.Generic
 
 open Lean4Axiomatic.Metric (abs)
-open Logic (AP)
+open Logic (AP Either)
 open Signed (Positive)
 
 variable
@@ -132,33 +132,6 @@ def nonneg_divide
     rem_lb := ‹r ≥ 0›
     rem_ub := ‹r < abs b›
   }
-
-theorem le_substR_sub {a₁ a₂ b : ℤ} : a₁ ≤ a₂ → b - a₂ ≤ b - a₁ := sorry
-theorem lt_substR_sub {a₁ a₂ b : ℤ} : a₁ < a₂ → b - a₂ < b - a₁ := sorry
-
-inductive Either (α : Prop) (β : Prop) where
-| inl (p : α) : Either α β
-| inr (p : β) : Either α β
-
-def ge_decidable (a b : ℤ) : Decidable (a ≥ b) := sorry
-
-def ge_split_either {a b : ℤ} : a ≥ b → Either (a > b) (a ≃ b) := sorry
-
-def either_nonneg {a : ℤ} : Either (a ≥ 0) (-a ≥ 0) :=
-  match show Decidable (a ≥ 0) from ge_decidable a 0 with
-  | .isTrue (_ : a ≥ 0) =>
-    show Either (a ≥ 0) (-a ≥ 0) from Either.inl ‹a ≥ 0›
-  | .isFalse (_ : ¬(a ≥ 0)) =>
-    have : a < 0 ∨ a ≥ 0 := lt_or_ge
-    have : a < 0 := match show a < 0 ∨ a ≥ 0 from lt_or_ge with
-    | .inl (_ : a < 0) => ‹a < 0›
-    | .inr (_ : a ≥ 0) => show a < 0 from absurd ‹a ≥ 0› ‹¬(a ≥ 0)›
-    have : a ≤ 0 := le_split.mpr (Or.inl ‹a < 0›)
-    have : -a ≥ 0 := calc
-      _ = -a := rfl
-      _ ≥ -0 := le_neg_flip.mp ‹a ≤ 0›
-      _ ≃ 0  := Rel.symm (neg_zero.mp Rel.refl)
-    show Either (a ≥ 0) (-a ≥ 0) from Either.inr ‹-a ≥ 0›
 
 /-- Definition of division -/
 def divide (a b : ℤ) [AP (b ≄ 0)] : EuclideanDivision a b :=
