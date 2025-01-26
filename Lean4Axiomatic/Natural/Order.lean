@@ -885,6 +885,12 @@ instance trans_le_lt_lt_inst : Trans (α := ℕ) (· ≤ ·) (· < ·) (· < ·)
   trans := trans_le_lt_lt
 }
 
+theorem neqv_zero_from_gt_zero {n : ℕ} : n > 0 → n ≄ 0 := by
+  intro (_ : n > 0)
+  have : Positive n := Natural.lt_zero_pos.mpr ‹n > 0›
+  have : n ≄ 0 := Signed.positive_defn.mp ‹Positive n›
+  exact this
+
 /--
 Very general property about ordering which often simplifies proofs that would
 otherwise have had to use induction.

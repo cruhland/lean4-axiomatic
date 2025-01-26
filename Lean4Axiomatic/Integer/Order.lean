@@ -1617,4 +1617,19 @@ theorem le_substR_sub {a₁ a₂ b : ℤ} : a₁ ≤ a₂ → b - a₂ ≤ b - a
 theorem lt_substL_sub {a₁ a₂ b : ℤ} : a₁ < a₂ → a₁ - b < a₂ - b := sorry
 theorem lt_substR_sub {a₁ a₂ b : ℤ} : a₁ < a₂ → b - a₂ < b - a₁ := sorry
 
+def nonneg_to_natural {a : ℤ} : a ≥ 0 → { n : ℕ // a ≃ n } := sorry
+
+def pos_to_natural {a : ℤ} : a > 0 → { n : ℕ // a ≃ n ∧ n > 0 } := by
+  intro (_ : a > 0)
+  show { n : ℕ // a ≃ n ∧ n > 0 }
+
+  have : a ≥ 0 := ge_split.mpr (Or.inl ‹a > 0›)
+  have (Subtype.mk (n : ℕ) (_ : a ≃ n)) := nonneg_to_natural ‹a ≥ 0›
+  have : (n:ℤ) > 0 := calc
+    _ = (n:ℤ) := rfl
+    _ ≃ a     := Rel.symm ‹a ≃ n›
+    _ > 0     := ‹a > 0›
+  have : n > 0 := from_natural_respects_lt.mpr ‹(n:ℤ) > 0›
+  exact Subtype.mk n (And.intro ‹a ≃ n› ‹n > 0›)
+
 end Lean4Axiomatic.Integer
