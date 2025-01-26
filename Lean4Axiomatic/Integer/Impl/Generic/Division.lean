@@ -56,84 +56,63 @@ def pos_to_natural {a : ℤ} : a > 0 → { n : ℕ // a ≃ n ∧ n > 0 } := by
 
 variable [Metric ℤ]
 
-/-- Direct translation of natural number division to integers. -/
-def basic_divide {a b : ℤ} : a ≥ 0 → b > 0 → EuclideanDivision a b := by
-  intro (_ : a ≥ 0) (_ : b > 0)
-  show EuclideanDivision a b
-
+/-- Integer division with a nonnegative dividend. -/
+def nonneg_divide
+    {a : ℤ} (a_nonneg : a ≥ 0) (b : ℤ) [AP (b ≄ 0)] : EuclideanDivision a b
+    :=
+  /- Find the natural number equivalent to the nonnegative dividend -/
   let an : { n : ℕ // a ≃ n } := nonneg_to_natural ‹a ≥ 0›
   let n := an.val
   have : a ≃ n := an.property
 
-  let bn : { m : ℕ // b ≃ m ∧ m > 0 } := pos_to_natural ‹b > 0›
+  /- Find the natural number equivalent to the divisor's absolute value -/
+  have : 0 ≤ abs b := abs_nonneg
+  have : 0 ≄ abs b := Rel.symm (mt abs_zero.mpr ‹AP (b ≄ 0)›.ev)
+  have : abs b > 0 := lt_from_le_neqv ‹0 ≤ abs b› ‹0 ≄ abs b›
+  let bn : { m : ℕ // abs b ≃ m ∧ m > 0 } := pos_to_natural ‹abs b > 0›
   let m := bn.val
-  have : b ≃ m := bn.property.left
+  have : (m:ℤ) ≃ abs b := Rel.symm bn.property.left
   have : m > 0 := bn.property.right
   have : AP (m ≄ 0) := AP.mk (neqv_zero_from_gt_zero ‹m > 0›)
 
-  let d := nat_divide n m; let q := d.quotient; let r := d.remainder
-  have : n ≃ m * q + r := nat_divide_eqv
+  /- Natural number division and results -/
+  let d' := nat_divide n m
+  let q' := d'.quotient
+  let r' := d'.remainder
+  have : n ≃ m * q' + r' := nat_divide_eqv
+  have : r' ≥ 0 := Natural.ge_zero
+  have : r' < m := nat_remainder_ub
 
-  have : a ≃ b * (q:ℤ) + (r:ℤ) := calc
-    _ = a                       := rfl
-    _ ≃ (n:ℤ)                   := ‹a ≃ n›
-    _ ≃ ((m * q + r : ℕ):ℤ)     := AA.subst₁ ‹n ≃ m * q + r›
-    _ ≃ ((m * q : ℕ):ℤ) + (r:ℤ) := AA.compat₂
-    _ ≃ (m:ℤ) * (q:ℤ) + (r:ℤ)   := AA.substL AA.compat₂
-    _ ≃ b * (q:ℤ) + (r:ℤ)       := AA.substL (AA.substL (Rel.symm ‹b ≃ m›))
-
-  have : r ≥ 0 := Natural.ge_zero
-  have : (r:ℤ) ≥ 0 := from_natural_respects_le.mp ‹r ≥ 0›
-  have : r < m := nat_remainder_ub
-  have : b ≥ 0 := ge_split.mpr (Or.inl ‹b > 0›)
-  have : (r:ℤ) < abs b := calc
-    _ = (r:ℤ) := rfl
-    _ < (m:ℤ) := from_natural_respects_lt.mp ‹r < m›
-    _ ≃ b     := Rel.symm ‹b ≃ m›
-    _ ≃ abs b := Rel.symm (abs_ident ‹b ≥ 0›)
-
-  exact show EuclideanDivision a b from {
-    quotient := (q:ℤ)
-    remainder := (r:ℤ)
-    div_eqv := ‹a ≃ b * (q:ℤ) + (r:ℤ)›
-    rem_lb := ‹(r:ℤ) ≥ 0›
-    rem_ub := ‹(r:ℤ) < abs b›
-  }
-
-def nonneg_divide
-    {a : ℤ} (a_nonneg : a ≥ 0) (b : ℤ) [AP (b ≄ 0)] : EuclideanDivision a b
-    :=
-  let b' := b * sgn b
-  have : Nonzero b := nonzero_iff_neqv_zero.mpr ‹AP (b ≄ 0)›.ev
-  have : Positive b' := positive_mul_sgn_self ‹Nonzero b›
-  have : b' > 0 := gt_zero_iff_pos.mpr ‹Positive b'›
-  let division' : EuclideanDivision a b' := basic_divide ‹a ≥ 0› ‹b' > 0›
-  let q := division'.quotient
-  let r := division'.remainder
-
-  have : a ≃ b * (sgn b * q) + r := calc
-    _ = a                   := rfl
-    _ ≃ b' * q + r          := division'.div_eqv
-    _ = (b * sgn b) * q + r := rfl
-    _ ≃ b * (sgn b * q) + r := AA.substL AA.assoc
-  have : r ≥ 0 := division'.rem_lb
-  have : b' ≥ 0 := ge_split.mpr (Or.inl ‹b' > 0›)
+  /- Adjust results to obtain integer division -/
+  let q := sgn b * q'
+  let r := (r':ℤ)
+  have : a ≃ b * q + r := calc
+    _ = a                         := rfl
+    _ ≃ (n:ℤ)                     := ‹a ≃ n›
+    _ ≃ ((m * q' + r' : ℕ):ℤ)     := AA.subst₁ ‹n ≃ m * q' + r'›
+    _ ≃ ((m * q' : ℕ):ℤ) + (r':ℤ) := AA.compat₂
+    _ ≃ (m:ℤ) * (q':ℤ) + (r':ℤ)   := AA.substL AA.compat₂
+    _ = (m:ℤ) * q' + r'           := rfl
+    _ ≃ abs b * q' + r'           := AA.substL (AA.substL ‹(m:ℤ) ≃ abs b›)
+    _ ≃ (b * sgn b) * q' + r'     := AA.substL (AA.substL abs_sgn)
+    _ ≃ b * (sgn b * q') + r'     := AA.substL AA.assoc
+    _ = b * q + r                 := rfl
+  have : r ≥ 0 := from_natural_respects_le.mp ‹r' ≥ 0›
   have : r < abs b := calc
-    _ = r         := rfl
-    _ < abs b'    := division'.rem_ub
-    _ ≃ b'        := abs_ident ‹b' ≥ 0›
-    _ = b * sgn b := rfl
-    _ ≃ abs b     := Rel.symm abs_sgn
+    _ = r      := rfl
+    _ = (r':ℤ) := rfl
+    _ < (m:ℤ)  := from_natural_respects_lt.mp ‹r' < m›
+    _ ≃ abs b  := ‹(m:ℤ) ≃ abs b›
 
   show EuclideanDivision a b from {
-    quotient := sgn b * q
+    quotient := q
     remainder := r
-    div_eqv := ‹a ≃ b * (sgn b * q) + r›
+    div_eqv := ‹a ≃ b * q + r›
     rem_lb := ‹r ≥ 0›
     rem_ub := ‹r < abs b›
   }
 
-/-- Definition of division -/
+/-- Definition of integer division. -/
 def divide (a b : ℤ) [AP (b ≄ 0)] : EuclideanDivision a b :=
   match show Either (a ≥ 0) (-a ≥ 0) from either_nonneg with
   | .inl (_ : a ≥ 0) =>
