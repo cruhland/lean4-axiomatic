@@ -31,30 +31,7 @@ theorem nat_remainder_ub
     := by
   admit
 
-theorem neqv_zero_from_gt_zero {n : ℕ} : n > 0 → n ≄ 0 := by
-  intro (_ : n > 0)
-  have : Positive n := Natural.lt_zero_pos.mpr ‹n > 0›
-  have : n ≄ 0 := Signed.positive_defn.mp ‹Positive n›
-  exact this
-
-def nonneg_to_natural {a : ℤ} : a ≥ 0 → { n : ℕ // a ≃ n } := sorry
-
-variable [Subtraction ℤ]
-
-def pos_to_natural {a : ℤ} : a > 0 → { n : ℕ // a ≃ n ∧ n > 0 } := by
-  intro (_ : a > 0)
-  show { n : ℕ // a ≃ n ∧ n > 0 }
-
-  have : a ≥ 0 := ge_split.mpr (Or.inl ‹a > 0›)
-  have (Subtype.mk (n : ℕ) (_ : a ≃ n)) := nonneg_to_natural ‹a ≥ 0›
-  have : (n:ℤ) > 0 := calc
-    _ = (n:ℤ) := rfl
-    _ ≃ a     := Rel.symm ‹a ≃ n›
-    _ > 0     := ‹a > 0›
-  have : n > 0 := from_natural_respects_lt.mpr ‹(n:ℤ) > 0›
-  exact Subtype.mk n (And.intro ‹a ≃ n› ‹n > 0›)
-
-variable [Metric ℤ]
+variable [Subtraction ℤ] [Metric ℤ]
 
 /-- Integer division with a nonnegative dividend. -/
 def nonneg_divide
@@ -73,7 +50,7 @@ def nonneg_divide
   let m := bn.val
   have : (m:ℤ) ≃ abs b := Rel.symm bn.property.left
   have : m > 0 := bn.property.right
-  have : AP (m ≄ 0) := AP.mk (neqv_zero_from_gt_zero ‹m > 0›)
+  have : AP (m ≄ 0) := AP.mk (Natural.neqv_zero_from_gt_zero ‹m > 0›)
 
   /- Natural number division and results -/
   let d' := nat_divide n m
