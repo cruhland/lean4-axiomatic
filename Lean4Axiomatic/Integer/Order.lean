@@ -7,7 +7,7 @@ namespace Lean4Axiomatic.Integer
 open AA.TwoOfThree (oneAndThree twoAndThree)
 open Coe (coe)
 open Logic (
-  AP and_mapL and_mapR iff_subst_contra iff_subst_covar or_mapL or_mapR
+  AP and_mapL and_mapR Either iff_subst_contra iff_subst_covar or_mapL or_mapR
 )
 open Natural (step)
 open Signed (Negative Positive)
@@ -1567,5 +1567,54 @@ theorem ind_from
   have : motive (n + b) := ‹motive' n›
   have : motive a := motive_subst ‹n + b ≃ a› ‹motive (n + b)›
   exact this
+
+/--
+Compute whether two integers are in a _greater than or equivalent to_ relation.
+-/
+def ge_decidable (a b : ℤ) : Decidable (a ≥ b) :=
+  match show Decidable (sgn (a - b) ≃ -1) from eqv? (sgn (a - b)) (-1:ℤ) with
+  | .isTrue (_ : sgn (a - b) ≃ -1) =>
+    have : a < b := lt_sgn.mpr ‹sgn (a - b) ≃ -1›
+    have : ¬(a ≥ b) := lt_ge_false ‹a < b›
+    show Decidable (a ≥ b) from .isFalse ‹¬(a ≥ b)›
+  | .isFalse (_ : sgn (a - b) ≄ -1) =>
+    have : a ≥ b := ge_sgn.mpr ‹sgn (a - b) ≄ -1›
+    show Decidable (a ≥ b) from .isTrue ‹a ≥ b›
+
+/--
+For two integers obeying the _greater than or equivalent to_ relation, compute
+which more precise relation they obey: _greater than_ or _equivalent to_.
+-/
+def ge_split_either {a b : ℤ} : a ≥ b → Either (a > b) (a ≃ b) := by
+  intro (_ : a ≥ b)
+  show Either (a > b) (a ≃ b)
+  match show Decidable (a ≃ b) from eqv? a b with
+  | .isTrue (_ : a ≃ b) =>
+    exact show Either (a > b) (a ≃ b) from .inr ‹a ≃ b›
+  | .isFalse (_ : a ≄ b) =>
+    have : a > b := lt_iff_le_neqv.mpr (And.intro ‹a ≥ b› (Rel.symm ‹a ≄ b›))
+    exact show Either (a > b) (a ≃ b) from .inl ‹a > b›
+
+/-- Compute whether an integer or its negation is nonnegative. -/
+def either_nonneg {a : ℤ} : Either (a ≥ 0) (-a ≥ 0) :=
+  match show Decidable (a ≥ 0) from ge_decidable a 0 with
+  | .isTrue (_ : a ≥ 0) =>
+    show Either (a ≥ 0) (-a ≥ 0) from Either.inl ‹a ≥ 0›
+  | .isFalse (_ : ¬(a ≥ 0)) =>
+    have : a < 0 ∨ a ≥ 0 := lt_or_ge
+    have : a < 0 := match show a < 0 ∨ a ≥ 0 from lt_or_ge with
+    | .inl (_ : a < 0) => ‹a < 0›
+    | .inr (_ : a ≥ 0) => show a < 0 from absurd ‹a ≥ 0› ‹¬(a ≥ 0)›
+    have : a ≤ 0 := le_split.mpr (Or.inl ‹a < 0›)
+    have : -a ≥ 0 := calc
+      _ = -a := rfl
+      _ ≥ -0 := le_neg_flip.mp ‹a ≤ 0›
+      _ ≃ 0  := Rel.symm (neg_zero.mp Rel.refl)
+    show Either (a ≥ 0) (-a ≥ 0) from Either.inr ‹-a ≥ 0›
+
+theorem le_substL_sub {a₁ a₂ b : ℤ} : a₁ ≤ a₂ → a₁ - b ≤ a₂ - b := sorry
+theorem le_substR_sub {a₁ a₂ b : ℤ} : a₁ ≤ a₂ → b - a₂ ≤ b - a₁ := sorry
+theorem lt_substL_sub {a₁ a₂ b : ℤ} : a₁ < a₂ → a₁ - b < a₂ - b := sorry
+theorem lt_substR_sub {a₁ a₂ b : ℤ} : a₁ < a₂ → b - a₂ < b - a₁ := sorry
 
 end Lean4Axiomatic.Integer
