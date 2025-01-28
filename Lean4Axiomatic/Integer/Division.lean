@@ -60,8 +60,6 @@ class Division
 
 export Division (divide)
 
-infix:50 " ÷ " => divide
-
 /-! ## Derived properties -/
 
 variable
@@ -69,6 +67,13 @@ variable
   {ℤ : Type}
     [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ] [Order ℤ] [Negation ℤ]
     [Sign ℤ] [Metric ℤ] [Division ℤ]
+
+/-- Enables the `· ÷ ·` operator to be used for integer division. -/
+instance divide_op_inst
+    : Operators.DivisionSign (λ a b : ℤ => [AP (b ≄ 0)] → EuclideanDivision a b)
+    := {
+  divisionSign := divide
+}
 
 /--
 Sufficient condition for the quotients of two integer divisions to be

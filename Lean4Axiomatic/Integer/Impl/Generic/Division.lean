@@ -12,26 +12,7 @@ variable
   {ℕ : Type} [Natural ℕ]
   {ℤ : Type}
     [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ] [Order ℤ] [Negation ℤ]
-    [Sign ℤ]
-
-structure DivisionResult (α : Type) where
-  quotient : α
-  remainder : α
-
-def nat_divide (n m : ℕ) [AP (m ≄ 0)] : DivisionResult ℕ := sorry
-
-theorem nat_divide_eqv
-    {n m : ℕ} [AP (m ≄ 0)]
-    : let d := nat_divide n m; n ≃ m * d.quotient + d.remainder
-    := by
-  admit
-
-theorem nat_remainder_ub
-    {n m : ℕ} [AP (m ≄ 0)] : (nat_divide n m).remainder < m
-    := by
-  admit
-
-variable [Subtraction ℤ] [Metric ℤ]
+    [Sign ℤ] [Subtraction ℤ] [Metric ℤ]
 
 /-- Integer division with a nonnegative dividend. -/
 def nonneg_divide
@@ -53,12 +34,12 @@ def nonneg_divide
   have : AP (m ≄ 0) := AP.mk (Natural.neqv_zero_from_gt_zero ‹m > 0›)
 
   /- Natural number division and results -/
-  let d' := nat_divide n m
+  let d' := n ÷ m
   let q' := d'.quotient
   let r' := d'.remainder
-  have : n ≃ m * q' + r' := nat_divide_eqv
+  have : n ≃ m * q' + r' := d'.div_eqv
   have : r' ≥ 0 := Natural.ge_zero
-  have : r' < m := nat_remainder_ub
+  have : r' < m := d'.rem_ub
 
   /- Adjust results to obtain integer division -/
   let q := sgn b * q'
