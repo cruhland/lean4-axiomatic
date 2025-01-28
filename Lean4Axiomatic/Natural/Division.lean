@@ -43,10 +43,18 @@ class Division
     (ℕ : Type) [Core ℕ] [Addition ℕ] [Order ℕ] [Multiplication ℕ]
     where
   /-- Computes the Euclidean division of the first argument by the second. -/
-  divide (n m : ℕ) [AP (n ≄ 0)] : EuclideanDivision n m
+  divide (n m : ℕ) [AP (m ≄ 0)] : EuclideanDivision n m
 
 export Division (divide)
 
-infix:50 " ÷ " => divide
+variable
+  {ℕ : Type} [Core ℕ] [Addition ℕ] [Order ℕ] [Multiplication ℕ] [Division ℕ]
+
+/-- Enables the `· ÷ ·` operator to be used for natural number division. -/
+instance divide_op_inst
+    : Operators.DivisionSign (λ n m : ℕ => [AP (m ≄ 0)] → EuclideanDivision n m)
+    := {
+  divisionSign := divide
+}
 
 end Lean4Axiomatic.Natural
