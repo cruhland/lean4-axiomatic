@@ -7,7 +7,7 @@ import Lean4Axiomatic.Natural.Sign
 
 namespace Lean4Axiomatic.Natural
 
-open Logic (iff_subst_covar or_mapL)
+open Logic (Either iff_subst_covar or_mapL)
 open Signed (Positive)
 
 /-!
@@ -670,6 +670,8 @@ theorem le_split {n m : ℕ} : n ≤ m ↔ n < m ∨ n ≃ m := by
     | Or.inr (_ : n ≃ m) =>
       have : n ≤ n := Rel.refl
       exact AA.substRFn ‹n ≃ m› ‹n ≤ n›
+
+def le_split_either {n m : ℕ} : n ≤ m → Either (n < m) (n ≃ m) := sorry
 
 /--
 Split _greater than or equivalent to_ into the relations implied by its name.

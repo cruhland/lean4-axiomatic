@@ -188,6 +188,16 @@ theorem not_or_iff_and_not {p q : Prop} : ¬(p ∨ q) ↔ ¬p ∧ ¬q := by
     | Or.inr (_ : q) => exact absurd ‹q› ‹¬q›
 
 /--
+Similar to `Or` but where the knowledge of which constructor was selected is
+computationally relevant.
+
+Isomorphic to the type `{ b : Bool // if b then α else β }`.
+-/
+inductive Either (α : Prop) (β : Prop) : Type where
+| /-- Left injection. -/ inl (p : α) : Either α β
+| /-- Right injection. -/ inr (p : β) : Either α β
+
+/--
 Class that enables arbitrary expressions in `Prop` to be used as instance
 arguments.
 
