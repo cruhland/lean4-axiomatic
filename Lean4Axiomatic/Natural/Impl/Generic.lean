@@ -1,4 +1,5 @@
 import Lean4Axiomatic.Natural.Impl.Generic.Core
+import Lean4Axiomatic.Natural.Impl.Generic.Division
 import Lean4Axiomatic.Natural.Impl.Generic.Exponentiation
 import Lean4Axiomatic.Natural.Impl.Generic.Order
 import Lean4Axiomatic.Natural.Impl.Generic.Sign

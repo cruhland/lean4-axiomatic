@@ -7,7 +7,7 @@ import Lean4Axiomatic.Natural.Sign
 
 namespace Lean4Axiomatic.Natural
 
-open Logic (iff_subst_covar or_mapL)
+open Logic (Either iff_subst_covar or_mapL)
 open Signed (Positive)
 
 /-!
@@ -955,6 +955,21 @@ theorem trichotomy (n m : ℕ)
       exact absurd ‹n ≃ m› (Rel.symm ‹m ≄ n›)
 
 /--
+Two natural numbers cannot be both _less than or equivalent to_ and
+_greater than_ each other.
+-/
+theorem le_gt_false {n m : ℕ} : n ≤ m → n > m → False := by
+  intro (_ : n ≤ m) (_ : n > m)
+  show False
+
+  let twoOfThree := AA.TwoOfThree (n < m) (n ≃ m) (n > m)
+  have : twoOfThree := match show n < m ∨ n ≃ m from le_split.mp ‹n ≤ m› with
+  | .inl (_ : n < m) => .oneAndThree ‹n < m› ‹n > m›
+  | .inr (_ : n ≃ m) => .twoAndThree ‹n ≃ m› ‹n > m›
+  have : ¬twoOfThree := (trichotomy n m).atMostOne
+  exact absurd ‹twoOfThree› ‹¬twoOfThree›
+
+/--
 Defines `compare`, a comparison function on natural numbers, that determines
 the ordering between any two of them: whether one is less than, equivalent to,
 or greater than the other.
@@ -1089,5 +1104,28 @@ theorem add_preserves_compare
       m + k < n + k := lt_substL_add ‹m < n›
     have : compare (n + k) (m + j) = Ordering.gt := compare_gt.mpr this
     exact this
+
+/--
+For two natural numbers obeying the _greater than or equivalent to_ relation,
+compute which more precise relation they obey: _greater than_ or
+_equivalent to_.
+-/
+def le_split_either {n m : ℕ} : n ≤ m → Either (n < m) (n ≃ m) := by
+  intro (_ : n ≤ m)
+  show Either (n < m) (n ≃ m)
+
+  match res : compare n m with
+  | .lt =>
+    have : compare n m = Ordering.lt := res
+    have : n < m := compare_lt.mp ‹compare n m = Ordering.lt›
+    exact show Either (n < m) (n ≃ m) from .inl ‹n < m›
+  | .eq =>
+    have : compare n m = Ordering.eq := res
+    have : n ≃ m := compare_eq.mp ‹compare n m = Ordering.eq›
+    exact show Either (n < m) (n ≃ m) from .inr ‹n ≃ m›
+  | .gt =>
+    have : compare n m = Ordering.gt := res
+    have : n > m := compare_gt.mp ‹compare n m = Ordering.gt›
+    exact show Either (n < m) (n ≃ m) from (le_gt_false ‹n ≤ m› ‹n > m›).elim
 
 end Lean4Axiomatic.Natural

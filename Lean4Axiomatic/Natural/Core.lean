@@ -75,7 +75,13 @@ class Literals (ℕ : outParam Type) [Constructor.Ops ℕ] [Equality ℕ] where
   literal_step {n : Nat}
     : OfNat.ofNat (α := ℕ) (Nat.succ n) ≃ step (OfNat.ofNat n)
 
-attribute [instance default+1] Literals.literal
+attribute [instance] Literals.literal
+
+/-
+Ensure that natural number literals without an inferred type default to this
+instance. The priority should be higher than the default instance for `Nat`.
+-/
+attribute [default_instance low+1] Literals.literal
 
 export Literals (literal literal_step literal_zero)
 

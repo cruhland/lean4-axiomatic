@@ -74,7 +74,13 @@ class Core {ℕ : outParam Type} [Natural ℕ] (ℤ : Type)
 variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Core (ℕ := ℕ) ℤ]
 
-/-- Provides a single definition of integer literals, for convenience. -/
+/--
+Provides a single definition of integer literals, for convenience.
+
+To resolve situations with ambiguous literals, it's a default instance with a
+higher priority than `Natural`'s default `OfNat` instance.
+-/
+@[default_instance low+2]
 instance literal {n : Nat} : OfNat ℤ n := {
   ofNat := coe (OfNat.ofNat n : ℕ)
 }

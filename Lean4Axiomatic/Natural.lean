@@ -1,3 +1,4 @@
+import Lean4Axiomatic.Natural.Division
 import Lean4Axiomatic.Natural.Exponentiation
 
 namespace Lean4Axiomatic
@@ -25,10 +26,12 @@ class Natural (ℕ : semiOutParam Type) where
   toCompare : Compare ℕ
   toMultiplication : Multiplication ℕ
   toExponentiation : Exponentiation ℕ ℕ
+  toDivision : Division ℕ
 
 attribute [instance] Natural.toAddition
 attribute [instance] Natural.toCompare
 attribute [instance] Natural.toCore
+attribute [instance] Natural.toDivision
 attribute [instance] Natural.toExponentiation
 attribute [instance] Natural.toInduction
 attribute [instance] Natural.toMultiplication

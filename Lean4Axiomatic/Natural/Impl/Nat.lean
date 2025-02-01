@@ -404,6 +404,7 @@ instance : Natural Nat := {
   toCompare := compare_inst
   toMultiplication := multiplication
   toExponentiation := Generic.exponentiation
+  toDivision := Generic.division
 }
 
 end Lean4Axiomatic.Natural.Impl.Nat
