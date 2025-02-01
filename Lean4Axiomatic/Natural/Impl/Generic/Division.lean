@@ -9,7 +9,7 @@ open Signed (Positive)
 
 variable
   {ℕ : Type}
-    [Core ℕ] [Addition ℕ] [Order ℕ] [Multiplication ℕ]
+    [Core ℕ] [Addition ℕ] [Order ℕ] [Compare ℕ] [Multiplication ℕ]
     [Induction.{0} ℕ] [Induction.{1} ℕ] [Sign ℕ]
 
 /-- Computes the Euclidean division of the first argument by the second. -/
