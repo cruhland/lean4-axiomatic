@@ -1147,6 +1147,10 @@ instance zero_product_inst : AA.ZeroProduct (α := ℤ) (· * ·) := {
   zero_prod := mul_split_zero.mp
 }
 
+theorem mul_split_neqv_zero {a b : ℤ} : a * b ≄ 0 ↔ a ≄ 0 ∧ b ≄ 0 := by
+  -- Pull out code from proof below
+  admit
+
 /--
 If a product of integers is nonzero, then both factors must be nonzero.
 
