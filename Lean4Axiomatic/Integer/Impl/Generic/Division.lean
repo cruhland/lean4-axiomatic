@@ -14,8 +14,8 @@ variable
     [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ] [Order ℤ] [Negation ℤ]
     [Sign ℤ] [Subtraction ℤ] [Metric ℤ]
 
-/-- Integer division with a nonnegative dividend. -/
-def nonneg_divide
+/-- Integer Euclidean division with a nonnegative dividend. -/
+def div_euclidean_nonneg
     {a : ℤ} (a_nonneg : a ≥ 0) (b : ℤ) [AP (b ≄ 0)] : EuclideanDivision a b
     :=
   /- Find the natural number equivalent to the nonnegative dividend -/
@@ -56,8 +56,9 @@ def nonneg_divide
     _ ≃ b * (sgn b * q') + r'     := AA.substL AA.assoc
     _ = b * q + r                 := rfl
   have : r ≥ 0 := from_natural_respects_le.mp ‹r' ≥ 0›
-  have : r < abs b := calc
-    _ = r      := rfl
+  have : abs r < abs b := calc
+    _ = abs r  := rfl
+    _ ≃ r      := abs_ident ‹r ≥ 0›
     _ = (r':ℤ) := rfl
     _ < (m:ℤ)  := from_natural_respects_lt.mp ‹r' < m›
     _ ≃ abs b  := ‹(m:ℤ) ≃ abs b›
@@ -66,17 +67,17 @@ def nonneg_divide
     quotient := q
     remainder := r
     div_eqv := ‹a ≃ b * q + r›
-    rem_lb := ‹r ≥ 0›
-    rem_ub := ‹r < abs b›
+    rem_mag := ‹abs r < abs b›
+    rem_sgn := ‹r ≥ 0›
   }
 
-/-- Definition of integer division. -/
-def divide (a b : ℤ) [AP (b ≄ 0)] : EuclideanDivision a b :=
+/-- Definition of integer Euclidean division. -/
+def div_euclidean (a b : ℤ) [AP (b ≄ 0)] : EuclideanDivision a b :=
   match show Either (a ≥ 0) (-a ≥ 0) from either_nonneg with
   | .inl (_ : a ≥ 0) =>
-    show EuclideanDivision a b from nonneg_divide ‹a ≥ 0› b
+    show EuclideanDivision a b from div_euclidean_nonneg ‹a ≥ 0› b
   | .inr (_ : -a ≥ 0) =>
-    let d' : EuclideanDivision (-a) b := nonneg_divide ‹-a ≥ 0› b
+    let d' : EuclideanDivision (-a) b := div_euclidean_nonneg ‹-a ≥ 0› b
     let q' := d'.quotient
     let r' := d'.remainder
     have : a ≃ b * -q' + -r' := calc
@@ -85,7 +86,7 @@ def divide (a b : ℤ) [AP (b ≄ 0)] : EuclideanDivision a b :=
       _ ≃ -(b * q' + r')  := AA.subst₁ d'.div_eqv
       _ ≃ -(b * q') + -r' := neg_compat_add
       _ ≃ b * -q' + -r'   := AA.substL AA.scompatR
-    have : r' ≥ 0 := d'.rem_lb
+    have : r' ≥ 0 := d'.rem_sgn
 
     match show Either (r' > 0) (r' ≃ 0) from ge_split_either ‹r' ≥ 0› with
     | .inl (_ : r' > 0) =>
@@ -120,14 +121,18 @@ def divide (a b : ℤ) [AP (b ≄ 0)] : EuclideanDivision a b :=
         _ = (b * -q' + -abs b) + r             := rfl
         _ ≃ b * -(q' + sgn b) + r              := AA.substL factor
         _ = b * q + r                          := rfl
-      have : r' ≤ abs b := le_split.mpr (Or.inl d'.rem_ub)
+      have : r' ≤ abs b := calc
+        _ = r'     := rfl
+        _ ≃ abs r' := Rel.symm (abs_ident ‹r' ≥ 0›)
+        _ ≤ abs b  := le_split.mpr (Or.inl d'.rem_mag)
       have : r ≥ 0 := calc
         _ = r             := rfl
         _ = abs b - r'    := rfl
         _ ≥ abs b - abs b := le_substR_sub ‹r' ≤ abs b›
         _ ≃ 0             := sub_same
-      have : r < abs b := calc
-        _ = r          := rfl
+      have : abs r < abs b := calc
+        _ = abs r      := rfl
+        _ ≃ r          := abs_ident ‹r ≥ 0›
         _ = abs b - r' := rfl
         _ < abs b - 0  := lt_substR_sub ‹r' > 0›
         _ ≃ abs b      := sub_identR
@@ -136,8 +141,8 @@ def divide (a b : ℤ) [AP (b ≄ 0)] : EuclideanDivision a b :=
         quotient := q
         remainder := r
         div_eqv := ‹a ≃ b * q + r›
-        rem_lb := ‹r ≥ 0›
-        rem_ub := ‹r < abs b›
+        rem_mag := ‹abs r < abs b›
+        rem_sgn := ‹r ≥ 0›
       }
 
     | .inr (_ : r' ≃ 0) =>
@@ -155,19 +160,22 @@ def divide (a b : ℤ) [AP (b ≄ 0)] : EuclideanDivision a b :=
       have : r ≤ abs b := abs_nonneg
       have : abs b ≄ 0 := mt abs_zero.mpr ‹AP (b ≄ 0)›.ev
       have : r ≄ abs b := Rel.symm ‹abs b ≄ 0›
-      have : r < abs b := lt_from_le_neqv ‹r ≤ abs b› ‹r ≄ abs b›
+      have : abs r < abs b := calc
+        _ = abs r := rfl
+        _ ≃ r     := abs_ident ‹r ≥ 0›
+        _ < abs b := lt_from_le_neqv ‹r ≤ abs b› ‹r ≄ abs b›
 
       show EuclideanDivision a b from {
         quotient := q
         remainder := r
         div_eqv := ‹a ≃ b * q + r›
-        rem_lb := ‹r ≥ 0›
-        rem_ub := ‹r < abs b›
+        rem_mag := ‹abs r < abs b›
+        rem_sgn := ‹r ≥ 0›
       }
 
-
 def division : Division ℤ := {
-  divide := divide
+  div_euclidean := div_euclidean
+  div_floored := sorry
 }
 
 end Lean4Axiomatic.Integer.Impl.Generic
