@@ -59,4 +59,10 @@ instance divide_op_inst
   divisionSign := divide
 }
 
+theorem div_zero
+    {n m : ℕ} [AP (m ≄ 0)]
+    : let d := divide n m; n ≃ 0 ↔ d.quotient ≃ 0 ∧ d.remainder ≃ 0
+    := by
+  admit
+
 end Lean4Axiomatic.Natural

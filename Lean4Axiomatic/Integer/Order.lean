@@ -1507,6 +1507,8 @@ theorem ge_mulR_nonneg {a₁ a₂ b : ℤ} : b ≥ 0 → a₁ ≥ a₂ → a₁ 
   have : a₁ * b ≥ a₂ * b := sgn_diff_ge_zero.mpr ‹sgn (a₁ * b - a₂ * b) ≥ 0›
   exact this
 
+theorem le_mulL_nonneg {a₁ a₂ b : ℤ} : b ≥ 0 → a₁ ≤ a₂ → b * a₁ ≤ b * a₂ := sorry
+
 /--
 The product of two nonnegative integers is also nonnegative.
 
@@ -1594,6 +1596,8 @@ def ge_split_either {a b : ℤ} : a ≥ b → Either (a > b) (a ≃ b) := by
   | .isFalse (_ : a ≄ b) =>
     have : a > b := lt_iff_le_neqv.mpr (And.intro ‹a ≥ b› (Rel.symm ‹a ≄ b›))
     exact show Either (a > b) (a ≃ b) from .inl ‹a > b›
+
+def either_ge_lt {a b : ℤ} : Either (a ≥ b) (a < b) := sorry
 
 /-- Compute whether an integer or its negation is nonnegative. -/
 def either_nonneg {a : ℤ} : Either (a ≥ 0) (-a ≥ 0) :=

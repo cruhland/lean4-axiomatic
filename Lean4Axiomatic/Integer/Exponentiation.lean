@@ -370,6 +370,8 @@ theorem sgn_sqr_nonneg {a : ℤ} : (sgn a)^2 ≃ sgn a ↔ a ≥ 0 := calc
   _ ↔ a > 0 ∨ a ≃ 0         := Or.comm
   _ ↔ a ≥ 0                 := ge_split.symm
 
+theorem sgn_sqr_ub {a : ℤ} : (sgn a)^2 ≤ 1 := sorry
+
 /--
 Squaring preserves the relative ordering of nonnegative integers.
 

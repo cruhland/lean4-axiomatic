@@ -12,6 +12,7 @@ namespace Lean4Axiomatic.Integer.Impl.Difference
 variable {ℕ : Type} [Natural ℕ] [Natural.Induction.{1} ℕ]
 
 instance integer : Integer (ℕ := ℕ) (Difference ℕ) :=
+  let exponentiation := Natural.Impl.Generic.exponentiation
   let order := Generic.order
   let subtraction := Generic.subtraction
   let metric := Generic.metric
@@ -19,7 +20,7 @@ instance integer : Integer (ℕ := ℕ) (Difference ℕ) :=
   {
     toAddition := addition
     toCore := core
-    toExponentiation := Natural.Impl.Generic.exponentiation
+    toExponentiation := exponentiation
     toInduction := induction
     toMultiplication := multiplication
     toNegation := negation
