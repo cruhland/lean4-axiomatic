@@ -1,4 +1,4 @@
-import Lean4Axiomatic.Integer.Order
+import Lean4Axiomatic.Integer.Exponentiation
 import Lean4Axiomatic.Metric
 
 /-! # Integer: metric functions -/
@@ -77,5 +77,17 @@ theorem abs_ident {a : ℤ} : a ≥ 0 → abs a ≃ a := by
 
 theorem abs_zero {a : ℤ} : a ≃ 0 ↔ abs a ≃ 0 := sorry
 theorem abs_nonneg {a : ℤ} : abs a ≥ 0 := sorry
+theorem abs_mul_sgn {a : ℤ} : abs a * sgn a ≃ a := sorry
+theorem abs_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → abs a₁ ≃ abs a₂ := sorry
+theorem abs_compat_mul {a b : ℤ} : abs (a * b) ≃ abs a * abs b := sorry
+theorem abs_pos_neg_sum
+    {a b c d : ℤ} : c * d < 0 → abs (a * sgn c + b * sgn d) ≃ abs (a - b)
+    := by
+  admit
+
+variable [Natural.Exponentiation ℕ ℤ]
+
+theorem abs_sgn_sqr {a : ℤ} : abs (sgn a) ≃ (sgn a)^2 := sorry
+theorem abs_sqr {a : ℤ} : (abs a)^2 ≃ a^2 := sorry
 
 end Lean4Axiomatic.Integer
