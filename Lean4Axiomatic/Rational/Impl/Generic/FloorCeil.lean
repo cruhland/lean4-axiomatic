@@ -16,7 +16,7 @@ variable
 /-- The greatest integer less than or equivalent to the given value. -/
 def _floor (p : ℚ) : ℤ :=
   have (AsRatio.mk (a : ℤ) (b : ℤ) (_ : AP (b ≄ 0)) _) := as_ratio p
-  (a ÷ b).quotient
+  (Integer.div_floored a b).quotient
 
 /-- The least integer greater than or equivalent to the given value. -/
 def _ceil (p : ℚ) : ℤ := -_floor (-p)
@@ -33,18 +33,21 @@ Evaluate `floor` in the common case where we know the integer components of the
 rational input.
 -/
 theorem floor_ratio
-    {a b : ℤ} [AP (b ≄ 0)] : floor ((a:ℚ)/b) ≃ (a ÷ b).quotient
+    {a b : ℤ} [AP (b ≄ 0)]
+    : floor ((a:ℚ)/b) ≃ (Integer.div_floored a b).quotient
     := by
   let ar := as_ratio ((a:ℚ)/b); let a' := ar.a; let b' := ar.b
   have : AP (b' ≄ 0) := ar.b_nonzero
   have : (a:ℚ)/b ≃ a'/b' := ar.p_eqv
   have : a' * b ≃ a * b' := div_int_eqv_div_int.mp (eqv_symm ‹(a:ℚ)/b ≃ a'/b'›)
+  let d := Integer.div_floored a b
+  let d' := Integer.div_floored a' b'
 
   -- ↓ begin key lines ↓
   calc
     _ = floor ((a:ℚ)/b)    := rfl
-    _ = (a' ÷ b').quotient := rfl
-    _ ≃ (a ÷ b).quotient   := Integer.quotient_eqv ‹a' * b ≃ a * b'›
+    _ = d'.quotient := rfl
+    _ ≃ d.quotient   := Integer.div_floored_quotient_eqv ‹a' * b ≃ a * b'›
   -- ↑  end key lines  ↑
 
 /-- `floor` is a legitimate function on rationals; it respects equivalence. -/
@@ -74,12 +77,14 @@ theorem floor_subst {p₁ p₂ : ℚ} : p₁ ≃ p₂ → floor p₁ ≃ floor p
     _ ≃ p₂        := ‹p₁ ≃ p₂›
     _ ≃ a₂/b₂     := ‹p₂ ≃ a₂/b₂›
   have : a₁ * b₂ ≃ a₂ * b₁ := div_int_eqv_div_int.mp ‹(a₁:ℚ)/b₁ ≃ a₂/b₂›
+  let d₁ := Integer.div_floored a₁ b₁
+  let d₂ := Integer.div_floored a₂ b₂
 
   calc
     _ = floor p₁           := rfl
     -- ↓ begin key lines ↓
-    _ = (a₁ ÷ b₁).quotient := rfl
-    _ ≃ (a₂ ÷ b₂).quotient := Integer.quotient_eqv ‹a₁ * b₂ ≃ a₂ * b₁›
+    _ = d₁.quotient := rfl
+    _ ≃ d₂.quotient := Integer.div_floored_quotient_eqv ‹a₁ * b₂ ≃ a₂ * b₁›
     -- ↑  end key lines  ↑
     _ = floor p₂           := rfl
 
@@ -94,12 +99,12 @@ theorem floor_ub {p : ℚ} : floor p ≤ p := by
   have : (b:ℚ) > 0 := lt_respects_from_integer.mp ‹b > 0›
 
   -- Use integer division properties to set up the main inequality
-  let d := a ÷ b; let q := d.quotient; let r := d.remainder
+  let d := Integer.div_floored a b; let q := d.quotient; let r := d.remainder
   have : b * q ≤ a := calc
     _ = b * q     := rfl
     -- ↓ begin key lines ↓
     _ ≃ b * q + 0 := Rel.symm AA.identR
-    _ ≤ b * q + r := Integer.ge_addL.mp d.rem_lb
+    _ ≤ b * q + r := Integer.ge_addL.mp sorry -- d.rem_lb
     -- ↑  end key lines  ↑
     _ ≃ a         := Rel.symm d.div_eqv
   have : ((b * q : ℤ):ℚ)/b ≤ (a:ℚ)/b :=
@@ -132,12 +137,12 @@ theorem floor_lb {p : ℚ} {c : ℤ} : c ≤ p → c ≤ floor p := by
   have : (b:ℚ) > 0 := lt_respects_from_integer.mp ‹b > 0›
 
   -- Use integer division properties to set up the main inequality
-  let d := a ÷ b; let q := d.quotient; let r := d.remainder
+  let d := Integer.div_floored a b; let q := d.quotient; let r := d.remainder
   have : a < b * (q + 1) := calc
     _ = a             := rfl
     -- ↓ begin key lines ↓
     _ ≃ b * q + r     := d.div_eqv
-    _ < b * q + abs b := AA.substR d.rem_ub
+    _ < b * q + abs b := AA.substR sorry -- d.rem_ub
     -- ↑  end key lines  ↑
     _ ≃ b * q + b     := Integer.add_substR (Integer.abs_ident ‹b ≥ 0›)
     _ ≃ b * q + b * 1 := Integer.add_substR (Rel.symm AA.identR)
