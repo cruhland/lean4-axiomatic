@@ -1,4 +1,5 @@
 import Lean4Axiomatic.Rational.Metric
+import Mathlib.Tactic.GRewrite
 
 /-!
 # Rational numbers: exponentiation to natural numbers
@@ -80,7 +81,7 @@ theorem pow_nat_scompatL_abs {p : ℚ} {n : ℕ} : abs (p^n) ≃ (abs p)^n := by
     have : abs (1:ℚ) ≃ 1 := abs_positive this
     calc
       _ ≃ abs (p^0) := eqv_refl
-      _ ≃ abs 1     := abs_subst pow_zero
+      _ ≃ abs 1     := by grw [pow_zero]; exact eqv_refl
       _ ≃ 1         := ‹abs (1:ℚ) ≃ 1›
       _ ≃ (abs p)^0 := eqv_symm pow_zero
   case step =>
@@ -88,12 +89,13 @@ theorem pow_nat_scompatL_abs {p : ℚ} {n : ℕ} : abs (p^n) ≃ (abs p)^n := by
     show abs (p^(step n')) ≃ (abs p)^(step n')
     calc
       _ ≃ abs (p^(step n'))  := eqv_refl
-      _ ≃ abs (p^n' * p)     := abs_subst pow_step
+      _ ≃ abs (p^n' * p)     := by grw [pow_step]; exact eqv_refl
       _ ≃ abs (p^n') * abs p := abs_compat_mul
-      _ ≃ (abs p)^n' * abs p := mul_substL ih
+      _ ≃ (abs p)^n' * abs p := by grw [ih]; exact eqv_refl
       _ ≃ (abs p)^(step n')  := eqv_symm pow_step
 
 end metric_only
+
 variable [Reciprocation ℚ]
 
 /--
@@ -1150,7 +1152,7 @@ theorem pow_lower_bound
     -- ↑  end key steps  ↑
     have : p^a ≥ 0 := ge_cases.mpr (Or.inl ‹p^a > 0›)
     have : (a:ℚ) ≤ 0 := le_respects_from_integer.mp ‹a ≤ 0›
-    have : p^a ≥ a := trans ‹p^a ≥ 0› ‹(0:ℚ) ≥ a›
+    have : p^a ≥ a := Trans.trans ‹p^a ≥ 0› ‹(0:ℚ) ≥ a›
     exact this
   | Or.inr (_ : a > 0) =>
     have : a ≥ 1 := Integer.pos_gt_iff_ge.mp ‹a > 0›
@@ -1158,7 +1160,7 @@ theorem pow_lower_bound
     have : (2:ℚ)^a ≥ a := pow_two_lower_bound ‹a ≥ 1›
     have : p^a ≥ (2:ℚ)^a := pow_pos_preserves_ge_pos ‹(2:ℚ) > 0› ‹a > 0› ‹p ≥ 2›
     -- ↑  end key steps  ↑
-    have : p^a ≥ a := trans ‹p^a ≥ (2:ℚ)^a› ‹(2:ℚ)^a ≥ a›
+    have : p^a ≥ a := Trans.trans ‹p^a ≥ (2:ℚ)^a› ‹(2:ℚ)^a ≥ a›
     exact this
 
 end Lean4Axiomatic.Rational

@@ -1,6 +1,7 @@
 import Lean4Axiomatic.AbstractAlgebra
 import Lean4Axiomatic.ClassicalAlgebra.Monoid
 import Lean4Axiomatic.Rational.Addition
+import Mathlib.Tactic.GCongr
 
 open Lean4Axiomatic.Logic (AP)
 
@@ -53,6 +54,9 @@ class Multiplication.Props
 
   /-- Multiplication on the right distributes over addition. -/
   mul_distribR {p q r : ℚ} : (q + r) * p ≃ q * p + r * p
+
+attribute [gcongr] Multiplication.Props.mul_substL
+attribute [gcongr] Multiplication.Props.mul_substR
 
 export Multiplication.Props (
   mul_assoc mul_comm mul_compat_from_integer mul_distribL mul_distribR

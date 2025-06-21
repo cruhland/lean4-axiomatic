@@ -1,5 +1,6 @@
 import Lean4Axiomatic.Metric
 import Lean4Axiomatic.Rational.MinMax
+import Mathlib.Tactic.GCongr
 
 /-! # Rational numbers: metric functions -/
 
@@ -105,6 +106,7 @@ The absolute value function preserves equivalence over its argument.
 **Proof intuition**: Expand `abs` into its `sgn` definition, and use
 substitution on multiplication and `sgn`.
 -/
+@[gcongr]
 theorem abs_subst {p₁ p₂ : ℚ} : p₁ ≃ p₂ → abs p₁ ≃ abs p₂ := by
   intro (_ : p₁ ≃ p₂)
   show abs p₁ ≃ abs p₂
