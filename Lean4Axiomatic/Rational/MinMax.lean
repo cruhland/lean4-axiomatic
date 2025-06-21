@@ -358,7 +358,7 @@ theorem min_max_comm
   have : q ≤ max r p := le_substR_eqv max_comm ‹q ≤ max p r›
   exact And.intro ‹min r p ≤ q› ‹q ≤ max r p›
 
-variable [Reciprocation ℚ] [Division ℚ] [Induction ℚ]
+variable [Reciprocation ℚ] [Division ℚ] [Induction.{1} ℚ]
 
 /--
 Convert "ordered betweenness" to the "min-max" form of betweenness.

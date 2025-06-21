@@ -51,7 +51,7 @@ While it's possible to define instances of this class whose predicates don't
 behave as expected, this shouldn't matter much in practice because any code
 that requires correct behavior will depend on `Signed` instead.
 -/
-class Ops (α : Type u) extends Positivity.Ops α where
+class Ops (α : Type u) extends toPositivityOps : Positivity.Ops α where
   /-- Predicate that holds only for negative values. -/
   Negative : α → Prop
 

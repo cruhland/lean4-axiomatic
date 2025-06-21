@@ -7,11 +7,8 @@ namespace Lean4Axiomatic.Natural.Impl.Generic
 
 variable {ℕ : Type} [Core ℕ]
 
-def positive_ops : Signed.Positivity.Ops ℕ := {
-  Positive := λ n => n ≄ 0
-}
-
 def positivity : Signed.Positivity ℕ := {
+  Positive := λ n => n ≄ 0
   positive_defn := Iff.intro id id
 }
 

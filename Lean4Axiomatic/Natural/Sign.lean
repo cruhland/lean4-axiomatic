@@ -74,7 +74,7 @@ theorem one_positive : Positive (1 : ℕ) :=
   have : Positive (step 0) := step_positive
   positive_subst ‹step 0 ≃ 1› ‹Positive (step 0)›
 
-variable [Induction ℕ]
+variable [Induction.{0} ℕ]
 
 /--
 Every positive natural number is the successor of a natural number.

@@ -675,7 +675,7 @@ theorem abs_compat_div
   -- ↑  end key steps  ↑
   _ ≃ abs p / abs q     := eqv_symm div_mul_recip
 
-variable [Induction ℚ]
+variable [Induction.{1} ℚ]
 
 /--
 Convert between an inequality on the absolute value of a rational number and

@@ -193,6 +193,7 @@ theorem two_neqv_zero : (2:ℕ) ≄ 0 :=
   have : (2:ℕ) ≃ step 1 := literal_step
   eqv_step_neqv_zero ‹(2:ℕ) ≃ step 1›
 
+section universe_polymorphic_induction
 variable [Induction ℕ]
 
 /--
@@ -253,6 +254,8 @@ theorem rec_on_step
   _ = s (ind_on n z (λ _ => s))         := rfl
   _ = s (rec_on n z s)                  := rfl
 
+end universe_polymorphic_induction
+
 /--
 A natural number is either zero, or the successor of another natural number.
 
@@ -263,7 +266,8 @@ natural numbers.
 
 **Proof intuition**: Follows directly from `cases_on`.
 -/
-theorem split_cases (n : ℕ) : n ≃ 0 ∨ ∃ (m : ℕ), n ≃ step m := by
+theorem split_cases
+    [Induction.{0} ℕ] (n : ℕ) : n ≃ 0 ∨ ∃ (m : ℕ), n ≃ step m := by
   apply cases_on n
   case zero =>
     show 0 ≃ 0 ∨ ∃ m, 0 ≃ step m
@@ -274,7 +278,7 @@ theorem split_cases (n : ℕ) : n ≃ 0 ∨ ∃ (m : ℕ), n ≃ step m := by
     exact Or.inr (Exists.intro k Rel.refl)
 
 /-- A natural number is never equal to its successor. -/
-theorem step_neqv {n : ℕ} : step n ≄ n := by
+theorem step_neqv [Induction.{0} ℕ] {n : ℕ} : step n ≄ n := by
   apply ind_on (motive := λ n => step n ≄ n) n
   case zero =>
     show step 0 ≄ 0

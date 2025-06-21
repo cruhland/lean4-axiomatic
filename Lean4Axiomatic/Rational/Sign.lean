@@ -927,7 +927,7 @@ theorem sub_fractions
 
 end
 
-variable [Induction ℚ]
+variable [Induction.{1} ℚ]
 
 /--
 If two rational numbers have the same sign value, their sum will as well.

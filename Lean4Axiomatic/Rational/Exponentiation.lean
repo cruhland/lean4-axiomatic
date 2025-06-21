@@ -149,7 +149,7 @@ theorem pow_distribR_div
   _ ≃ p^n * (q^n)⁻¹ := mul_substR (eqv_symm pow_scompatL_recip)
   _ ≃ p^n / q^n     := eqv_symm div_mul_recip
 
-variable [Induction ℚ]
+variable [Induction.{1} ℚ]
 
 /--
 Swap the order of two operations on a rational number: raising it to a natural
@@ -835,7 +835,7 @@ theorem pow_int_scompatL_abs
     _ ≃ (abs p)^a             := pow_substR (Rel.symm ‹a ≃ n - m›)
 
 end
-variable [Induction ℚ]
+variable [Induction.{1} ℚ]
 
 /--
 Swap the order of two operations on a nonzero rational number: raising it to an

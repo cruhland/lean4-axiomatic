@@ -1236,7 +1236,7 @@ theorem sgn_sub_recip
     _ ≃ sgn (q - p) * 1           := AA.substR (gt_zero_sgn.mp ‹p * q > 0›)
     _ ≃ sgn (q - p)               := AA.identR
 
-variable [Induction ℚ]
+variable [Induction.{1} ℚ]
 
 /--
 A rational number is greater than zero iff its sign is greater than zero.

@@ -41,7 +41,7 @@ export Multiplication (mulOp step_mul zero_mul)
 ## Derived properties
 -/
 
-variable {ℕ : Type} [Core ℕ] [Addition ℕ] [Multiplication ℕ] [Induction ℕ]
+variable {ℕ : Type} [Core ℕ] [Addition ℕ] [Multiplication ℕ] [Induction.{0} ℕ]
 
 /--
 Multiplying by zero on the right always gives zero.

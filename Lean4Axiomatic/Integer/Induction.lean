@@ -177,8 +177,7 @@ attribute [instance] Induction.toProps
 
 variable
   {ℕ : Type} [Natural ℕ]
-  {ℤ : Type}
-    [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ] [Induction ℤ]
+  {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
 
 /--
 Convenience constructor of integer induction contexts for `ℤ → Prop` motives.
@@ -214,6 +213,9 @@ def ind_ctx_const
   on_diff := on_diff
   on_diff_subst := λ {_} {_} {_} {_} {diff_eqv} => on_diff_subst diff_eqv
 }
+
+section universe_polymorphic_induction
+variable [Induction ℤ]
 
 /--
 The computational behavior of integer induction: when evaluated on a difference
@@ -292,6 +294,8 @@ def Induction.Context.rec_diff_subst
     :=
   ctx.ind_diff_subst
 
+end universe_polymorphic_induction
+
 /--
 Every integer can be expressed as a difference of natural numbers.
 
@@ -302,7 +306,7 @@ for `ind_diff`.
 integer equivalence, define an `on_diff` function, and create a context. Then
 use the context to invoke `ind_diff` on the input integer.
 -/
-theorem as_diff (a : ℤ) : ∃ (n m : ℕ), a ≃ n - m := by
+theorem as_diff [Induction.{0} ℤ] (a : ℤ) : ∃ (n m : ℕ), a ≃ n - m := by
   let motive (z : ℤ) : Prop := ∃ (n m : ℕ), z ≃ n - m
 
   let msubst {x₁ x₂ : ℤ} : x₁ ≃ x₂ → motive x₁ → motive x₂ := by

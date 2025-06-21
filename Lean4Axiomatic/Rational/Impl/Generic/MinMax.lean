@@ -63,7 +63,7 @@ theorem min_leL {p q : ℚ} : min p q ≤ p := by
   | false =>
     show (if false then p else q) ≤ p
     show q ≤ p
-    have : ¬(p < q) := ofBoolUsing_eq_false eq
+    have : ¬(p < q) := of_toBoolUsing_eq_false eq
     have : sgn (p - q) ≄ -1 := mt lt_sgn.mpr this
     have : q ≤ p := ge_sgn.mpr this
     exact this
@@ -81,7 +81,7 @@ theorem min_leR {p q : ℚ} : min p q ≤ q := by
   | true =>
     show (if true then p else q) ≤ q
     show p ≤ q
-    have : p < q := ofBoolUsing_eq_true eq
+    have : p < q := of_toBoolUsing_eq_true eq
     have : p ≤ q := le_cases.mpr (Or.inl this)
     exact this
   | false =>
@@ -128,7 +128,7 @@ theorem max_leL {p q : ℚ} : p ≤ max p q := by
   | false =>
     show p ≤ (if false then p else q)
     show p ≤ q
-    have : ¬(p > q) := ofBoolUsing_eq_false eq
+    have : ¬(p > q) := of_toBoolUsing_eq_false eq
     have : sgn (p - q) ≄ 1 := mt gt_sgn.mpr this
     have : p ≤ q := le_sgn.mpr this
     exact this
@@ -146,7 +146,7 @@ theorem max_leR {p q : ℚ} : q ≤ max p q := by
   | true =>
     show q ≤ (if true then p else q)
     show q ≤ p
-    have : p > q := ofBoolUsing_eq_true eq
+    have : p > q := of_toBoolUsing_eq_true eq
     have : q ≤ p := le_cases.mpr (Or.inl ‹q < p›)
     exact this
   | false =>
