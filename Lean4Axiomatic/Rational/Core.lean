@@ -1,4 +1,5 @@
 import Lean4Axiomatic.Integer
+import Mathlib.Tactic.GCongr
 
 /-! # Rational numbers: fundamental definitions and properties -/
 
@@ -30,6 +31,8 @@ class Equivalence.Props (ℚ : Type) [Ops ℚ] where
 
   /-- Equivalence is transitive. -/
   eqv_trans {p q r : ℚ} : p ≃ q → q ≃ r → p ≃ r
+
+attribute [refl] Equivalence.Props.eqv_refl
 
 export Equivalence.Props (eqv_refl eqv_symm eqv_trans)
 
@@ -88,6 +91,8 @@ class Conversion.Props
 
   /-- Equivalent converted rationals came from the same integer. -/
   from_integer_inject {a₁ a₂ : ℤ} : (a₁ : ℚ) ≃ (a₂ : ℚ) → a₁ ≃ a₂
+
+attribute [gcongr] Conversion.Props.from_integer_subst
 
 export Conversion.Props (from_integer_inject from_integer_subst)
 

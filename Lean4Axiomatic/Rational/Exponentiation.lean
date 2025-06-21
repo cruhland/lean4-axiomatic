@@ -48,16 +48,17 @@ theorem pow_scompatL_from_integer {a : ℤ} {n : ℕ} : ((a^n:ℤ):ℚ) ≃ (a:�
     show ((a^0:ℤ):ℚ) ≃ (a:ℚ)^0
     calc
       _ = ((a^0:ℤ):ℚ) := rfl
-      _ ≃ 1           := from_integer_subst Natural.pow_zero
+      _ ≃ ((1:ℤ):ℚ)   := by grw [Natural.pow_zero]
+      _ = 1           := rfl
       _ ≃ (a:ℚ)^0     := eqv_symm Natural.pow_zero
   case step =>
     intro (n' : ℕ) (ih : ((a^n':ℤ):ℚ) ≃ (a:ℚ)^n')
     show ((a^(step n'):ℤ):ℚ) ≃ (a:ℚ)^(step n')
     calc
       _ = ((a^(step n'):ℤ):ℚ)  := rfl
-      _ ≃ ((a^n' * a : ℤ):ℚ)   := from_integer_subst Natural.pow_step
+      _ ≃ ((a^n' * a : ℤ):ℚ)   := by grw [Natural.pow_step]
       _ ≃ ((a^n':ℤ):ℚ) * (a:ℚ) := mul_compat_from_integer
-      _ ≃ (a:ℚ)^n' * (a:ℚ)     := mul_substL ih
+      _ ≃ (a:ℚ)^n' * (a:ℚ)     := by grw [ih]
       _ ≃ (a:ℚ)^(step n')      := eqv_symm Natural.pow_step
 
 variable [Negation ℚ] [Sign ℚ]
@@ -81,7 +82,7 @@ theorem pow_nat_scompatL_abs {p : ℚ} {n : ℕ} : abs (p^n) ≃ (abs p)^n := by
     have : abs (1:ℚ) ≃ 1 := abs_positive this
     calc
       _ ≃ abs (p^0) := eqv_refl
-      _ ≃ abs 1     := by grw [pow_zero]; exact eqv_refl
+      _ ≃ abs 1     := by grw [pow_zero]
       _ ≃ 1         := ‹abs (1:ℚ) ≃ 1›
       _ ≃ (abs p)^0 := eqv_symm pow_zero
   case step =>
@@ -89,13 +90,12 @@ theorem pow_nat_scompatL_abs {p : ℚ} {n : ℕ} : abs (p^n) ≃ (abs p)^n := by
     show abs (p^(step n')) ≃ (abs p)^(step n')
     calc
       _ ≃ abs (p^(step n'))  := eqv_refl
-      _ ≃ abs (p^n' * p)     := by grw [pow_step]; exact eqv_refl
+      _ ≃ abs (p^n' * p)     := by grw [pow_step]
       _ ≃ abs (p^n') * abs p := abs_compat_mul
-      _ ≃ (abs p)^n' * abs p := by grw [ih]; exact eqv_refl
+      _ ≃ (abs p)^n' * abs p := by grw [ih]
       _ ≃ (abs p)^(step n')  := eqv_symm pow_step
 
 end metric_only
-
 variable [Reciprocation ℚ]
 
 /--
