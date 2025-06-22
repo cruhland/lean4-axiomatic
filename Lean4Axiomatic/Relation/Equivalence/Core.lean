@@ -110,6 +110,8 @@ class Symmetric {α : Sort u} (R : α → α → Prop) where
 
 export Symmetric (symm)
 
+attribute [symm] symm
+
 /--
 `Symmetric` relations are special cases of `Fn.Swappable` functions.
 

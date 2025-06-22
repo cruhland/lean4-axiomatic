@@ -232,6 +232,7 @@ rational numbers.
 the underlying multiplication, which is already known to obey the substitution
 property.
 -/
+@[gcongr]
 theorem div_substL {p₁ p₂ q : ℚ} [AP (q ≄ 0)] : p₁ ≃ p₂ → p₁ / q ≃ p₂ / q := by
   intro (_ : p₁ ≃ p₂)
   show p₁ / q ≃ p₂ / q
@@ -251,6 +252,7 @@ rational numbers.
 multiplication's right operand. Multiplication and reciprocation are already
 known to obey the substitution property.
 -/
+@[gcongr]
 theorem div_substR
     {p₁ p₂ q : ℚ} [AP (p₁ ≄ 0)] [AP (p₂ ≄ 0)] : p₁ ≃ p₂ → q / p₁ ≃ q / p₂
     := by

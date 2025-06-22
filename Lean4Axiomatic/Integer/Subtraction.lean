@@ -52,6 +52,7 @@ Subtraction is left-substitutive.
 
 **Proof intuition**: Trivial; just substitutes on the underlying addition.
 -/
+@[gcongr]
 theorem sub_substL {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → a₁ - b ≃ a₂ - b := by
   intro (_ : a₁ ≃ a₂)
   show a₁ - b ≃ a₂ - b
@@ -73,6 +74,7 @@ Subtraction is right-substitutive.
 **Proof intuition**: Trivial; just substitutes on the underlying addition and
 negation.
 -/
+@[gcongr]
 theorem sub_substR {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → b - a₁ ≃ b - a₂ := by
   intro (_ : a₁ ≃ a₂)
   show b - a₁ ≃ b - a₂

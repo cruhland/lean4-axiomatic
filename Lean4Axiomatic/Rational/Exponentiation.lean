@@ -211,7 +211,7 @@ theorem pow_preserves_pos {p : ℚ} {n : ℕ} : p > 0 → p^n > 0 := by
   have : sgn (p^n) ≃ 1 := calc
     _ = sgn (p^n) := rfl
     _ ≃ (sgn p)^n := sgn_int_pow_nat
-    _ ≃ 1^n       := Natural.pow_substL ‹sgn p ≃ 1›
+    _ ≃ 1^n       := by grw [‹sgn p ≃ 1›]
     _ ≃ 1         := Natural.pow_absorbL
   have : p^n > 0 := gt_zero_sgn.mpr ‹sgn (p^n) ≃ 1›
   exact this
@@ -244,13 +244,13 @@ theorem pow_preserves_nonneg {p : ℚ} {n : ℕ} : p ≥ 0 → p^n ≥ 0 := by
     | Or.inl (_ : (0:ℚ)^n ≃ 0) =>
       calc
         _ = p^n := rfl
-        _ ≃ 0^n := Natural.pow_substL ‹p ≃ 0›
+        _ ≃ 0^n := by grw [‹p ≃ 0›]
         _ ≃ 0   := ‹(0:ℚ)^n ≃ 0›
         _ ≥ 0   := le_refl
     | Or.inr (_ : (0:ℚ)^n ≃ 1) =>
       calc
         _ = p^n := rfl
-        _ ≃ 0^n := Natural.pow_substL ‹p ≃ 0›
+        _ ≃ 0^n := by grw [‹p ≃ 0›]
         _ ≃ 1   := ‹(0:ℚ)^n ≃ 1›
         _ ≥ 0   := one_ge_zero
 
@@ -295,7 +295,7 @@ theorem sgn_diff_pow_pos
     calc
       _ = sgn (x * y)   := rfl
       _ ≃ sgn x * sgn y := Integer.sgn_compat_mul
-      _ ≃ 1 * sgn y     := AA.substL (Integer.gt_zero_sgn.mp ‹x > 0›)
+      _ ≃ 1 * sgn y     := by grw [Integer.gt_zero_sgn.mp ‹x > 0›]
       _ ≃ sgn y         := AA.identL
   have : sgn (b * d) ≃ 1 := calc
     _ = sgn (b * d)   := rfl
@@ -306,7 +306,7 @@ theorem sgn_diff_pow_pos
   have sgn_bd_pow {k : ℕ} : sgn ((b * d)^k) ≃ 1 := calc
     _ = sgn ((b * d)^k) := rfl
     _ ≃ (sgn (b * d))^k := Integer.sgn_pow
-    _ ≃ 1^k             := Natural.pow_substL ‹sgn (b * d) ≃ 1›
+    _ ≃ 1^k             := by grw [‹sgn (b * d) ≃ 1›]
     _ ≃ 1               := Natural.pow_absorbL
   have : Integer.Sqrt1 (sgn (b * d)) :=
     Integer.sqrt1_cases.mpr (Or.inl ‹sgn (b * d) ≃ 1›)
@@ -327,27 +327,23 @@ theorem sgn_diff_pow_pos
     eqv_symm sub_compat_from_integer
   have mul_liftQ {x y : ℤ} : (x:ℚ) * y ≃ ((x * y : ℤ):ℚ) :=
     eqv_symm mul_compat_from_integer
-  have mul_pow_liftQ
-      {x y : ℤ} {k : ℕ} : (x:ℚ)^k * (y:ℚ)^k ≃ (((x * y)^k : ℤ):ℚ)
-      := calc
+  have mpℚ {x y : ℤ} {k : ℕ} : (x:ℚ)^k * (y:ℚ)^k ≃ (((x * y)^k : ℤ):ℚ) := calc
     _ = (x:ℚ)^k * (y:ℚ)^k   := rfl
     _ ≃ ((x:ℚ) * y)^k       := eqv_symm Natural.pow_distribR_mul
-    _ ≃ ((x * y : ℤ):ℚ)^k   := Natural.pow_substL mul_liftQ
+    _ ≃ ((x * y : ℤ):ℚ)^k   := by grw [mul_liftQ]
     _ ≃ (((x * y)^k : ℤ):ℚ) := eqv_symm pow_scompatL_from_integer
   have sub_mul_liftQ
       {k : ℕ}
       : (a:ℚ)^k * (d:ℚ)^k - (b:ℚ)^k * (c:ℚ)^k ≃ (((a * d)^k - (b * c)^k : ℤ):ℚ)
       := calc
-    _ = (a:ℚ)^k * (d:ℚ)^k - (b:ℚ)^k * (c:ℚ)^k     := rfl
-    _ ≃ (((a * d)^k : ℤ):ℚ) - (b:ℚ)^k * (c:ℚ)^k   := sub_substL mul_pow_liftQ
-    _ ≃ (((a * d)^k : ℤ):ℚ) - (((b * c)^k : ℤ):ℚ) := sub_substR mul_pow_liftQ
-    _ ≃ (((a * d)^k - (b * c)^k : ℤ):ℚ)           := sub_liftQ
+    _ = (a:ℚ)^k * (d:ℚ)^k - (b:ℚ)^k * (c:ℚ)^k := rfl
+    _ ≃ (((a*d)^k:ℤ):ℚ) - (((b*c)^k:ℤ):ℚ)     := by grw [mpℚ, mpℚ]
+    _ ≃ (((a*d)^k - (b*c)^k : ℤ):ℚ)           := sub_liftQ
   have sub_pow_expand {k : ℕ} : p^k - q^k ≃ (a:ℚ)^k/b^k - (c:ℚ)^k/d^k := calc
     _ = p^k - q^k                 := rfl
-    _ ≃ ((a:ℚ)/b)^k - q^k         := sub_substL (Natural.pow_substL ‹p ≃ a/b›)
-    _ ≃ ((a:ℚ)/b)^k - ((c:ℚ)/d)^k := sub_substR (Natural.pow_substL ‹q ≃ c/d›)
-    _ ≃ (a:ℚ)^k/b^k - ((c:ℚ)/d)^k := sub_substL pow_distribR_div
-    _ ≃ (a:ℚ)^k/b^k - (c:ℚ)^k/d^k := sub_substR pow_distribR_div
+    _ ≃ (a:ℚ)^k/b^k - q^k         := by grw [‹p ≃ a/b›, pow_distribR_div]
+    _ ≃ (a:ℚ)^k/b^k - ((c:ℚ)/d)^k := by grw [‹q ≃ c/d›]
+    _ ≃ (a:ℚ)^k/b^k - (c:ℚ)^k/d^k := by gcongr; exact pow_distribR_div
   have sub_pow_frac
       {k : ℕ}
       : have : Integer.Nonzero ((b * d)^k) := nonzero_bd_pow
@@ -358,8 +354,8 @@ theorem sgn_diff_pow_pos
     _ = p^k - q^k                                   := rfl
     _ ≃ (a:ℚ)^k/b^k - (c:ℚ)^k/d^k                   := sub_pow_expand
     _ ≃ ((a:ℚ)^k*(d:ℚ)^k - (b:ℚ)^k*(c:ℚ)^k)/((b:ℚ)^k*(d:ℚ)^k) := sub_fractions
-    _ ≃ (((a*d)^k-(b*c)^k:ℤ):ℚ)/((b:ℚ)^k * (d:ℚ)^k) := div_substL sub_mul_liftQ
-    _ ≃ (((a*d)^k-(b*c)^k:ℤ):ℚ)/(((b*d)^k:ℤ):ℚ)     := div_substR mul_pow_liftQ
+    _ ≃ (((a*d)^k-(b*c)^k:ℤ):ℚ)/((b:ℚ)^k * (d:ℚ)^k) := by grw [sub_mul_liftQ]
+    _ ≃ (((a*d)^k-(b*c)^k:ℤ):ℚ)/(((b*d)^k:ℤ):ℚ)     := by gcongr; exact mpℚ
 
   have sgn_sub_pow_factor
       : sgn (p^n - q^n) ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n)
@@ -374,30 +370,23 @@ theorem sgn_diff_pow_pos
     _ ≃ (sgn (b * d))^n := Integer.sgn_pow
     _ ≃ sgn (b * d)     := Integer.pow_absorbL ‹n ≥ 1› sqr_sgn_bd_idemp
 
-  have drop_pow_ones_ℚ : p^1 - q^1 ≃ p - q := calc
-    _ = p^1 - q^1 := rfl
-    _ ≃ p - q^1   := sub_substL Natural.pow_one
-    _ ≃ p - q     := sub_substR Natural.pow_one
-  have drop_pow_num {x y : ℤ} : ((x^1 - y^1 : ℤ):ℚ) ≃ ((x - y : ℤ):ℚ) := calc
-    _ = ((x^1 - y^1 : ℤ):ℚ) := rfl
-    _ ≃ ((x - y^1 : ℤ):ℚ)   := from_integer_subst (AA.substL Natural.pow_one)
-    _ ≃ ((x - y : ℤ):ℚ)     := from_integer_subst (AA.substR Natural.pow_one)
-  have drop_pow_den {x : ℤ} : ((x^1:ℤ):ℚ) ≃ (x:ℚ) :=
-    from_integer_subst Natural.pow_one
+  have p1ℤ {x : ℤ} : x^1 ≃ x := Natural.pow_one
+  have p1ℚ {x : ℚ} : x^1 ≃ x := Natural.pow_one
+  have drop_pow_ones : p^1 - q^1 ≃ p - q := by grw [p1ℚ, p1ℚ]
   have sub_frac : p - q ≃ ((a * d - b * c : ℤ):ℚ)/((b * d : ℤ):ℚ) := calc
     _ = p - q                                       := rfl
-    _ ≃ p^1 - q^1                                   := eqv_symm drop_pow_ones_ℚ
+    _ ≃ p^1 - q^1                                   := eqv_symm drop_pow_ones
     _ ≃ (((a*d)^1 - (b*c)^1 : ℤ):ℚ)/(((b*d)^1:ℤ):ℚ) := sub_pow_frac
-    _ ≃ ((a*d - b*c : ℤ):ℚ)/(((b*d)^1:ℤ):ℚ)         := div_substL drop_pow_num
-    _ ≃ ((a*d - b*c : ℤ):ℚ)/((b*d:ℤ):ℚ)             := div_substR drop_pow_den
+    _ ≃ ((a*d - b*c : ℤ):ℚ)/(((b*d)^1:ℤ):ℚ)         := by grw [p1ℤ, p1ℤ]
+    _ ≃ ((a*d - b*c : ℤ):ℚ)/((b*d:ℤ):ℚ)             := by gcongr; exact p1ℤ
 
   calc
     _ = sgn (p^n - q^n)                       := rfl
     _ ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n) := sgn_sub_pow_factor
-    _ ≃ sgn (a*d - b*c) * sgn ((b*d)^n)       := AA.substL sgn_diff_int_pow
-    _ ≃ sgn (a*d - b*c) * sgn (b*d)           := AA.substR sgn_bd_drop_pow
+    _ ≃ sgn (a*d - b*c) * sgn ((b*d)^n)       := by grw [sgn_diff_int_pow]
+    _ ≃ sgn (a*d - b*c) * sgn (b*d)           := by grw [sgn_bd_drop_pow]
     _ ≃ sgn (((a*d - b*c:ℤ):ℚ)/((b*d:ℤ):ℚ))   := Rel.symm sgn_div_integers
-    _ ≃ sgn (p - q)                           := sgn_subst (eqv_symm sub_frac)
+    _ ≃ sgn (p - q)                           := by grw [eqv_symm sub_frac]
 
 /--
 The greater-than relation between two nonnegative rational numbers is
@@ -448,10 +437,10 @@ theorem pow_preserves_ge_nonneg
   | Or.inr (_ : n ≃ 0) =>
     have : p^n ≃ q^n := calc
       _ = p^n := rfl
-      _ ≃ p^0 := Natural.pow_substR ‹n ≃ 0›
+      _ ≃ p^0 := by grw [‹n ≃ 0›]
       _ ≃ 1   := Natural.pow_zero
       _ ≃ q^0 := eqv_symm Natural.pow_zero
-      _ ≃ q^n := Natural.pow_substR (Rel.symm ‹n ≃ 0›)
+      _ ≃ q^n := by grw [Rel.symm ‹n ≃ 0›]
     have : p^n ≥ q^n := ge_cases.mpr (Or.inr ‹p^n ≃ q^n›)
     exact this
 

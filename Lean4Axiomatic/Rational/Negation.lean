@@ -281,6 +281,7 @@ rational numbers.
 **Proof intuition**: Expand subtraction into addition; addition is left
 substitutive.
 -/
+@[gcongr]
 theorem sub_substL {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → p₁ - q ≃ p₂ - q := by
   intro (_ : p₁ ≃ p₂)
   show p₁ - q ≃ p₂ - q
@@ -300,6 +301,7 @@ rational numbers.
 **Proof intuition**: Expand subtraction into addition of the negation; addition
 and negation obey substitution.
 -/
+@[gcongr]
 theorem sub_substR {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → q - p₁ ≃ q - p₂ := by
   intro (_ : p₁ ≃ p₂)
   show q - p₁ ≃ q - p₂
