@@ -117,7 +117,7 @@ theorem pow_scompatL_recip
     show (p^(0:ℕ))⁻¹ ≃ (p⁻¹)^(0:ℕ)
     calc
       _ = (p^(0:ℕ))⁻¹ := rfl
-      _ ≃ 1⁻¹         := recip_subst pow_zero
+      _ ≃ 1⁻¹         := by gcongr; exact pow_zero
       _ ≃ 1           := recip_sqrt1
       _ ≃ (p⁻¹)^(0:ℕ) := eqv_symm pow_zero
   case step =>
@@ -125,9 +125,9 @@ theorem pow_scompatL_recip
     show (p^(step n'))⁻¹ ≃ (p⁻¹)^(step n')
     calc
       _ ≃ (p^(step n'))⁻¹ := eqv_refl
-      _ ≃ (p^n' * p)⁻¹    := recip_subst pow_step
+      _ ≃ (p^n' * p)⁻¹    := by gcongr; exact pow_step
       _ ≃ (p^n')⁻¹ * p⁻¹  := recip_compat_mul
-      _ ≃ (p⁻¹)^n' * p⁻¹  := mul_substL ih
+      _ ≃ (p⁻¹)^n' * p⁻¹  := by grw [ih]
       _ ≃ (p⁻¹)^(step n') := eqv_symm pow_step
 
 variable [Division ℚ]
@@ -146,9 +146,9 @@ theorem pow_distribR_div
     {p q : ℚ} [AP (q ≄ 0)] {n : ℕ} : (p / q)^n ≃ p^n / q^n
     := calc
   _ = (p / q)^n     := rfl
-  _ ≃ (p * q⁻¹)^n   := Natural.pow_substL div_mul_recip
+  _ ≃ (p * q⁻¹)^n   := by grw [div_mul_recip]
   _ ≃ p^n * (q⁻¹)^n := Natural.pow_distribR_mul
-  _ ≃ p^n * (q^n)⁻¹ := mul_substR (eqv_symm pow_scompatL_recip)
+  _ ≃ p^n * (q^n)⁻¹ := by grw [eqv_symm pow_scompatL_recip]
   _ ≃ p^n / q^n     := eqv_symm div_mul_recip
 
 variable [Induction.{1} ℚ]
@@ -164,27 +164,25 @@ theorem sgn_int_pow_nat {p : ℚ} {n : ℕ} : sgn (p^n) ≃ (sgn p)^n := by
   -- Helpers to keep the main proof short and avoid repetition
   have int_sgn_pow {x : ℤ} : sgn ((x:ℚ)^n) ≃ (sgn x)^n := calc
     _ = sgn ((x:ℚ)^n)   := rfl
-    _ ≃ sgn ((x^n:ℤ):ℚ) := sgn_subst (eqv_symm pow_scompatL_from_integer)
+    _ ≃ sgn ((x^n:ℤ):ℚ) := by grw [eqv_symm pow_scompatL_from_integer]
     _ ≃ sgn (x^n)       := sgn_from_integer
     -- This is the key step of the whole proof
     _ ≃ (sgn x)^n       := Integer.sgn_pow
   have sgn_merge : sgn a * sgn b ≃ sgn p := Rel.symm $ calc
     _ = sgn p                 := rfl
-    _ ≃ sgn ((a:ℚ)/b)         := sgn_subst ‹p ≃ a/b›
+    _ ≃ sgn ((a:ℚ)/b)         := by grw [‹p ≃ a/b›]
     _ ≃ sgn (a:ℚ) * sgn (b:ℚ) := sgn_div
-    _ ≃ sgn a * sgn (b:ℚ)     := AA.substL sgn_from_integer
-    _ ≃ sgn a * sgn b         := AA.substR sgn_from_integer
+    _ ≃ sgn a * sgn b         := by grw [sgn_from_integer, sgn_from_integer]
 
   calc
     _ = sgn (p^n)                     := rfl
-    _ ≃ sgn (((a:ℚ)/b)^n)             := sgn_subst (Natural.pow_substL p_eqv)
-    _ ≃ sgn ((a:ℚ)^n/b^n)             := sgn_subst pow_distribR_div
+    _ ≃ sgn (((a:ℚ)/b)^n)             := by grw [p_eqv]
+    _ ≃ sgn ((a:ℚ)^n/b^n)             := by grw [pow_distribR_div]
     _ ≃ sgn ((a:ℚ)^n) * sgn ((b:ℚ)^n) := sgn_div
-    -- The following two steps are the most important at this level
-    _ ≃ (sgn a)^n * sgn ((b:ℚ)^n)     := AA.substL int_sgn_pow
-    _ ≃ (sgn a)^n * (sgn b)^n         := AA.substR int_sgn_pow
+    -- The following step is the most important at this level
+    _ ≃ (sgn a)^n * (sgn b)^n         := by grw [int_sgn_pow, int_sgn_pow]
     _ ≃ (sgn a * sgn b)^n             := Rel.symm Natural.pow_distribR_mul
-    _ ≃ (sgn p)^n                     := Natural.pow_substL sgn_merge
+    _ ≃ (sgn p)^n                     := by grw [sgn_merge]
 
 /--
 Swap the order of two operations on a rational number: raising it to a natural
@@ -193,7 +191,7 @@ number power, and extracting its (rational-valued) sign.
 theorem sgn_pow_nat {p : ℚ} {n : ℕ} : (sgn (p^n):ℚ) ≃ (sgn p:ℚ)^n := calc
   _ = (sgn (p^n):ℚ)     := rfl
   -- This is the key step
-  _ ≃ (((sgn p)^n:ℤ):ℚ) := from_integer_subst sgn_int_pow_nat
+  _ ≃ (((sgn p)^n:ℤ):ℚ) := by grw [sgn_int_pow_nat]
   _ ≃ (sgn p:ℚ)^n       := pow_scompatL_from_integer
 
 variable [Subtraction ℚ] [Order ℚ]

@@ -1,5 +1,6 @@
 import Lean4Axiomatic.AbstractAlgebra
 import Lean4Axiomatic.Integer.Addition
+import Mathlib.Tactic.GCongr
 
 /-! # Integer multiplication -/
 
@@ -92,5 +93,21 @@ instance mul_monoid : CA.Monoid.Monoid (α := ℤ) := {
   toOps   := mul_monoid_ops
   toProps := mul_monoid_props
 }
+
+/--
+Non-typeclass version of `mul_substitutive.substitutiveL`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+@[gcongr]
+theorem mul_substL {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → a₁ * b ≃ a₂ * b := AA.substL
+
+/--
+Non-typeclass version of `mul_substitutive.substitutiveR`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+@[gcongr]
+theorem mul_substR {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → b * a₁ ≃ b * a₂ := AA.substR
 
 end Lean4Axiomatic.Integer

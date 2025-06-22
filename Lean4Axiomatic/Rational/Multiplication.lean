@@ -55,13 +55,12 @@ class Multiplication.Props
   /-- Multiplication on the right distributes over addition. -/
   mul_distribR {p q r : ℚ} : (q + r) * p ≃ q * p + r * p
 
-attribute [gcongr] Multiplication.Props.mul_substL
-attribute [gcongr] Multiplication.Props.mul_substR
-
 export Multiplication.Props (
   mul_assoc mul_comm mul_compat_from_integer mul_distribL mul_distribR
   mul_identL mul_identR mul_substL mul_substR
 )
+
+attribute [gcongr] mul_substL mul_substR
 
 /-- All axioms of multiplication for rational numbers. -/
 class Multiplication

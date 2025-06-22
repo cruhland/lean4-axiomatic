@@ -1,4 +1,5 @@
 import Lean4Axiomatic.Natural.Multiplication
+import Mathlib.Tactic.GCongr
 
 /-!
 # Natural number exponentiation
@@ -87,6 +88,7 @@ function.
 that has `zero` and `step` cases in the axioms. The base case and inductive
 case both follow from expanding definitions and using substitution.
 -/
+@[gcongr]
 theorem pow_substL {x₁ x₂ : α} {m : ℕ} : x₁ ≃ x₂ → x₁ ^ m ≃ x₂ ^ m := by
   intro (_ : x₁ ≃ x₂)
   show x₁ ^ m ≃ x₂ ^ m
@@ -123,6 +125,7 @@ we need to do a case-split on `n₂` within the base case and inductive case for
 case, which expands definitions, then uses substitution and the inductive
 hypothesis.
 -/
+@[gcongr]
 theorem pow_substR {x : α} {n₁ n₂ : ℕ} : n₁ ≃ n₂ → x ^ n₁ ≃ x ^ n₂ := by
   apply ind_on (motive := λ k => ∀ {j}, k ≃ j → x ^ k ≃ x ^ j) n₁
   case zero =>

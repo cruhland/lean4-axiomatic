@@ -81,6 +81,8 @@ class Reciprocation.Props
 
 export Reciprocation.Props (mul_inverseL mul_inverseR recip_subst)
 
+attribute [gcongr] recip_subst
+
 /-- All rational number reciprocation axioms. -/
 class Reciprocation
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]

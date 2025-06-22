@@ -426,8 +426,6 @@ theorem ord_sgn_subst
   intro (_ : o₁ = o₂)
   show ord_sgn o₁ ≃ ord_sgn o₂
   rw [‹o₁ = o₂›]
-  show ord_sgn o₂ ≃ ord_sgn o₂
-  exact Rel.refl
 
 /--
 Every integer result of the `ord_sgn` function is obtained from a unique

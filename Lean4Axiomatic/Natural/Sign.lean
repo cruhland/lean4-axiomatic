@@ -95,9 +95,8 @@ theorem positive_step {n : ℕ} : Positive n → ∃ m : ℕ, step m ≃ n := by
     exact Rel.refl
   case step =>
     intro n (_ : Positive (step n))
-    exists n
-    show step n ≃ step n
-    exact Rel.refl
+    show ∃ (m : ℕ), step m ≃ step n
+    exact Exists.intro n Rel.refl
 
 variable [Addition ℕ]
 

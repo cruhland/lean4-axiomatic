@@ -49,6 +49,8 @@ class Reflexive {α : Sort u} (R : α → α → Prop) where
 
 export Reflexive (refl)
 
+attribute [refl] refl
+
 /--
 The type of logical implication (i.e., the arrow type or exponential) is
 reflexive: there are inhabitants of the type `α → α` for all `α : Prop`.

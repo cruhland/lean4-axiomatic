@@ -32,9 +32,10 @@ class Equivalence.Props (ℚ : Type) [Ops ℚ] where
   /-- Equivalence is transitive. -/
   eqv_trans {p q r : ℚ} : p ≃ q → q ≃ r → p ≃ r
 
-attribute [refl] Equivalence.Props.eqv_refl
-
 export Equivalence.Props (eqv_refl eqv_symm eqv_trans)
+
+attribute [refl] eqv_refl
+attribute [symm] eqv_symm
 
 /-- All rational number equivalence axioms. -/
 class Equivalence (ℚ : Type) extends Equivalence.Ops ℚ, Equivalence.Props ℚ

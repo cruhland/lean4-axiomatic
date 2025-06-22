@@ -81,6 +81,8 @@ export Sign.Props (
   sgn_trichotomy
 )
 
+attribute [gcongr] sgn_subst
+
 /-- All rational number sign axioms. -/
 class Sign
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
