@@ -65,6 +65,7 @@ Non-typeclass version of `add_substitutive.substitutiveL`.
 
 Eventually, this should become the axiom and the typeclass should be derived.
 -/
+@[gcongr]
 theorem add_substL {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → a₁ + b ≃ a₂ + b := AA.substL
 
 /--
@@ -72,6 +73,7 @@ Non-typeclass version of `add_substitutive.substitutiveR`.
 
 Eventually, this should become the axiom and the typeclass should be derived.
 -/
+@[gcongr]
 theorem add_substR {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → b + a₁ ≃ b + a₂ := AA.substR
 
 /--
