@@ -774,15 +774,15 @@ theorem pow_distribR_mul
 
   calc
     _ = (p * q)^a                 := rfl
-    _ ≃ (p * q)^((n:ℤ)-m)         := pow_substR a_eqv
+    _ ≃ (p * q)^((n:ℤ)-m)         := by grw [a_eqv]
     _ ≃ (p * q)^n / (p * q)^m     := pow_diff
-    _ ≃ (p^n * q^n) / (p * q)^m   := div_substL Natural.pow_distribR_mul
-    _ ≃ (p^n * q^n) / (p^m * q^m) := div_substR Natural.pow_distribR_mul
+    _ ≃ (p^n * q^n) / (p * q)^m   := by grw [Natural.pow_distribR_mul]
+    _ ≃ (p^n * q^n) / (p^m * q^m) := by gcongr; exact Natural.pow_distribR_mul
     _ ≃ (p^n / p^m) * (q^n / q^m) := eqv_symm div_mul_swap
-    _ ≃ p^((n:ℤ)-m) * (q^n / q^m) := mul_substL (eqv_symm pow_diff)
-    _ ≃ p^((n:ℤ)-m) * q^((n:ℤ)-m) := mul_substR (eqv_symm pow_diff)
-    _ ≃ p^a * q^((n:ℤ)-m)         := mul_substL (pow_substR (Rel.symm a_eqv))
-    _ ≃ p^a * q^a                 := mul_substR (pow_substR (Rel.symm a_eqv))
+    _ ≃ p^((n:ℤ)-m) * (q^n / q^m) := by grw [eqv_symm pow_diff]
+    _ ≃ p^((n:ℤ)-m) * q^((n:ℤ)-m) := by grw [eqv_symm pow_diff]
+    _ ≃ p^a * q^((n:ℤ)-m)         := by grw [pow_substR (Rel.symm a_eqv)]
+    _ ≃ p^a * q^a                 := by grw [Rel.symm a_eqv]
 
 /--
 The rational number one, raised to any integer exponent, is one.
@@ -800,9 +800,9 @@ theorem one_pow {a : ℤ} : (1:ℚ)^a ≃ 1 := by
     Integer.as_diff a
   calc
     _ = (1:ℚ)^a           := rfl
-    _ ≃ (1:ℚ)^((n:ℤ) - m) := pow_substR ‹a ≃ n - m›
+    _ ≃ (1:ℚ)^((n:ℤ) - m) := by grw [‹a ≃ n - m›]
     _ ≃ (1:ℚ)^n / (1:ℚ)^m := pow_diff
-    _ ≃ (1:ℚ)^n / 1       := div_substR Natural.pow_absorbL
+    _ ≃ (1:ℚ)^n / 1       := by gcongr; exact Natural.pow_absorbL
     _ ≃ (1:ℚ)^n           := div_identR
     _ ≃ 1                 := Natural.pow_absorbL
 
@@ -821,15 +821,15 @@ theorem pow_int_scompatL_abs
 
   calc
     _ = abs (p^a)             := rfl
-    _ ≃ abs (p^((n:ℤ)-m))     := abs_subst (pow_substR ‹a ≃ n - m›)
-    _ ≃ abs (p^n/p^m)         := abs_subst pow_diff
+    _ ≃ abs (p^((n:ℤ)-m))     := by grw [‹a ≃ n - m›]
+    _ ≃ abs (p^n/p^m)         := by grw [pow_diff]
     -- ↓ begin key steps ↓
     _ ≃ abs (p^n) / abs (p^m) := abs_compat_div
-    _ ≃ (abs p)^n / abs (p^m) := div_substL pow_nat_scompatL_abs
-    _ ≃ (abs p)^n / (abs p)^m := div_substR pow_nat_scompatL_abs
+    _ ≃ (abs p)^n / abs (p^m) := by grw [pow_nat_scompatL_abs]
+    _ ≃ (abs p)^n / (abs p)^m := by gcongr; exact pow_nat_scompatL_abs
     -- ↑  end key steps  ↑
     _ ≃ (abs p)^((n:ℤ)-m)     := eqv_symm pow_diff
-    _ ≃ (abs p)^a             := pow_substR (Rel.symm ‹a ≃ n - m›)
+    _ ≃ (abs p)^a             := by grw [Rel.symm ‹a ≃ n - m›]
 
 end
 variable [Induction.{1} ℚ]
@@ -843,17 +843,16 @@ theorem sgn_pow_int
     := by
   have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : a ≃ n - m)) :=
     Integer.as_diff a
-  have pow_eqv : p^a ≃ p^((n:ℤ) - m) := pow_substR ‹a ≃ n - m›
   calc
     _ = (sgn (p^a):ℚ)               := rfl
-    _ ≃ (sgn (p^((n:ℤ) - m)):ℚ)     := from_integer_subst (sgn_subst pow_eqv)
-    _ ≃ (sgn (p^n/p^m):ℚ)           := from_integer_subst (sgn_subst pow_diff)
+    _ ≃ (sgn (p^n/p^m):ℚ)           := by grw [‹a ≃ n - m›, pow_diff]
     _ ≃ (sgn (p^n):ℚ)/(sgn (p^m):ℚ) := sgn_compat_div
-    -- The next two steps are the key to the proof
-    _ ≃ (sgn p:ℚ)^n/(sgn (p^m):ℚ)   := div_substL sgn_pow_nat
-    _ ≃ (sgn p:ℚ)^n/(sgn p:ℚ)^m     := div_substR sgn_pow_nat
+    -- ↓ begin key steps ↓
+    _ ≃ (sgn p:ℚ)^n/(sgn (p^m):ℚ)   := by grw [sgn_pow_nat]
+    _ ≃ (sgn p:ℚ)^n/(sgn p:ℚ)^m     := by gcongr; exact sgn_pow_nat
+    -- ↑  end key steps  ↑
     _ ≃ (sgn p:ℚ)^((n:ℤ) - m)       := eqv_symm pow_diff
-    _ ≃ (sgn p:ℚ)^a                 := pow_substR (Rel.symm ‹a ≃ n - m›)
+    _ ≃ (sgn p:ℚ)^a                 := by grw [Rel.symm ‹a ≃ n - m›]
 
 variable [Subtraction ℚ] [Order ℚ]
 
@@ -871,7 +870,7 @@ theorem pow_preserves_pos_base
     _ = (sgn (p^a):ℚ) := rfl
     -- The next two steps are the key
     _ ≃ (sgn p:ℚ)^a   := sgn_pow_int
-    _ ≃ (1:ℚ)^a       := pow_substL (from_integer_subst ‹sgn p ≃ 1›)
+    _ ≃ (1:ℚ)^a       := by gcongr; grw [‹sgn p ≃ 1›]; exact eqv_refl
     _ ≃ 1             := one_pow
   have : sgn (p^a) ≃ 1 := from_integer_inject ‹(sgn (p^a):ℚ) ≃ 1›
   have : p^a > 0 := gt_zero_sgn.mpr ‹sgn (p^a) ≃ 1›
@@ -915,20 +914,19 @@ theorem sgn_diff_pow
   | Or.inl (_ : a ≃ 0) =>
     have pow_a_simp {x : ℚ} [AP (x ≄ 0)] : x^a ≃ 1 := calc
       _ = x^a     := rfl
-      _ ≃ x^(0:ℤ) := pow_substR ‹a ≃ 0›
+      _ ≃ x^(0:ℤ) := by grw [‹a ≃ 0›]
       _ ≃ x^(0:ℕ) := pow_nonneg
       _ ≃ 1       := Natural.pow_zero
     have : sgn a ≃ 0 := Integer.sgn_zero.mp ‹a ≃ 0›
     calc
-      -- V begin key steps V
+      -- ↓ begin key steps ↓
       _ = sgn (p^a - q^a)     := rfl
-      _ ≃ sgn (1 - q^a)       := sgn_subst (sub_substL pow_a_simp)
-      _ ≃ sgn ((1:ℚ) - 1)     := sgn_subst (sub_substR pow_a_simp)
-      _ ≃ sgn (0:ℚ)           := sgn_subst (sub_eqv_zero_iff_eqv.mpr eqv_refl)
-      -- ^  end key steps  ^
+      _ ≃ sgn ((1:ℚ) - 1)     := by grw [pow_a_simp, pow_a_simp]
+      _ ≃ sgn (0:ℚ)           := by grw [sub_eqv_zero_iff_eqv.mpr eqv_refl]
+      -- ↑  end key steps ↑
       _ ≃ 0                   := sgn_zero.mp eqv_refl
       _ ≃ sgn (p - q) * 0     := Rel.symm AA.absorbR
-      _ ≃ sgn (p - q) * sgn a := AA.substR (Rel.symm ‹sgn a ≃ 0›)
+      _ ≃ sgn (p - q) * sgn a := by grw [Rel.symm ‹sgn a ≃ 0›]
   | Or.inr (_ : Integer.Nonzero a) =>
     /-
     It's important to express `a` as a natural number with a sign, so that the
@@ -944,43 +942,40 @@ theorem sgn_diff_pow
     | Or.inl (_ : sgn a ≃ 1) =>
       have pow_a_simp {x : ℚ} [AP (x ≄ 0)] : x^a ≃ x^n := calc
         _ = x^a               := rfl
-        _ ≃ x^((n:ℤ) * sgn a) := pow_substR ‹a ≃ n * sgn a›
-        _ ≃ x^((n:ℤ) * 1)     := pow_substR (AA.substR ‹sgn a ≃ 1›)
-        _ ≃ x^(n:ℤ)           := pow_substR AA.identR
+        _ ≃ x^((n:ℤ) * sgn a) := by gcongr -- a ≃ n * sgn a
+        _ ≃ x^(n:ℤ)           := by grw [‹sgn a ≃ 1›, Integer.mul_identR]
         _ ≃ x^n               := pow_nonneg
       calc
         _ = sgn (p^a - q^a)     := rfl
-        _ ≃ sgn (p^n - q^a)     := sgn_subst (sub_substL pow_a_simp)
-        -- V begin key steps V
-        _ ≃ sgn (p^n - q^n)     := sgn_subst (sub_substR pow_a_simp)
+        -- ↓ begin key steps ↓
+        _ ≃ sgn (p^n - q^n)     := by grw [pow_a_simp, pow_a_simp]
         _ ≃ sgn (p - q)         := sgn_diff_pow_pos ‹p ≥ 0› ‹q ≥ 0› ‹n ≥ 1›
-        -- ^  end key steps  ^
+        -- ↑  end key steps  ↑
         _ ≃ sgn (p - q) * 1     := Rel.symm AA.identR
-        _ ≃ sgn (p - q) * sgn a := AA.substR (Rel.symm ‹sgn a ≃ 1›)
+        _ ≃ sgn (p - q) * sgn a := by grw [Rel.symm ‹sgn a ≃ 1›]
     | Or.inr (_ : sgn a ≃ -1) =>
       have pow_a_simp {x : ℚ} [AP (x ≄ 0)] : x^a ≃ (x^n)⁻¹ := calc
         _ = x^a               := rfl
-        _ ≃ x^((n:ℤ) * sgn a) := pow_substR ‹a ≃ n * sgn a›
-        _ ≃ x^((n:ℤ) * -1)    := pow_substR (AA.substR ‹sgn a ≃ -1›)
+        _ ≃ x^((n:ℤ) * sgn a) := by gcongr -- a ≃ n * sgn a
+        _ ≃ x^((n:ℤ) * -1)    := by gcongr -- a ≃ -1
         _ ≃ (x^(n:ℤ))^(-1:ℤ)  := eqv_symm pow_flatten
         _ ≃ (x^(n:ℤ))⁻¹       := pow_neg_one
-        _ ≃ (x^n)⁻¹           := recip_subst pow_nonneg
+        _ ≃ (x^n)⁻¹           := by gcongr; exact pow_nonneg
       have : p^n > 0 := pow_preserves_pos ‹p > 0›
       have : q^n > 0 := pow_preserves_pos ‹q > 0›
       have : p^n * q^n > 0 := mul_preserves_pos ‹p^n > 0› ‹q^n > 0›
       calc
         _ = sgn (p^a - q^a)         := rfl
-        _ ≃ sgn ((p^n)⁻¹ - q^a)     := sgn_subst (sub_substL pow_a_simp)
-        -- V begin key steps V
-        _ ≃ sgn ((p^n)⁻¹ - (q^n)⁻¹) := sgn_subst (sub_substR pow_a_simp)
+        -- ↓ begin key steps ↓
+        _ ≃ sgn ((p^n)⁻¹ - (q^n)⁻¹) := by grw [pow_a_simp, pow_a_simp]
         _ ≃ sgn (q^n - p^n)         := sgn_sub_recip ‹p^n * q^n > 0›
         _ ≃ sgn (q - p)             := sgn_diff_pow_pos ‹q ≥ 0› ‹p ≥ 0› ‹n ≥ 1›
-        -- ^  end key steps  ^
-        _ ≃ sgn (-(p - q))          := sgn_subst (eqv_symm neg_sub)
+        -- ↑  end key steps  ↑
+        _ ≃ sgn (-(p - q))          := by grw [eqv_symm neg_sub]
         _ ≃ -sgn (p - q)            := sgn_compat_neg
         _ ≃ -1 * sgn (p - q)        := Rel.symm Integer.mul_neg_one
         _ ≃ sgn (p - q) * -1        := AA.comm
-        _ ≃ sgn (p - q) * sgn a     := AA.substR (Rel.symm ‹sgn a ≃ -1›)
+        _ ≃ sgn (p - q) * sgn a     := by grw [Rel.symm ‹sgn a ≃ -1›]
 
 /--
 Raising two positive rational numbers (with one greater than or equivalent to
@@ -998,11 +993,11 @@ theorem pow_pos_preserves_ge_pos
   show p^a ≥ q^a
 
   have : sgn (p^a - q^a) ≥ 0 := calc
-    -- V begin key steps V
+    -- ↓ begin key steps ↓
     _ = sgn (p^a - q^a)     := rfl
     _ ≃ sgn (p - q) * sgn a := sgn_diff_pow ‹p > 0› ‹q > 0›
-    -- ^  end key steps  ^
-    _ ≃ sgn (p - q) * 1     := AA.substR (Integer.gt_zero_sgn.mp ‹a > 0›)
+    -- ↑  end key steps  ↑
+    _ ≃ sgn (p - q) * 1     := by grw [Integer.gt_zero_sgn.mp ‹a > 0›]
     _ ≃ sgn (p - q)         := AA.identR
     _ ≥ 0                   := ge_iff_sub_sgn_nonneg.mp ‹p ≥ q›
   have : p^a ≥ q^a := ge_iff_sub_sgn_nonneg.mpr ‹sgn (p^a - q^a) ≥ 0›
@@ -1023,15 +1018,15 @@ theorem pow_neg_reverses_ge_pos
   show p^a ≤ q^a
 
   have : sgn (q^a - p^a) ≥ 0 := calc
-    -- V begin key steps V
+    -- ↓ begin key steps ↓
     _ = sgn (q^a - p^a)     := rfl
     _ ≃ sgn (q - p) * sgn a := sgn_diff_pow ‹q > 0› ‹p > 0›
-    -- ^  end key steps  ^
-    _ ≃ sgn (q - p) * -1    := AA.substR (Integer.lt_zero_sgn.mp ‹a < 0›)
+    -- ↑  end key steps  ↑
+    _ ≃ sgn (q - p) * -1    := by grw [Integer.lt_zero_sgn.mp ‹a < 0›]
     _ ≃ -1 * sgn (q - p)    := AA.comm
     _ ≃ -sgn (q - p)        := Integer.mul_neg_one
     _ ≃ sgn (-(q - p))      := Rel.symm sgn_compat_neg
-    _ ≃ sgn (p - q)         := sgn_subst neg_sub
+    _ ≃ sgn (p - q)         := by grw [neg_sub]
     _ ≥ 0                   := ge_iff_sub_sgn_nonneg.mp ‹p ≥ q›
   have : p^a ≤ q^a := ge_iff_sub_sgn_nonneg.mpr ‹sgn (q^a - p^a) ≥ 0›
   exact this
@@ -1063,10 +1058,10 @@ theorem pow_bijectL
   calc
     _ ↔ p^a ≃ q^a                   := Iff.rfl
     _ ↔ p^a - q^a ≃ 0               := sub_eqv_zero_iff_eqv.symm
-    -- V begin key steps V
+    -- ↓ begin key steps ↓
     _ ↔ sgn (p^a - q^a) ≃ 0         := sgn_zero
-    _ ↔ sgn (p - q) * sgn a ≃ 0     := AA.eqv_substL_iff factor
-    -- ^  end key steps  ^
+    _ ↔ sgn (p - q) * sgn a ≃ 0     := by grw [factor]
+    -- ↑  end key steps  ↑
     _ ↔ sgn (p - q) ≃ 0 ∨ sgn a ≃ 0 := Integer.mul_split_zero
     _ ↔ sgn (p - q) ≃ 0 ∨ False     := iff_subst_covar or_mapR a_neqv_0
     _ ↔ sgn (p - q) ≃ 0             := or_identR
@@ -1097,9 +1092,9 @@ theorem pow_two_lower_bound {a : ℤ} : a ≥ 1 → (2:ℚ)^a ≥ a := by
     show (2:ℚ)^c₂ ≥ c₂
     calc
       _ = (2:ℚ)^c₂ := rfl
-      _ ≃ (2:ℚ)^c₁ := pow_substR (Rel.symm ‹c₁ ≃ c₂›)
+      _ ≃ (2:ℚ)^c₁ := by grw [Rel.symm ‹c₁ ≃ c₂›]
       _ ≥ c₁       := ‹(2:ℚ)^c₁ ≥ c₁›
-      _ ≃ c₂       := from_integer_subst ‹c₁ ≃ c₂›
+      _ ≃ c₂       := by grw [‹c₁ ≃ c₂›]
 
   apply Integer.ind_from motive_subst ‹a ≥ 1›
   case base =>
@@ -1116,13 +1111,13 @@ theorem pow_two_lower_bound {a : ℤ} : a ≥ 1 → (2:ℚ)^a ≥ a := by
     calc
       _ = (2:ℚ)^(c + 1)         := rfl
       _ ≃ (2:ℚ)^c * (2:ℚ)^(1:ℤ) := pow_compatL_add
-      _ ≃ (2:ℚ)^c * (2:ℚ)^(1:ℕ) := mul_substR pow_nonneg
+      _ ≃ (2:ℚ)^c * (2:ℚ)^(1:ℕ) := by gcongr; exact pow_nonneg
       -- ↓ begin key steps ↓
-      _ ≃ (2:ℚ)^c * 2           := mul_substR Natural.pow_one
-      _ ≥ (c:ℚ) * 2             := le_substL_mul_pos two_pos ‹(2:ℚ)^c ≥ c›
+      _ ≃ (2:ℚ)^c * 2           := by grw [Natural.pow_one]
+      _ ≥ (c:ℚ) * 2             := by grw [‹(2:ℚ)^c ≥ c›]; exact two_pos
       _ ≃ (2:ℚ) * c             := mul_comm
       _ ≃ (c:ℚ) + c             := mul_two_add
-      _ ≥ (c:ℚ) + 1             := le_substR_add ‹(c:ℚ) ≥ 1›
+      _ ≥ (c:ℚ) + 1             := by grw [‹1 ≤ (c:ℚ)›]
       -- ↑  end key steps  ↑
       _ ≃ ((c + 1 : ℤ):ℚ)       := eqv_symm add_compat_from_integer
 

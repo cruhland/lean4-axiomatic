@@ -396,6 +396,7 @@ In other words, _less than or equivalent to_ is a reflexive relation.
 **Property and proof intuition**: Every rational number is equivalent to
 itself, and thus is less than _or_ equivalent to itself as well.
 -/
+@[refl]
 theorem le_refl {p : ℚ} : p ≤ p := by
   have : p ≃ p := eqv_refl
   have : p ≤ p := le_cases.mpr (Or.inr this)
@@ -752,6 +753,7 @@ their relative ordering.
 via their `sgn`-based definitions. Show that they are equivalent using algebra
 and substitution.
 -/
+@[gcongr]
 theorem le_substL_add {p₁ p₂ q : ℚ} : p₁ ≤ p₂ → p₁ + q ≤ p₂ + q := by
   intro (_ : p₁ ≤ p₂)
   show p₁ + q ≤ p₂ + q
@@ -772,6 +774,7 @@ their relative ordering.
 **Proof intuition**: Follows from the opposite-handed version because addition
 is commutative.
 -/
+@[gcongr]
 theorem le_substR_add {p₁ p₂ q : ℚ} : p₁ ≤ p₂ → q + p₁ ≤ q + p₂ := by
   intro (_ : p₁ ≤ p₂)
   show q + p₁ ≤ q + p₂
@@ -791,6 +794,7 @@ their relative ordering.
 via their `sgn`-based definitions. Show that they are equivalent using algebra
 and substitution.
 -/
+@[gcongr]
 theorem lt_substL_add {p₁ p₂ q : ℚ} : p₁ < p₂ → p₁ + q < p₂ + q := by
   intro (_ : p₁ < p₂)
   show p₁ + q < p₂ + q
@@ -810,6 +814,7 @@ their relative ordering.
 **Proof intuition**: Follows from the opposite-handed version because addition
 is commutative.
 -/
+@[gcongr]
 theorem lt_substR_add {p₁ p₂ q : ℚ} : p₁ < p₂ → q + p₁ < q + p₂ := by
   intro (_ : p₁ < p₂)
   show q + p₁ < q + p₂
@@ -912,6 +917,7 @@ change their relative ordering.
 via their `sgn`-based definitions. Show that they are equivalent using algebra
 and substitution.
 -/
+@[gcongr]
 theorem le_substL_mul_pos {p q r : ℚ} : r > 0 → p ≤ q → p * r ≤ q * r := by
   intro (_ : r > 0) (_ : p ≤ q)
   show p * r ≤ q * r
@@ -934,6 +940,7 @@ change their relative ordering.
 **Proof intuition**: Follows from the opposite-handed version because
 multiplication is commutative.
 -/
+@[gcongr]
 theorem le_substR_mul_pos {p q r : ℚ} : r > 0 → p ≤ q → r * p ≤ r * q := by
   intro (_ : r > 0) (_ : p ≤ q)
   show r * p ≤ r * q

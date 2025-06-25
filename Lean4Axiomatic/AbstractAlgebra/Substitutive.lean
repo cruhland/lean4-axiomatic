@@ -1,5 +1,6 @@
 import Lean4Axiomatic.AbstractAlgebra.Commutative
 import Lean4Axiomatic.AbstractAlgebra.Core
+import Mathlib.Tactic.GCongr
 
 namespace Lean4Axiomatic.AA
 
@@ -575,6 +576,7 @@ bidirectionally.
 **Intuition**: Given `eqv_substL`, symmetry of equivalence means it works in
 the other direction too.
 -/
+@[gcongr]
 theorem eqv_substL_iff
     {α : Sort u} [EqvOp α] {x₁ x₂ y : α} : x₁ ≃ x₂ → (x₁ ≃ y ↔ x₂ ≃ y)
     := by
@@ -601,6 +603,7 @@ bidirectionally.
 **Intuition**: Given `eqv_substR`, symmetry of equivalence means it works in
 the other direction too.
 -/
+@[gcongr]
 theorem eqv_substR_iff
     {α : Sort u} [EqvOp α] {x y₁ y₂ : α} : y₁ ≃ y₂ → (x ≃ y₁ ↔ x ≃ y₂)
     := by

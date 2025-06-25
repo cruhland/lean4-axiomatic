@@ -110,4 +110,18 @@ Eventually, this should become the axiom and the typeclass should be derived.
 @[gcongr]
 theorem mul_substR {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → b * a₁ ≃ b * a₂ := AA.substR
 
+/--
+Non-typeclass version of `mul_identity.identityL`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+theorem mul_identL {a : ℤ} : 1 * a ≃ a := AA.identL
+
+/--
+Non-typeclass version of `mul_identity.identityR`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+theorem mul_identR {a : ℤ} : a * 1 ≃ a := AA.identR
+
 end Lean4Axiomatic.Integer
