@@ -357,36 +357,36 @@ theorem sgn_diff_pow_pos
     _ ≃ (((a*d)^k-(b*c)^k:ℤ):ℚ)/((b:ℚ)^k * (d:ℚ)^k) := by grw [sub_mul_liftQ]
     _ ≃ (((a*d)^k-(b*c)^k:ℤ):ℚ)/(((b*d)^k:ℤ):ℚ)     := by gcongr; exact mpℚ
 
+  let ad := a * d; let bc := b * c; let bd := b * d
   have sgn_sub_pow_factor
-      : sgn (p^n - q^n) ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n)
+      : sgn (p^n - q^n) ≃ sgn (ad^n - bc^n) * sgn (bd^n)
       := calc
-    _ = sgn (p^n - q^n)                               := rfl
-    _ ≃ sgn ((((a*d)^n-(b*c)^n:ℤ):ℚ)/(((b*d)^n:ℤ):ℚ)) := sgn_subst sub_pow_frac
-    _ ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n)         := sgn_div_integers
-  have sgn_diff_int_pow : sgn ((a * d)^n - (b * c)^n) ≃ sgn (a * d - b * c) :=
-    Integer.sgn_diff_pow_pos ‹a * d ≥ 0› ‹b * c ≥ 0› ‹n ≥ 1›
-  have sgn_bd_drop_pow : sgn ((b * d)^n) ≃ sgn (b * d) := calc
-    _ = sgn ((b * d)^n) := rfl
-    _ ≃ (sgn (b * d))^n := Integer.sgn_pow
-    _ ≃ sgn (b * d)     := Integer.pow_absorbL ‹n ≥ 1› sqr_sgn_bd_idemp
+    _ = sgn (p^n - q^n)                      := rfl
+    _ ≃ sgn (((ad^n-bc^n:ℤ):ℚ)/((bd^n:ℤ):ℚ)) := by gcongr; exact sub_pow_frac
+    _ ≃ sgn (ad^n-bc^n) * sgn (bd^n)         := sgn_div_integers
+  have sgn_diff_int_pow : sgn (ad^n - bc^n) ≃ sgn (ad - bc) :=
+    Integer.sgn_diff_pow_pos ‹ad ≥ 0› ‹bc ≥ 0› ‹n ≥ 1›
+  have sgn_bd_drop_pow : sgn (bd^n) ≃ sgn bd := calc
+    _ = sgn (bd^n) := rfl
+    _ ≃ (sgn bd)^n := Integer.sgn_pow
+    _ ≃ sgn bd     := Integer.pow_absorbL ‹n ≥ 1› sqr_sgn_bd_idemp
 
   have p1ℤ {x : ℤ} : x^1 ≃ x := Natural.pow_one
   have p1ℚ {x : ℚ} : x^1 ≃ x := Natural.pow_one
-  have drop_pow_ones : p^1 - q^1 ≃ p - q := by grw [p1ℚ, p1ℚ]
   have sub_frac : p - q ≃ ((a * d - b * c : ℤ):ℚ)/((b * d : ℤ):ℚ) := calc
-    _ = p - q                                       := rfl
-    _ ≃ p^1 - q^1                                   := eqv_symm drop_pow_ones
-    _ ≃ (((a*d)^1 - (b*c)^1 : ℤ):ℚ)/(((b*d)^1:ℤ):ℚ) := sub_pow_frac
-    _ ≃ ((a*d - b*c : ℤ):ℚ)/(((b*d)^1:ℤ):ℚ)         := by grw [p1ℤ, p1ℤ]
-    _ ≃ ((a*d - b*c : ℤ):ℚ)/((b*d:ℤ):ℚ)             := by gcongr; exact p1ℤ
+    _ = p - q                              := rfl
+    _ ≃ p^1 - q^1                          := eqv_symm (by grw [p1ℚ, p1ℚ])
+    _ ≃ ((ad^1 - bc^1 : ℤ):ℚ)/((bd^1:ℤ):ℚ) := sub_pow_frac
+    _ ≃ ((ad - bc : ℤ):ℚ)/((bd^1:ℤ):ℚ)     := by grw [p1ℤ, p1ℤ]
+    _ ≃ ((ad - bc : ℤ):ℚ)/((bd:ℤ):ℚ)       := by gcongr; exact p1ℤ
 
   calc
-    _ = sgn (p^n - q^n)                       := rfl
-    _ ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n) := sgn_sub_pow_factor
-    _ ≃ sgn (a*d - b*c) * sgn ((b*d)^n)       := by grw [sgn_diff_int_pow]
-    _ ≃ sgn (a*d - b*c) * sgn (b*d)           := by grw [sgn_bd_drop_pow]
-    _ ≃ sgn (((a*d - b*c:ℤ):ℚ)/((b*d:ℤ):ℚ))   := Rel.symm sgn_div_integers
-    _ ≃ sgn (p - q)                           := by grw [eqv_symm sub_frac]
+    _ = sgn (p^n - q^n)                  := rfl
+    _ ≃ sgn (ad^n-bc^n) * sgn (bd^n)     := sgn_sub_pow_factor
+    _ ≃ sgn (ad - bc) * sgn (bd^n)       := by grw [sgn_diff_int_pow]
+    _ ≃ sgn (ad - bc) * sgn bd           := by grw [sgn_bd_drop_pow]
+    _ ≃ sgn (((ad - bc:ℤ):ℚ)/((bd:ℤ):ℚ)) := Rel.symm sgn_div_integers
+    _ ≃ sgn (p - q)                      := by grw [eqv_symm sub_frac]
 
 /--
 The greater-than relation between two nonnegative rational numbers is
@@ -672,7 +672,7 @@ theorem pow_compatL_add
     _ = p^(a + b)                 := rfl
     _ ≃ p^(n + k) / p^(m + j)     := by grw [‹p^(a+b) ≃ p^(n+k)/p^(m+j)›]
     _ ≃ (p^n * p^k) / p^(m + j)   := by grw [Natural.pow_compatL_add]
-    _ ≃ (p^n * p^k) / (p^m * p^j) := div_substR Natural.pow_compatL_add
+    _ ≃ (p^n * p^k) / (p^m * p^j) := by gcongr; exact Natural.pow_compatL_add
     _ ≃ (p^n / p^m) * (p^k / p^j) := Rel.symm div_mul_swap
     _ ≃ p^a * p^b                 := by grw [‹p^n/p^m ≃ p^a›, ‹p^k/p^j ≃ p^b›]
 
@@ -698,17 +698,18 @@ theorem pow_flatten {p : ℚ} [AP (p ≄ 0)] {a b : ℤ} : (p^a)^b ≃ p^(a * b)
   have Exists.intro (k : ℕ) (Exists.intro (j : ℕ) (b_eqv : b ≃ k - j)) :=
     Integer.as_diff b
 
-  have : p^a ≃ p^n / p^m := calc
+  let pn := p^n; let pm := p^m
+  have : p^a ≃ pn / pm := calc
     _ = p^a           := rfl
     _ ≃ p^((n:ℤ) - m) := by grw [‹a ≃ n - m›]
-    _ ≃ p^n / p^m     := pow_diff
-  have pow_expand : (p^a)^b ≃ ((p^n)^k/(p^m)^k) / ((p^n)^j/(p^m)^j) := calc
-    _ = (p^a)^b                               := rfl
-    _ ≃ (p^n/p^m)^b                           := by gcongr -- p^a ≃ p^n / p^m
-    _ ≃ (p^n/p^m)^((k:ℤ)-j)                   := by grw [‹b ≃ k - j›]
-    _ ≃ (p^n/p^m)^k / (p^n/p^m)^j             := pow_diff
-    _ ≃ ((p^n)^k/(p^m)^k) / (p^n/p^m)^j       := by grw [pow_distribR_div]
-    _ ≃ ((p^n)^k/(p^m)^k) / ((p^n)^j/(p^m)^j) := div_substR pow_distribR_div
+    _ ≃ pn / pm       := pow_diff
+  have pow_expand : (p^a)^b ≃ (pn^k/pm^k) / (pn^j/pm^j) := calc
+    _ = (p^a)^b                   := rfl
+    _ ≃ (pn/pm)^b                 := by gcongr -- p^a ≃ pn / pm
+    _ ≃ (pn/pm)^((k:ℤ)-j)         := by grw [‹b ≃ k - j›]
+    _ ≃ (pn/pm)^k / (pn/pm)^j     := pow_diff
+    _ ≃ (pn^k/pm^k) / (pn/pm)^j   := by grw [pow_distribR_div]
+    _ ≃ (pn^k/pm^k) / (pn^j/pm^j) := by gcongr; exact pow_distribR_div
   have pow_combine {w x y z : ℕ} : (p^w)^x*(p^y)^z ≃ p^(w*x + y*z) := calc
     _ = (p^w)^x*(p^y)^z := rfl
     _ ≃ p^(w*x)*p^(y*z) := by grw [Natural.pow_flatten, Natural.pow_flatten]
@@ -741,16 +742,19 @@ theorem pow_flatten {p : ℚ} [AP (p ≄ 0)] {a b : ℤ} : (p^a)^b ≃ p^(a * b)
   have pow_reduce₂ : ((n:ℤ)*k + m*j) - (m*k + n*j) ≃ a * b := calc
     _ = ((n:ℤ)*k + m*j) - (m*k + n*j) := rfl
     _ ≃ ((n:ℤ) - m) * (k - j)         := Rel.symm diff_expand
-    _ ≃ a * b                         := by grw [Rel.symm a_eqv, Rel.symm b_eqv]
-  calc
-    _ = (p^a)^b                                       := rfl
-    _ ≃ ((p^n)^k/(p^m)^k) / ((p^n)^j/(p^m)^j)         := pow_expand
-    _ ≃ ((p^n)^k*(p^m)^j) / ((p^m)^k*(p^n)^j)         := div_div_div
-    _ ≃ p^(n*k + m*j) / ((p^m)^k*(p^n)^j)             := by grw [pow_combine]
-    _ ≃ p^(n*k + m*j) / p^(m*k + n*j)                 := div_substR pow_combine
+    _ ≃ a * b                         := Rel.symm (by grw [a_eqv, b_eqv])
+  have div_pow_reduce : p^(n*k + m*j) / p^(m*k + n*j) ≃ p^(a * b) := calc
+    _ = p^(n*k + m*j) / p^(m*k + n*j)                 := rfl
     _ ≃ p^(((n*k + m*j : ℕ):ℤ) - ((m*k + n*j : ℕ):ℤ)) := eqv_symm pow_diff
     _ ≃ p^(((n:ℤ)*k + m*j) - (m*k + n*j))             := by grw [pow_reduce₁]
     _ ≃ p^(a * b)                                     := by grw [pow_reduce₂]
+  calc
+    _ = (p^a)^b                               := rfl
+    _ ≃ ((p^n)^k/(p^m)^k) / ((p^n)^j/(p^m)^j) := pow_expand
+    _ ≃ ((p^n)^k*(p^m)^j) / ((p^m)^k*(p^n)^j) := div_div_div
+    _ ≃ p^(n*k + m*j) / ((p^m)^k*(p^n)^j)     := by grw [pow_combine]
+    _ ≃ p^(n*k + m*j) / p^(m*k + n*j)         := by gcongr; exact pow_combine
+    _ ≃ p^(a * b)                             := div_pow_reduce
 
 /--
 Integer exponents distribute over multiplication.
