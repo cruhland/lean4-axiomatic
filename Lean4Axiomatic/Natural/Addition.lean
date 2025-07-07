@@ -1,5 +1,6 @@
 import Lean4Axiomatic.Natural.Core
 import Lean4Axiomatic.ClassicalAlgebra.Monoid
+import Lean4Axiomatic.Tactic.Sandbox
 import Mathlib.Tactic.GRewrite
 
 /-!
@@ -50,7 +51,7 @@ theorem add_zero {n : ℕ} : n + 0 ≃ n := by
     show step n + 0 ≃ step n
     calc
       step n + 0   ≃ _ := Addition.step_add
-      step (n + 0) ≃ _ := by grw [ih]
+      step (n + 0) ≃ _ := by scongr? --; grw [ih]
       step n       ≃ _ := Rel.refl
 
 instance add_identity : AA.Identity (α := ℕ) 0 (· + ·) := {
