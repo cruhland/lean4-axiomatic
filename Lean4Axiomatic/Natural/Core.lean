@@ -172,6 +172,14 @@ export Induction (ind ind_step ind_zero)
 variable {ℕ : Type} [Core ℕ]
 
 /--
+Non-typeclass version of `step_substitutive.subst₁`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+@[gcongr]
+theorem step_subst {n₁ n₂ : ℕ} : n₁ ≃ n₂ → step n₁ ≃ step n₂ := AA.subst₁
+
+/--
 Alternative form of `step_neqv_zero` that's useful for showing natural number
 literals are nonzero.
 -/

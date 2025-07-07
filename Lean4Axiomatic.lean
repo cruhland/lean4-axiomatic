@@ -4,5 +4,6 @@
 import Lean4Axiomatic.Integer.Impl.Difference
 import Lean4Axiomatic.Natural.Impl.Nat
 import Lean4Axiomatic.Rational.Impl.Fraction
+import Lean4Axiomatic.Tactic.Sandbox
 
 def hello := "world"
