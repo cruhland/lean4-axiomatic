@@ -50,9 +50,9 @@ theorem add_zero {n : ℕ} : n + 0 ≃ n := by
     intro n (ih : n + 0 ≃ n)
     show step n + 0 ≃ step n
     calc
-      step n + 0   ≃ _ := Addition.step_add
-      step (n + 0) ≃ _ := by scongr? --; grw [ih]
-      step n       ≃ _ := Rel.refl
+      _ = step n + 0   := rfl
+      _ ≃ step (n + 0) := Addition.step_add
+      _ ≃ step n       := by srw [ih]
 
 instance add_identity : AA.Identity (α := ℕ) 0 (· + ·) := {
   identityL := AA.IdentityOn.mk Addition.zero_add
