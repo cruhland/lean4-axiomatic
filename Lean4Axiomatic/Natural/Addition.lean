@@ -44,18 +44,18 @@ theorem add_zero {n : ℕ} : n + 0 ≃ n := by
   case zero =>
     show 0 + 0 ≃ 0
     calc
-      0 + (0 : ℕ) ≃ _ := Addition.zero_add
+      0 + (0 : ℕ) ≃ _ := zero_add
       0           ≃ _ := Rel.refl
   case step =>
     intro n (ih : n + 0 ≃ n)
     show step n + 0 ≃ step n
     calc
       _ = step n + 0   := rfl
-      _ ≃ step (n + 0) := Addition.step_add
+      _ ≃ step (n + 0) := step_add
       _ ≃ step n       := by srw [ih]
 
 instance add_identity : AA.Identity (α := ℕ) 0 (· + ·) := {
-  identityL := AA.IdentityOn.mk Addition.zero_add
+  identityL := AA.IdentityOn.mk zero_add
   identityR := AA.IdentityOn.mk add_zero
 }
 
@@ -85,20 +85,20 @@ theorem add_step {n m : ℕ} : n + step m ≃ step (n + m) := by
   case zero =>
     show 0 + step m ≃ step (0 + m)
     calc
-      0 + step m   ≃ _ := Addition.zero_add
-      step m       ≃ _ := by srw [Rel.symm Addition.zero_add]
-      step (0 + m) ≃ _ := Rel.refl
+      _ = 0 + step m   := rfl
+      _ ≃ step m       := zero_add
+      _ ≃ step (0 + m) := by srw [←zero_add]
   case step =>
     intro n (ih : n + step m ≃ step (n + m))
     show step n + step m ≃ step (step n + m)
     calc
-      step n + step m     ≃ _ := Addition.step_add
-      step (n + step m)   ≃ _ := by srw [ih]
-      step (step (n + m)) ≃ _ := by srw [Rel.symm Addition.step_add]
-      step (step n + m)   ≃ _ := Rel.refl
+      _ = step n + step m     := rfl
+      _ ≃ step (n + step m)   := step_add
+      _ ≃ step (step (n + m)) := by srw [ih]
+      _ ≃ step (step n + m)   := by srw [←step_add]
 
 instance add_semicompatible_step : AA.Semicompatible (α := ℕ) step (· + ·) := {
-  semicompatibleL := AA.SemicompatibleOn.mk (Rel.symm Addition.step_add)
+  semicompatibleL := AA.SemicompatibleOn.mk (Rel.symm step_add)
   semicompatibleR := AA.SemicompatibleOn.mk (Rel.symm add_step)
 }
 
@@ -122,14 +122,14 @@ theorem add_comm {n m : ℕ} : n + m ≃ m + n := by
   case zero =>
     show 0 + m ≃ m + 0
     calc
-      0 + m ≃ _ := Addition.zero_add
+      0 + m ≃ _ := zero_add
       m     ≃ _ := Rel.symm add_zero
       m + 0 ≃ _ := Rel.refl
   case step =>
     intro n (ih : n + m ≃ m + n)
     show step n + m ≃ m + step n
     calc
-      step n + m   ≃ _ := Addition.step_add
+      step n + m   ≃ _ := step_add
       step (n + m) ≃ _ := by srw [ih]
       step (m + n) ≃ _ := Rel.symm add_step
       m + step n   ≃ _ := Rel.refl
@@ -170,9 +170,9 @@ theorem add_substL {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m
       show step n₁ + m ≃ step n₂ + m
       have : n₁ ≃ n₂ := AA.inject ‹step n₁ ≃ step n₂›
       calc
-        step n₁ + m   ≃ _ := Addition.step_add
+        step n₁ + m   ≃ _ := step_add
         step (n₁ + m) ≃ _ := by srw [ih _ ‹n₁ ≃ n₂›]
-        step (n₂ + m) ≃ _ := Rel.symm Addition.step_add
+        step (n₂ + m) ≃ _ := Rel.symm step_add
         step n₂ + m   ≃ _ := Rel.refl
 
 /--
@@ -229,17 +229,17 @@ theorem add_assoc {n m k : ℕ} : (n + m) + k ≃ n + (m + k) := by
   case zero =>
     show (0 + m) + k ≃ 0 + (m + k)
     calc
-      (0 + m) + k ≃ _ := by srw [Addition.zero_add]
-      m + k       ≃ _ := Rel.symm Addition.zero_add
+      (0 + m) + k ≃ _ := by srw [zero_add]
+      m + k       ≃ _ := Rel.symm zero_add
       0 + (m + k) ≃ _ := Rel.refl
   case step =>
     intro n (ih : (n + m) + k ≃ n + (m + k))
     show (step n + m) + k ≃ step n + (m + k)
     calc
-      (step n + m) + k   ≃ _ := by srw [Addition.step_add]
-      step (n + m) + k   ≃ _ := Addition.step_add
+      (step n + m) + k   ≃ _ := by srw [step_add]
+      step (n + m) + k   ≃ _ := step_add
       step ((n + m) + k) ≃ _ := by srw [ih]
-      step (n + (m + k)) ≃ _ := Rel.symm Addition.step_add
+      step (n + (m + k)) ≃ _ := Rel.symm step_add
       step n + (m + k)   ≃ _ := Rel.refl
 
 instance add_associative : AA.Associative (α := ℕ) (· + ·) := {
@@ -258,9 +258,9 @@ theorem cancel_add {n m k : ℕ} : n + m ≃ n + k → m ≃ k := by
     intro (_ : 0 + m ≃ 0 + k)
     show m ≃ k
     calc
-      m     ≃ _ := Rel.symm Addition.zero_add
+      m     ≃ _ := Rel.symm zero_add
       0 + m ≃ _ := ‹0 + m ≃ 0 + k›
-      0 + k ≃ _ := Addition.zero_add
+      0 + k ≃ _ := zero_add
       k     ≃ _ := Rel.refl
   case step =>
     intro n (ih : n + m ≃ n + k → m ≃ k) (_ : step n + m ≃ step n + k)
@@ -270,9 +270,9 @@ theorem cancel_add {n m k : ℕ} : n + m ≃ n + k → m ≃ k := by
     apply AA.inject (β := ℕ) (f := step) (rβ := (· ≃ ·))
     show step (n + m) ≃ step (n + k)
     calc
-      step (n + m) ≃ _ := Rel.symm Addition.step_add
+      step (n + m) ≃ _ := Rel.symm step_add
       step n + m   ≃ _ := ‹step n + m ≃ step n + k›
-      step n + k   ≃ _ := Addition.step_add
+      step n + k   ≃ _ := step_add
       step (n + k) ≃ _ := Rel.refl
 
 def add_cancelL

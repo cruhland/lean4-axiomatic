@@ -1,4 +1,5 @@
 import Lean
+import Lean4Axiomatic.Relation.Equivalence
 import Mathlib.Tactic.GCongr
 
 namespace Lean4Axiomatic.Tactic
@@ -10,7 +11,7 @@ open Lean.Elab.Tactic (
 )
 open Lean.Elab.Term (elabTerm)
 open Lean.Meta (
-  MetaM isDefEq isProof mkConstWithFreshMVarLevels
+  MetaM isDefEq isProof mkAppM mkConstWithFreshMVarLevels
   mkFreshExprSyntheticOpaqueMVar saveState whnf withReducible
   withReducibleAndInstances
 )
@@ -75,8 +76,13 @@ syntax (name := srwStx) "srw " rwRuleSeq : tactic
   let rulesInBrackets := stx[1]
   let rules := rulesInBrackets[1].getArgs
   let rule := rules[0]!
+
+  let symm := !rule[0].isNone
   let term := rule[1]
   let rwRuleExpr ← elabTerm term none
-  srw (← getMainGoal) rwRuleExpr
+  let directedRuleExpr ←
+    if symm then mkAppM ``Rel.symm #[rwRuleExpr] else pure rwRuleExpr
+
+  srw (← getMainGoal) directedRuleExpr
 
 end Lean4Axiomatic.Tactic
