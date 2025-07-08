@@ -60,7 +60,7 @@ theorem mul_zero {n : ℕ} : n * 0 ≃ 0 := by
     show step n * 0 ≃ 0
     calc
       step n * 0 ≃ _ := step_mul
-      n * 0 + 0  ≃ _ := AA.substL ih
+      n * 0 + 0  ≃ _ := by srw [ih]
       0 + 0      ≃ _ := Addition.zero_add
       0          ≃ _ := Rel.refl
 
@@ -88,18 +88,18 @@ theorem mul_step {n m : ℕ} : n * step m ≃ n * m + n := by
     calc
       0 * step m ≃ _ := zero_mul
       0          ≃ _ := Rel.symm Addition.zero_add
-      0 + 0      ≃ _ := AA.substL (Rel.symm zero_mul)
+      0 + 0      ≃ _ := by srw [←zero_mul]
       0 * m + 0  ≃ _ := Rel.refl
   case step =>
     intro n (ih : n * step m ≃ n * m + n)
     show step n * step m ≃ step n * m + step n
     calc
       step n * step m        ≃ _ := step_mul
-      n * step m + step m    ≃ _ := AA.substL ih
+      n * step m + step m    ≃ _ := by srw [ih]
       (n * m + n) + step m   ≃ _ := add_step
-      step ((n * m + n) + m) ≃ _ := AA.subst₁ AA.assoc
+      step ((n * m + n) + m) ≃ _ := by srw [AA.assoc]
       step (n * m + (n + m)) ≃ _ := AA.subst₁ (AA.substR AA.comm)
-      step (n * m + (m + n)) ≃ _ := AA.subst₁ (Rel.symm AA.assoc)
+      step (n * m + (m + n)) ≃ _ := by srw [←AA.assoc]
       step ((n * m + m) + n) ≃ _ := AA.subst₁ (AA.substL (Rel.symm step_mul))
       step (step n * m + n)  ≃ _ := Rel.symm add_step
       step n * m + step n    ≃ _ := Rel.refl
@@ -122,7 +122,7 @@ theorem mul_comm {n m : ℕ} : n * m ≃ m * n := by
     show step n * m ≃ m * step n
     calc
       step n * m ≃ _ := step_mul
-      n * m + m  ≃ _ := AA.substL ih
+      n * m + m  ≃ _ := by srw [ih]
       m * n + m  ≃ _ := Rel.symm mul_step
       m * step n ≃ _ := Rel.refl
 
@@ -135,6 +135,7 @@ Multiplication by a fixed value as the right-hand operand preserves equality.
 
 Intuition: addition preserves equality; multiplication is repeated addition.
 -/
+@[gcongr]
 theorem subst_mul_eq {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ * m ≃ n₂ * m := by
   apply ind_on (motive := λ x => ∀ y, x ≃ y → x * m ≃ y * m) n₁
   case zero =>
@@ -162,7 +163,7 @@ theorem subst_mul_eq {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ * m ≃ n₂ *
       have : n₁ * m ≃ n₂ * m := ih n₂ ‹n₁ ≃ n₂›
       calc
         step n₁ * m  ≃ _ := step_mul
-        (n₁ * m) + m ≃ _ := AA.substL ‹n₁ * m ≃ n₂ * m›
+        (n₁ * m) + m ≃ _ := by srw [‹n₁ * m ≃ n₂ * m›]
         (n₂ * m) + m ≃ _ := Rel.symm step_mul
         step n₂ * m  ≃ _ := Rel.refl
 
@@ -213,7 +214,7 @@ theorem mul_split_zero {n m : ℕ} : n * m ≃ 0 ↔ n ≃ 0 ∨ m ≃ 0 := by
     · intro (_ : n ≃ 0)
       show n * m ≃ 0
       calc
-        n * m ≃ _ := AA.substL ‹n ≃ 0›
+        n * m ≃ _ := by srw [‹n ≃ 0›]
         0 * m ≃ _ := zero_mul
         0     ≃ _ := Rel.refl
     · intro (_ : m ≃ 0)
@@ -241,25 +242,25 @@ theorem mul_distribL_add {n m k : ℕ} : n * (m + k) ≃ n * m + n * k := by
   case zero =>
     show 0 * (m + k) ≃ 0 * m + 0 * k
     calc
-      0 * (m + k)   ≃ _ := zero_mul
-      0             ≃ _ := Rel.symm Addition.zero_add
-      0 + 0         ≃ _ := AA.substL (Rel.symm zero_mul)
-      0 * m + 0     ≃ _ := AA.substR (Rel.symm zero_mul)
-      0 * m + 0 * k ≃ _ := Rel.refl
+      _ = 0 * (m + k)   := rfl
+      _ ≃ 0             := zero_mul
+      _ ≃ 0 + 0         := Rel.symm zero_add
+      _ ≃ 0 * m + 0     := by srw [←zero_mul]
+      _ ≃ 0 * m + 0 * k := by srw [←zero_mul]
   case step =>
     intro n (ih : n * (m + k) ≃ n * m + n * k)
     show step n * (m + k) ≃ step n * m + step n * k
     calc
-      step n * (m + k)          ≃ _ := step_mul
-      n * (m + k) + (m + k)     ≃ _ := AA.substL ih
-      n * m + n * k + (m + k)   ≃ _ := AA.assoc
-      n * m + (n * k + (m + k)) ≃ _ := AA.substR (Rel.symm AA.assoc)
-      n * m + ((n * k + m) + k) ≃ _ := AA.substR (AA.substL AA.comm)
-      n * m + ((m + n * k) + k) ≃ _ := AA.substR AA.assoc
-      n * m + (m + (n * k + k)) ≃ _ := Rel.symm AA.assoc
-      (n * m + m) + (n * k + k) ≃ _ := AA.substL (Rel.symm step_mul)
-      step n * m + (n * k + k)  ≃ _ := AA.substR (Rel.symm step_mul)
-      step n * m + step n * k   ≃ _ := Rel.refl
+      _ = step n * (m + k)          := rfl
+      _ ≃ n * (m + k) + (m + k)     := step_mul
+      _ ≃ n * m + n * k + (m + k)   := by srw [ih]
+      _ ≃ n * m + (n * k + (m + k)) := AA.assoc
+      _ ≃ n * m + ((n * k + m) + k) := by srw [←AA.assoc]
+      _ ≃ n * m + ((m + n * k) + k) := AA.substR (AA.substL AA.comm)
+      _ ≃ n * m + (m + (n * k + k)) := by srw [AA.assoc]
+      _ ≃ (n * m + m) + (n * k + k) := Rel.symm AA.assoc
+      _ ≃ step n * m + (n * k + k)  := by srw [←step_mul]
+      _ ≃ step n * m + step n * k   := by srw [←step_mul]
 
 def mul_distributiveL : AA.DistributiveOn Hand.L (α := ℕ) (· * ·) (· + ·) :=
   AA.DistributiveOn.mk mul_distribL_add
@@ -279,9 +280,9 @@ to that number.
 see that multiplying by one is the same as adding zero.
 -/
 theorem mul_identL {n : ℕ} : 1 * n ≃ n := calc
-  1 * n      ≃ _ := AA.substL Literals.literal_step
+  1 * n      ≃ _ := by srw [Literals.literal_step]
   step 0 * n ≃ _ := step_mul
-  0 * n + n  ≃ _ := AA.substL zero_mul
+  0 * n + n  ≃ _ := by srw [zero_mul]
   0 + n      ≃ _ := AA.identL
   n          ≃ _ := Rel.refl
 
@@ -355,7 +356,7 @@ instance mul_associative : AA.Associative (α := ℕ) (· * ·) := by
   case zero =>
     show (0 * m) * k ≃ 0 * (m * k)
     calc
-      (0 * m) * k ≃ _ := AA.substL zero_mul
+      (0 * m) * k ≃ _ := by srw [zero_mul]
       0 * k       ≃ _ := zero_mul
       0           ≃ _ := Rel.symm zero_mul
       0 * (m * k) ≃ _ := Rel.refl
@@ -363,9 +364,9 @@ instance mul_associative : AA.Associative (α := ℕ) (· * ·) := by
     intro n (ih : (n * m) * k ≃ n * (m * k))
     show (step n * m) * k ≃ step n * (m * k)
     calc
-      (step n * m) * k    ≃ _ := AA.substL step_mul
+      (step n * m) * k    ≃ _ := by srw [step_mul]
       (n * m + m) * k     ≃ _ := AA.distribR
-      (n * m) * k + m * k ≃ _ := AA.substL ih
+      (n * m) * k + m * k ≃ _ := by srw [ih]
       n * (m * k) + m * k ≃ _ := Rel.symm step_mul
       step n * (m * k)    ≃ _ := Rel.refl
 
@@ -379,6 +380,7 @@ ordering of any two natural numbers.
 difference between them. Multiplying them by another positive natural number
 also multiplies their difference, which remains positive.
 -/
+@[gcongr]
 theorem subst_mul_lt
     {n₁ n₂ m : ℕ} : Positive m → n₁ < n₂ → n₁ * m < n₂ * m := by
   intro (_ : Positive m) (_ : n₁ < n₂)
@@ -386,7 +388,7 @@ theorem subst_mul_lt
   have ⟨(d : ℕ), (_ : Positive d), (_ : n₂ ≃ n₁ + d)⟩ :=
     lt_defn_add.mp ‹n₁ < n₂›
   have : n₂ * m ≃ n₁ * m + d * m := calc
-    n₂ * m         ≃ _ := AA.substL ‹n₂ ≃ n₁ + d›
+    n₂ * m         ≃ _ := by srw [‹n₂ ≃ n₁ + d›]
     (n₁ + d) * m   ≃ _ := AA.distribR
     n₁ * m + d * m ≃ _ := Rel.refl
   have : Positive (d * m) := mul_positive ‹Positive d› ‹Positive m›
@@ -479,7 +481,7 @@ theorem factors_eqv_1 {n m : ℕ} : n * m ≃ 1 ↔ n ≃ 1 ∧ m ≃ 1 := by
     | Or.inr (_ : n ≃ 1) =>
       have : m ≃ 1 := calc
         m     ≃ _ := Rel.symm AA.identL
-        1 * m ≃ _ := AA.substL (Rel.symm ‹n ≃ 1›)
+        1 * m ≃ _ := by srw [←‹n ≃ 1›]
         n * m ≃ _ := ‹n * m ≃ 1›
         1     ≃ _ := Rel.refl
       exact And.intro ‹n ≃ 1› ‹m ≃ 1›
@@ -487,7 +489,7 @@ theorem factors_eqv_1 {n m : ℕ} : n * m ≃ 1 ↔ n ≃ 1 ∧ m ≃ 1 := by
     intro (And.intro (_ : n ≃ 1) (_ : m ≃ 1))
     show n * m ≃ 1
     calc
-      n * m ≃ _ := AA.substL ‹n ≃ 1›
+      n * m ≃ _ := by srw [‹n ≃ 1›]
       1 * m ≃ _ := AA.identL
       m     ≃ _ := ‹m ≃ 1›
       1     ≃ _ := Rel.refl
