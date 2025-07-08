@@ -273,10 +273,10 @@ instance trans_le_le_le : Trans (α := ℕ) (· ≤ ·) (· ≤ ·) (· ≤ ·) 
 
 /--
 The _less than or equal to_ relation is preserved when the same value is
-added on the left to both sides.
+added on the right to both sides.
 -/
 @[gcongr]
-theorem le_subst_add {n₁ n₂ m : ℕ} : n₁ ≤ n₂ → n₁ + m ≤ n₂ + m := by
+theorem add_substL_le {n₁ n₂ m : ℕ} : n₁ ≤ n₂ → n₁ + m ≤ n₂ + m := by
   intro (_ : n₁ ≤ n₂)
   show n₁ + m ≤ n₂ + m
   have ⟨d, (_ : n₁ + d ≃ n₂)⟩ := le_defn.mp ‹n₁ ≤ n₂›
@@ -290,17 +290,25 @@ theorem le_subst_add {n₁ n₂ m : ℕ} : n₁ ≤ n₂ → n₁ + m ≤ n₂ +
     (n₁ + d) + m ≃ _ := by srw [‹n₁ + d ≃ n₂›]
     n₂ + m       ≃ _ := Rel.refl
 
-def le_substL_add
-    : AA.SubstitutiveOn Hand.L (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·)
-    := {
-  subst₂ := λ (_ : True) => le_subst_add
-}
+/--
+The _less than or equal to_ relation is preserved when the same value is
+added on the left to both sides.
+-/
+@[gcongr]
+theorem add_substR_le {n₁ n₂ m : ℕ} : n₁ ≤ n₂ → m + n₁ ≤ m + n₂ := by
+  intro (_ : n₁ ≤ n₂)
+  show m + n₁ ≤ m + n₂
+  calc
+    _ = m + n₁ := rfl
+    _ ≃ n₁ + m := add_comm
+    _ ≤ n₂ + m := by srw [‹n₁ ≤ n₂›]
+    _ ≃ m + n₂ := add_comm
 
 instance le_substitutive_add
     : AA.Substitutive₂ (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·)
     := {
-  substitutiveL := le_substL_add
-  substitutiveR := AA.substR_from_substL_swap (rS := (· ≃ ·)) le_substL_add
+  substitutiveL := { subst₂ := λ (_ : True) => add_substL_le }
+  substitutiveR := { subst₂ := λ (_ : True) => add_substR_le }
 }
 
 /--

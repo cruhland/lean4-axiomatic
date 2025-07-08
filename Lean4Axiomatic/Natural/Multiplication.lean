@@ -136,7 +136,7 @@ Multiplication by a fixed value as the right-hand operand preserves equality.
 Intuition: addition preserves equality; multiplication is repeated addition.
 -/
 @[gcongr]
-theorem subst_mul_eq {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ * m ≃ n₂ * m := by
+theorem mul_substL_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ * m ≃ n₂ * m := by
   apply ind_on (motive := λ x => ∀ y, x ≃ y → x * m ≃ y * m) n₁
   case zero =>
     intro n₂
@@ -167,17 +167,26 @@ theorem subst_mul_eq {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ * m ≃ n₂ *
         (n₂ * m) + m ≃ _ := Rel.symm step_mul
         step n₂ * m  ≃ _ := Rel.refl
 
-def mul_substL_eq
-    : AA.SubstitutiveOn Hand.L (α := ℕ) (· * ·) AA.tc (· ≃ ·) (· ≃ ·)
-    := {
-  subst₂ := λ (_ : True) => subst_mul_eq
-}
+/--
+Multiplication by a fixed value as the left-hand operand preserves equality.
 
-instance mul_substitutive_eq
+Intuition: addition preserves equality; multiplication is repeated addition.
+-/
+@[gcongr]
+theorem mul_substR_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m * n₁ ≃ m * n₂ := by
+  intro (_ : n₁ ≃ n₂)
+  show m * n₁ ≃ m * n₂
+  calc
+    _ = m * n₁ := rfl
+    _ ≃ n₁ * m := mul_comm
+    _ ≃ n₂ * m := by srw [‹n₁ ≃ n₂›]
+    _ ≃ m * n₂ := mul_comm
+
+instance mul_substitutive_eqv
     : AA.Substitutive₂ (α := ℕ) (· * ·) AA.tc (· ≃ ·) (· ≃ ·)
     := {
-  substitutiveL := mul_substL_eq
-  substitutiveR := AA.substR_from_substL_swap (rS := (· ≃ ·)) mul_substL_eq
+  substitutiveL := { subst₂ := λ (_ : True) => mul_substL_eqv }
+  substitutiveR := { subst₂ := λ (_ : True) => mul_substR_eqv }
 }
 
 /--
@@ -381,8 +390,9 @@ difference between them. Multiplying them by another positive natural number
 also multiplies their difference, which remains positive.
 -/
 @[gcongr]
-theorem subst_mul_lt
-    {n₁ n₂ m : ℕ} : Positive m → n₁ < n₂ → n₁ * m < n₂ * m := by
+theorem mul_substL_lt
+    {n₁ n₂ m : ℕ} : Positive m → n₁ < n₂ → n₁ * m < n₂ * m
+    := by
   intro (_ : Positive m) (_ : n₁ < n₂)
   show n₁ * m < n₂ * m
   have ⟨(d : ℕ), (_ : Positive d), (_ : n₂ ≃ n₁ + d)⟩ :=
@@ -395,17 +405,27 @@ theorem subst_mul_lt
   exact lt_defn_add.mpr
     ⟨d * m, ‹Positive (d * m)›, ‹n₂ * m ≃ n₁ * m + d * m›⟩
 
-def mul_substL_lt
-    : AA.SubstitutiveOn Hand.L (α := ℕ) (· * ·) Positive (· < ·) (· < ·)
-    := {
-  subst₂ := subst_mul_lt
-}
+/--
+Multiplication on the left by a positive natural number preserves the strict
+ordering of any two natural numbers.
+-/
+@[gcongr]
+theorem mul_substR_lt
+    {n₁ n₂ m : ℕ} : Positive m → n₁ < n₂ → m * n₁ < m * n₂
+    := by
+  intro (_ : Positive m) (_ : n₁ < n₂)
+  show m * n₁ < m * n₂
+  calc
+    _ = m * n₁ := rfl
+    _ ≃ n₁ * m := mul_comm
+    _ < n₂ * m := mul_substL_lt ‹Positive m› ‹n₁ < n₂›
+    _ ≃ m * n₂ := mul_comm
 
 instance mul_substitutive_lt
     : AA.Substitutive₂ (α := ℕ) (· * ·) Positive (· < ·) (· < ·)
     := {
-  substitutiveL := mul_substL_lt
-  substitutiveR := AA.substR_from_substL_swap (rS := (· ≃ ·)) mul_substL_lt
+  substitutiveL := { subst₂ := mul_substL_lt }
+  substitutiveR := { subst₂ := mul_substR_lt }
 }
 
 /--
@@ -471,7 +491,7 @@ theorem factors_eqv_1 {n m : ℕ} : n * m ≃ 1 ↔ n ≃ 1 ∧ m ≃ 1 := by
       have : 1 < n * m := calc
         1     ≤ _ := positive_ge.mp ‹Positive m›
         m     ≃ _ := Rel.symm AA.identL
-        1 * m < _ := subst_mul_lt ‹Positive m› ‹1 < n›
+        1 * m < _ := mul_substL_lt ‹Positive m› ‹1 < n›
         n * m ≃ _ := Rel.refl
       have two : AA.TwoOfThree (n * m < 1) (n * m ≃ 1) (n * m > 1) :=
         AA.TwoOfThree.twoAndThree ‹n * m ≃ 1› ‹n * m > 1›
