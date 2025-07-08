@@ -86,16 +86,15 @@ theorem add_step {n m : ℕ} : n + step m ≃ step (n + m) := by
     show 0 + step m ≃ step (0 + m)
     calc
       0 + step m   ≃ _ := Addition.zero_add
-      -- Seems to be influenced by the orientation of the `≃ _`??
-      step m       ≃ _ := by gcongr; exact Rel.symm Addition.zero_add
+      step m       ≃ _ := by srw [Rel.symm Addition.zero_add]
       step (0 + m) ≃ _ := Rel.refl
   case step =>
     intro n (ih : n + step m ≃ step (n + m))
     show step n + step m ≃ step (step n + m)
     calc
       step n + step m     ≃ _ := Addition.step_add
-      step (n + step m)   ≃ _ := by grw [ih]
-      step (step (n + m)) ≃ _ := by grw [Rel.symm Addition.step_add]
+      step (n + step m)   ≃ _ := by srw [ih]
+      step (step (n + m)) ≃ _ := by srw [Rel.symm Addition.step_add]
       step (step n + m)   ≃ _ := Rel.refl
 
 instance add_semicompatible_step : AA.Semicompatible (α := ℕ) step (· + ·) := {
@@ -131,7 +130,7 @@ theorem add_comm {n m : ℕ} : n + m ≃ m + n := by
     show step n + m ≃ m + step n
     calc
       step n + m   ≃ _ := Addition.step_add
-      step (n + m) ≃ _ := by grw [ih]
+      step (n + m) ≃ _ := by srw [ih]
       step (m + n) ≃ _ := Rel.symm add_step
       m + step n   ≃ _ := Rel.refl
 
@@ -172,7 +171,7 @@ theorem add_substL {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m
       have : n₁ ≃ n₂ := AA.inject ‹step n₁ ≃ step n₂›
       calc
         step n₁ + m   ≃ _ := Addition.step_add
-        step (n₁ + m) ≃ _ := by grw [ih _ ‹n₁ ≃ n₂›]
+        step (n₁ + m) ≃ _ := by srw [ih _ ‹n₁ ≃ n₂›]
         step (n₂ + m) ≃ _ := Rel.symm Addition.step_add
         step n₂ + m   ≃ _ := Rel.refl
 
@@ -188,7 +187,7 @@ theorem add_substR {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m + n₁ ≃ m + n₂
   calc
     _ = m + n₁ := rfl
     _ ≃ n₁ + m := add_comm
-    _ ≃ n₂ + m := by grw [‹n₁ ≃ n₂›]
+    _ ≃ n₂ + m := by srw [‹n₁ ≃ n₂›]
     _ ≃ m + n₂ := add_comm
 
 instance add_substitutive
@@ -201,9 +200,9 @@ instance add_substitutive
 /-- Adding one is the same as incrementing. -/
 theorem add_one_step {n : ℕ} : n + 1 ≃ step n := by
   calc
-    n + 1        ≃ _ := by grw [Literals.literal_step]
+    n + 1        ≃ _ := by srw [Literals.literal_step]
     n + step 0   ≃ _ := add_step
-    step (n + 0) ≃ _ := by grw [add_zero]
+    step (n + 0) ≃ _ := by srw [add_zero]
     step n       ≃ _ := Rel.refl
 
 /--
@@ -230,16 +229,16 @@ theorem add_assoc {n m k : ℕ} : (n + m) + k ≃ n + (m + k) := by
   case zero =>
     show (0 + m) + k ≃ 0 + (m + k)
     calc
-      (0 + m) + k ≃ _ := by grw [Addition.zero_add]
+      (0 + m) + k ≃ _ := by srw [Addition.zero_add]
       m + k       ≃ _ := Rel.symm Addition.zero_add
       0 + (m + k) ≃ _ := Rel.refl
   case step =>
     intro n (ih : (n + m) + k ≃ n + (m + k))
     show (step n + m) + k ≃ step n + (m + k)
     calc
-      (step n + m) + k   ≃ _ := by grw [Addition.step_add]
+      (step n + m) + k   ≃ _ := by srw [Addition.step_add]
       step (n + m) + k   ≃ _ := Addition.step_add
-      step ((n + m) + k) ≃ _ := by grw [ih]
+      step ((n + m) + k) ≃ _ := by srw [ih]
       step (n + (m + k)) ≃ _ := Rel.symm Addition.step_add
       step n + (m + k)   ≃ _ := Rel.refl
 
@@ -326,7 +325,7 @@ theorem zero_sum_split {n m : ℕ} : n + m ≃ 0 ↔ n ≃ 0 ∧ m ≃ 0 := by
     show n + m ≃ 0
     calc
       _ = n + m := rfl
-      _ ≃ 0 + m := by grw [‹n ≃ 0›]
+      _ ≃ 0 + m := by srw [‹n ≃ 0›]
       _ ≃ m     := AA.identL
       _ ≃ 0     := ‹m ≃ 0›
 
