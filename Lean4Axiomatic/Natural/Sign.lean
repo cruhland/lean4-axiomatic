@@ -45,6 +45,7 @@ predicate.
 **Proof intuition**: From the definition of `Positive`, this is equivalent to
 proving `n₁ ≄ 0 → n₂ ≄ 0`. Use substitution on `· ≄ ·` to complete the proof.
 -/
+@[gcongr]
 theorem positive_subst {n₁ n₂ : ℕ} : n₁ ≃ n₂ → Positive n₁ → Positive n₂ := by
   intro (_ : n₁ ≃ n₂) (_ : Positive n₁)
   show Positive n₂

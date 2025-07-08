@@ -56,6 +56,7 @@ variable {ℕ : Type} [Core ℕ] [Addition ℕ] [order_inst : Order ℕ]
 The _less than or equal to_ relation is preserved when both sides are
 incremented.
 -/
+@[gcongr]
 theorem le_subst_step {n₁ n₂ : ℕ} : n₁ ≤ n₂ → step n₁ ≤ step n₂ := by
   intro (_ : n₁ ≤ n₂)
   show step n₁ ≤ step n₂
@@ -65,7 +66,7 @@ theorem le_subst_step {n₁ n₂ : ℕ} : n₁ ≤ n₂ → step n₁ ≤ step n
   show step n₁ + d ≃ step n₂
   calc
     step n₁ + d   ≃ _ := step_add
-    step (n₁ + d) ≃ _ := AA.subst₁ ‹n₁ + d ≃ n₂›
+    step (n₁ + d) ≃ _ := by srw [‹n₁ + d ≃ n₂›]
     step n₂       ≃ _ := Rel.refl
 
 instance le_substitutive_step
@@ -99,6 +100,7 @@ instance le_injective_step : AA.Injective (α := ℕ) step (· ≤ ·) (· ≤ �
 Equal natural numbers can be substituted on the right side of
 _less than or equal to_.
 -/
+@[gcongr]
 theorem le_eqv_subst {n m₁ m₂ : ℕ} : m₁ ≃ m₂ → n ≤ m₁ → n ≤ m₂ := by
   intro (_ : m₁ ≃ m₂) (_ : n ≤ m₁)
   show n ≤ m₂
@@ -133,6 +135,7 @@ variable [Induction.{0} ℕ]
 Equal natural numbers can be substituted on the left side of
 _less than or equal to_.
 -/
+@[gcongr]
 theorem le_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ ≤ m → n₂ ≤ m := by
   intro (_ : n₁ ≃ n₂) (_ : n₁ ≤ m)
   show n₂ ≤ m
@@ -141,7 +144,7 @@ theorem le_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ ≤ m → n₂
   exists d
   show n₂ + d ≃ m
   calc
-    n₂ + d ≃ _ := Rel.symm (AA.substL ‹n₁ ≃ n₂›)
+    n₂ + d ≃ _ := by srw [←‹n₁ ≃ n₂›]
     n₁ + d ≃ _ := ‹n₁ + d ≃ m›
     m      ≃ _ := Rel.refl
 
@@ -206,7 +209,7 @@ theorem le_step_split {n m : ℕ} : n ≤ step m → n ≤ m ∨ n ≃ step m :=
     show n ≃ step m
     calc
       n      ≃ _ := Rel.symm add_zero
-      n + 0  ≃ _ := AA.substR (Rel.symm ‹d ≃ 0›)
+      n + 0  ≃ _ := by srw [←‹d ≃ 0›]
       n + d  ≃ _ := ‹n + d ≃ step m›
       step m ≃ _ := Rel.refl
   · intro e (_ : d ≃ step e)
@@ -219,7 +222,7 @@ theorem le_step_split {n m : ℕ} : n ≤ step m → n ≤ m ∨ n ≃ step m :=
     show step (n + e) ≃ step m
     calc
       step (n + e) ≃ _ := Rel.symm add_step
-      n + step e   ≃ _ := AA.substR (Rel.symm ‹d ≃ step e›)
+      n + step e   ≃ _ := by srw [←‹d ≃ step e›]
       n + d        ≃ _ := ‹n + d ≃ step m›
       step m       ≃ _ := Rel.refl
 
@@ -232,7 +235,7 @@ theorem le_step {n m : ℕ} : n ≤ m → n ≤ step m := by
   show n + step d ≃ step m
   calc
     n + step d   ≃ _ := add_step
-    step (n + d) ≃ _ := AA.subst₁ ‹n + d ≃ m›
+    step (n + d) ≃ _ := by srw [‹n + d ≃ m›]
     step m       ≃ _ := Rel.refl
 
 /--
@@ -252,7 +255,7 @@ theorem le_trans {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k := by
     show n + (d + e) ≃ 0
     calc
       n + (d + e) ≃ _ := Rel.symm AA.assoc
-      (n + d) + e ≃ _ := AA.substL ‹n + d ≃ m›
+      (n + d) + e ≃ _ := by srw [‹n + d ≃ m›]
       m + e       ≃ _ := ‹m + e ≃ 0›
       0           ≃ _ := Rel.refl
   case step =>
@@ -272,6 +275,7 @@ instance trans_le_le_le : Trans (α := ℕ) (· ≤ ·) (· ≤ ·) (· ≤ ·) 
 The _less than or equal to_ relation is preserved when the same value is
 added on the left to both sides.
 -/
+@[gcongr]
 theorem le_subst_add {n₁ n₂ m : ℕ} : n₁ ≤ n₂ → n₁ + m ≤ n₂ + m := by
   intro (_ : n₁ ≤ n₂)
   show n₁ + m ≤ n₂ + m
@@ -281,9 +285,9 @@ theorem le_subst_add {n₁ n₂ m : ℕ} : n₁ ≤ n₂ → n₁ + m ≤ n₂ +
   show (n₁ + m) + d ≃ n₂ + m
   calc
     (n₁ + m) + d ≃ _ := AA.assoc
-    n₁ + (m + d) ≃ _ := AA.substR AA.comm
+    n₁ + (m + d) ≃ _ := by srw [AA.comm]
     n₁ + (d + m) ≃ _ := Rel.symm AA.assoc
-    (n₁ + d) + m ≃ _ := AA.substL ‹n₁ + d ≃ n₂›
+    (n₁ + d) + m ≃ _ := by srw [‹n₁ + d ≃ n₂›]
     n₂ + m       ≃ _ := Rel.refl
 
 def le_substL_add
@@ -336,7 +340,7 @@ theorem le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m := by
   have (Exists.intro (d₂ : ℕ) (_ : m + d₂ ≃ n)) := le_defn.mp ‹m ≤ n›
   have : n + (d₁ + d₂) ≃ n + 0 := calc
     n + (d₁ + d₂) ≃ _ := Rel.symm AA.assoc
-    (n + d₁) + d₂ ≃ _ := AA.substL ‹n + d₁ ≃ m›
+    (n + d₁) + d₂ ≃ _ := by srw [‹n + d₁ ≃ m›]
     m + d₂        ≃ _ := ‹m + d₂ ≃ n›
     n             ≃ _ := Rel.symm add_zero
     n + 0         ≃ _ := Rel.refl
@@ -344,13 +348,14 @@ theorem le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m := by
   have (And.intro (_ : d₁ ≃ 0) _) := zero_sum_split.mp ‹d₁ + d₂ ≃ 0›
   calc
     n      ≃ _ := Rel.symm add_zero
-    n + 0  ≃ _ := AA.substR (Rel.symm ‹d₁ ≃ 0›)
+    n + 0  ≃ _ := by srw [←‹d₁ ≃ 0›]
     n + d₁ ≃ _ := ‹n + d₁ ≃ m›
     m      ≃ _ := Rel.refl
 
 /--
 Equivalent natural numbers can be substituted on the left side of _less than_.
 -/
+@[gcongr]
 theorem lt_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ < m → n₂ < m := by
   intro (_ : n₁ ≃ n₂) (_ : n₁ < m)
   show n₂ < m
@@ -382,6 +387,7 @@ def lt_substL_eqv
 /--
 Equivalent natural numbers can be substituted on the right side of _less than_.
 -/
+@[gcongr]
 theorem lt_eqv_subst {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m < n₁ → m < n₂ := by
   intro (_ : n₁ ≃ n₂) (_ : m < n₁)
   show m < n₂
@@ -447,6 +453,7 @@ the same distance apart.
 _not equivalent to_. Show that both of them are preserved under addition. Put
 them back together.
 -/
+@[gcongr]
 theorem lt_substL_add {n₁ n₂ m : ℕ} : n₁ < n₂ → n₁ + m < n₂ + m := by
   intro (_ : n₁ < n₂)
   show n₁ + m < n₂ + m
@@ -467,6 +474,7 @@ the same distance apart.
 **Proof intuition**: Use commutativity of addition with the opposite-hand
 version of this theorem.
 -/
+@[gcongr]
 theorem lt_substR_add {n₁ n₂ m : ℕ} : n₁ < n₂ → m + n₁ < m + n₂ := by
   intro (_ : n₁ < n₂)
   show m + n₁ < m + n₂
@@ -494,7 +502,7 @@ theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
       show n ≃ m
       calc
         n     ≃ _ := Rel.symm add_zero
-        n + 0 ≃ _ := AA.substR (Rel.symm ‹d ≃ 0›)
+        n + 0 ≃ _ := by srw [←‹d ≃ 0›]
         n + d ≃ _ := ‹n + d ≃ m›
         m     ≃ _ := Rel.refl
     have : Positive d := Signed.positive_defn.mpr ‹d ≄ 0›
@@ -506,7 +514,7 @@ theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
     calc
       step n + d'   ≃ _ := step_add
       step (n + d') ≃ _ := Rel.symm add_step
-      n + step d'   ≃ _ := AA.substR ‹step d' ≃ d›
+      n + step d'   ≃ _ := by srw [‹step d' ≃ d›]
       n + d         ≃ _ := ‹n + d ≃ m›
       m             ≃ _ := Rel.refl
   · intro (_ : step n ≤ m)
@@ -586,7 +594,7 @@ theorem lt_defn_add {n m : ℕ} : n < m ↔ ∃ k, Positive k ∧ m ≃ n + k :=
     calc
       step n + k'   ≃ _ := step_add
       step (n + k') ≃ _ := Rel.symm add_step
-      n + step k'   ≃ _ := AA.substR ‹step k' ≃ k›
+      n + step k'   ≃ _ := by srw [‹step k' ≃ k›]
       n + k         ≃ _ := Rel.symm ‹m ≃ n + k›
       m             ≃ _ := Rel.refl
 
@@ -648,14 +656,14 @@ theorem le_split {n m : ℕ} : n ≤ m ↔ n < m ∨ n ≃ m := by
       have : n ≃ m := calc
         _ = n     := rfl
         _ ≃ n + 0 := Rel.symm add_zero
-        _ ≃ n + d := AA.substR (Rel.symm ‹d ≃ 0›)
+        _ ≃ n + d := by srw [←‹d ≃ 0›]
         _ ≃ m     := ‹n + d ≃ m›
       exact Or.inr ‹n ≃ m›
     | Or.inr (Exists.intro (d' : ℕ) (_ : d ≃ step d')) =>
       have : step n + d' ≃ m := calc
         _ = step n + d'   := rfl
         _ ≃ n + step d'   := step_add_swap
-        _ ≃ n + d         := AA.substR (Rel.symm ‹d ≃ step d'›)
+        _ ≃ n + d         := by srw [←‹d ≃ step d'›]
         _ ≃ m             := ‹n + d ≃ m›
       have : step n ≤ m := le_defn.mpr (Exists.intro d' ‹step n + d' ≃ m›)
       have : n < m := lt_step_le.mpr ‹step n ≤ m›
