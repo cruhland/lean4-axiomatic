@@ -29,16 +29,18 @@ def getRel : Expr → Option (Name × Expr × Expr)
 partial def
     srw (goal : MVarId) (rwRule : Expr) : TacticM Unit
     := goal.withContext do
-  -- Try to solve goal right away
+  /- Try to solve goal right away -/
   try
     goal.gcongrForward #[rwRule]
     return ()
   catch _ =>
     pure ()
 
-  -- Validate goal is in the right shape for this tactic
-  let rel ← goal.getType -- Not reducing to whnf until needed
-  let some (relName, lhs, rhs) := getRel rel | throwError "scongr?: not rel"
+  /- Validate goal is in the right shape for this tactic -/
+  -- Use `getType'` instead of `getType` to resolve mvars and reduce exprs
+  -- But only use reducible transparency to avoid unfolding too much
+  let rel ← withReducible goal.getType'
+  let some (relName, lhs, rhs) := getRel rel | throwError "not rel"
   let some (lhsHead, lhsArgs) := getCongrAppFnArgs lhs | throwError "lhs bad"
   let some (rhsHead, rhsArgs) := getCongrAppFnArgs rhs | throwError "rhs bad"
   unless lhsHead == rhsHead && lhsArgs.size == rhsArgs.size do
@@ -50,7 +52,7 @@ partial def
     return !isSame
   if varyingArgs.all not then throwError "args are all same; use rfl instead?"
 
-  -- Apply the first lemma that matches
+  /- Apply the first lemma that matches -/
   let key := { relName, head := lhsHead, varyingArgs }
   let matchingLemmas := (gcongrExt.getState (← getEnv)).getD key #[]
   let s ← saveState
@@ -63,7 +65,7 @@ partial def
       return none
   let some (lem, _newGoals) := lemAndNewGoalsOpt | return ()
 
-  -- Recursively apply this tactic to main subgoals
+  /- Recursively apply this tactic to main subgoals -/
   let some e ← getExprMVarAssignment? goal | panic! "goal unassigned?"
   let args := e.getAppArgs
   for (i, _, _) in lem.mainSubgoals do

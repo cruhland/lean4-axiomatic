@@ -98,9 +98,9 @@ theorem mul_step {n m : ℕ} : n * step m ≃ n * m + n := by
       n * step m + step m    ≃ _ := by srw [ih]
       (n * m + n) + step m   ≃ _ := add_step
       step ((n * m + n) + m) ≃ _ := by srw [AA.assoc]
-      step (n * m + (n + m)) ≃ _ := AA.subst₁ (AA.substR AA.comm)
+      step (n * m + (n + m)) ≃ _ := by srw [AA.comm]
       step (n * m + (m + n)) ≃ _ := by srw [←AA.assoc]
-      step ((n * m + m) + n) ≃ _ := AA.subst₁ (AA.substL (Rel.symm step_mul))
+      step ((n * m + m) + n) ≃ _ := by srw [←step_mul]
       step (step n * m + n)  ≃ _ := Rel.symm add_step
       step n * m + step n    ≃ _ := Rel.refl
 
@@ -229,7 +229,7 @@ theorem mul_split_zero {n m : ℕ} : n * m ≃ 0 ↔ n ≃ 0 ∨ m ≃ 0 := by
     · intro (_ : m ≃ 0)
       show n * m ≃ 0
       calc
-        n * m ≃ _ := AA.substR ‹m ≃ 0›
+        n * m ≃ _ := by srw [‹m ≃ 0›]
         n * 0 ≃ _ := mul_zero
         0     ≃ _ := Rel.refl
 
@@ -265,7 +265,7 @@ theorem mul_distribL_add {n m k : ℕ} : n * (m + k) ≃ n * m + n * k := by
       _ ≃ n * m + n * k + (m + k)   := by srw [ih]
       _ ≃ n * m + (n * k + (m + k)) := AA.assoc
       _ ≃ n * m + ((n * k + m) + k) := by srw [←AA.assoc]
-      _ ≃ n * m + ((m + n * k) + k) := AA.substR (AA.substL AA.comm)
+      _ ≃ n * m + ((m + n * k) + k) := by srw [AA.comm]
       _ ≃ n * m + (m + (n * k + k)) := by srw [AA.assoc]
       _ ≃ (n * m + m) + (n * k + k) := Rel.symm AA.assoc
       _ ≃ step n * m + (n * k + k)  := by srw [←step_mul]
