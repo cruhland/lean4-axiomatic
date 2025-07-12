@@ -4,12 +4,14 @@ import Mathlib.Tactic.GCongr
 
 namespace Lean4Axiomatic.Tactic
 
-open Lean (Expr MVarId Name Syntax getExprMVarAssignment? withRef)
-open Lean.Elab.Tactic (
-  Tactic TacticM getMainGoal getMainTarget replaceMainGoal withMainContext
-  withRWRulesSeq
+open Lean (
+  Expr MVarId Name Syntax getExprMVarAssignment? registerTraceClass withRef
 )
-open Lean.Elab.Term (elabTerm)
+open Lean.Elab (throwAbortTactic)
+open Lean.Elab.Tactic (
+  Tactic TacticM elabTerm getMainGoal getMainTarget replaceMainGoal
+  withMainContext withRWRulesSeq
+)
 open Lean.Meta (
   MetaM isDefEq isProof mkAppM mkConstWithFreshMVarLevels
   mkFreshExprSyntheticOpaqueMVar saveState whnf withReducible
@@ -21,6 +23,8 @@ open Lean.Parser.Tactic (rwRuleSeq)
 open Mathlib.Tactic.GCongr (
   gcongrExt gcongrForwardDischarger getCongrAppFnArgs getRel
 )
+
+initialize registerTraceClass `Meta.srw
 
 def getRel : Expr → Option (Name × Expr × Expr)
 | .app (.app rel lhs) rhs => rel.getAppFn.constName?.map (·, lhs, rhs)
@@ -81,10 +85,16 @@ syntax (name := srwStx) "srw " rwRuleSeq : tactic
 
   let symm := !rule[0].isNone
   let term := rule[1]
-  let rwRuleExpr ← elabTerm term none
+
+  let goal ← getMainGoal
+  let rwRuleExpr ← goal.withContext do
+    elabTerm term (expectedType? := none) (mayPostpone := true)
+  if rwRuleExpr.hasSyntheticSorry then
+      -- Elaboration can produce `sorry` to indicate failure
+      throwAbortTactic
   let directedRuleExpr ←
     if symm then mkAppM ``Rel.symm #[rwRuleExpr] else pure rwRuleExpr
 
-  srw (← getMainGoal) directedRuleExpr
+  srw goal directedRuleExpr
 
 end Lean4Axiomatic.Tactic

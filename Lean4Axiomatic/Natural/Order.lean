@@ -466,7 +466,7 @@ theorem lt_substL_add {n₁ n₂ m : ℕ} : n₁ < n₂ → n₁ + m < n₂ + m 
   intro (_ : n₁ < n₂)
   show n₁ + m < n₂ + m
   have (And.intro (_ : n₁ ≤ n₂) (_ : n₁ ≄ n₂)) := lt_defn.mp ‹n₁ < n₂›
-  have : n₁ + m ≤ n₂ + m := AA.substL ‹n₁ ≤ n₂›
+  have : n₁ + m ≤ n₂ + m := by srw [‹n₁ ≤ n₂›]
   have : n₁ + m ≄ n₂ + m := mt AA.cancelR ‹n₁ ≄ n₂›
   have : n₁ + m < n₂ + m :=
     lt_defn.mpr (And.intro ‹n₁ + m ≤ n₂ + m› ‹n₁ + m ≄ n₂ + m›)
@@ -944,7 +944,7 @@ theorem trichotomy (n m : ℕ)
       | AA.OneOfThree.second (_ : n ≃ m) =>
         have : m ≃ n := Rel.symm ‹n ≃ m›
         have : m ≤ n := le_split.mpr (Or.inr ‹m ≃ n›)
-        have : step m ≤ step n := AA.subst₁ ‹m ≤ n›
+        have : step m ≤ step n := by srw [‹m ≤ n›]
         have : m < step n := lt_step_le.mpr ‹step m ≤ step n›
         apply AA.OneOfThree.third
         exact ‹m < step n›
@@ -1037,7 +1037,7 @@ theorem compare_add {n m k : ℕ} : compare n m = compare (n + k) (m + k) := by
   match tri with
   | AA.OneOfThree.first (_ : n < m) =>
     have : compare n m = Ordering.lt := compare_lt.mpr ‹n < m›
-    have : n + k < m + k := lt_substL_add ‹n < m›
+    have : n + k < m + k := by srw [‹n < m›]
     have : compare (n + k) (m + k) = Ordering.lt := compare_lt.mpr this
     calc
       compare n m
@@ -1048,7 +1048,7 @@ theorem compare_add {n m k : ℕ} : compare n m = compare (n + k) (m + k) := by
         = _ := rfl
   | AA.OneOfThree.second (_ : n ≃ m) =>
     have : compare n m = Ordering.eq := compare_eq.mpr ‹n ≃ m›
-    have : n + k ≃ m + k := AA.substL ‹n ≃ m›
+    have : n + k ≃ m + k := by srw [‹n ≃ m›]
     have : compare (n + k) (m + k) = Ordering.eq :=
       compare_eq.mpr ‹n + k ≃ m + k›
     calc
@@ -1060,7 +1060,7 @@ theorem compare_add {n m k : ℕ} : compare n m = compare (n + k) (m + k) := by
         = _ := rfl
   | AA.OneOfThree.third (_ : n > m) =>
     have : compare n m = Ordering.gt := compare_gt.mpr ‹n > m›
-    have : n + k > m + k := lt_substL_add ‹n > m›
+    have : n + k > m + k := by srw [‹n > m›]
     have : compare (n + k) (m + k) = Ordering.gt :=
       compare_gt.mpr ‹n + k > m + k›
     calc
@@ -1096,8 +1096,9 @@ theorem add_preserves_compare
     have : n < m := compare_lt.mp ‹compare n m = Ordering.lt›
     have : k < j := compare_lt.mp ‹compare k j = Ordering.lt›
     have : n + k < m + j := calc
-      n + k < m + k := lt_substL_add ‹n < m›
-      m + k < m + j := lt_substR_add ‹k < j›
+      -- TODO: multi-rw
+      n + k < m + k := by srw [‹n < m›]
+      m + k < m + j := by srw [‹k < j›]
     have : compare (n + k) (m + j) = Ordering.lt := compare_lt.mpr this
     exact this
   | Ordering.eq =>
@@ -1106,8 +1107,9 @@ theorem add_preserves_compare
     have : n ≃ m := compare_eq.mp ‹compare n m = Ordering.eq›
     have : k ≃ j := compare_eq.mp ‹compare k j = Ordering.eq›
     have : n + k ≃ m + j := calc
-      n + k ≃ m + k := AA.substL ‹n ≃ m›
-      m + k ≃ m + j := AA.substR ‹k ≃ j›
+      -- TODO: multi-rw
+      n + k ≃ m + k := by srw [‹n ≃ m›]
+      m + k ≃ m + j := by srw [‹k ≃ j›]
     have : compare (n + k) (m + j) = Ordering.eq := compare_eq.mpr this
     exact this
   | Ordering.gt =>
@@ -1116,8 +1118,9 @@ theorem add_preserves_compare
     have : n > m := compare_gt.mp ‹compare n m = Ordering.gt›
     have : k > j := compare_gt.mp ‹compare k j = Ordering.gt›
     have : m + j < n + k := calc
-      m + j < m + k := lt_substR_add ‹j < k›
-      m + k < n + k := lt_substL_add ‹m < n›
+    -- TODO: multi-rw
+      m + j < m + k := by srw [‹j < k›]
+      m + k < n + k := by srw [‹m < n›]
     have : compare (n + k) (m + j) = Ordering.gt := compare_gt.mpr this
     exact this
 
