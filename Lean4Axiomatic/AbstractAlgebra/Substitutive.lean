@@ -626,6 +626,7 @@ value.
 with an equivalent term, the right-hand term should still be unequal to the new
 term.
 -/
+@[gcongr]
 theorem neqv_substL
     {α : Sort u} [EqvOp α] {x₁ x₂ y : α} : x₁ ≃ x₂ → x₁ ≄ y → x₂ ≄ y
     := by
@@ -642,6 +643,7 @@ value.
 with an equivalent term, the left-hand term should still be unequal to the new
 term.
 -/
+@[gcongr]
 theorem neqv_substR
     {α : Sort u} [EqvOp α] {x₁ x₂ y : α} : x₁ ≃ x₂ → y ≄ x₁ → y ≄ x₂
     := by

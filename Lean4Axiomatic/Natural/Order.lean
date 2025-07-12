@@ -117,7 +117,7 @@ to_ and equivalence.
 theorem trans_le_eqv_le {n m k : ℕ} : n ≤ m → m ≃ k → n ≤ k := by
   intro (_ : n ≤ m) (_ : m ≃ k)
   show n ≤ k
-  exact le_eqv_subst ‹m ≃ k› ‹n ≤ m›
+  frw [‹m ≃ k›] ‹n ≤ m›
 
 instance trans_le_eqv_le_inst : Trans (α := ℕ) (· ≤ ·) (· ≃ ·) (· ≤ ·) := {
   trans := trans_le_eqv_le
@@ -127,6 +127,33 @@ def le_substR_eqv
     : AA.SubstitutiveOn Hand.R (α := ℕ) (· ≤ ·) AA.tc (· ≃ ·) (· → ·)
     := {
   subst₂ := λ (_ : True) => le_eqv_subst
+}
+
+/--
+Equivalent natural numbers can be substituted on the right side of _less than_.
+-/
+@[gcongr]
+theorem lt_eqv_subst {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m < n₁ → m < n₂ := by
+  intro (_ : n₁ ≃ n₂) (_ : m < n₁)
+  show m < n₂
+  have ⟨(_ : m ≤ n₁), (_ : m ≄ n₁)⟩ := lt_defn.mp ‹m < n₁›
+  have : m ≤ n₂ := by frw [‹n₁ ≃ n₂›] ‹m ≤ n₁›
+  -- TODO: mismatched lhs & rhs
+  have : m ≄ n₂ := AA.neqv_substR ‹n₁ ≃ n₂› ‹m ≄ n₁›
+  apply lt_defn.mpr
+  exact ⟨‹m ≤ n₂›, ‹m ≄ n₂›⟩
+
+/--
+Corollary of `lt_eqv_subst` to support transitivity of _less than_ and
+equivalence.
+-/
+theorem trans_lt_eqv_lt {n m k : ℕ} : n < m → m ≃ k → n < k := by
+  intro (_ : n < m) (_ : m ≃ k)
+  show n < k
+  frw [‹m ≃ k›] ‹n < m›
+
+instance trans_lt_eqv_lt_inst : Trans (α := ℕ) (· < ·) (· ≃ ·) (· < ·) := {
+  trans := trans_lt_eqv_lt
 }
 
 variable [Induction.{0} ℕ]
@@ -155,7 +182,7 @@ _less than or equivalent to_.
 theorem trans_eqv_le_le {n m k : ℕ} : n ≃ m → m ≤ k → n ≤ k := by
   intro (_ : n ≃ m) (_ : m ≤ k)
   show n ≤ k
-  exact le_subst_eqv (Rel.symm ‹n ≃ m›) ‹m ≤ k›
+  frw [←‹n ≃ m›] ‹m ≤ k›
 
 instance trans_eqv_le_le_inst : Trans (α := ℕ) (· ≃ ·) (· ≤ ·) (· ≤ ·) := {
   trans := trans_eqv_le_le
@@ -263,9 +290,12 @@ theorem le_trans {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k := by
     show n ≤ step k
     match le_step_split ‹m ≤ step k› with
     | Or.inl (_ : m ≤ k) =>
-      exact le_step (ih ‹m ≤ k›)
+      have : n ≤ k := ih ‹m ≤ k›
+      have : n ≤ step k := le_step ‹n ≤ k›
+      exact this
     | Or.inr (_ : m ≃ step k) =>
-      exact AA.substRFn ‹m ≃ step k› ‹n ≤ m›
+      have : n ≤ step k := by frw [‹m ≃ step k›] ‹n ≤ m›
+      exact this
 
 instance trans_le_le_le : Trans (α := ℕ) (· ≤ ·) (· ≤ ·) (· ≤ ·) := {
   trans := le_trans
@@ -368,7 +398,8 @@ theorem lt_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ < m → n₂ <
   intro (_ : n₁ ≃ n₂) (_ : n₁ < m)
   show n₂ < m
   have ⟨(_ : n₁ ≤ m), (_ : n₁ ≄ m)⟩ := lt_defn.mp ‹n₁ < m›
-  have : n₂ ≤ m := AA.substLFn ‹n₁ ≃ n₂› ‹n₁ ≤ m›
+  have : n₂ ≤ m := by frw [‹n₁ ≃ n₂›] ‹n₁ ≤ m›
+  -- TODO: mismatched lhs & rhs
   have : n₂ ≄ m := AA.neqv_substL ‹n₁ ≃ n₂› ‹n₁ ≄ m›
   apply lt_defn.mpr
   exact ⟨‹n₂ ≤ m›, ‹n₂ ≄ m›⟩
@@ -380,7 +411,7 @@ than_.
 theorem trans_eqv_lt_lt {n m k : ℕ} : n ≃ m → m < k → n < k := by
   intro (_ : n ≃ m) (_ : m < k)
   show n < k
-  exact lt_subst_eqv (Rel.symm ‹n ≃ m›) ‹m < k›
+  frw [←‹n ≃ m›] ‹m < k›
 
 instance trans_eqv_lt_lt_inst : Trans (α := ℕ) (· ≃ ·) (· < ·) (· < ·) := {
   trans := trans_eqv_lt_lt
@@ -390,32 +421,6 @@ def lt_substL_eqv
     : AA.SubstitutiveOn Hand.L (α := ℕ) (· < ·) AA.tc (· ≃ ·) (· → ·)
     := {
   subst₂ := λ (_ : True) => lt_subst_eqv
-}
-
-/--
-Equivalent natural numbers can be substituted on the right side of _less than_.
--/
-@[gcongr]
-theorem lt_eqv_subst {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m < n₁ → m < n₂ := by
-  intro (_ : n₁ ≃ n₂) (_ : m < n₁)
-  show m < n₂
-  have ⟨(_ : m ≤ n₁), (_ : m ≄ n₁)⟩ := lt_defn.mp ‹m < n₁›
-  have : m ≤ n₂ := AA.substRFn ‹n₁ ≃ n₂› ‹m ≤ n₁›
-  have : m ≄ n₂ := AA.neqv_substR ‹n₁ ≃ n₂› ‹m ≄ n₁›
-  apply lt_defn.mpr
-  exact ⟨‹m ≤ n₂›, ‹m ≄ n₂›⟩
-
-/--
-Corollary of `lt_eqv_subst` to support transitivity of _less than_ and
-equivalence.
--/
-theorem trans_lt_eqv_lt {n m k : ℕ} : n < m → m ≃ k → n < k := by
-  intro (_ : n < m) (_ : m ≃ k)
-  show n < k
-  exact lt_eqv_subst ‹m ≃ k› ‹n < m›
-
-instance trans_lt_eqv_lt_inst : Trans (α := ℕ) (· < ·) (· ≃ ·) (· < ·) := {
-  trans := trans_lt_eqv_lt
 }
 
 def lt_substR_eqv
@@ -447,6 +452,7 @@ theorem lt_step {n : ℕ} : n < step n := by
 /-- The natural number two is greater than one. -/
 theorem two_gt_one : (2:ℕ) > 1 := by
   have : step 1 > 1 := lt_step
+  -- TODO: mismatched lhs & rhs
   have : (2:ℕ) > 1 := lt_eqv_subst (Rel.symm literal_step) ‹step 1 > 1›
   exact this
 
@@ -486,10 +492,12 @@ version of this theorem.
 theorem lt_substR_add {n₁ n₂ m : ℕ} : n₁ < n₂ → m + n₁ < m + n₂ := by
   intro (_ : n₁ < n₂)
   show m + n₁ < m + n₂
-  have : n₁ + m < n₂ + m := lt_substL_add ‹n₁ < n₂›
-  have : m + n₁ < n₂ + m := AA.substLFn AA.comm ‹n₁ + m < n₂ + m›
-  have : m + n₁ < m + n₂ := AA.substRFn AA.comm ‹m + n₁ < n₂ + m›
-  exact this
+  calc
+    _ = m + n₁ := rfl
+    _ ≃ n₁ + m := add_comm
+    -- TODO: lhs bad
+    _ < n₂ + m := lt_substL_add ‹n₁ < n₂›
+    _ ≃ m + n₂ := add_comm
 
 variable [Sign ℕ]
 
@@ -641,7 +649,8 @@ theorem lt_zero_pos {n : ℕ} : Positive n ↔ n > 0 := by
     show Positive n
     have ⟨k, ⟨(_ : Positive k), (_ : n ≃ 0 + k)⟩⟩ := lt_defn_add.mp ‹0 < n›
     have : k ≃ n := Rel.symm (Rel.trans ‹n ≃ 0 + k› zero_add)
-    exact AA.substFn ‹k ≃ n› ‹Positive k›
+    have : Positive n := by frw [‹k ≃ n›] ‹Positive k›
+    exact this
 
 /--
 The _less than or equivalent to_ relation can be formed from, or split into,
@@ -685,7 +694,8 @@ theorem le_split {n m : ℕ} : n ≤ m ↔ n < m ∨ n ≃ m := by
       exact ‹n ≤ m›
     | Or.inr (_ : n ≃ m) =>
       have : n ≤ n := Rel.refl
-      exact AA.substRFn ‹n ≃ m› ‹n ≤ n›
+      have : n ≤ m := by frw [‹n ≃ m›] ‹n ≤ n›
+      exact this
 
 /--
 Split _greater than or equivalent to_ into the relations implied by its name.
@@ -780,11 +790,13 @@ theorem positive_ge {n : ℕ} : Positive n ↔ n ≥ 1 := by
     show n ≥ 1
     have : n > 0 := lt_zero_pos.mp ‹Positive n›
     have : n ≥ step 0 := lt_step_le.mp this
+    -- TODO: mismatched lhs & rhs
     have : n ≥ 1 := AA.substLFn (Rel.symm literal_step) this
     exact this
   case mpr =>
     intro (_ : n ≥ 1)
     show Positive n
+    -- TODO: mismatched lhs & rhs
     have : n ≥ step 0 := AA.substLFn literal_step ‹n ≥ 1›
     have : n > 0 := lt_step_le.mpr this
     have : Positive n := lt_zero_pos.mpr this

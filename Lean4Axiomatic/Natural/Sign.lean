@@ -50,6 +50,7 @@ theorem positive_subst {n₁ n₂ : ℕ} : n₁ ≃ n₂ → Positive n₁ → P
   intro (_ : n₁ ≃ n₂) (_ : Positive n₁)
   show Positive n₂
   have : n₁ ≄ 0 := Signed.positive_defn.mp ‹Positive n₁›
+  -- TODO: fix lhs & rhs mismatch error
   have : n₂ ≄ 0 := AA.neqv_substL ‹n₁ ≃ n₂› ‹n₁ ≄ 0›
   have : Positive n₂ := Signed.positive_defn.mpr ‹n₂ ≄ 0›
   exact this
@@ -70,10 +71,11 @@ theorem step_positive {n : ℕ} : Positive (step n) :=
   Signed.positive_defn.mpr step_neqv_zero
 
 /-- One is a positive natural number. -/
-theorem one_positive : Positive (1 : ℕ) :=
+theorem one_positive : Positive (1:ℕ) := by
   have : step 0 ≃ 1 := Rel.symm literal_step
   have : Positive (step 0) := step_positive
-  positive_subst ‹step 0 ≃ 1› ‹Positive (step 0)›
+  have : Positive 1 := by frw [‹step 0 ≃ 1›] this
+  exact this
 
 variable [Induction.{0} ℕ]
 
@@ -119,15 +121,13 @@ theorem positive_add {n m : ℕ} : Positive n → Positive (n + m) := by
   apply cases_on (motive := λ m => Positive (n + m)) m
   case zero =>
     show Positive (n + 0)
-    apply AA.substFn (Rel.symm add_zero)
-    exact ‹Positive n›
+    frw [←add_zero] ‹Positive n›
   case step =>
-    intro m
+    intro (m : ℕ)
     show Positive (n + step m)
-    apply AA.substFn (Rel.symm add_step)
-    show Positive (step (n + m))
-    apply Signed.positive_defn.mpr
-    show step (n + m) ≄ 0
-    exact step_neqv_zero
+    have : step (n + m) ≄ 0 := step_neqv_zero
+    have : Positive (step (n + m)) := Signed.positive_defn.mpr this
+    have : Positive (n + step m) := by frw [←add_step] this
+    exact this
 
 end Lean4Axiomatic.Natural

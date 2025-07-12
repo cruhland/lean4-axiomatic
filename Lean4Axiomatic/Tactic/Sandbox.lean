@@ -4,18 +4,11 @@ import Mathlib.Tactic.GCongr
 
 namespace Lean4Axiomatic.Tactic
 
-open Lean (
-  Expr MVarId Name Syntax getExprMVarAssignment? registerTraceClass withRef
-)
+open Lean (Expr MVarId Name Syntax getExprMVarAssignment? registerTraceClass)
 open Lean.Elab (throwAbortTactic)
-open Lean.Elab.Tactic (
-  Tactic TacticM elabTerm getMainGoal getMainTarget replaceMainGoal
-  withMainContext withRWRulesSeq
-)
+open Lean.Elab.Tactic (Tactic TacticM elabTerm getMainGoal)
 open Lean.Meta (
-  MetaM isDefEq isProof mkAppM mkConstWithFreshMVarLevels
-  mkFreshExprSyntheticOpaqueMVar saveState whnf withReducible
-  withReducibleAndInstances
+  isDefEq inferType isProof mkAppM mkFreshExprMVar saveState withReducible
 )
 open Lean.MonadEnv (getEnv)
 open Lean.MVarId (gcongr gcongrForward)
@@ -25,10 +18,6 @@ open Mathlib.Tactic.GCongr (
 )
 
 initialize registerTraceClass `Meta.srw
-
-def getRel : Expr → Option (Name × Expr × Expr)
-| .app (.app rel lhs) rhs => rel.getAppFn.constName?.map (·, lhs, rhs)
-| _ => none
 
 partial def
     srw (goal : MVarId) (rwRule : Expr) : TacticM Unit
@@ -76,25 +65,49 @@ partial def
     let some (.mvar mvarId) := args[i]? | panic! "hyp not an mvar?"
     srw mvarId rwRule
 
-syntax (name := srwStx) "srw " rwRuleSeq : tactic
+def elabTermStx (term : Syntax) : TacticM Expr := do
+  let expr ← elabTerm term (expectedType? := none) (mayPostpone := true)
+  if expr.hasSyntheticSorry then
+    -- Elaboration can produce `sorry` to indicate failure
+    throwAbortTactic
+  return expr
 
-@[tactic srwStx] def elabSrw : Tactic := λ stx => do
-  let rulesInBrackets := stx[1]
+def elabRules (rulesInBrackets : Syntax) : TacticM Expr := do
   let rules := rulesInBrackets[1].getArgs
   let rule := rules[0]!
-
   let symm := !rule[0].isNone
   let term := rule[1]
 
-  let goal ← getMainGoal
-  let rwRuleExpr ← goal.withContext do
-    elabTerm term (expectedType? := none) (mayPostpone := true)
-  if rwRuleExpr.hasSyntheticSorry then
-      -- Elaboration can produce `sorry` to indicate failure
-      throwAbortTactic
-  let directedRuleExpr ←
-    if symm then mkAppM ``Rel.symm #[rwRuleExpr] else pure rwRuleExpr
+  let rwRuleExpr ← elabTermStx term
+  if symm then mkAppM ``Rel.symm #[rwRuleExpr] else pure rwRuleExpr
 
-  srw goal directedRuleExpr
+syntax (name := srwStx) "srw " rwRuleSeq : tactic
+
+@[tactic srwStx] def elabSrw : Tactic := λ stx => do
+  let goal ← getMainGoal
+  goal.withContext do
+    let directedRuleExpr ← elabRules stx[1]
+    srw goal directedRuleExpr
+
+partial def frw (goal : MVarId) (fnArg rwRule : Expr) : TacticM Unit := do
+  /- Create a subgoal metavariable for the function. We must give it an
+     explicit type: Lean isn't able to figure it out.
+  -/
+  let fnArgType ← inferType fnArg
+  let goalType ← withReducible goal.getType'
+  let fnGoalType := .forallE `x fnArgType goalType .default
+  let fn ← mkFreshExprMVar (some fnGoalType)
+
+  goal.assign (.app fn fnArg)
+  srw fn.mvarId! rwRule
+
+syntax (name := frwStx) "frw " rwRuleSeq term : tactic
+
+@[tactic frwStx] def elabFrw : Tactic := λ stx => do
+  let goal ← getMainGoal
+  goal.withContext do
+    let directedRuleExpr ← elabRules stx[1]
+    let fnArg ← elabTermStx stx[2]
+    frw goal fnArg directedRuleExpr
 
 end Lean4Axiomatic.Tactic
