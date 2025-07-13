@@ -8,7 +8,8 @@ open Lean (Expr MVarId Name Syntax getExprMVarAssignment? registerTraceClass)
 open Lean.Elab (throwAbortTactic)
 open Lean.Elab.Tactic (Tactic TacticM elabTerm getMainGoal)
 open Lean.Meta (
-  isDefEq inferType isProof mkAppM mkFreshExprMVar saveState withReducible
+  isDefEq inferType isProof mkAppM mkConstWithFreshMVarLevels mkFreshExprMVar
+  saveState withReducible
 )
 open Lean.MonadEnv (getEnv)
 open Lean.MVarId (gcongr gcongrForward)
@@ -51,7 +52,8 @@ partial def
   let s ← saveState
   let lemAndNewGoalsOpt ← matchingLemmas.findSomeM? λ lem =>
     try
-      let gs ← goal.apply (.const lem.declName [])
+      let lemConst ← mkConstWithFreshMVarLevels lem.declName
+      let gs ← goal.apply lemConst
       return some (lem, gs)
     catch _ =>
       s.restore
@@ -94,7 +96,7 @@ partial def frw (goal : MVarId) (fnArg rwRule : Expr) : TacticM Unit := do
      explicit type: Lean isn't able to figure it out.
   -/
   let fnArgType ← inferType fnArg
-  let goalType ← withReducible goal.getType'
+  let goalType ← goal.getType
   let fnGoalType := .forallE `x fnArgType goalType .default
   let fn ← mkFreshExprMVar (some fnGoalType)
 

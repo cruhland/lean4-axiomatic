@@ -50,8 +50,7 @@ theorem positive_subst {n₁ n₂ : ℕ} : n₁ ≃ n₂ → Positive n₁ → P
   intro (_ : n₁ ≃ n₂) (_ : Positive n₁)
   show Positive n₂
   have : n₁ ≄ 0 := Signed.positive_defn.mp ‹Positive n₁›
-  -- TODO: fix lhs & rhs mismatch error
-  have : n₂ ≄ 0 := AA.neqv_substL ‹n₁ ≃ n₂› ‹n₁ ≄ 0›
+  have : n₂ ≄ 0 := by frw [‹n₁ ≃ n₂›] ‹n₁ ≄ 0›
   have : Positive n₂ := Signed.positive_defn.mpr ‹n₂ ≄ 0›
   exact this
 
