@@ -74,22 +74,41 @@ def elabTermStx (term : Syntax) : TacticM Expr := do
     throwAbortTactic
   return expr
 
-def elabRules (rulesInBrackets : Syntax) : TacticM Expr := do
-  let rules := rulesInBrackets[1].getArgs
-  let rule := rules[0]!
-  let symm := !rule[0].isNone
-  let term := rule[1]
+def elabRule (ruleStx : Syntax) : TacticM Expr := do
+  let symm := !ruleStx[0].isNone
+  let term := ruleStx[1]
 
   let rwRuleExpr ← elabTermStx term
   if symm then mkAppM ``Rel.symm #[rwRuleExpr] else pure rwRuleExpr
+
+def elabSingleRule (rulesInBrackets : Syntax) : TacticM Expr := do
+  let rules := rulesInBrackets[1].getArgs
+  unless rules.size == 1 do throwError "expected exactly one rw rule"
+  elabRule rules[0]!
+
+def elabRules (rulesInBrackets : Syntax) : TacticM (Array Expr) := do
+  let rulesWithoutSeparators := rulesInBrackets[1].getArgs.getEvenElems
+  rulesWithoutSeparators.mapM elabRule
 
 syntax (name := srwStx) "srw " rwRuleSeq : tactic
 
 @[tactic srwStx] def elabSrw : Tactic := λ stx => do
   let goal ← getMainGoal
   goal.withContext do
-    let directedRuleExpr ← elabRules stx[1]
+    let directedRuleExpr ← elabSingleRule stx[1]
     srw goal directedRuleExpr
+
+syntax (name := mrwStx) "mrw " rwRuleSeq : tactic
+
+@[tactic mrwStx] def elabMrw : Tactic := λ stx => try
+    let goal ← getMainGoal
+    goal.withContext do
+      let directedRuleExprs ← elabRules stx[1]
+      for rule in directedRuleExprs do
+        dbg_trace "next rule: {rule}"
+      return
+  catch e =>
+    dbg_trace "tactic failed with {← e.toMessageData.toString}"
 
 partial def frw (goal : MVarId) (fnArg rwRule : Expr) : TacticM Unit := do
   /- Create a subgoal metavariable for the function. We must give it an
@@ -108,7 +127,7 @@ syntax (name := frwStx) "frw " rwRuleSeq term : tactic
 @[tactic frwStx] def elabFrw : Tactic := λ stx => do
   let goal ← getMainGoal
   goal.withContext do
-    let directedRuleExpr ← elabRules stx[1]
+    let directedRuleExpr ← elabSingleRule stx[1]
     let fnArg ← elabTermStx stx[2]
     frw goal fnArg directedRuleExpr
 
