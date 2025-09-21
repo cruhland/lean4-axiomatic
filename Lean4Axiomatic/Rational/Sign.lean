@@ -81,6 +81,8 @@ export Sign.Props (
   sgn_trichotomy
 )
 
+attribute [gcongr] sgn_subst
+
 /-- All rational number sign axioms. -/
 class Sign
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
@@ -112,10 +114,11 @@ theorem sgn_zero {p : ℚ} : p ≃ 0 ↔ sgn p ≃ 0 := by
     intro (_ : p ≃ 0)
     show sgn p ≃ 0
     calc
-      sgn p             ≃ _ := sgn_subst ‹p ≃ 0›
-      sgn ((0 : ℤ) : ℚ) ≃ _ := sgn_from_integer
-      sgn (0 : ℤ)       ≃ _ := Integer.sgn_zero.mp Rel.refl
-      0                 ≃ _ := Rel.refl
+      _ = sgn p         := rfl
+      _ ≃ sgn (0:ℚ)     := by srw [‹p ≃ 0›]
+      _ = sgn ((0:ℤ):ℚ) := rfl
+      _ ≃ sgn (0:ℤ)     := sgn_from_integer
+      _ ≃ 0             := Integer.sgn_zero.mp Rel.refl
   case mpr =>
     exact Sign.Props.sgn_zero_only_for_zero
 
@@ -146,11 +149,13 @@ The sign of (the rational number) negative one, is negative one.
 **Property and proof intuition**: It's the same in the integers, and signs of
 integers are consistent with their equivalent rational numbers.
 -/
-theorem sgn_neg_one : sgn (-1 : ℚ) ≃ -1 := calc
-  _ ≃ sgn (-1 : ℚ)       := Rel.refl
-  _ ≃ sgn ((-1 : ℤ) : ℚ) := sgn_subst (eqv_symm neg_compat_from_integer)
-  _ ≃ sgn (-1 : ℤ)       := sgn_from_integer
-  _ ≃ -1                 := Integer.sgn_negative.mp Integer.neg_one_negative
+theorem sgn_neg_one : sgn (-1:ℚ) ≃ -1 := calc
+  _ = sgn (-1:ℚ)       := rfl
+  _ = sgn (-(1:ℚ))     := rfl
+  _ = sgn (-((1:ℤ):ℚ)) := rfl
+  _ ≃ sgn ((-1:ℤ):ℚ)   := by srw [←neg_compat_from_integer]
+  _ ≃ sgn (-1:ℤ)       := sgn_from_integer
+  _ ≃ -1               := Integer.sgn_negative.mp Integer.neg_one_negative
 
 /--
 The rational number two is positive.
@@ -174,11 +179,11 @@ negation function inverts the sign.
 use compatibility of multiplication and `sgn`.
 -/
 theorem sgn_compat_neg {p : ℚ} : sgn (-p) ≃ -(sgn p) := calc
-  _ ≃ sgn (-p)             := Rel.refl
-  _ ≃ sgn (-1 * p)         := sgn_subst (eqv_symm mul_neg_one)
-  _ ≃ sgn (-1 : ℚ) * sgn p := sgn_compat_mul
-  _ ≃ -1 * sgn p           := AA.substL sgn_neg_one
-  _ ≃ -(sgn p)             := Integer.mul_neg_one
+  _ ≃ sgn (-p)           := Rel.refl
+  _ ≃ sgn (-1 * p)       := by srw [←mul_neg_one]
+  _ ≃ sgn (-1:ℚ) * sgn p := sgn_compat_mul
+  _ ≃ -1 * sgn p         := by srw [sgn_neg_one]
+  _ ≃ -(sgn p)           := Integer.mul_neg_one
 
 /--
 The sign of a nonzero rational number is a square root of unity.
@@ -241,11 +246,11 @@ theorem mul_split_zero {p q : ℚ} : p * q ≃ 0 ↔ p ≃ 0 ∨ q ≃ 0 := by
     show p * q ≃ 0
     match ‹p ≃ 0 ∨ q ≃ 0› with
     | Or.inl (_ : p ≃ 0) => calc
-      p * q ≃ _ := mul_substL ‹p ≃ 0›
+      p * q ≃ _ := by srw [‹p ≃ 0›]
       0 * q ≃ _ := mul_absorbL
       0     ≃ _ := eqv_refl
     | Or.inr (_ : q ≃ 0) => calc
-      p * q ≃ _ := mul_substR ‹q ≃ 0›
+      p * q ≃ _ := by srw [‹q ≃ 0›]
       p * 0 ≃ _ := mul_absorbR
       0     ≃ _ := eqv_refl
 
@@ -306,18 +311,18 @@ theorem sgn_max {p : ℚ} : sgn p ≤ 1 := by
   | AA.OneOfThree.first (_ : sgn p ≃ 0) =>
     have : (0 : ℤ) < 1 := Integer.zero_lt_one
     have : (0 : ℤ) ≤ 1 := Integer.le_split.mpr (Or.inl this)
-    have : sgn p ≤ 1 := Integer.le_substL_eqv (Rel.symm ‹sgn p ≃ 0›) this
+    have : sgn p ≤ 1 := by prw [←‹sgn p ≃ 0›] this
     exact this
   | AA.OneOfThree.second (_ : sgn p ≃ 1) =>
     have : (1 : ℤ) ≤ 1 := Integer.le_refl
-    have : sgn p ≤ 1 := Integer.le_substL_eqv (Rel.symm ‹sgn p ≃ 1›) this
+    have : sgn p ≤ 1 := by prw [←‹sgn p ≃ 1›] this
     exact this
   | AA.OneOfThree.third (_ : sgn p ≃ -1) =>
     have : (-1 : ℤ) < 0 := Integer.neg_one_lt_zero
     have : (0 : ℤ) < 1 := Integer.zero_lt_one
     have : (-1 : ℤ) < 1 := Integer.trans_lt_lt_lt ‹(-1 : ℤ) < 0› ‹(0 : ℤ) < 1›
     have : (-1 : ℤ) ≤ 1 := Integer.le_split.mpr (Or.inl this)
-    have : sgn p ≤ 1 := Integer.le_substL_eqv (Rel.symm ‹sgn p ≃ -1›) this
+    have : sgn p ≤ 1 := by prw [←‹sgn p ≃ -1›] this
     exact this
 
 /--
@@ -328,10 +333,13 @@ transform algebraically to show the result.
 -/
 theorem sgn_min {p : ℚ} : sgn p ≥ -1 := by
   have : sgn (-p) ≤ 1 := sgn_max
-  have : -(sgn (-p)) ≥ -1 := Integer.le_neg_flip.mp this
-  have : -(-(sgn p)) ≥ -1 :=
-    Integer.le_substR_eqv (AA.subst₁ sgn_compat_neg) this
-  have : sgn p ≥ -1 := Integer.le_substR_eqv Integer.neg_involutive this
+  have : -1 ≤ sgn p := calc
+    _ = -1          := rfl
+    _ ≤ -(sgn (-p)) := Integer.le_neg_flip.mp ‹sgn (-p) ≤ 1›
+    _ ≃ -(-(sgn p)) := by srw [sgn_compat_neg]
+    _ ≃ sgn p       := by srw [Integer.neg_involutive]
+
+  have : sgn p ≥ -1 := ‹-1 ≤ sgn p›
   exact this
 
 section sub_only
@@ -359,9 +367,9 @@ theorem sgn_sub_cancelL_mul_pos
   show sgn (r * p - r * q) ≃ sgn (p - q)
   calc
     _ ≃ sgn (r * p - r * q) := Rel.refl
-    _ ≃ sgn (r * (p - q))   := sgn_subst (eqv_symm mul_distribL_sub)
+    _ ≃ sgn (r * (p - q))   := by srw [←mul_distribL_sub]
     _ ≃ sgn r * sgn (p - q) := sgn_compat_mul
-    _ ≃ 1 * sgn (p - q)     := AA.substL ‹sgn r ≃ 1›
+    _ ≃ 1 * sgn (p - q)     := by srw [‹sgn r ≃ 1›]
     _ ≃ sgn (p - q)         := AA.identL
 
 /--
@@ -385,8 +393,7 @@ theorem sgn_sub_cancelR_mul_pos
   show sgn (p * r - q * r) ≃ sgn (p - q)
   calc
     _ ≃ sgn (p * r - q * r) := Rel.refl
-    _ ≃ sgn (r * p - q * r) := sgn_subst (sub_substL mul_comm)
-    _ ≃ sgn (r * p - r * q) := sgn_subst (sub_substR mul_comm)
+    _ ≃ sgn (r * p - r * q) := by srw [mul_comm, mul_comm]
     _ ≃ sgn (p - q)         := sgn_sub_cancelL_mul_pos ‹sgn r ≃ 1›
 
 /--
@@ -413,12 +420,12 @@ theorem sgn_sub_cancelL_mul_neg
   show sgn (r * p - r * q) ≃ sgn (q - p)
   calc
     _ ≃ sgn (r * p - r * q) := Rel.refl
-    _ ≃ sgn (r * (p - q))   := sgn_subst (eqv_symm mul_distribL_sub)
+    _ ≃ sgn (r * (p - q))   := by srw [←mul_distribL_sub]
     _ ≃ sgn r * sgn (p - q) := sgn_compat_mul
-    _ ≃ -1 * sgn (p - q)    := AA.substL ‹sgn r ≃ -1›
+    _ ≃ -1 * sgn (p - q)    := by srw [‹sgn r ≃ -1›]
     _ ≃ -sgn (p - q)        := Integer.mul_neg_one
     _ ≃ sgn (-(p - q))      := Rel.symm sgn_compat_neg
-    _ ≃ sgn (q - p)         := sgn_subst neg_sub
+    _ ≃ sgn (q - p)         := by srw [neg_sub]
 
 /--
 Removing a common negative right factor from a difference of two rational
@@ -443,8 +450,7 @@ theorem sgn_sub_cancelR_mul_neg
   show sgn (p * r - q * r) ≃ sgn (q - p)
   calc
     _ ≃ sgn (p * r - q * r) := Rel.refl
-    _ ≃ sgn (r * p - q * r) := sgn_subst (sub_substL mul_comm)
-    _ ≃ sgn (r * p - r * q) := sgn_subst (sub_substR mul_comm)
+    _ ≃ sgn (r * p - r * q) := by srw [mul_comm, mul_comm]
     _ ≃ sgn (q - p)         := sgn_sub_cancelL_mul_neg ‹sgn r ≃ -1›
 
 /--
@@ -472,19 +478,8 @@ theorem eqv_sgn {p q : ℚ} : p ≃ q ↔ sgn (p - q) ≃ 0 := by
     have : p ≃ q := sub_eqv_zero_iff_eqv.mp this
     exact this
 
-/--
-When computing the sign of the difference of two integers, the result is the
-same if the values are converted to rational numbers first.
--/
-theorem sgn_diff_respects_from_integer
-    {a b : ℤ} : sgn (a - b) ≃ sgn ((a:ℚ) - (b:ℚ))
-    := Rel.symm $ calc
-  /- An explicit proof for this should be unnecessary with better tactics. -/
-  _ = sgn ((a:ℚ) - (b:ℚ)) := rfl
-  _ ≃ sgn (((a - b):ℤ):ℚ) := sgn_subst (eqv_symm sub_compat_from_integer)
-  _ ≃ sgn (a - b)         := sgn_from_integer
-
 end sub_only
+
 variable [Reciprocation ℚ]
 
 /--
@@ -500,15 +495,13 @@ rationals are square roots of unity, along with the algebraic interactions of
 -/
 theorem sgn_recip {p : ℚ} [AP (p ≄ 0)] : sgn (p⁻¹) ≃ sgn p := by
   have : Integer.Sqrt1 (sgn p) := sqrt1_sgn_nonzero ‹AP (p ≄ 0)›.ev
-  have : 1 ≃ sgn p * sgn p := Rel.symm ‹Integer.Sqrt1 (sgn p)›.elim
   calc
     sgn (p⁻¹)                   ≃ _ := Rel.symm AA.identR
-    sgn (p⁻¹) * 1               ≃ _ := AA.substR ‹1 ≃ sgn p * sgn p›
-    sgn (p⁻¹) * (sgn p * sgn p) ≃ _ := AA.substR (Rel.symm sgn_compat_mul)
+    sgn (p⁻¹) * 1               ≃ _ := by srw [←‹Integer.Sqrt1 (sgn p)›.elim]
+    sgn (p⁻¹) * (sgn p * sgn p) ≃ _ := by srw [←sgn_compat_mul]
     sgn (p⁻¹) * sgn (p * p)     ≃ _ := Rel.symm sgn_compat_mul
-    sgn (p⁻¹ * (p * p))         ≃ _ := sgn_subst (eqv_symm mul_assoc)
-    sgn ((p⁻¹ * p) * p)         ≃ _ := sgn_subst (mul_substL mul_inverseL)
-    sgn (1 * p)                 ≃ _ := sgn_subst mul_identL
+    sgn (p⁻¹ * (p * p))         ≃ _ := by srw [←mul_assoc]
+    sgn ((p⁻¹ * p) * p)         ≃ _ := by srw [mul_inverseL, mul_identL]
     sgn p                       ≃ _ := Rel.refl
 
 /--
@@ -526,9 +519,9 @@ theorem sgn_swap_recip
   have : Integer.Sqrt1 (sgn p) := sqrt1_sgn_nonzero ‹AP (p ≄ 0)›.ev
   have : Sqrt1 (sgn p:ℚ) := from_integer_preserves_sqrt1.mpr this
   calc
-  _ = (sgn (p⁻¹):ℚ) := rfl
-  _ ≃ (sgn p:ℚ)     := from_integer_subst sgn_recip
-  _ ≃ (sgn p:ℚ)⁻¹   := eqv_symm recip_sqrt1
+    _ = (sgn (p⁻¹):ℚ) := rfl
+    _ ≃ (sgn p:ℚ)     := by srw [sgn_recip]
+    _ ≃ (sgn p:ℚ)⁻¹   := eqv_symm recip_sqrt1
 
 /--
 Taking the reciprocal of a product of rational numbers is equivalent to the
@@ -543,18 +536,16 @@ and the multiplicative identity and inverse properties.
 theorem recip_compat_mul
     {p q : ℚ} [AP (p ≄ 0)] [AP (q ≄ 0)] : (p * q)⁻¹ ≃ p⁻¹ * q⁻¹
     := by
-  have inv_p : 1 ≃ p * p⁻¹ := eqv_symm mul_inverseR
-  have inv_q : 1 ≃ q * q⁻¹ := eqv_symm mul_inverseR
-  have swap_middle : (p * p⁻¹) * (q * q⁻¹) ≃ (p * q) * (p⁻¹ * q⁻¹) :=
+  have swap_middle {w x y z : ℚ} : (w * x) * (y * z) ≃ (w * y) * (x * z) :=
     AA.expr_xxfxxff_lr_swap_rl
   calc
     (p * q)⁻¹                           ≃ _ := eqv_symm mul_identR
-    (p * q)⁻¹ * 1                       ≃ _ := mul_substR (eqv_symm mul_identR)
-    (p * q)⁻¹ * (1 * 1)                 ≃ _ := mul_substR (mul_substL inv_p)
-    (p * q)⁻¹ * ((p * p⁻¹) * 1)         ≃ _ := mul_substR (mul_substR inv_q)
-    (p * q)⁻¹ * ((p * p⁻¹) * (q * q⁻¹)) ≃ _ := mul_substR swap_middle
+    (p * q)⁻¹ * 1                       ≃ _ := by srw [←mul_identR]
+    (p * q)⁻¹ * (1 * 1)                 ≃ _ := by srw [←mul_inverseR]
+    (p * q)⁻¹ * ((p * p⁻¹) * 1)         ≃ _ := by srw [←mul_inverseR]
+    (p * q)⁻¹ * ((p * p⁻¹) * (q * q⁻¹)) ≃ _ := by srw [swap_middle]
     (p * q)⁻¹ * ((p * q) * (p⁻¹ * q⁻¹)) ≃ _ := eqv_symm mul_assoc
-    ((p * q)⁻¹ * (p * q)) * (p⁻¹ * q⁻¹) ≃ _ := mul_substL mul_inverseL
+    ((p * q)⁻¹ * (p * q)) * (p⁻¹ * q⁻¹) ≃ _ := by srw [mul_inverseL]
     1 * (p⁻¹ * q⁻¹)                     ≃ _ := mul_identL
     p⁻¹ * q⁻¹                           ≃ _ := eqv_refl
 
@@ -569,9 +560,9 @@ fractions, so it makes sense that they can be done in any order.
 result that reciprocals are compatible with multiplication.
 -/
 theorem recip_compat_neg {p : ℚ} [AP (p ≄ 0)] : (-p)⁻¹ ≃ -p⁻¹ := calc
-  (-p)⁻¹       ≃ _ := recip_subst (eqv_symm mul_neg_one)
+  (-p)⁻¹       ≃ _ := by srw [←mul_neg_one]
   (-1 * p)⁻¹   ≃ _ := recip_compat_mul
-  (-1)⁻¹ * p⁻¹ ≃ _ := mul_substL recip_sqrt1
+  (-1)⁻¹ * p⁻¹ ≃ _ := by srw [recip_sqrt1]
   (-1) * p⁻¹   ≃ _ := mul_neg_one
   (-p⁻¹)       ≃ _ := eqv_refl
 
@@ -589,11 +580,11 @@ theorem sgn_compat_div
     {p q : ℚ} [AP (q ≄ 0)] : (sgn (p / q):ℚ) ≃ sgn p / sgn q
     := calc
   _ = (sgn (p / q):ℚ)           := rfl
-  _ ≃ (sgn (p * q⁻¹):ℚ)         := from_integer_subst (sgn_subst div_mul_recip)
-  _ ≃ ((sgn p * sgn (q⁻¹):ℤ):ℚ) := from_integer_subst sgn_compat_mul
+  _ ≃ (sgn (p * q⁻¹):ℚ)         := by srw [div_mul_recip]
+  _ ≃ ((sgn p * sgn (q⁻¹):ℤ):ℚ) := by srw [sgn_compat_mul]
   _ ≃ (sgn p:ℚ) * (sgn (q⁻¹):ℚ) := mul_compat_from_integer
   -- This is the key proof step
-  _ ≃ (sgn p:ℚ) * (sgn q:ℚ)⁻¹   := mul_substR sgn_swap_recip
+  _ ≃ (sgn p:ℚ) * (sgn q:ℚ)⁻¹   := by srw [sgn_swap_recip]
   _ ≃ (sgn p:ℚ) / (sgn q:ℚ)     := eqv_symm div_mul_recip
 
 /--
@@ -608,9 +599,9 @@ then apply `sgn_compat_mul` and `sgn_recip`.
 -/
 theorem sgn_div {p q : ℚ} [AP (q ≄ 0)] : sgn (p / q) ≃ sgn p * sgn q := calc
   _ = sgn (p / q)       := rfl
-  _ ≃ sgn (p * q⁻¹)     := sgn_subst div_mul_recip
+  _ ≃ sgn (p * q⁻¹)     := by srw [div_mul_recip]
   _ ≃ sgn p * sgn (q⁻¹) := sgn_compat_mul
-  _ ≃ sgn p * sgn q     := AA.substR sgn_recip
+  _ ≃ sgn p * sgn q     := by srw [sgn_recip]
 
 /--
 The sign of a fraction formed from integers is the product of the integers'
@@ -623,8 +614,7 @@ theorem sgn_div_integers
     := calc
   _ = sgn ((a:ℚ) / (b:ℚ))   := rfl
   _ ≃ sgn (a:ℚ) * sgn (b:ℚ) := sgn_div
-  _ ≃ sgn a * sgn (b:ℚ)     := AA.substL sgn_from_integer
-  _ ≃ sgn a * sgn b         := AA.substR sgn_from_integer
+  _ ≃ sgn a * sgn b         := by srw [sgn_from_integer, sgn_from_integer]
 
 /--
 Negation can be moved between the "outside" of a division operation and the
@@ -635,9 +625,9 @@ operand with the reciprocal of the right operand. Negation can be moved from
 the "outside" to the "inside" of both reciprocation and multiplication.
 -/
 theorem neg_scompatR_div {p q : ℚ} [AP (q ≄ 0)] : -(p / q) ≃ p / (-q) := calc
-  (-(p / q))   ≃ _ := neg_subst div_mul_recip
+  (-(p / q))   ≃ _ := by srw [div_mul_recip]
   (-(p * q⁻¹)) ≃ _ := neg_scompatR_mul
-  p * -(q⁻¹)   ≃ _ := mul_substR (eqv_symm recip_compat_neg)
+  p * -(q⁻¹)   ≃ _ := by srw [←recip_compat_neg]
   p * (-q)⁻¹   ≃ _ := eqv_symm div_mul_recip
   p / (-q)     ≃ _ := eqv_refl
 
@@ -654,7 +644,7 @@ double-negation property.
 -/
 theorem div_neg_cancel {p q : ℚ} [AP (q ≄ 0)] : (-p)/(-q) ≃ p / q := calc
   (-p)/(-q)     ≃ _ := eqv_symm neg_scompatL_div
-  (-(p / -q))   ≃ _ := neg_subst (eqv_symm neg_scompatR_div)
+  (-(p / -q))   ≃ _ := by srw [←neg_scompatR_div]
   (-(-(p / q))) ≃ _ := neg_involutive
   p / q         ≃ _ := eqv_refl
 
@@ -673,46 +663,37 @@ to the outermost layer, then switch back into a fraction for the result.
 -/
 theorem add_div_integers
     {a b c d : ℤ} [Integer.Nonzero b] [Integer.Nonzero d]
-    : (a : ℚ)/b + (c : ℚ)/d ≃ ((a * d + b * c : ℤ) : ℚ)/((b * d : ℤ) : ℚ)
+    : (a:ℚ)/b + (c:ℚ)/d ≃ ((a * d + b * c : ℤ):ℚ)/((b * d : ℤ):ℚ)
     := by
-  let aQ := (a : ℚ); let bQ := (b : ℚ); let cQ := (c : ℚ); let dQ := (d : ℚ)
+  let aQ := (a:ℚ); let bQ := (b:ℚ); let cQ := (c:ℚ); let dQ := (d:ℚ)
+  have swap_middle {w x y z : ℚ} : (w * x) * (y * z) ≃ (w * y) * (x * z) :=
+    AA.expr_xxfxxff_lr_swap_rl
+  have swap_endsR {w x y z : ℚ} : (w * x) * (y * z) ≃ (w * z) * (y * x) :=
+    AA.expr_xxfxxff_lr_swap_rr
+  have add_compat_ℤ {x y : ℤ} : ((x + y : ℤ):ℚ) ≃ (x:ℚ) + (y:ℚ) :=
+    add_compat_from_integer
+  have mul_compat_ℤ {x y : ℤ} : ((x * y : ℤ):ℚ) ≃ (x:ℚ) * (y:ℚ) :=
+    mul_compat_from_integer
   calc
-    aQ/bQ + cQ/dQ
-      ≃ _ := add_substL div_mul_recip
-    aQ * bQ⁻¹ + cQ/dQ
-      ≃ _ := add_substR div_mul_recip
-    aQ * bQ⁻¹ + cQ * dQ⁻¹
-      ≃ _ := add_substL (eqv_symm mul_identR)
-    aQ * bQ⁻¹ * 1 + cQ * dQ⁻¹
-      ≃ _ := add_substL (mul_substR (eqv_symm mul_inverseR))
-    aQ * bQ⁻¹ * (dQ * dQ⁻¹) + cQ * dQ⁻¹
-      ≃ _ := add_substL AA.expr_xxfxxff_lr_swap_rl
-    aQ * dQ * (bQ⁻¹ * dQ⁻¹) + cQ * dQ⁻¹
-      ≃ _ := add_substL (mul_substR (eqv_symm recip_compat_mul))
-    aQ * dQ * (bQ * dQ)⁻¹ + cQ * dQ⁻¹
-      ≃ _ := add_substR (eqv_symm mul_identR)
-    aQ * dQ * (bQ * dQ)⁻¹ + cQ * dQ⁻¹ * 1
-      ≃ _ := add_substR (mul_substR (eqv_symm mul_inverseL))
-    aQ * dQ * (bQ * dQ)⁻¹ + cQ * dQ⁻¹ * (bQ⁻¹ * bQ)
-      ≃ _ := add_substR AA.expr_xxfxxff_lr_swap_rr
-    aQ * dQ * (bQ * dQ)⁻¹ + cQ * bQ * (bQ⁻¹ * dQ⁻¹)
-      ≃ _ := add_substR (mul_substL mul_comm)
-    aQ * dQ * (bQ * dQ)⁻¹ + bQ * cQ * (bQ⁻¹ * dQ⁻¹)
-      ≃ _ := add_substR (mul_substR (eqv_symm recip_compat_mul))
-    aQ * dQ * (bQ * dQ)⁻¹ + bQ * cQ * (bQ * dQ)⁻¹
-      ≃ _ := eqv_symm mul_distribR
-    (aQ * dQ + bQ * cQ) * (bQ * dQ)⁻¹
-      ≃ _ := mul_substL (add_substL (eqv_symm mul_compat_from_integer))
-    ((a * d : ℤ) + bQ * cQ) * (bQ * dQ)⁻¹
-      ≃ _ := mul_substL (add_substR (eqv_symm mul_compat_from_integer))
-    ((a * d : ℤ) + (b * c : ℤ)) * (bQ * dQ)⁻¹
-      ≃ _ := mul_substL (eqv_symm add_compat_from_integer)
-    (a * d + b * c : ℤ) * (bQ * dQ)⁻¹
-      ≃ _ := mul_substR (recip_subst (eqv_symm mul_compat_from_integer))
-    (a * d + b * c : ℤ) * ((b * d : ℤ) : ℚ)⁻¹
-      ≃ _ := eqv_symm div_mul_recip
-    ((a * d + b * c : ℤ) : ℚ)/((b * d : ℤ) : ℚ)
-      ≃ _ := eqv_refl
+    _ = (a:ℚ)/b + (c:ℚ)/d                       := rfl
+    _ = aQ/bQ + cQ/dQ                           := rfl
+    _ ≃ aQ*bQ⁻¹ + cQ/dQ                         := by srw [div_mul_recip]
+    _ ≃ aQ*bQ⁻¹ + cQ*dQ⁻¹                       := by srw [div_mul_recip]
+    _ ≃ aQ*bQ⁻¹ * 1 + cQ*dQ⁻¹                   := by srw [←mul_identR]
+    _ ≃ aQ*bQ⁻¹ * (dQ*dQ⁻¹) + cQ*dQ⁻¹           := by srw [←mul_inverseR]
+    _ ≃ aQ*dQ * (bQ⁻¹*dQ⁻¹) + cQ*dQ⁻¹           := by srw [swap_middle]
+    _ ≃ aQ*dQ * (bQ*dQ)⁻¹ + cQ*dQ⁻¹             := by srw [←recip_compat_mul]
+    _ ≃ aQ*dQ * (bQ*dQ)⁻¹ + cQ*dQ⁻¹ * 1         := by srw [←mul_identR]
+    _ ≃ aQ*dQ * (bQ*dQ)⁻¹ + cQ*dQ⁻¹ * (bQ⁻¹*bQ) := by srw [←mul_inverseL]
+    _ ≃ aQ*dQ * (bQ*dQ)⁻¹ + cQ*bQ * (bQ⁻¹*dQ⁻¹) := by srw [swap_endsR]
+    _ ≃ aQ*dQ * (bQ*dQ)⁻¹ + bQ*cQ * (bQ⁻¹*dQ⁻¹) := by srw [mul_comm]
+    _ ≃ aQ*dQ * (bQ*dQ)⁻¹ + bQ*cQ * (bQ*dQ)⁻¹   := by srw [←recip_compat_mul]
+    _ ≃ (aQ*dQ + bQ*cQ) * (bQ*dQ)⁻¹             := eqv_symm mul_distribR
+    _ ≃ ((a * d : ℤ) + bQ*cQ) * (bQ*dQ)⁻¹       := by srw [←mul_compat_ℤ]
+    _ ≃ ((a * d : ℤ) + (b * c : ℤ)) * (bQ*dQ)⁻¹ := by srw [←mul_compat_ℤ]
+    _ ≃ (a * d + b * c : ℤ) * (bQ*dQ)⁻¹         := by srw [←add_compat_ℤ]
+    _ ≃ (a * d + b * c : ℤ) * ((b * d : ℤ):ℚ)⁻¹ := by srw [←mul_compat_ℤ]
+    _ ≃ ((a * d + b * c : ℤ):ℚ)/((b * d : ℤ):ℚ) := eqv_symm div_mul_recip
 
 /--
 The product of two fractions is a fraction of the product of the numerators
@@ -730,10 +711,9 @@ theorem div_mul_swap
     {p q r s : ℚ} [AP (q ≄ 0)] [AP (s ≄ 0)] : (p/q) * (r/s) ≃ (p * r)/(q * s)
     := calc
   _ ≃ (p/q) * (r/s)         := eqv_refl
-  _ ≃ (p * q⁻¹) * (r/s)     := mul_substL div_mul_recip
-  _ ≃ (p * q⁻¹) * (r * s⁻¹) := mul_substR div_mul_recip
+  _ ≃ (p * q⁻¹) * (r * s⁻¹) := by srw [div_mul_recip, div_mul_recip]
   _ ≃ (p * r) * (q⁻¹ * s⁻¹) := AA.expr_xxfxxff_lr_swap_rl
-  _ ≃ (p * r) * (q * s)⁻¹   := mul_substR (eqv_symm recip_compat_mul)
+  _ ≃ (p * r) * (q * s)⁻¹   := by srw [←recip_compat_mul]
   _ ≃ (p * r)/(q * s)       := eqv_symm div_mul_recip
 
 /--
@@ -751,7 +731,7 @@ theorem div_cancelR_mul
   calc
     _ = (p * r)/(q * r) := rfl
     _ ≃ (p/q) * (r/r)   := eqv_symm div_mul_swap
-    _ ≃ (p/q) * 1       := mul_substR div_same
+    _ ≃ (p/q) * 1       := by srw [div_same]
     _ ≃ p/q             := mul_identR
 
 /--
@@ -767,12 +747,11 @@ from the numerator and denominator as a separate fraction. This cancels to one,
 leaving only the original number.
 -/
 theorem mulL_div_same {p q : ℚ} [AP (p ≄ 0)] : (p * q)/p ≃ q := calc
-  _ ≃ (p * q)/p       := eqv_refl
-  _ ≃ (p * q)/(p * 1) := div_substR (eqv_symm mul_identR)
+  _ = (p * q)/p       := rfl
+  _ ≃ (p * q)/(p * 1) := by srw [←mul_identR]
   _ ≃ (p/p) * (q/1)   := eqv_symm div_mul_swap
-  _ ≃ 1 * (q/1)       := mul_substL div_same
-  _ ≃ q/1             := mul_identL
-  _ ≃ q               := div_identR
+  _ ≃ 1 * q           := by srw [div_same, div_identR]
+  _ ≃ q               := mul_identL
 
 /--
 A rational number can be multiplied (on the right) and divided by another
@@ -786,8 +765,8 @@ Useful when a specific denominator is needed.
 commutativity.
 -/
 theorem mulR_div_same {p q : ℚ} [AP (q ≄ 0)] : (p * q)/q ≃ p := calc
-  _ ≃ (p * q)/q := eqv_refl
-  _ ≃ (q * p)/q := div_substL mul_comm
+  _ = (p * q)/q := rfl
+  _ ≃ (q * p)/q := by srw [mul_comm]
   _ ≃ p         := mulL_div_same
 
 /--
@@ -817,7 +796,7 @@ theorem div_eqv_0 {p q : ℚ} [AP (q ≄ 0)] : p/q ≃ 0 ↔ p ≃ 0 := by
     calc
       _ ≃ p/q     := eqv_refl
       _ ≃ p * q⁻¹ := div_mul_recip
-      _ ≃ 0 * q⁻¹ := mul_substL ‹p ≃ 0›
+      _ ≃ 0 * q⁻¹ := by srw [‹p ≃ 0›]
       _ ≃ 0       := mul_absorbL
 
 /--
@@ -856,9 +835,9 @@ theorem recip_flip_div
     {p q : ℚ} [AP (p ≄ 0)] [AP (q ≄ 0)] : (p/q)⁻¹ ≃ q/p
     := calc
   _ ≃ (p/q)⁻¹       := eqv_refl
-  _ ≃ (p * q⁻¹)⁻¹   := recip_subst div_mul_recip
+  _ ≃ (p * q⁻¹)⁻¹   := by srw [div_mul_recip]
   _ ≃ p⁻¹ * (q⁻¹)⁻¹ := recip_compat_mul
-  _ ≃ p⁻¹ * q       := mul_substR recip_idemp
+  _ ≃ p⁻¹ * q       := by srw [recip_idemp]
   _ ≃ q * p⁻¹       := mul_comm
   _ ≃ q/p           := eqv_symm div_mul_recip
 
@@ -874,7 +853,7 @@ theorem div_div_div
     := calc
   _ ≃ (p/q) / (r/s)   := eqv_refl
   _ ≃ (p/q) * (r/s)⁻¹ := div_mul_recip
-  _ ≃ (p/q) * (s/r)   := mul_substR recip_flip_div
+  _ ≃ (p/q) * (s/r)   := by srw [recip_flip_div]
   _ ≃ (p * s)/(q * r) := div_mul_swap
 
 /--
@@ -890,12 +869,12 @@ theorem add_fractions
     : p/q + r/s ≃ (p * s + q * r)/(q * s)
     := calc
   _ = p/q + r/s                 := rfl
-  _ ≃ (p/q) * 1 + r/s           := add_substL (eqv_symm mul_identR)
-  _ ≃ (p/q)*(s/s) + r/s         := add_substL (mul_substR (eqv_symm div_same))
-  _ ≃ (p*s)/(q*s) + r/s         := add_substL div_mul_swap
-  _ ≃ (p*s)/(q*s) + 1 * (r/s)   := add_substR (eqv_symm mul_identL)
-  _ ≃ (p*s)/(q*s) + (q/q)*(r/s) := add_substR (mul_substL (eqv_symm div_same))
-  _ ≃ (p*s)/(q*s) + (q*r)/(q*s) := add_substR div_mul_swap
+  _ ≃ (p/q) * 1 + r/s           := by srw [←mul_identR]
+  _ ≃ (p/q)*(s/s) + r/s         := by srw [←div_same]
+  _ ≃ (p*s)/(q*s) + r/s         := by srw [div_mul_swap]
+  _ ≃ (p*s)/(q*s) + 1 * (r/s)   := by srw [←mul_identL]
+  _ ≃ (p*s)/(q*s) + (q/q)*(r/s) := by srw [←div_same]
+  _ ≃ (p*s)/(q*s) + (q*r)/(q*s) := by srw [div_mul_swap]
   _ ≃ (p*s + q*r)/(q*s)         := eqv_symm div_distribR
 
 section
@@ -913,17 +892,13 @@ additive term, then convert back to subtraction.
 theorem sub_fractions
     {p q r s : ℚ} [AP (q ≄ 0)] [AP (s ≄ 0)]
     : p/q - r/s ≃ (p * s - q * r)/(q * s)
-    := by
-  have neg_to_sub : p * s + q * (-r) ≃ p * s - q * r := calc
-    _ = p * s + q * (-r) := rfl
-    _ ≃ p * s + -(q * r) := add_substR (eqv_symm neg_scompatR_mul)
-    _ ≃ p * s - q * r    := eqv_symm sub_add_neg
-  calc
-    _ = p/q - r/s                  := rfl
-    _ ≃ p/q + -(r/s)               := sub_add_neg
-    _ ≃ p/q + (-r/s)               := add_substR neg_scompatL_div
-    _ ≃ (p * s + q * (-r))/(q * s) := add_fractions
-    _ ≃ (p * s - q * r)/(q * s)    := div_substL neg_to_sub
+    := calc
+  _ = p/q - r/s                  := rfl
+  _ ≃ p/q + -(r/s)               := sub_add_neg
+  _ ≃ p/q + (-r/s)               := by srw [neg_scompatL_div]
+  _ ≃ (p * s + q * (-r))/(q * s) := add_fractions
+  _ ≃ (p * s + -(q * r))/(q * s) := by srw [←neg_scompatR_mul]
+  _ ≃ (p * s - q * r)/(q * s)    := by srw [←sub_add_neg]
 
 end
 
@@ -958,54 +933,41 @@ theorem add_preserves_sign
   have : q ≃ c/d := q_eqv
   have : Integer.Sqrt1 (sgn b) := Integer.sgn_nonzero.mp ‹Integer.Nonzero b›
   have : Integer.Sqrt1 (sgn d) := Integer.sgn_nonzero.mp ‹Integer.Nonzero d›
-  have : sgn (a * b) ≃ s := calc
-    sgn (a * b)     ≃ _ := Integer.sgn_compat_mul
-    sgn a * sgn b   ≃ _ := Rel.symm sgn_div_integers
-    sgn ((a : ℚ)/b) ≃ _ := sgn_subst (eqv_symm ‹p ≃ a/b›)
-    sgn p           ≃ _ := ‹sgn p ≃ s›
-    s               ≃ _ := Rel.refl
-  have : sgn (c * d) ≃ s := calc
-    sgn (c * d)     ≃ _ := Integer.sgn_compat_mul
-    sgn c * sgn d   ≃ _ := Rel.symm sgn_div_integers
-    sgn ((c : ℚ)/d) ≃ _ := sgn_subst (eqv_symm ‹q ≃ c/d›)
-    sgn q           ≃ _ := ‹sgn q ≃ s›
-    s               ≃ _ := Rel.refl
-  have sgn_abdd : sgn (a * b * (d * d)) ≃ s := calc
-    sgn (a * b * (d * d))     ≃ _ := Integer.sgn_compat_mul
-    sgn (a * b) * sgn (d * d) ≃ _ := AA.substL ‹sgn (a * b) ≃ s›
-    s * sgn (d * d)           ≃ _ := AA.substR Integer.sgn_compat_mul
-    s * (sgn d * sgn d)       ≃ _ := AA.substR ‹Integer.Sqrt1 (sgn d)›.elim
-    s * 1                     ≃ _ := AA.identR
-    s                         ≃ _ := Rel.refl
-  have sgn_bbcd : sgn (b * b * (c * d)) ≃ s := calc
-    sgn (b * b * (c * d))     ≃ _ := Integer.sgn_compat_mul
-    sgn (b * b) * sgn (c * d) ≃ _ := AA.substR ‹sgn (c * d) ≃ s›
-    sgn (b * b) * s           ≃ _ := AA.substL Integer.sgn_compat_mul
-    sgn b * sgn b * s         ≃ _ := AA.substL ‹Integer.Sqrt1 (sgn b)›.elim
-    1 * s                     ≃ _ := AA.identL
-    s                         ≃ _ := Rel.refl
-  have : sgn (p + q) ≃ s := calc
-    sgn (p + q)
-      ≃ _ := sgn_subst (add_substL ‹p ≃ a/b›)
-    sgn ((a : ℚ)/b + q)
-      ≃ _ := sgn_subst (add_substR ‹q ≃ c/d›)
-    sgn ((a : ℚ)/b + (c : ℚ)/d)
-      ≃ _ := sgn_subst add_div_integers
-    sgn (((a * d + b * c : ℤ) : ℚ)/((b * d : ℤ) : ℚ))
-      ≃ _ := sgn_div_integers
-    sgn (a * d + b * c) * sgn (b * d)
-      ≃ _ := Rel.symm Integer.sgn_compat_mul
-    sgn ((a * d + b * c) * (b * d))
-      ≃ _ := Integer.sgn_subst AA.distribR
-    sgn (a * d * (b * d) + b * c * (b * d))
-      ≃ _ := Integer.sgn_subst (Integer.add_substL AA.expr_xxfxxff_lr_swap_rl)
-    sgn (a * b * (d * d) + b * c * (b * d))
-      ≃ _ := Integer.sgn_subst (Integer.add_substR AA.expr_xxfxxff_lr_swap_rl)
-    sgn (a * b * (d * d) + b * b * (c * d))
-      ≃ _ := Integer.add_preserves_sign sgn_abdd sgn_bbcd
-    s
-      ≃ _ := Rel.refl
-  exact this
+
+  have : sgn (a * b * (d * d)) ≃ s := calc
+    _ = sgn (a * b * (d * d))         := rfl
+    _ ≃ sgn (a * b) * sgn (d * d)     := Integer.sgn_compat_mul
+    _ ≃ sgn (a * b) * (sgn d * sgn d) := by srw [Integer.sgn_compat_mul]
+    _ ≃ sgn (a * b) * 1               := by srw [‹Integer.Sqrt1 (sgn d)›.elim]
+    _ ≃ sgn (a * b)                   := Integer.mul_identR
+    _ ≃ sgn a * sgn b                 := Integer.sgn_compat_mul
+    _ ≃ sgn ((a:ℚ)/b)                 := Rel.symm sgn_div_integers
+    _ ≃ sgn p                         := by srw [←‹p ≃ a/b›]
+    _ ≃ s                             := ‹sgn p ≃ s›
+  have : sgn (b * b * (c * d)) ≃ s := calc
+    _ = sgn (b * b * (c * d))       := rfl
+    _ ≃ sgn (b * b) * sgn (c * d)   := Integer.sgn_compat_mul
+    _ ≃ sgn b * sgn b * sgn (c * d) := by srw [Integer.sgn_compat_mul]
+    _ ≃ 1 * sgn (c * d)             := by srw [‹Integer.Sqrt1 (sgn b)›.elim]
+    _ ≃ sgn (c * d)                 := Integer.mul_identL
+    _ ≃ (sgn c * sgn d)             := Integer.sgn_compat_mul
+    _ ≃ sgn ((c:ℚ)/d)               := Rel.symm sgn_div_integers
+    _ ≃ sgn q                       := by srw [←‹q ≃ c/d›]
+    _ ≃ s                           := ‹sgn q ≃ s›
+  have : sgn (a*b * (d*d) + b*b * (c*d)) ≃ s :=
+    Integer.add_preserves_sign ‹sgn (a*b * (d*d)) ≃ s› ‹sgn (b*b * (c*d)) ≃ s›
+
+  calc
+    _ = sgn (p + q)                       := rfl
+    _ ≃ sgn ((a:ℚ)/b + q)                 := by srw [‹p ≃ a/b›]
+    _ ≃ sgn ((a:ℚ)/b + (c:ℚ)/d)           := by srw [‹q ≃ c/d›]
+    _ ≃ sgn (((a*d+b*c:ℤ):ℚ)/((b*d:ℤ):ℚ)) := by srw [add_div_integers]
+    _ ≃ sgn (a*d + b*c) * sgn (b*d)       := sgn_div_integers
+    _ ≃ sgn ((a* d + b * c) * (b * d))    := Rel.symm Integer.sgn_compat_mul
+    _ ≃ sgn (a*d * (b*d) + b*c * (b*d))   := by srw [Integer.mul_distribR]
+    _ ≃ sgn (a*b * (d*d) + b*c * (b*d))   := by srw [AA.expr_xxfxxff_lr_swap_rl]
+    _ ≃ sgn (a*b * (d*d) + b*b * (c*d))   := by srw [AA.expr_xxfxxff_lr_swap_rl]
+    _ ≃ s                                 := ‹sgn (a*b*(d*d) + b*b*(c*d)) ≃ s›
 
 /--
 The _signum_ function is idempotent: applying it twice is the same as applying
@@ -1023,13 +985,13 @@ theorem sgn_idemp {p : ℚ} : sgn (sgn p) ≃ sgn p := by
   have : Integer.Nonzero b := Integer.nonzero_iff_neqv_zero.mpr ‹AP (b ≄ 0)›.ev
   have : p ≃ a/b := eqv
   calc
-    sgn (sgn p)               ≃ _ := Integer.sgn_subst (sgn_subst ‹p ≃ a/b›)
-    sgn (sgn ((a : ℚ)/b))     ≃ _ := Integer.sgn_subst sgn_div_integers
+    sgn (sgn p)               ≃ _ := by srw [‹p ≃ a/b›]
+    sgn (sgn ((a : ℚ)/b))     ≃ _ := by srw [sgn_div_integers]
     sgn (sgn a * sgn b)       ≃ _ := Integer.sgn_compat_mul
-    sgn (sgn a) * sgn (sgn b) ≃ _ := AA.substL Integer.sgn_idemp
-    sgn a * sgn (sgn b)       ≃ _ := AA.substR Integer.sgn_idemp
+    sgn (sgn a) * sgn (sgn b) ≃ _ := by srw [Integer.sgn_idemp]
+    sgn a * sgn (sgn b)       ≃ _ := by srw [Integer.sgn_idemp]
     sgn a * sgn b             ≃ _ := Rel.symm sgn_div_integers
-    sgn ((a : ℚ)/b)           ≃ _ := sgn_subst (eqv_symm ‹p ≃ a/b›)
+    sgn ((a : ℚ)/b)           ≃ _ := by srw [←‹p ≃ a/b›]
     sgn p                     ≃ _ := Rel.refl
 
 /--
@@ -1090,11 +1052,10 @@ expression is too.
 theorem nonneg_square {p : ℚ} : sgn (p * p) ≄ -1 := by
   have : sgn (sgn p * sgn p) ≃ sgn (p * p) := calc
     _ = sgn (sgn p * sgn p) := rfl
-    _ ≃ sgn (sgn (p * p))   := Integer.sgn_subst (Rel.symm sgn_compat_mul)
+    _ ≃ sgn (sgn (p * p))   := by srw [←sgn_compat_mul]
     _ ≃ sgn (p * p)         := sgn_idemp
   have : sgn (sgn p * sgn p) ≄ -1 := Integer.nonneg_square
-  have : sgn (p * p) ≄ -1 :=
-    AA.neqv_substL ‹sgn (sgn p * sgn p) ≃ sgn (p * p)› this
+  have : sgn (p * p) ≄ -1 := by prw [‹sgn (sgn p * sgn p) ≃ sgn (p * p)›] this
   exact this
 
 /--
@@ -1108,7 +1069,7 @@ the sign of a sign leaves it unchanged.
 theorem sgn_gt_zero_iff_pos {p : ℚ} : sgn p > 0 ↔ sgn p ≃ 1 := calc
   _ ↔ sgn p > 0       := Iff.rfl
   _ ↔ sgn (sgn p) ≃ 1 := Integer.gt_zero_sgn
-  _ ↔ sgn p ≃ 1       := AA.eqv_substL_iff sgn_idemp
+  _ ↔ sgn p ≃ 1       := by srw [sgn_idemp]
 
 variable [Subtraction ℚ]
 
@@ -1138,8 +1099,7 @@ theorem sgn_sub_cancelR_div_pos
   have : sgn (r⁻¹) ≃ 1 := Rel.trans sgn_recip ‹sgn r ≃ 1›
   calc
     _ ≃ sgn (p/r - q/r)         := Rel.refl
-    _ ≃ sgn (p * r⁻¹ - q/r)     := sgn_subst (sub_substL div_mul_recip)
-    _ ≃ sgn (p * r⁻¹ - q * r⁻¹) := sgn_subst (sub_substR div_mul_recip)
+    _ ≃ sgn (p * r⁻¹ - q * r⁻¹) := by srw [div_mul_recip, div_mul_recip]
     _ ≃ sgn (p - q)             := sgn_sub_cancelR_mul_pos this
 
 /--
@@ -1168,8 +1128,7 @@ theorem sgn_sub_cancelR_div_neg
   have : sgn (r⁻¹) ≃ -1 := Rel.trans sgn_recip ‹sgn r ≃ -1›
   calc
     _ ≃ sgn (p/r - q/r)         := Rel.refl
-    _ ≃ sgn (p * r⁻¹ - q/r)     := sgn_subst (sub_substL div_mul_recip)
-    _ ≃ sgn (p * r⁻¹ - q * r⁻¹) := sgn_subst (sub_substR div_mul_recip)
+    _ ≃ sgn (p * r⁻¹ - q * r⁻¹) := by srw [div_mul_recip, div_mul_recip]
     _ ≃ sgn (q - p)             := sgn_sub_cancelR_mul_neg this
 
 end Lean4Axiomatic.Rational

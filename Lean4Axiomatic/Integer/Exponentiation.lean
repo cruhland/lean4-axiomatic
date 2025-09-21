@@ -37,7 +37,7 @@ theorem pow_absorbL {a : ℤ} {n : ℕ} : n ≥ 1 → a^2 ≃ a → a^n ≃ a :=
     show a^x₂ ≃ a
     calc
       _ = a^x₂ := rfl
-      _ ≃ a^x₁ := Natural.pow_substR (Rel.symm ‹x₁ ≃ x₂›)
+      _ ≃ a^x₁ := by srw [←‹x₁ ≃ x₂›]
       _ ≃ a    := ‹a^x₁ ≃ a›
 
   apply Natural.ind_from motive_subst ‹n ≥ 1›
@@ -50,7 +50,7 @@ theorem pow_absorbL {a : ℤ} {n : ℕ} : n ≥ 1 → a^2 ≃ a → a^n ≃ a :=
     calc
       _ = a^(step k) := rfl
       _ ≃ a^k * a    := Natural.pow_step
-      _ ≃ a * a      := AA.substL ih
+      _ ≃ a * a      := by srw [ih]
       _ ≃ a^2        := Rel.symm Natural.pow_two
       _ ≃ a          := ‹a^2 ≃ a›
 
@@ -66,7 +66,7 @@ separate a factor of `a`.
 -/
 theorem cube_splitL {a : ℤ} : a^3 ≃ a * a^2 := calc
   _ = a^3        := rfl
-  _ ≃ a^(step 2) := Natural.pow_substR Natural.literal_step
+  _ ≃ a^(step 2) := by srw [Natural.literal_step]
   _ ≃ a^2 * a    := Natural.pow_step
   _ ≃ a * a^2    := AA.comm
 
@@ -95,19 +95,15 @@ distribute terms and simplify.
 -/
 theorem factor_diff_sqr {a b : ℤ} : a^2 - b^2 ≃ (a - b) * (a + b) := by
   apply Rel.symm
-  have pow_two_symm {x : ℤ} : x * x ≃ x^2 := Rel.symm Natural.pow_two
   calc
     _ = (a - b) * (a + b)             := rfl
     _ ≃ a * (a + b) - b * (a + b)     := AA.distribR
-    _ ≃ a * a + a * b - b * (a + b)   := sub_substL AA.distribL
-    _ ≃ a^2 + a * b - b * (a + b)     := sub_substL (AA.substL pow_two_symm)
-    _ ≃ a^2 + a * b - (a + b) * b     := sub_substR AA.comm
-    _ ≃ a^2 + a * b - (a * b + b * b) := sub_substR AA.distribR
-    _ ≃ a^2 + a * b - (a * b + b^2)   := sub_substR (AA.substR pow_two_symm)
+    _ ≃ a^2 + a * b - b * (a + b)     := by srw [mul_distribL, ←Natural.pow_two]
+    _ ≃ a^2 + a * b - (a + b) * b     := by srw [AA.comm]
+    _ ≃ a^2 + a * b - (a * b + b^2)   := by srw [mul_distribR, ←Natural.pow_two]
     _ ≃ a^2 + (a * b - (a * b + b^2)) := sub_assoc_addL
-    _ ≃ a^2 + ((a * b - a * b) - b^2) := AA.substR (Rel.symm sub_assoc_subR)
-    _ ≃ a^2 + (0 - b^2)               := AA.substR (AA.substL sub_same)
-    _ ≃ a^2 + (-b^2)                  := AA.substR sub_identL
+    _ ≃ a^2 + ((a * b - a * b) - b^2) := by srw [←sub_assoc_subR]
+    _ ≃ a^2 + (-b^2)                  := by srw [sub_same, sub_identL]
     _ ≃ a^2 - b^2                     := Rel.symm sub_defn
 
 /--
@@ -128,6 +124,7 @@ obey this property.
 **Proof intuition**: Substitute the left operand in the expression defining
 `sum_sub_err`; this is possible because it uses substitutive operations.
 -/
+@[gcongr]
 theorem sse_substL
     {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → sum_sub_err a₁ b ≃ sum_sub_err a₂ b
     := by
@@ -136,8 +133,8 @@ theorem sse_substL
   calc
     _ = sum_sub_err a₁ b  := rfl
     _ = a₁ + b - a₁ * b^2 := rfl
-    _ ≃ a₂ + b - a₁ * b^2 := sub_substL (AA.substL ‹a₁ ≃ a₂›)
-    _ ≃ a₂ + b - a₂ * b^2 := sub_substR (AA.substL ‹a₁ ≃ a₂›)
+    _ ≃ a₂ + b - a₁ * b^2 := by srw [‹a₁ ≃ a₂›]
+    _ ≃ a₂ + b - a₂ * b^2 := by srw [‹a₁ ≃ a₂›]
     _ = sum_sub_err a₂ b  := rfl
 
 /--
@@ -149,17 +146,17 @@ obey this property.
 **Proof intuition**: Substitute the right operand in the expression defining
 `sum_sub_err`; this is possible because it uses substitutive operations.
 -/
+@[gcongr]
 theorem sse_substR
     {a b₁ b₂ : ℤ} : b₁ ≃ b₂ → sum_sub_err a b₁ ≃ sum_sub_err a b₂
     := by
   intro (_ : b₁ ≃ b₂)
   show sum_sub_err a b₁ ≃ sum_sub_err a b₂
-  have : b₁^2 ≃ b₂^2 := Natural.pow_substL ‹b₁ ≃ b₂›
   calc
     _ = sum_sub_err a b₁  := rfl
     _ = a + b₁ - a * b₁^2 := rfl
-    _ ≃ a + b₂ - a * b₁^2 := sub_substL (AA.substR ‹b₁ ≃ b₂›)
-    _ ≃ a + b₂ - a * b₂^2 := sub_substR (AA.substR ‹b₁^2 ≃ b₂^2›)
+    _ ≃ a + b₂ - a * b₁^2 := by srw [‹b₁ ≃ b₂›]
+    _ ≃ a + b₂ - a * b₂^2 := by srw [‹b₁ ≃ b₂›]
     _ = sum_sub_err a b₂  := rfl
 
 /--
@@ -177,10 +174,10 @@ theorem sse_same {a : ℤ} : a^3 ≃ a → sum_sub_err a a ≃ a := by
   calc
     _ = sum_sub_err a a := rfl
     _ = a + a - a * a^2 := rfl
-    _ ≃ a + a - a^3     := sub_substR (Rel.symm cube_splitL)
-    _ ≃ a + a - a       := sub_substR ‹a^3 ≃ a›
+    _ ≃ a + a - a^3     := by srw [←cube_splitL]
+    _ ≃ a + a - a       := by srw [‹a^3 ≃ a›]
     _ ≃ a + (a - a)     := sub_assoc_addL
-    _ ≃ a + 0           := AA.substR sub_same
+    _ ≃ a + 0           := by srw [sub_same]
     _ ≃ a               := AA.identR
 
 /--
@@ -198,15 +195,15 @@ theorem sse_compat_mul
   show sum_sub_err (a * b) (a * c) ≃ a * sum_sub_err b c
   have pull_out_a : (a * b) * (a * c)^2 ≃ a * (b * c^2) := calc
     _ = (a * b) * (a * c)^2   := rfl
-    _ ≃ (a * b) * (a^2 * c^2) := AA.substR Natural.pow_distribR_mul
+    _ ≃ (a * b) * (a^2 * c^2) := by srw [Natural.pow_distribR_mul]
     _ ≃ (a * a^2) * (b * c^2) := AA.expr_xxfxxff_lr_swap_rl
-    _ ≃ a^3 * (b * c^2)       := AA.substL (Rel.symm cube_splitL)
-    _ ≃ a * (b * c^2)         := AA.substL ‹a^3 ≃ a›
+    _ ≃ a^3 * (b * c^2)       := by srw [←cube_splitL]
+    _ ≃ a * (b * c^2)         := by srw [‹a^3 ≃ a›]
   calc
     _ = sum_sub_err (a * b) (a * c)         := rfl
     _ = a * b + a * c - (a * b) * (a * c)^2 := rfl
-    _ ≃ a * (b + c) - (a * b) * (a * c)^2   := sub_substL (Rel.symm AA.distribL)
-    _ ≃ a * (b + c) - a * (b * c^2)         := sub_substR pull_out_a
+    _ ≃ a * (b + c) - (a * b) * (a * c)^2   := by srw [←mul_distribL]
+    _ ≃ a * (b + c) - a * (b * c^2)         := by srw [pull_out_a]
     _ ≃ a * (b + c - b * c^2)               := Rel.symm AA.distribL
     _ = a * sum_sub_err b c                 := rfl
 
@@ -228,7 +225,7 @@ theorem sgn_pow {a : ℤ} {n : ℕ} : sgn (a^n) ≃ (sgn a)^n := by
     show sgn (a^0) ≃ (sgn a)^0
     calc
       _ = sgn (a^0) := rfl
-      _ ≃ sgn (1:ℤ) := sgn_subst Natural.pow_zero
+      _ ≃ sgn (1:ℤ) := by srw [Natural.pow_zero]
       _ ≃ 1         := sgn_positive.mp one_positive
       _ ≃ (sgn a)^0 := Rel.symm Natural.pow_zero
   case step =>
@@ -236,12 +233,13 @@ theorem sgn_pow {a : ℤ} {n : ℕ} : sgn (a^n) ≃ (sgn a)^n := by
     show sgn (a^(step n')) ≃ (sgn a)^(step n')
     calc
       _ = sgn (a^(step n'))  := rfl
-      _ ≃ sgn (a^n' * a)     := sgn_subst Natural.pow_step
+      _ ≃ sgn (a^n' * a)     := by srw [Natural.pow_step]
       _ ≃ sgn (a^n') * sgn a := sgn_compat_mul
-      _ ≃ (sgn a)^n' * sgn a := AA.substL ih
+      _ ≃ (sgn a)^n' * sgn a := by srw [ih]
       _ ≃ (sgn a)^(step n')  := Rel.symm Natural.pow_step
 
 end sign_only
+
 variable [Subtraction ℤ] [Sign ℤ]
 
 /--
@@ -254,7 +252,7 @@ integers greater than one increase in magnitude.
 -/
 theorem sqr_idemp_reasons {a : ℤ} : a^2 ≃ a ↔ a ≃ 0 ∨ a ≃ 1 := calc
   _ ↔ a^2 ≃ a       := Iff.rfl
-  _ ↔ a * a ≃ a     := AA.eqv_substL_iff Natural.pow_two
+  _ ↔ a * a ≃ a     := by srw [Natural.pow_two]
   _ ↔ a ≃ 0 ∨ a ≃ 1 := mul_identR_reasons
 
 /--
@@ -271,29 +269,21 @@ side into `a * (a - 1) * (a + 1)` using algebra and `factor_diff_squares`. Then
 apply `mul_split_zero` twice and rearrange to get the result.
 -/
 theorem cube_idemp_reasons {a : ℤ} : a^3 ≃ a ↔ a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1 := by
-  have : a ≃ a * 1^2 := calc
-    _ = a       := rfl
-    _ ≃ a * 1   := Rel.symm AA.identR
-    _ ≃ a * 1^2 := AA.substR (Rel.symm Natural.pow_absorbL)
-  have factor : a * a^2 - a * 1^2 ≃ a * ((a - 1) * (a + 1)) := calc
-    _ = a * a^2 - a * 1^2       := rfl
-    _ ≃ a * (a^2 - 1^2)         := Rel.symm mul_distribL_sub
-    _ ≃ a * ((a - 1) * (a + 1)) := AA.substR factor_diff_sqr
-  have : a + 1 ≃ 0 ↔ a ≃ -1 := calc
-    _ ↔ a + 1 ≃ 0 := Iff.rfl
-    _ ↔ a ≃ 0 - 1 := subR_moveL_addR.symm
-    _ ↔ a ≃ -1    := AA.eqv_substR_iff sub_identL
   have nonzero_values : (a - 1) * (a + 1) ≃ 0 ↔ a ≃ 1 ∨ a ≃ -1 := calc
     _ ↔ (a - 1) * (a + 1) ≃ 0 := Iff.rfl
     _ ↔ a - 1 ≃ 0 ∨ a + 1 ≃ 0 := mul_split_zero
     _ ↔ a ≃ 1 ∨ a + 1 ≃ 0     := iff_subst_covar or_mapL zero_diff_iff_eqv
-    _ ↔ a ≃ 1 ∨ a ≃ -1        := iff_subst_covar or_mapR ‹a + 1 ≃ 0 ↔ a ≃ -1›
+    _ ↔ a ≃ 1 ∨ a ≃ 0 - 1     := iff_subst_covar or_mapR subR_moveL_addR.symm
+    _ ↔ a ≃ 1 ∨ a ≃ -1        := iff_subst_covar or_mapR (by srw [sub_identL])
+
   calc
     _ ↔ a^3 ≃ a                       := Iff.rfl
-    _ ↔ a * a^2 ≃ a                   := AA.eqv_substL_iff cube_splitL
-    _ ↔ a * a^2 ≃ a * 1^2             := AA.eqv_substR_iff ‹a ≃ a * 1^2›
-    _ ↔ a * a^2 - a * 1^2 ≃ 0         := zero_diff_iff_eqv.symm
-    _ ↔ a * ((a - 1) * (a + 1)) ≃ 0   := AA.eqv_substL_iff factor
+    _ ↔ a^3 ≃ a * 1                   := by srw [←mul_identR]
+    _ ↔ a^3 ≃ a * 1^2                 := by srw [←Natural.pow_absorbL]
+    _ ↔ a^3 - a * 1^2 ≃ 0             := zero_diff_iff_eqv.symm
+    _ ↔ a * a^2 - a * 1^2 ≃ 0         := by srw [cube_splitL]
+    _ ↔ a * (a^2 - 1^2) ≃ 0           := by srw [←mul_distribL_sub]
+    _ ↔ a * ((a - 1) * (a + 1)) ≃ 0   := by srw [factor_diff_sqr]
     _ ↔ a ≃ 0 ∨ (a - 1) * (a + 1) ≃ 0 := mul_split_zero
     _ ↔ a ≃ 0 ∨ a ≃ 1 ∨ a ≃ -1        := iff_subst_covar or_mapR nonzero_values
 
@@ -335,7 +325,7 @@ theorem cube_idemp_iff_sgn {a : ℤ} : a^3 ≃ a ↔ ∃ (b : ℤ), a ≃ sgn b 
     show a^3 ≃ a
     calc
       _ = a^3       := rfl
-      _ ≃ (sgn b)^3 := Natural.pow_substL ‹a ≃ sgn b›
+      _ ≃ (sgn b)^3 := by srw [‹a ≃ sgn b›]
       _ ≃ sgn b     := sgn_cubed
       _ ≃ a         := Rel.symm ‹a ≃ sgn b›
 
@@ -407,7 +397,7 @@ theorem sgn_diff_sqr
     Or.inl ‹sgn (a - b) ≃ 0›
   calc
     _ = sgn (a^2 - b^2)           := rfl
-    _ ≃ sgn ((a - b) * (a + b))   := sgn_subst factor_diff_sqr
+    _ ≃ sgn ((a - b) * (a + b))   := by srw [factor_diff_sqr]
     _ ≃ sgn (a - b) * sgn (a + b) := sgn_compat_mul
     _ ≃ sgn (a - b)               := mul_identR_reasons.mpr diff_zero_sum_one
 
@@ -441,25 +431,24 @@ theorem sgn_sum
       _ = sgn (a + b)                 := rfl
       _ ≃ sgn a                       := ‹sgn (a + b) ≃ sgn a›
       _ ≃ sum_sub_err (sgn a) (sgn a) := Rel.symm (sse_same sgn_cubed)
-      _ ≃ sum_sub_err (sgn a) (sgn b) := sse_substR ‹sgn a ≃ sgn b›
+      _ ≃ sum_sub_err (sgn a) (sgn b) := by srw [‹sgn a ≃ sgn b›]
   | Or.inr (_ : a * b ≃ 0) =>
+    let sa := sgn a; let sb := sgn b
     have : a ≃ 0 ∨ b ≃ 0 := mul_split_zero.mp ‹a * b ≃ 0›
-    have : sgn (a + b) ≃ sgn a + sgn b := sgn_sum_zero_term ‹a ≃ 0 ∨ b ≃ 0›
+    have : sgn (a + b) ≃ sa + sb := sgn_sum_zero_term ‹a ≃ 0 ∨ b ≃ 0›
 
-    have zero_eqv_sgn_prod : 0 ≃ (sgn a) * (sgn b)^2 := Rel.symm $ calc
-      _ = (sgn a) * (sgn b)^2           := rfl
-      _ ≃ (sgn a) * ((sgn b) * (sgn b)) := AA.substR Natural.pow_two
-      _ ≃ ((sgn a) * (sgn b)) * (sgn b) := Rel.symm AA.assoc
-      _ ≃ (sgn (a * b)) * (sgn b)       := AA.substL (Rel.symm sgn_compat_mul)
-      _ ≃ (sgn (0:ℤ)) * (sgn b)         := AA.substL (sgn_subst ‹a * b ≃ 0›)
-      _ ≃ 0 * (sgn b)                   := AA.substL (sgn_zero.mp Rel.refl)
-      _ ≃ 0                             := AA.absorbL
-    calc
-      _ = sgn (a + b)                         := rfl
-      _ ≃ sgn a + sgn b                       := ‹sgn (a + b) ≃ sgn a + sgn b›
-      _ ≃ sgn a + sgn b - 0                   := Rel.symm sub_identR
-      _ ≃ sgn a + sgn b - (sgn a) * (sgn b)^2 := sub_substR zero_eqv_sgn_prod
-      _ = sum_sub_err (sgn a) (sgn b)         := rfl
+    exact Rel.symm $ calc
+      _ = sum_sub_err (sgn a) (sgn b)  := rfl
+      _ = sum_sub_err sa sb            := rfl
+      _ = sa + sb - sa * sb^2          := rfl
+      _ ≃ sa + sb - sa * (sb * sb)     := by srw [Natural.pow_two]
+      _ ≃ sa + sb - (sa * sb) * sb     := by srw [←AA.assoc]
+      _ ≃ sa + sb - (sgn (a * b)) * sb := by srw [←sgn_compat_mul]
+      _ ≃ sa + sb - (sgn (0:ℤ)) * sb   := by srw [‹a * b ≃ 0›]
+      _ ≃ sa + sb - 0 * sb             := by srw [sgn_zero.mp Rel.refl]
+      _ ≃ sa + sb - 0                  := by srw [mul_absorbL]
+      _ ≃ sa + sb                      := sub_identR
+      _ ≃ sgn (a + b)                  := Rel.symm ‹sgn (a + b) ≃ sa + sb›
 
 /--
 Raising two nonnegative integers to the same positive natural number power
@@ -486,39 +475,29 @@ theorem sgn_diff_pow_pos
   have motive_subst {x₁ x₂ : ℕ} : x₁ ≃ x₂ → motive x₁ → motive x₂ := by
     intro (_ : x₁ ≃ x₂) (_ : sgn (a^x₁ - b^x₁) ≃ sgn (a - b))
     show sgn (a^x₂ - b^x₂) ≃ sgn (a - b)
-    have pow_substR {c : ℤ} : c^x₂ ≃ c^x₁ :=
-      Natural.pow_substR (Rel.symm ‹x₁ ≃ x₂›)
     calc
       _ = sgn (a^x₂ - b^x₂) := rfl
-      _ ≃ sgn (a^x₁ - b^x₂) := sgn_subst (sub_substL pow_substR)
-      _ ≃ sgn (a^x₁ - b^x₁) := sgn_subst (sub_substR pow_substR)
+      _ ≃ sgn (a^x₁ - b^x₂) := by srw [←‹x₁ ≃ x₂›]
+      _ ≃ sgn (a^x₁ - b^x₁) := by srw [←‹x₁ ≃ x₂›]
       _ ≃ sgn (a - b)       := ‹sgn (a^x₁ - b^x₁) ≃ sgn (a - b)›
 
   apply Natural.ind_from motive_subst ‹n ≥ 1›
   case base =>
     show sgn (a^1 - b^1) ≃ sgn (a - b)
-    calc
-      _ = sgn (a^1 - b^1) := rfl
-      _ ≃ sgn (a - b^1)   := sgn_subst (sub_substL Natural.pow_one)
-      _ ≃ sgn (a - b)     := sgn_subst (sub_substR Natural.pow_one)
+    srw [Natural.pow_one, Natural.pow_one]
   case next =>
     intro (m : ℕ) (_ : m ≥ 1) (ih : sgn (a^m - b^m) ≃ sgn (a - b))
     show sgn (a^(step m) - b^(step m)) ≃ sgn (a - b)
 
-    have sub_to_sum
-        {w x y z : ℤ} : w*x - y*z ≃ w * (x - z) + (w - y) * z
-        := calc
-      _ = w*x - y*z                 := rfl
-      _ ≃ (w*x - w*z) + (w*z - y*z) := Rel.symm add_sub_telescope
-      _ ≃ w * (x - z) + (w*z - y*z) := AA.substL (Rel.symm AA.distribL)
-      _ ≃ w * (x - z) + (w - y) * z := AA.substR (Rel.symm AA.distribR)
     have expand
         : a^(step m) - b^(step m) ≃ a^m * (a - b) + (a^m - b^m) * b
         := calc
-      _ = a^(step m) - b^(step m)         := rfl
-      _ ≃ a^m * a - b^(step m)            := sub_substL Natural.pow_step
-      _ ≃ a^m * a - b^m * b               := sub_substR Natural.pow_step
-      _ ≃ a^m * (a - b) + (a^m - b^m) * b := sub_to_sum
+      _ = a^(step m) - b^(step m)           := rfl
+      _ ≃ a^m*a - b^(step m)                := by srw [Natural.pow_step]
+      _ ≃ a^m*a - b^m*b                     := by srw [Natural.pow_step]
+      _ ≃ (a^m*a - a^m*b) + (a^m*b - b^m*b) := Rel.symm add_sub_telescope
+      _ ≃ a^m * (a - b) + (a^m*b - b^m*b)   := by srw [←mul_distribL_sub]
+      _ ≃ a^m * (a - b) + (a^m - b^m) * b   := by srw [←mul_distribR_sub]
 
     have : a * b ≥ 0 := mul_preserves_nonneg ‹a ≥ 0› ‹b ≥ 0›
     have : (sgn a)^2 ≃ sgn a := sgn_sqr_nonneg.mpr ‹a ≥ 0›
@@ -528,7 +507,7 @@ theorem sgn_diff_pow_pos
       _ ≃ sgn a     := pow_absorbL ‹m ≥ 1› ‹(sgn a)^2 ≃ sgn a›
     have reduce : sum_sub_err (sgn (a^m)) (sgn b) ≃ sgn (a + b) := calc
       _ = sum_sub_err (sgn (a^m)) (sgn b) := rfl
-      _ ≃ sum_sub_err (sgn a) (sgn b)     := sse_substL ‹sgn (a^m) ≃ sgn a›
+      _ ≃ sum_sub_err (sgn a) (sgn b)     := by srw [‹sgn (a^m) ≃ sgn a›]
       _ ≃ sgn (a + b)                     := Rel.symm (sgn_sum ‹a * b ≥ 0›)
 
     have factor_sumL : sgn (a^m * (a - b)) ≃ sgn (a - b) * sgn (a^m) := calc
@@ -549,30 +528,27 @@ theorem sgn_diff_pow_pos
     have : sgn (amab * abmb) ≥ 0 := calc
       _ = sgn (amab * abmb)           := rfl
       _ ≃ sgn amab * sgn abmb         := sgn_compat_mul
-      _ ≃ (sab * sam) * sgn abmb      := AA.substL factor_sumL
-      _ ≃ (sab * sam) * (sab * sgn b) := AA.substR factor_sumR
+      _ ≃ (sab * sam) * sgn abmb      := by srw [factor_sumL]
+      _ ≃ (sab * sam) * (sab * sgn b) := by srw [factor_sumR]
       _ ≃ (sab * sab) * (sam * sgn b) := AA.expr_xxfxxff_lr_swap_rl
-      _ ≃ sab^2 * (sam * sgn b)       := AA.substL (Rel.symm Natural.pow_two)
-      _ ≃ sab^2 * (sgn a * sgn b)     := AA.substR (AA.substL ‹sam ≃ sgn a›)
-      _ ≃ sab^2 * sgn (a * b)         := AA.substR (Rel.symm sgn_compat_mul)
+      _ ≃ sab^2 * (sam * sgn b)       := by srw [←Natural.pow_two]
+      _ ≃ sab^2 * (sgn a * sgn b)     := by srw [‹sam ≃ sgn a›]
+      _ ≃ sab^2 * sgn (a * b)         := by srw [←sgn_compat_mul]
       _ ≥ 0                           := ‹sab^2 * sgn (a * b) ≥ 0›
     have : amab * abmb ≥ 0 := sgn_preserves_ge_zero.mpr ‹sgn (amab * abmb) ≥ 0›
 
-    have factor : sgn (a^(step m) - b^(step m)) ≃ sgn (a-b) * sgn (a+b) := calc
+    calc
       _ = sgn (a^(step m) - b^(step m))         := rfl
-      _ ≃ sgn (a^m * (a - b) + (a^m - b^m) * b) := sgn_subst expand
+      _ ≃ sgn (a^m * (a - b) + (a^m - b^m) * b) := by srw [expand]
       _ ≃ sum_sub_err (sgn amab) (sgn abmb)     := sgn_sum ‹amab * abmb ≥ 0›
-      _ ≃ sum_sub_err (sab * sam) (sgn abmb)    := sse_substL factor_sumL
-      _ ≃ sum_sub_err (sab * sam) (sab * sgn b) := sse_substR factor_sumR
+      _ ≃ sum_sub_err (sab * sam) (sgn abmb)    := by srw [factor_sumL]
+      _ ≃ sum_sub_err (sab * sam) (sab * sgn b) := by srw [factor_sumR]
       _ ≃ sab * sum_sub_err sam (sgn b)         := sse_compat_mul sgn_cubed
       _ = sgn (a - b) * sum_sub_err sam (sgn b) := rfl
-      _ ≃ sgn (a - b) * sgn (a + b)             := AA.substR reduce
-    calc
-      _ = sgn (a^(step m) - b^(step m)) := rfl
-      _ ≃ sgn (a - b) * sgn (a + b)     := factor
-      _ ≃ sgn ((a - b) * (a + b))       := Rel.symm sgn_compat_mul
-      _ ≃ sgn (a^2 - b^2)               := sgn_subst (Rel.symm factor_diff_sqr)
-      _ ≃ sgn (a - b)                   := sgn_diff_sqr ‹a ≥ 0› ‹b ≥ 0›
+      _ ≃ sgn (a - b) * sgn (a + b)             := by srw [reduce]
+      _ ≃ sgn ((a - b) * (a + b))               := Rel.symm sgn_compat_mul
+      _ ≃ sgn (a^2 - b^2)                       := by srw [←factor_diff_sqr]
+      _ ≃ sgn (a - b)                           := sgn_diff_sqr ‹a ≥ 0› ‹b ≥ 0›
 
 /--
 The ordering of two nonnegative integers, each raised to the same natural
@@ -594,23 +570,18 @@ theorem sgn_diff_pow
   have : n > 0 ∨ n ≃ 0 := Natural.ge_split ‹n ≥ 0›
   match this.symm with
   | Or.inl (_ : n ≃ 0) =>
-    have : a^n - b^n ≃ 0 := calc
-      _ = a^n - b^n := rfl
-      _ ≃ a^0 - b^n := sub_substL (Natural.pow_substR ‹n ≃ 0›)
-      _ ≃ a^0 - b^0 := sub_substR (Natural.pow_substR ‹n ≃ 0›)
-      _ ≃ 1 - b^0   := sub_substL Natural.pow_zero
-      _ ≃ (1:ℤ) - 1 := sub_substR Natural.pow_zero
-      _ ≃ 0         := sub_same
-    have : sgn (n:ℤ) ≃ 0 := calc
-      _ = sgn (n:ℤ)     := rfl
-      _ ≃ sgn ((0:ℕ):ℤ) := sgn_subst (AA.subst₁ ‹n ≃ 0›)
-      _ ≃ 0             := sgn_zero.mp Rel.refl
     calc
-      _ = sgn (a^n - b^n)         := rfl
-      _ ≃ sgn (0:ℤ)               := sgn_subst ‹a^n - b^n ≃ 0›
-      _ ≃ 0                       := sgn_zero.mp Rel.refl
-      _ ≃ sgn (a - b) * 0         := Rel.symm AA.absorbR
-      _ ≃ sgn (a - b) * sgn (n:ℤ) := AA.substR (Rel.symm ‹sgn (n:ℤ) ≃ 0›)
+      _ = sgn (a^n - b^n)             := rfl
+      _ ≃ sgn (a^0 - b^n)             := by srw [‹n ≃ 0›]
+      _ ≃ sgn (a^0 - b^0)             := by srw [‹n ≃ 0›]
+      _ ≃ sgn (1 - b^0)               := by srw [Natural.pow_zero]
+      _ ≃ sgn ((1:ℤ) - 1)             := by srw [Natural.pow_zero]
+      _ ≃ sgn (0:ℤ)                   := by srw [sub_same]
+      _ ≃ 0                           := sgn_zero.mp Rel.refl
+      _ ≃ sgn (a - b) * 0             := Rel.symm AA.absorbR
+      _ ≃ sgn (a - b) * sgn (0:ℤ)     := by srw [←sgn_zero.mp Rel.refl]
+      _ = sgn (a - b) * sgn ((0:ℕ):ℤ) := rfl
+      _ ≃ sgn (a - b) * sgn (n:ℤ)     := by srw [←‹n ≃ 0›]
   | Or.inr (_ : n > 0) =>
     have : Positive n := Natural.lt_zero_pos.mpr ‹n > 0›
     have : n ≥ 1 := Natural.positive_ge.mp ‹Positive n›
@@ -620,6 +591,6 @@ theorem sgn_diff_pow
       _ = sgn (a^n - b^n)         := rfl
       _ ≃ sgn (a - b)             := sgn_diff_pow_pos ‹a ≥ 0› ‹b ≥ 0› ‹n ≥ 1›
       _ ≃ sgn (a - b) * 1         := Rel.symm AA.identR
-      _ ≃ sgn (a - b) * sgn (n:ℤ) := AA.substR (Rel.symm ‹sgn (n:ℤ) ≃ 1›)
+      _ ≃ sgn (a - b) * sgn (n:ℤ) := by srw [←‹sgn (n:ℤ) ≃ 1›]
 
 end Lean4Axiomatic.Integer

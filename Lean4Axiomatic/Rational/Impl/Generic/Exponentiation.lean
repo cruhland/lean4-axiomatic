@@ -58,11 +58,6 @@ theorem on_diff_subst_pow
   intro (p : ℚ) (_ : AP (p ≄ 0))
   show p^n₁ / p^m₁ ≃ p^n₂ / p^m₂
 
-  have pow_add_n₁m₂ : p^n₁ * p^m₂ ≃ p^(n₁ + m₂) :=
-    Rel.symm Natural.pow_compatL_add
-  have pow_add_m₁n₂ : p^m₁ * p^n₂ ≃ p^(m₁ + n₂) :=
-    Rel.symm Natural.pow_compatL_add
-
   have : (n₁:ℤ) + m₂ ≃ n₂ + m₁ :=
     Integer.sub_swap_add.mp ‹(n₁:ℤ) - m₁ ≃ n₂ - m₂›
   have : ((n₁ + m₂:ℕ):ℤ) ≃ ((m₁ + n₂:ℕ):ℤ) := calc
@@ -71,15 +66,14 @@ theorem on_diff_subst_pow
     _ ≃ n₂ + m₁         := ‹(n₁:ℤ) + m₂ ≃ n₂ + m₁›
     _ ≃ m₁ + n₂         := Integer.add_comm
     _ ≃ ((m₁ + n₂:ℕ):ℤ) := Rel.symm AA.compat₂
-  have : n₁ + m₂ ≃ m₁ + n₂ := AA.inject this
-  have pow_add_subst : p^(n₁ + m₂) ≃ p^(m₁ + n₂) := Natural.pow_substR this
+  have : n₁ + m₂ ≃ m₁ + n₂ := AA.inject ‹((n₁ + m₂:ℕ):ℤ) ≃ ((m₁ + n₂:ℕ):ℤ)›
 
   have : (p^n₁ / p^m₁) / (p^n₂ / p^m₂) ≃ 1 := calc
     _ = (p^n₁ / p^m₁) / (p^n₂ / p^m₂) := rfl
     _ ≃ (p^n₁ * p^m₂) / (p^m₁ * p^n₂) := div_div_div
-    _ ≃ p^(n₁ + m₂) / (p^m₁ * p^n₂)   := div_substL pow_add_n₁m₂
-    _ ≃ p^(n₁ + m₂) / p^(m₁ + n₂)     := div_substR pow_add_m₁n₂
-    _ ≃ p^(m₁ + n₂) / p^(m₁ + n₂)     := div_substL pow_add_subst
+    _ ≃ p^(n₁ + m₂) / (p^m₁ * p^n₂)   := by srw [←Natural.pow_compatL_add]
+    _ ≃ p^(n₁ + m₂) / p^(m₁ + n₂)     := by srw [←Natural.pow_compatL_add]
+    _ ≃ p^(m₁ + n₂) / p^(m₁ + n₂)     := by srw [‹n₁ + m₂ ≃ m₁ + n₂›]
     _ ≃ 1                             := div_same
   have : p^n₁ / p^m₁ ≃ p^n₂ / p^m₂ := div_eqv_1.mp this
   exact this

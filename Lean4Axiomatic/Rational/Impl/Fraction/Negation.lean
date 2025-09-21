@@ -26,9 +26,12 @@ as integer fractions.
 -/
 theorem neg_compat_from_integer
     {a : ℤ} : from_integer (-a) ≃ -(from_integer a)
-    := by
-  show (-a)//1 ≃ -(a//1)
-  exact eqv_refl
+    := calc
+  _ = from_integer (-a) := rfl
+  _ = (-a)//1           := rfl
+  _ = -(a//1)           := rfl
+  _ = -(from_integer a) := rfl
+  _ ≃ -(from_integer a) := eqv_refl
 
 /--
 The negations of equivalent fractions are themselves equivalent.
@@ -40,18 +43,27 @@ valid function.
 equivalences involving only integers are reached. Show the goal equivalence
 using algebra and the equivalence from the `p₁ ≃ p₂` hypothesis.
 -/
+@[gcongr]
 theorem neg_subst {p₁ p₂ : Fraction ℤ} : p₁ ≃ p₂ → -p₁ ≃ -p₂ := by
-  revert p₁; intro (p₁n//p₁d); revert p₂; intro (p₂n//p₂d)
-  intro (_ : p₁n//p₁d ≃ p₂n//p₂d)
-  show -(p₁n//p₁d) ≃ -(p₂n//p₂d)
-  show (-p₁n//p₁d) ≃ (-p₂n//p₂d)
-  show -p₁n * p₂d ≃ -p₂n * p₁d
+  revert p₁; intro (p₁n//p₁d); let p₁ := p₁n//p₁d
+  revert p₂; intro (p₂n//p₂d); let p₂ := p₂n//p₂d
+  intro (_ : p₁ ≃ p₂)
+  show -p₁ ≃ -p₂
+
+  have : p₁n//p₁d ≃ p₂n//p₂d := ‹p₁ ≃ p₂›
   have : p₁n * p₂d ≃ p₂n * p₁d := ‹p₁n//p₁d ≃ p₂n//p₂d›
+  have : -p₁n * p₂d ≃ -p₂n * p₁d := calc
+    _ = (-p₁n) * p₂d   := rfl
+    _ ≃ (-(p₁n * p₂d)) := Rel.symm AA.scompatL
+    _ ≃ (-(p₂n * p₁d)) := by srw [‹p₁n * p₂d ≃ p₂n * p₁d›]
+    _ ≃ (-p₂n) * p₁d   := AA.scompatL
   calc
-    (-p₁n) * p₂d   ≃ _ := Rel.symm AA.scompatL
-    (-(p₁n * p₂d)) ≃ _ := AA.subst₁ ‹p₁n * p₂d ≃ p₂n * p₁d›
-    (-(p₂n * p₁d)) ≃ _ := AA.scompatL
-    (-p₂n) * p₁d   ≃ _ := Rel.refl
+    _ = -p₁         := rfl
+    _ = -(p₁n//p₁d) := rfl
+    _ = (-p₁n//p₁d) := rfl
+    _ ≃ (-p₂n//p₂d) := ‹-p₁n * p₂d ≃ -p₂n * p₁d›
+    _ = -(p₂n//p₂d) := rfl
+    _ = -p₂         := rfl
 
 /--
 The negation of a fraction is its left additive inverse.
@@ -64,14 +76,15 @@ directly added. But the numerators are additive inverses, so they sum to zero,
 and thus the entire result is zero.
 -/
 theorem add_inverseL {p : Fraction ℤ} : -p + p ≃ 0 := by
-  revert p; intro (pn//pd)
-  show -(pn//pd) + pn//pd ≃ 0
+  revert p; intro (pn//pd); let p := pn//pd
+  show -p + p ≃ 0
   calc
-    -(pn//pd) + pn//pd ≃ _ := eqv_refl
-    (-pn)//pd + pn//pd ≃ _ := add_eqv_denominators
-    (-pn + pn)//pd     ≃ _ := substN AA.inverseL
-    0//pd              ≃ _ := eqv_zero_iff_numerator_eqv_zero.mpr Rel.refl
-    0                  ≃ _ := eqv_refl
+    _ = -p + p             := rfl
+    _ = -(pn//pd) + pn//pd := rfl
+    _ = (-pn)//pd + pn//pd := rfl
+    _ ≃ (-pn + pn)//pd     := add_eqv_denominators
+    _ ≃ 0//pd              := by srw [Integer.neg_invL]
+    _ ≃ 0                  := eqv_zero_iff_numerator_eqv_zero.mpr Rel.refl
 
 /--
 The negation of a fraction is its right additive inverse.

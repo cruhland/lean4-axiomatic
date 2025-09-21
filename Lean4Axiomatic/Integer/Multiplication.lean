@@ -93,4 +93,62 @@ instance mul_monoid : CA.Monoid.Monoid (α := ℤ) := {
   toProps := mul_monoid_props
 }
 
+/--
+Non-typeclass version of `mul_substitutive.substitutiveL`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+@[gcongr]
+theorem mul_substL {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → a₁ * b ≃ a₂ * b := AA.substL
+
+/--
+Non-typeclass version of `mul_substitutive.substitutiveR`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+@[gcongr]
+theorem mul_substR {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → b * a₁ ≃ b * a₂ := AA.substR
+
+/--
+Non-typeclass version of `mul_associative.assoc`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+theorem mul_assoc {a b c : ℤ} : (a * b) * c ≃ a * (b * c) := AA.assoc
+
+/--
+Non-typeclass version of `mul_commutative.comm`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+theorem mul_comm {a b : ℤ} : a * b ≃ b * a := AA.comm
+
+/--
+Non-typeclass version of `mul_identity.identityL`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+theorem mul_identL {a : ℤ} : 1 * a ≃ a := AA.identL
+
+/--
+Non-typeclass version of `mul_identity.identityR`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+theorem mul_identR {a : ℤ} : a * 1 ≃ a := AA.identR
+
+/--
+Non-typeclass version of `mul_distributive.distribL`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+theorem mul_distribL {a b c : ℤ} : a * (b + c) ≃ a * b + a * c := AA.distribL
+
+/--
+Non-typeclass version of `mul_distributive.distribR`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+theorem mul_distribR {a b c : ℤ} : (b + c) * a ≃ b * a + c * a := AA.distribR
+
 end Lean4Axiomatic.Integer

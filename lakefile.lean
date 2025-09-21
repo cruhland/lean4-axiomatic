@@ -1,6 +1,8 @@
 import Lake
 open Lake DSL
 
+require "leanprover-community" / "mathlib"
+
 package «lean4-axiomatic» {
   moreLeanArgs := #["-D warningAsError=true"]
 }

@@ -288,6 +288,7 @@ Integer recursion obeys the substitution property on equivalence.
 **Intuition**: This is a special case of `ind_diff_subst` when the `motive`
 returns the same type for all inputs.
 -/
+@[gcongr]
 def Induction.Context.rec_diff_subst
     {X : Sort u} [EqvOp X] (ctx : Context (λ (_ : ℤ) => X))
     : {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) → ctx.rec_diff a₁ ≃ ctx.rec_diff a₂

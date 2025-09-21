@@ -115,7 +115,7 @@ theorem pos_diff_gt {n m : ℕ} : Positive (n——m) ↔ n > m := by
     calc
       m——n           ≃ _ := Rel.symm neg_involutive
       (-(-(m——n)))   ≃ _ := Rel.refl
-      (-(n——m))      ≃ _ := AA.subst₁ ‹n——m ≃ 1 * coe k›
+      (-(n——m))      ≃ _ := by srw [‹n——m ≃ 1 * coe k›]
       (-(1 * coe k)) ≃ _ := AA.scompatL
       (-1) * coe k   ≃ _ := Rel.refl
   case mpr =>
@@ -132,8 +132,8 @@ theorem pos_diff_gt {n m : ℕ} : Positive (n——m) ↔ n > m := by
     calc
       n——m              ≃ _ := Rel.symm neg_involutive
       (-(-(n——m)))      ≃ _ := Rel.refl
-      (-(m——n))         ≃ _ := AA.subst₁ ‹m——n ≃ -1 * coe k›
-      (-(-1 * coe k))   ≃ _ := AA.subst₁ (Rel.symm AA.scompatL)
+      (-(m——n))         ≃ _ := by srw [‹m——n ≃ -1 * coe k›]
+      (-(-1 * coe k))   ≃ _ := by srw [←AA.scompatL]
       (-(-(1 * coe k))) ≃ _ := neg_involutive
       1 * coe k         ≃ _ := Rel.refl
 
@@ -258,8 +258,8 @@ theorem sgn_zero {a : Difference ℕ} : a ≃ 0 ↔ sgn a ≃ 0 := by
     show sgn (n——m) ≃ 0
     have : n ≃ m := zero_diff_eqv.mp ‹n——m ≃ 0›
     have : compare n m = Ordering.eq := Natural.compare_eq.mpr this
-    have : ord_sgn (compare n m) ≃ ord_sgn Ordering.eq :=
-      ord_sgn_subst (ℤ := Difference ℕ) this
+    have : ord_sgn (ℤ := Difference ℕ) (compare n m) ≃ ord_sgn Ordering.eq :=
+      by srw [‹compare n m = Ordering.eq›]
     have : ord_sgn (compare n m) ≃ (0:Difference ℕ) := this
     have : sgn (n——m) ≃ 0 := this
     exact this
@@ -291,8 +291,8 @@ theorem sgn_positive {a : Difference ℕ} : Positive a ↔ sgn a ≃ 1 := by
     show sgn (n——m) ≃ 1
     have : n > m := pos_diff_gt.mp ‹Positive (n——m)›
     have : compare n m = Ordering.gt := Natural.compare_gt.mpr this
-    have : ord_sgn (compare n m) ≃ ord_sgn Ordering.gt :=
-      ord_sgn_subst (ℤ := Difference ℕ) this
+    have : ord_sgn (ℤ := Difference ℕ) (compare n m) ≃ ord_sgn Ordering.gt :=
+      by srw [‹compare n m = Ordering.gt›]
     have : ord_sgn (compare n m) ≃ (1:Difference ℕ) := this
     have : sgn (n——m) ≃ 1 := this
     exact this
@@ -324,8 +324,8 @@ theorem sgn_negative {a : Difference ℕ} : Negative a ↔ sgn a ≃ -1 := by
     show sgn (n——m) ≃ -1
     have : n < m := neg_diff_lt.mp ‹Negative (n——m)›
     have : compare n m = Ordering.lt := Natural.compare_lt.mpr this
-    have : ord_sgn (compare n m) ≃ ord_sgn Ordering.lt :=
-      ord_sgn_subst (ℤ := Difference ℕ) this
+    have : ord_sgn (ℤ := Difference ℕ) (compare n m) ≃ ord_sgn Ordering.lt :=
+      by srw [‹compare n m = Ordering.lt›]
     have : ord_sgn (compare n m) ≃ (-1:Difference ℕ) := this
     have : sgn (n——m) ≃ -1 := this
     exact this
@@ -368,7 +368,7 @@ theorem add_preserves_sign
   have : sgn (n——m + k——j) ≃ s := calc
     sgn (n——m + k——j)                 ≃ _ := Rel.refl
     sgn ((n + k)——(m + j))            ≃ _ := Rel.refl
-    ord_sgn (compare (n + k) (m + j)) ≃ _ := ord_sgn_subst this
+    ord_sgn (compare (n + k) (m + j)) ≃ _ := by srw [this]
     ord_sgn (compare k j)             ≃ _ := ‹ord_sgn (compare k j) ≃ s›
     s                                 ≃ _ := Rel.refl
   exact this

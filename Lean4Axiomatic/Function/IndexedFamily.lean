@@ -1,4 +1,5 @@
 import Lean4Axiomatic.Relation.Equivalence.Core
+import Mathlib.Tactic.GCongr
 
 /-! # Indexed families of types -/
 
@@ -112,6 +113,7 @@ respect to equivalence).
 
 Useful when proving properties of expressions wrapped by `fsubst`.
 -/
+@[gcongr]
 abbrev fsubst_substR
     {α : Type} [EqvOp α] {fam : α → Sort u} [IndexedFamily fam]
     {x y : α} {fx₁ fx₂ : fam x} {xy : x ≃ y}

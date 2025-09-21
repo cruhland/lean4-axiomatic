@@ -66,19 +66,31 @@ instance tildeDash : Operators.TildeDash (Naive.Fraction ℤ) := {
 
 /-- Naive fraction equivalence is reflexive. -/
 theorem eqv_refl {p : Naive.Fraction ℤ} : p ≃ p := by
-  revert p; intro (a//b)
-  show a//b ≃ a//b
-  show a * b ≃ a * b
-  exact Rel.refl
+  revert p; intro (a//b); let p := a//b
+  show p ≃ p
+
+  have : a * b ≃ a * b := Rel.refl
+  calc
+    _ = p    := rfl
+    _ = a//b := rfl
+    _ ≃ a//b := ‹a * b ≃ a * b›
+    _ = p    := rfl
 
 /-- Naive fraction equivalence is symmetric. -/
 theorem eqv_symm {p q : Naive.Fraction ℤ} : p ≃ q → q ≃ p := by
-  revert p; intro (a//b); revert q; intro (c//d)
-  intro (_ : a//b ≃ c//d)
-  show c//d ≃ a//b
-  have : a * d ≃ c * b := ‹a//b ≃ c//d›
-  show c * b ≃ a * d
-  exact Rel.symm ‹a * d ≃ c * b›
+  revert p; intro (a//b); let p := a//b
+  revert q; intro (c//d); let q := c//d
+  intro (_ : p ≃ q)
+  show q ≃ p
+
+  have : a//b ≃ c//d   := ‹p ≃ q›
+  have : a * d ≃ c * b := this
+  have : c * b ≃ a * d := Rel.symm this
+  calc
+    _ = q    := rfl
+    _ = c//d := rfl
+    _ ≃ a//b := ‹c * b ≃ a * d›
+    _ = p    := rfl
 
 /--
 The transitive property fails for "equivalence" on naive fractions.
@@ -93,34 +105,40 @@ theorem eqv_trans_impossible
     := by
   intro (trans : {p q r : Naive.Fraction ℤ} → p ≃ q → q ≃ r → p ≃ r)
   show False
+
   let p : Naive.Fraction ℤ := 1//0
   let q : Naive.Fraction ℤ := 0//0
   let r : Naive.Fraction ℤ := 1//1
-  have : p ≃ q := by
-    show 1//0 ≃ 0//0
-    show 1 * 0 ≃ 0 * 0
-    calc
-      (1 : ℤ) * 0 ≃ _ := AA.absorbR
-      0           ≃ _ := Rel.symm AA.absorbR
-      0 * 0       ≃ _ := Rel.refl
-  have : q ≃ r := by
-    show 0//0 ≃ 1//1
-    show 0 * 1 ≃ 1 * 0
-    exact AA.comm
-  have : p ≄ r := by
-    intro (_ : p ≃ r)
-    show False
-    have : (1 : ℤ)//0 ≃ 1//1 := ‹p ≃ r›
-    have : (1 : ℤ) * 1 ≃ 1 * 0 := ‹(1 : ℤ)//0 ≃ 1//1›
-    have : (1 : ℤ) ≃ 0 := calc
-      (1 : ℤ) ≃ _ := Rel.symm AA.identR
-      1 * 1   ≃ _ := ‹(1 : ℤ) * 1 ≃ 1 * 0›
-      1 * 0   ≃ _ := AA.absorbR
-      0       ≃ _ := Rel.refl
-    have : (1 : ℤ) ≄ 0 := Integer.one_neqv_zero
-    exact absurd ‹(1 : ℤ) ≃ 0› ‹(1 : ℤ) ≄ 0›
-  have : p ≃ r := trans ‹p ≃ q› ‹q ≃ r›
-  exact absurd ‹p ≃ r› ‹p ≄ r›
+
+  have : (1:ℤ) * 0 ≃ 0 * 0 := calc
+    _ = (1:ℤ) * 0 := rfl
+    _ ≃ 0         := AA.absorbR
+    _ ≃ 0 * 0     := Rel.symm AA.absorbR
+  have : p ≃ q := calc
+    _ = p    := rfl
+    _ = 1//0 := rfl
+    _ ≃ 0//0 := ‹(1:ℤ) * 0 ≃ 0 * 0›
+    _ = q    := rfl
+
+  have : (0:ℤ) * 1 ≃ 1 * 0 := calc
+    _ = (0:ℤ) * 1 := rfl
+    _ ≃ 1 * 0     := AA.comm
+  have : q ≃ r := calc
+    _ = q    := rfl
+    _ = 0//0 := rfl
+    _ ≃ 1//1 := ‹(0:ℤ) * 1 ≃ 1 * 0›
+    _ = r    := rfl
+
+  have : p ≃ r             := trans ‹p ≃ q› ‹q ≃ r›
+  have : (1:ℤ)//0 ≃ 1//1   := ‹p ≃ r›
+  have : (1:ℤ) * 1 ≃ 1 * 0 := ‹(1:ℤ)//0 ≃ 1//1›
+  have : (1:ℤ) ≃ 0 := calc
+    _ = (1:ℤ) := rfl
+    _ ≃ 1 * 1 := Rel.symm AA.identR
+    _ ≃ 1 * 0 := ‹(1:ℤ) * 1 ≃ 1 * 0›
+    _ ≃ 0     := AA.absorbR
+  have : (1:ℤ) ≄ 0 := Integer.one_neqv_zero
+  exact absurd ‹(1:ℤ) ≃ 0› ‹(1:ℤ) ≄ 0›
 
 /-!
 Although general transitivity is impossible, by imposing some restrictions we
@@ -139,20 +157,28 @@ that it's nonzero.
 theorem eqv_trans_nonzero_denom
     {p q r : Naive.Fraction ℤ} : q.denominator ≄ 0 → p ≃ q → q ≃ r → p ≃ r
     := by
-  revert p; intro (pn//pd); revert q; intro (qn//qd); revert r; intro (rn//rd)
-  intro (_ : qd ≄ 0) (_ : pn//pd ≃ qn//qd) (_ : qn//qd ≃ rn//rd)
-  show pn//pd ≃ rn//rd
+  revert p; intro (pn//pd); let p := pn//pd
+  revert q; intro (qn//qd); let q := qn//qd
+  revert r; intro (rn//rd); let r := rn//rd
+  intro (_ : q.denominator ≄ 0) (_ : p ≃ q) (_ : q ≃ r)
+  show p ≃ r
+
+  have : pn//pd ≃ qn//qd := ‹p ≃ q›
+  have : qn//qd ≃ rn//rd := ‹q ≃ r›
+  have : pn * qd ≃ qn * pd := ‹pn//pd ≃ qn//qd›
+  have : qn * rd ≃ rn * qd := ‹qn//qd ≃ rn//rd›
+
   have : (pn * rd) * qd ≃ (rn * pd) * qd := calc
-    (pn * rd) * qd ≃ _ := AA.substL AA.comm
-    (rd * pn) * qd ≃ _ := AA.assoc
-    rd * (pn * qd) ≃ _ := AA.substR ‹pn * qd ≃ qn * pd›
-    rd * (qn * pd) ≃ _ := Rel.symm AA.assoc
-    (rd * qn) * pd ≃ _ := AA.substL AA.comm
-    (qn * rd) * pd ≃ _ := AA.substL ‹qn * rd ≃ rn * qd›
-    (rn * qd) * pd ≃ _ := AA.assoc
-    rn * (qd * pd) ≃ _ := AA.substR AA.comm
-    rn * (pd * qd) ≃ _ := Rel.symm AA.assoc
-    (rn * pd) * qd ≃ _ := Rel.refl
+    _ = (pn * rd) * qd := rfl
+    _ ≃ (rd * pn) * qd := by srw [AA.comm]
+    _ ≃ rd * (pn * qd) := AA.assoc
+    _ ≃ rd * (qn * pd) := by srw [‹pn * qd ≃ qn * pd›]
+    _ ≃ (rd * qn) * pd := Rel.symm AA.assoc
+    _ ≃ (qn * rd) * pd := by srw [AA.comm]
+    _ ≃ (rn * qd) * pd := by srw [‹qn * rd ≃ rn * qd›]
+    _ ≃ rn * (qd * pd) := AA.assoc
+    _ ≃ rn * (pd * qd) := by srw [AA.comm]
+    _ ≃ (rn * pd) * qd := Rel.symm AA.assoc
   have : pn * rd ≃ rn * pd :=
     Integer.mul_cancelR ‹qd ≄ 0› ‹(pn * rd) * qd ≃ (rn * pd) * qd›
   exact this
@@ -173,13 +199,17 @@ equivalence of two products, each containing a factor of zero. By absorption,
 this is the same as `0 ≃ 0`, which is trivially true.
 -/
 theorem zero_over_zero_eqv_any {p : Naive.Fraction ℤ} : 0//0 ≃ p := by
-  revert p; intro (pn//pd)
-  show 0//0 ≃ pn//pd
-  show 0 * pd ≃ pn * 0
+  revert p; intro (pn//pd); let p := pn//pd
+  show 0//0 ≃ p
+
+  have : 0 * pd ≃ pn * 0 := calc
+    _ = 0 * pd := rfl
+    _ ≃ 0      := AA.absorbL
+    _ ≃ pn * 0 := Rel.symm AA.absorbR
   calc
-    0 * pd ≃ _ := AA.absorbL
-    0      ≃ _ := Rel.symm AA.absorbR
-    pn * 0 ≃ _ := Rel.refl
+    _ = 0//0   := rfl
+    _ ≃ pn//pd := ‹0 * pd ≃ pn * 0›
+    _ = p      := rfl
 
 /-!
 That result is certainly a disaster for creating a model of fractions that
@@ -204,53 +234,60 @@ theorem eqv_trans_almost
     {p q r : Naive.Fraction ℤ}
     : p ≃ q → q ≃ r → (p ≃ r ∨ q.to_prod ≃ (0//0).to_prod)
     := by
-  revert p; intro (pn//pd); revert q; intro (qn//qd); revert r; intro (rn//rd)
-  intro (_ : pn//pd ≃ qn//qd) (_ : qn//qd ≃ rn//rd)
-  show pn//pd ≃ rn//rd ∨ (qn//qd).to_prod ≃ (0//0).to_prod
-  show pn * rd ≃ rn * pd ∨ (qn, qd) ≃ (0, 0)
+  revert p; intro (pn//pd); let p := pn//pd
+  revert q; intro (qn//qd); let q := qn//qd
+  revert r; intro (rn//rd); let r := rn//rd
+  intro (_ : p ≃ q) (_ : q ≃ r)
+  show p ≃ r ∨ q.to_prod ≃ (0//0).to_prod
+
   have : Decidable (qd ≃ 0) := Integer.eqv? qd 0
   match this with
   | isTrue (_ : qd ≃ 0) =>
-    have : pn * qd ≃ qn * pd := ‹pn//pd ≃ qn//qd›
-    have : qn * rd ≃ rn * qd := ‹qn//qd ≃ rn//rd›
+    have : qn * pd ≃ pn * qd := Rel.symm ‹p ≃ q›
+    have : qn * rd ≃ rn * qd := ‹q ≃ r›
     have : qn * pd ≃ 0 := calc
-      qn * pd ≃ _ := Rel.symm ‹pn * qd ≃ qn * pd›
-      pn * qd ≃ _ := AA.substR ‹qd ≃ 0›
-      pn * 0  ≃ _ := AA.absorbR
-      0       ≃ _ := Rel.refl
+      _ = qn * pd := rfl
+      _ ≃ pn * qd := ‹qn * pd ≃ pn * qd›
+      _ ≃ pn * 0  := by srw [‹qd ≃ 0›]
+      _ ≃ 0       := AA.absorbR
     have : qn * rd ≃ 0 := calc
-      qn * rd ≃ _ := ‹qn * rd ≃ rn * qd›
-      rn * qd ≃ _ := AA.substR ‹qd ≃ 0›
-      rn * 0  ≃ _ := AA.absorbR
-      0       ≃ _ := Rel.refl
+      _ = qn * rd := rfl
+      _ ≃ rn * qd := ‹qn * rd ≃ rn * qd›
+      _ ≃ rn * 0  := by srw [‹qd ≃ 0›]
+      _ ≃ 0       := AA.absorbR
     have : qn ≃ 0 ∨ pd ≃ 0 := Integer.mul_split_zero.mp ‹qn * pd ≃ 0›
     have : qn ≃ 0 ∨ rd ≃ 0 := Integer.mul_split_zero.mp ‹qn * rd ≃ 0›
     have : (qn ≃ 0 ∨ pd ≃ 0) ∧ (qn ≃ 0 ∨ rd ≃ 0) :=
       And.intro ‹qn ≃ 0 ∨ pd ≃ 0› ‹qn ≃ 0 ∨ rd ≃ 0›
     have : qn ≃ 0 ∨ (pd ≃ 0 ∧ rd ≃ 0) :=
       Logic.or_distribL_and.mpr ‹(qn ≃ 0 ∨ pd ≃ 0) ∧ (qn ≃ 0 ∨ rd ≃ 0)›
+
     match ‹qn ≃ 0 ∨ (pd ≃ 0 ∧ rd ≃ 0)› with
     | Or.inl (_ : qn ≃ 0) =>
-      have : qn ≃ 0 ∧ qd ≃ 0 := And.intro ‹qn ≃ 0› ‹qd ≃ 0›
-      have : (qn, qd) ≃ (0, 0) :=
-        Relation.Equivalence.Impl.Prod.eqv_defn.mpr ‹qn ≃ 0 ∧ qd ≃ 0›
-      exact Or.inr ‹(qn, qd) ≃ (0, 0)›
+      have : q.to_prod ≃ (0//0).to_prod := calc
+        _ = q.to_prod        := rfl
+        _ = (qn//qd).to_prod := rfl
+        _ = (qn, qd)         := rfl
+        _ ≃ (0, qd)          := by srw [‹qn ≃ 0›]
+        _ ≃ (0, 0)           := by srw [‹qd ≃ 0›]
+        _ = (0//0).to_prod   := rfl
+      exact Or.inr ‹q.to_prod ≃ (0//0).to_prod›
     | Or.inr (And.intro (_ : pd ≃ 0) (_ : rd ≃ 0)) =>
       have : pn * rd ≃ rn * pd := calc
-        pn * rd ≃ _ := AA.substR ‹rd ≃ 0›
-        pn * 0  ≃ _ := AA.absorbR
-        0       ≃ _ := Rel.symm AA.absorbR
-        rn * 0  ≃ _ := AA.substR (Rel.symm ‹pd ≃ 0›)
-        rn * pd ≃ _ := Rel.refl
-      exact Or.inl ‹pn * rd ≃ rn * pd›
+        _ = pn * rd := rfl
+        _ ≃ pn * 0  := by srw [‹rd ≃ 0›]
+        _ ≃ 0       := AA.absorbR
+        _ ≃ rn * 0  := Rel.symm AA.absorbR
+        _ ≃ rn * pd := by srw [←‹pd ≃ 0›]
+      have : p ≃ r := calc
+        _ = p      := rfl
+        _ = pn//pd := rfl
+        _ ≃ rn//rd := ‹pn * rd ≃ rn * pd›
+        _ = r      := rfl
+      exact Or.inl ‹p ≃ r›
   | isFalse (_ : qd ≄ 0) =>
-    have : pn * rd ≃ rn * pd :=
-      eqv_trans_nonzero_denom
-        (q := qn//qd)
-        ‹qd ≄ 0›
-        ‹pn//pd ≃ qn//qd›
-        ‹qn//qd ≃ rn//rd›
-    exact Or.inl ‹pn * rd ≃ rn * pd›
+    have : p ≃ r := eqv_trans_nonzero_denom ‹q.denominator ≄ 0› ‹p ≃ q› ‹q ≃ r›
+    exact Or.inl ‹p ≃ r›
 
 /-!
 So all we need to do to have useful fractions is disallow the value `0//0`? Not
@@ -300,43 +337,25 @@ As mentioned above, we cannot avoid having zero-valued numerators if we have
 addition of fractions. Here's one example where fractions having nonzero
 components produce a numerator with value zero when added.
 -/
-example : (2//4 + (-1 : ℤ)//2).numerator ≃ 0 := by
-  show 2 * 2 + 4 * -1 ≃ 0
-  calc
-    2 * 2 + 4 * (-1 : ℤ)
-      ≃ _ := AA.substR (Rel.symm AA.scompatR)
-    2 * 2 + -(4 * 1)
-      ≃ _ := AA.substR (AA.subst₁ AA.identR)
-    2 * 2 + -4
-      ≃ _ := Rel.refl
-    coe 2 * coe 2 + -4
-      ≃ _ := AA.substL (Rel.symm AA.compat₂)
-    coe (2 * 2) + -4
-      ≃ _ := AA.substL (AA.subst₁ (AA.substL Natural.literal_step))
-    coe (step 1 * 2) + -4
-      ≃ _ := AA.substL (AA.subst₁ Natural.step_mul)
-    coe (1 * 2 + 2) + -4
-      ≃ _ := AA.substL (AA.subst₁ (Natural.add_substL AA.identL))
-    coe (2 + 2) + -4
-      ≃ _ := AA.substL (AA.subst₁ (Natural.add_substL Natural.literal_step))
-    coe (step 1 + 2) + -4
-      ≃ _ := AA.substL (AA.subst₁ Natural.step_add_swap)
-    coe (1 + step 2) + -4
-      ≃ _ := AA.substL (AA.subst₁ (Natural.add_substL Natural.literal_step))
-    coe (step 0 + step 2) + -4
-      ≃ _ := AA.substL (AA.subst₁ Natural.step_add_swap)
-    coe (0 + step (step 2)) + -4
-      ≃ _ := AA.substL (AA.subst₁ Natural.zero_add)
-    coe (step (step 2)) + -4
-      ≃ _ := AA.substL (AA.subst₁ (AA.subst₁ (Rel.symm Natural.literal_step)))
-    coe (step 3) + -4
-      ≃ _ := AA.substL (AA.subst₁ (Rel.symm Natural.literal_step))
-    coe 4 + -4
-      ≃ _ := Rel.refl
-    4 + -4
-      ≃ _ := AA.inverseR
-    0
-      ≃ _ := Rel.refl
+example : (2//4 + (-1:ℤ)//2).numerator ≃ 0 := calc
+  _ = (2//4 + (-1:ℤ)//2).numerator     := rfl
+  _ = 2 * 2 + 4 * (-1:ℤ)               := rfl
+  _ ≃ 2 * 2 + -(4 * 1)                 := by srw [←AA.scompatR]
+  _ ≃ 2 * 2 + -4                       := by srw [Integer.mul_identR]
+  _ = ((2:ℕ):ℤ) * ((2:ℕ):ℤ) + -4       := rfl
+  _ ≃ ((2 * 2 : ℕ):ℤ) + -4             := by srw [←AA.compat₂]
+  _ ≃ ((step 1 * 2 : ℕ):ℤ) + -4        := by srw [Natural.literal_step]
+  _ ≃ ((1 * 2 + 2 : ℕ):ℤ) + -4         := by srw [Natural.step_mul]
+  _ ≃ ((2 + 2 : ℕ):ℤ) + -4             := by srw [Natural.mul_identL]
+  _ ≃ ((step 1 + 2 : ℕ):ℤ) + -4        := by srw [Natural.literal_step]
+  _ ≃ ((1 + step 2 : ℕ):ℤ) + -4        := by srw [Natural.step_add_swap]
+  _ ≃ ((step 0 + step 2 : ℕ):ℤ) + -4   := by srw [Natural.literal_step]
+  _ ≃ ((0 + step (step 2) : ℕ):ℤ) + -4 := by srw [Natural.step_add_swap]
+  _ ≃ (step (step 2) : ℤ) + -4         := by srw [Natural.zero_add]
+  _ ≃ (step 3 : ℤ) + -4                := by srw [←Natural.literal_step]
+  _ ≃ ((4:ℕ):ℤ) + -4                   := by srw [←Natural.literal_step]
+  _ = 4 + -4                           := rfl
+  _ ≃ 0                                := AA.inverseR
 
 /--
 Adding two naive fractions with zero-valued denominators always gives `0//0`.
@@ -347,30 +366,18 @@ even if only one operand's denominator is zero, it can be seen from the proof
 that the result's denominator will still be zero. Thus in any expression adding
 naive fractions, if there are just two denominators that are zero, the entire
 sum will always reduce to `0//0`, a useless result.
-
-**Proof intuition**: Handle the numerator and the denominator separately. The
-numerator becomes zero because it's a sum of two products, where each of them
-has a zero-valued denominator as one of the factors. The denominator is zero
-because both of its factors are zero.
 -/
 theorem add_zero_denominators
     {a b : ℤ} : (a//0 + b//0).to_prod ≃ (0//0).to_prod
-    := by
-  show ((a * 0 + 0 * b)//(0 * 0)).to_prod ≃ (0//0).to_prod
-  show (a * 0 + 0 * b, 0 * 0) ≃ (0, 0)
-  apply Relation.Equivalence.Impl.Prod.eqv_defn.mpr
-  show a * 0 + 0 * b ≃ 0 ∧ 0 * 0 ≃ 0
-  apply And.intro
-  case left =>
-    show a * 0 + 0 * b ≃ 0
-    calc
-      a * 0 + 0 * b ≃ _ := AA.substL AA.absorbR
-      0 + 0 * b     ≃ _ := AA.identL
-      0 * b         ≃ _ := AA.absorbL
-      0             ≃ _ := Rel.refl
-  case right =>
-    show 0 * 0 ≃ 0
-    exact AA.absorbL
+    := calc
+  _ = (a//0 + b//0).to_prod              := rfl
+  _ = ((a * 0 + 0 * b)//(0 * 0)).to_prod := rfl
+  _ = (a * 0 + 0 * b, 0 * 0)             := rfl
+  _ ≃ (0 + 0 * b, 0 * 0)                 := by srw [Integer.mul_absorbR]
+  _ ≃ (0 + 0, 0 * 0)                     := by srw [Integer.mul_absorbL]
+  _ ≃ (0 + 0, 0)                         := by srw [Integer.mul_absorbR]
+  _ ≃ (0, 0)                             := by srw [Integer.add_identL]
+  _ = (0//0).to_prod                     := rfl
 
 /--
 Adding two naive fractions with nonzero denominators always gives a result with
@@ -388,12 +395,18 @@ theorem add_preserves_nonzero_denominators
     : Nonzero p.denominator → Nonzero q.denominator
     → Nonzero ((p + q).denominator)
     := by
-  revert p; intro (pn//pd); revert q; intro (qn//qd)
-  intro (_ : Nonzero pd) (_ : Nonzero qd)
-  show Nonzero (pn//pd + qn//qd).denominator
-  show Nonzero ((pn * qd + pd * qn)//(pd * qd)).denominator
-  show Nonzero (pd * qd)
-  exact Integer.mul_preserves_nonzero ‹Nonzero pd› ‹Nonzero qd›
+  revert p; intro (pn//pd); let p := pn//pd
+  revert q; intro (qn//qd); let q := qn//qd
+  intro (_ : Nonzero p.denominator) (_ : Nonzero q.denominator)
+  show Nonzero (p + q).denominator
+
+  have : Nonzero pd := ‹Nonzero p.denominator›
+  have : Nonzero qd := ‹Nonzero q.denominator›
+  have : Nonzero (pd * qd) :=
+    Integer.mul_preserves_nonzero ‹Nonzero pd› ‹Nonzero qd›
+  have : Nonzero ((pn * qd + pd * qn)//(pd * qd)).denominator := this
+  have : Nonzero (pd * qd) := this
+  exact this
 
 /-!
 In summary, if we want to have meaningful equivalence between fractions, we
@@ -421,11 +434,17 @@ theorem add_preserves_positive_denominators
     : Positive p.denominator → Positive q.denominator
     → Positive ((p + q).denominator)
     := by
-  revert p; intro (pn//pd); revert q; intro (qn//qd)
-  intro (_ : Positive pd) (_ : Positive qd)
-  show Positive (pn//pd + qn//qd).denominator
-  show Positive ((pn * qd + pd * qn)//(pd * qd)).denominator
-  show Positive (pd * qd)
-  exact Integer.mul_preserves_positive ‹Positive pd› ‹Positive qd›
+  revert p; intro (pn//pd); let p := pn//pd
+  revert q; intro (qn//qd); let q := qn//qd
+  intro (_ : Positive p.denominator) (_ : Positive q.denominator)
+  show Positive (p + q).denominator
+
+  have : Positive pd := ‹Positive p.denominator›
+  have : Positive qd := ‹Positive q.denominator›
+  have : Positive ((pn * qd + pd * qn)//(pd * qd)).denominator :=
+    Integer.mul_preserves_positive ‹Positive pd› ‹Positive qd›
+  have : Positive (pd * qd) := this
+  have : Positive ((p + q).denominator) := this
+  exact this
 
 end Lean4Axiomatic.Rational.Impl.Fraction.Naive

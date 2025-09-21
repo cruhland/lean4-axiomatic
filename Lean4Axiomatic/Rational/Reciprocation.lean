@@ -45,7 +45,7 @@ def of_scientific
   have : AP ((1:ℕ) ≄ 0) := AP.mk this
 
   have : Natural.step 9 ≄ 0 := Natural.step_neqv_zero
-  have : (10:ℕ) ≄ 0 := AA.neqv_substL (Rel.symm Natural.literal_step) this
+  have : (10:ℕ) ≄ 0 := by prw [←Natural.literal_step] this
   have : AP (powTen ≄ 0) := AP.mk (Natural.pow_preserves_nonzero_base this)
   let rationalPowTen : ℚ := if exponentIsNegative then powTen⁻¹ else powTen
 
@@ -80,6 +80,8 @@ class Reciprocation.Props
   mul_inverseR {p : ℚ} [AP (p ≄ 0)] : p * p⁻¹ ≃ 1
 
 export Reciprocation.Props (mul_inverseL mul_inverseR recip_subst)
+
+attribute [gcongr] recip_subst
 
 /-- All rational number reciprocation axioms. -/
 class Reciprocation
@@ -165,9 +167,9 @@ result.
 -/
 theorem recip_sqrt1 {s : ℚ} [Sqrt1 s] : s⁻¹ ≃ s := calc
   s⁻¹           ≃ _ := eqv_symm mul_identL
-  1 * s⁻¹       ≃ _ := mul_substL (eqv_symm ‹Sqrt1 s›.elim)
+  1 * s⁻¹       ≃ _ := by srw [←‹Sqrt1 s›.elim]
   (s * s) * s⁻¹ ≃ _ := mul_assoc
-  s * (s * s⁻¹) ≃ _ := mul_substR mul_inverseR
+  s * (s * s⁻¹) ≃ _ := by srw [mul_inverseR]
   s * 1         ≃ _ := mul_identR
   s             ≃ _ := eqv_refl
 
@@ -183,10 +185,8 @@ theorem recip_preserves_nonzero {p : ℚ} [AP (p ≄ 0)] : p⁻¹ ≄ 0 := by
   have : p ≃ 0 := calc
     _ ≃ p             := eqv_refl
     _ ≃ p * 1         := eqv_symm mul_identR
-    _ ≃ p * (p * p⁻¹) := mul_substR (eqv_symm mul_inverseR)
-    _ ≃ p * (p * 0)   := mul_substR (mul_substR ‹p⁻¹ ≃ 0›)
-    _ ≃ p * 0         := mul_substR mul_absorbR
-    _ ≃ 0             := mul_absorbR
+    _ ≃ p * (p * p⁻¹) := by srw [←mul_inverseR]
+    _ ≃ 0             := by srw [‹p⁻¹ ≃ 0›, mul_absorbR, mul_absorbR]
   exact absurd ‹p ≃ 0› ‹AP (p ≄ 0)›.ev
 
 /--
@@ -211,9 +211,9 @@ and `p⁻¹`, then to cancel `p⁻¹` and `(p⁻¹)⁻¹`, leaving `p` behind.
 theorem recip_idemp {p : ℚ} [AP (p ≄ 0)] : (p⁻¹)⁻¹ ≃ p := calc
   _ ≃ (p⁻¹)⁻¹             := eqv_refl
   _ ≃ 1 * (p⁻¹)⁻¹         := eqv_symm mul_identL
-  _ ≃ (p * p⁻¹) * (p⁻¹)⁻¹ := mul_substL (eqv_symm mul_inverseR)
+  _ ≃ (p * p⁻¹) * (p⁻¹)⁻¹ := by srw [←mul_inverseR]
   _ ≃ p * (p⁻¹ * (p⁻¹)⁻¹) := mul_assoc
-  _ ≃ p * 1               := mul_substR mul_inverseR
+  _ ≃ p * 1               := by srw [mul_inverseR]
   _ ≃ p                   := mul_identR
 
 end neg_only
@@ -230,12 +230,13 @@ rational numbers.
 the underlying multiplication, which is already known to obey the substitution
 property.
 -/
+@[gcongr]
 theorem div_substL {p₁ p₂ q : ℚ} [AP (q ≄ 0)] : p₁ ≃ p₂ → p₁ / q ≃ p₂ / q := by
   intro (_ : p₁ ≃ p₂)
   show p₁ / q ≃ p₂ / q
   calc
     p₁ / q   ≃ _ := div_mul_recip
-    p₁ * q⁻¹ ≃ _ := mul_substL ‹p₁ ≃ p₂›
+    p₁ * q⁻¹ ≃ _ := by srw [‹p₁ ≃ p₂›]
     p₂ * q⁻¹ ≃ _ := eqv_symm div_mul_recip
     p₂ / q   ≃ _ := eqv_refl
 
@@ -249,6 +250,7 @@ rational numbers.
 multiplication's right operand. Multiplication and reciprocation are already
 known to obey the substitution property.
 -/
+@[gcongr]
 theorem div_substR
     {p₁ p₂ q : ℚ} [AP (p₁ ≄ 0)] [AP (p₂ ≄ 0)] : p₁ ≃ p₂ → q / p₁ ≃ q / p₂
     := by
@@ -256,7 +258,7 @@ theorem div_substR
   show q / p₁ ≃ q / p₂
   calc
     q / p₁   ≃ _ := div_mul_recip
-    q * p₁⁻¹ ≃ _ := mul_substR (recip_subst ‹p₁ ≃ p₂›)
+    q * p₁⁻¹ ≃ _ := by srw [‹p₁ ≃ p₂›]
     q * p₂⁻¹ ≃ _ := eqv_symm div_mul_recip
     q / p₂   ≃ _ := eqv_refl
 
@@ -304,17 +306,17 @@ theorem div_eqv_1 {p q : ℚ} [AP (q ≄ 0)] : p/q ≃ 1 ↔ p ≃ q := by
     calc
       _ ≃ p             := eqv_refl
       _ ≃ p * 1         := eqv_symm mul_identR
-      _ ≃ p * (q⁻¹ * q) := mul_substR (eqv_symm mul_inverseL)
+      _ ≃ p * (q⁻¹ * q) := by srw [←mul_inverseL]
       _ ≃ (p * q⁻¹) * q := eqv_symm mul_assoc
-      _ ≃ (p/q) * q     := mul_substL (eqv_symm div_mul_recip)
-      _ ≃ 1 * q         := mul_substL ‹p/q ≃ 1›
+      _ ≃ (p/q) * q     := by srw [←div_mul_recip]
+      _ ≃ 1 * q         := by srw [‹p/q ≃ 1›]
       _ ≃ q             := mul_identL
   case mpr =>
     intro (_ : p ≃ q)
     show p/q ≃ 1
     calc
       _ ≃ p/q := eqv_refl
-      _ ≃ q/q := div_substL ‹p ≃ q›
+      _ ≃ q/q := by srw [‹p ≃ q›]
       _ ≃ 1   := div_same
 
 /--
@@ -331,8 +333,7 @@ theorem div_distribR {p q r : ℚ} [AP (r ≄ 0)] : (p + q)/r ≃ p/r + q/r := c
   _ = (p + q)/r         := rfl
   _ ≃ (p + q) * r⁻¹     := div_mul_recip
   _ ≃ p * r⁻¹ + q * r⁻¹ := mul_distribR
-  _ ≃ p/r + q * r⁻¹     := add_substL (eqv_symm div_mul_recip)
-  _ ≃ p/r + q/r         := add_substR (eqv_symm div_mul_recip)
+  _ ≃ p/r + q/r         := by srw [←div_mul_recip, ←div_mul_recip]
 
 end div_only
 variable [Negation ℚ] [Division ℚ]
@@ -348,7 +349,7 @@ reciprocal of one is one, which disappears, leaving the original number.
 theorem div_identR {p : ℚ} : p/1 ≃ p := calc
   _ ≃ p/1     := eqv_refl
   _ ≃ p * 1⁻¹ := div_mul_recip
-  _ ≃ p * 1   := mul_substR recip_sqrt1
+  _ ≃ p * 1   := by srw [recip_sqrt1]
   _ ≃ p       := mul_identR
 
 /--
@@ -359,7 +360,7 @@ Negation can be moved between the "outside" of a division operation and the
 and division is a form of multiplication.
 -/
 theorem neg_scompatL_div {p q : ℚ} [AP (q ≄ 0)] : -(p / q) ≃ (-p) / q := calc
-  (-(p / q))   ≃ _ := neg_subst div_mul_recip
+  (-(p / q))   ≃ _ := by srw [div_mul_recip]
   (-(p * q⁻¹)) ≃ _ := neg_scompatL_mul
   (-p) * q⁻¹   ≃ _ := eqv_symm div_mul_recip
   (-p) / q     ≃ _ := eqv_refl

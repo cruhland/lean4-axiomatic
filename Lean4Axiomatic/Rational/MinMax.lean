@@ -89,7 +89,7 @@ theorem min_le {p q : ℚ} : min p q ≃ p ↔ p ≤ q := by
     intro (_ : min p q ≃ p)
     show p ≤ q
     have : min p q ≤ q := min_leR
-    have : p ≤ q := le_substL_eqv ‹min p q ≃ p› ‹min p q ≤ q›
+    have : p ≤ q := by prw [‹min p q ≃ p›] ‹min p q ≤ q›
     exact this
   case mpr =>
     intro (_ : p ≤ q)
@@ -101,7 +101,7 @@ theorem min_le {p q : ℚ} : min p q ≃ p ↔ p ≤ q := by
       exact this
     | Or.inr (_ : min p q ≃ q) =>
       have : min p q ≤ p := min_leL
-      have : q ≤ p := le_substL_eqv ‹min p q ≃ q› ‹min p q ≤ p›
+      have : q ≤ p := by prw [‹min p q ≃ q›] ‹min p q ≤ p›
       have : q ≃ p := le_antisymm ‹q ≤ p› ‹p ≤ q›
       have : min p q ≃ p := eqv_trans ‹min p q ≃ q› ‹q ≃ p›
       exact this
@@ -123,7 +123,7 @@ theorem max_le {p q : ℚ} : max p q ≃ q ↔ p ≤ q := by
     intro (_ : max p q ≃ q)
     show p ≤ q
     have : p ≤ max p q := max_leL
-    have : p ≤ q := le_substR_eqv ‹max p q ≃ q› ‹p ≤ max p q›
+    have : p ≤ q := by prw [‹max p q ≃ q›] ‹p ≤ max p q›
     exact this
   case mpr =>
     intro (_ : p ≤ q)
@@ -132,7 +132,7 @@ theorem max_le {p q : ℚ} : max p q ≃ q ↔ p ≤ q := by
     match this with
     | Or.inl (_ : max p q ≃ p) =>
       have : q ≤ max p q := max_leR
-      have : q ≤ p := le_substR_eqv ‹max p q ≃ p› ‹q ≤ max p q›
+      have : q ≤ p := by prw [‹max p q ≃ p›] ‹q ≤ max p q›
       have : p ≃ q := le_antisymm ‹p ≤ q› ‹q ≤ p›
       have : max p q ≃ q := eqv_trans ‹max p q ≃ p› ‹p ≃ q›
       exact this
@@ -152,10 +152,10 @@ theorem min_le_both {p q r : ℚ} : p ≤ q → p ≤ r → p ≤ min q r := by
   have : min q r ≃ q ∨ min q r ≃ r := min_cases
   match this with
   | Or.inl (_ : min q r ≃ q) =>
-    have : p ≤ min q r := le_substR_eqv (eqv_symm ‹min q r ≃ q›) ‹p ≤ q›
+    have : p ≤ min q r := by prw [←‹min q r ≃ q›] ‹p ≤ q›
     exact this
   | Or.inr (_ : min q r ≃ r) =>
-    have : p ≤ min q r := le_substR_eqv (eqv_symm ‹min q r ≃ r›) ‹p ≤ r›
+    have : p ≤ min q r := by prw [←‹min q r ≃ r›] ‹p ≤ r›
     exact this
 
 /--
@@ -170,10 +170,10 @@ theorem max_le_both {p q r : ℚ} : p ≤ r → q ≤ r → max p q ≤ r := by
   have : max p q ≃ p ∨ max p q ≃ q := max_cases
   match this with
   | Or.inl (_ : max p q ≃ p) =>
-    have : max p q ≤ r := le_substL_eqv (eqv_symm ‹max p q ≃ p›) ‹p ≤ r›
+    have : max p q ≤ r := by prw [←‹max p q ≃ p›] ‹p ≤ r›
     exact this
   | Or.inr (_ : max p q ≃ q) =>
-    have : max p q ≤ r := le_substL_eqv (eqv_symm ‹max p q ≃ q›) ‹q ≤ r›
+    have : max p q ≤ r := by prw [←‹max p q ≃ q›] ‹q ≤ r›
     exact this
 
 /--
@@ -195,8 +195,8 @@ theorem min_comm {p q : ℚ} : min p q ≃ min q p := by
     intro (_ : min r s ≃ x) (_ : min s r ≃ y)
     intro (_ : min r s ≤ y) (_ : min s r ≤ x)
     show min r s ≃ min s r
-    have : x ≤ y := le_substL_eqv ‹min r s ≃ x› ‹min r s ≤ y›
-    have : y ≤ x := le_substL_eqv ‹min s r ≃ y› ‹min s r ≤ x›
+    have : x ≤ y := by prw [‹min r s ≃ x›] ‹min r s ≤ y›
+    have : y ≤ x := by prw [‹min s r ≃ y›] ‹min s r ≤ x›
     have : x ≃ y := le_antisymm ‹x ≤ y› ‹y ≤ x›
     have : min r s ≃ min s r := calc
       _ ≃ min r s := eqv_refl
@@ -257,8 +257,8 @@ theorem max_comm {p q : ℚ} : max p q ≃ max q p := by
     intro (_ : max r s ≃ x) (_ : max s r ≃ y)
     intro (_ : y ≤ max r s) (_ : x ≤ max s r)
     show max r s ≃ max s r
-    have : y ≤ x := le_substR_eqv ‹max r s ≃ x› ‹y ≤ max r s›
-    have : x ≤ y := le_substR_eqv ‹max s r ≃ y› ‹x ≤ max s r›
+    have : y ≤ x := by prw [‹max r s ≃ x›] ‹y ≤ max r s›
+    have : x ≤ y := by prw [‹max s r ≃ y›] ‹x ≤ max s r›
     have : x ≃ y := le_antisymm ‹x ≤ y› ‹y ≤ x›
     have : max r s ≃ max s r := calc
       _ ≃ max r s := eqv_refl
@@ -354,8 +354,8 @@ theorem min_max_comm
     := by
   intro (And.intro (_ : min p r ≤ q) (_ : q ≤ max p r))
   show min r p ≤ q ∧ q ≤ max r p
-  have : min r p ≤ q := le_substL_eqv min_comm ‹min p r ≤ q›
-  have : q ≤ max r p := le_substR_eqv max_comm ‹q ≤ max p r›
+  have : min r p ≤ q := by prw [min_comm] ‹min p r ≤ q›
+  have : q ≤ max r p := by prw [max_comm] ‹q ≤ max p r›
   exact And.intro ‹min r p ≤ q› ‹q ≤ max r p›
 
 variable [Reciprocation ℚ] [Division ℚ] [Induction.{1} ℚ]

@@ -50,14 +50,15 @@ predicate.
 involving multiplication. Since multiplication is substitutive, the result
 follows easily.
 -/
+@[gcongr]
 theorem sqrt1_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → Sqrt1 a₁ → Sqrt1 a₂ := by
   intro (_ : a₁ ≃ a₂) (_ : Sqrt1 a₁)
   show Sqrt1 a₂
   have : a₂ * a₂ ≃ 1 := calc
-    a₂ * a₂ ≃ _ := AA.substL (Rel.symm ‹a₁ ≃ a₂›)
-    a₁ * a₂ ≃ _ := AA.substR (Rel.symm ‹a₁ ≃ a₂›)
-    a₁ * a₁ ≃ _ := ‹Sqrt1 a₁›.elim
-    1       ≃ _ := Rel.refl
+    _ = a₂ * a₂ := rfl
+    _ ≃ a₁ * a₂ := by srw [←‹a₁ ≃ a₂›]
+    _ ≃ a₁ * a₁ := by srw [←‹a₁ ≃ a₂›]
+    _ ≃ 1       := ‹Sqrt1 a₁›.elim
   exact Sqrt1.mk ‹a₂ * a₂ ≃ 1›
 
 instance sqrt1_substitutive
@@ -96,8 +97,7 @@ instance mul_preserves_sqrt1
   show (a * b) * (a * b) ≃ 1
   calc
     (a * b) * (a * b) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
-    (a * a) * (b * b) ≃ _ := AA.substL ‹Sqrt1 a›.elim
-    1 * (b * b)       ≃ _ := AA.substR ‹Sqrt1 b›.elim
+    (a * a) * (b * b) ≃ _ := by srw [‹Sqrt1 a›.elim, ‹Sqrt1 b›.elim]
     1 * 1             ≃ _ := one_mul_one_eqv_one
     1                 ≃ _ := Rel.refl
 
@@ -148,6 +148,7 @@ predicate.
 **Proof intuition**: The underlying relation for `NonzeroWithSign` is
 equivalence, so replacing `a₁` with `a₂` follows from transitivity.
 -/
+@[gcongr]
 theorem NonzeroWithSign.subst_nonzero
     {a₁ a₂ s : ℤ} {_ : Sqrt1 s}
     : a₁ ≃ a₂ → NonzeroWithSign a₁ s → NonzeroWithSign a₂ s
@@ -168,13 +169,17 @@ for `s₂`. This _must_ be true for `NonzeroWithSign` to be a valid predicate.
 **Proof intuition**: Extract the equivalence for `s₁`, substitute `s₂` into it,
 and build a new `NonzeroWithSign` on `s₂`.
 -/
+@[gcongr]
 theorem NonzeroWithSign.subst_sign
     {a s₁ s₂ : ℤ} {_ : Sqrt1 s₁} {_ : Sqrt1 s₂} (_ : s₁ ≃ s₂)
     : NonzeroWithSign a s₁ → NonzeroWithSign a s₂
     := by
-  intro (NonzeroWithSign.intro (m : ℕ) (_ : Positive m) (_ : a ≃ s₁ * coe m))
-  have : a ≃ s₂ * coe m := Rel.trans ‹a ≃ s₁ * coe m› (AA.substL ‹s₁ ≃ s₂›)
-  exact NonzeroWithSign.intro m ‹Positive m› ‹a ≃ s₂ * coe m›
+  intro (NonzeroWithSign.intro (m : ℕ) (_ : Positive m) (_ : a ≃ s₁ * m))
+  have : a ≃ s₂ * m := calc
+    _ = a      := rfl
+    _ ≃ s₁ * m := ‹a ≃ s₁ * m›
+    _ ≃ s₂ * m := by srw [‹s₁ ≃ s₂›]
+  exact NonzeroWithSign.intro m ‹Positive m› ‹a ≃ s₂ * m›
 
 /--
 Given two integers in signed-magnitude form, we can put their product in
@@ -189,24 +194,22 @@ that the product of two signed-magnitude forms can itself be put into
 signed-magnitude form; this follows mostly from algebra on multiplication.
 -/
 theorem mul_preserves_nonzeroWithSign
-    {a b as bs : ℤ} {a_sqrt1 : Sqrt1 as} {b_sqrt1 : Sqrt1 bs}
-    : NonzeroWithSign a as → NonzeroWithSign b bs
-    → NonzeroWithSign (a * b) (as * bs)
+    {a b s t : ℤ} {_ : Sqrt1 s} {_ : Sqrt1 t}
+    : NonzeroWithSign a s → NonzeroWithSign b t
+    → NonzeroWithSign (a * b) (s * t)
     := by
-  intro
-    (NonzeroWithSign.intro (am : ℕ) (_ : Positive am) (_ : a ≃ as * coe am))
-  intro
-    (NonzeroWithSign.intro (bm : ℕ) (_ : Positive bm) (_ : b ≃ bs * coe bm))
-  show NonzeroWithSign (a * b) (as * bs)
-  have : Positive (am * bm) := Natural.mul_positive ‹Positive am› ‹Positive bm›
-  have : a * b ≃ (as * bs) * coe (am * bm) := calc
-    a * b                         ≃ _ := AA.substL ‹a ≃ as * coe am›
-    (as * coe am) * b             ≃ _ := AA.substR ‹b ≃ bs * coe bm›
-    (as * coe am) * (bs * coe bm) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
-    (as * bs) * (coe am * coe bm) ≃ _ := AA.substR (Rel.symm AA.compat₂)
-    (as * bs) * coe (am * bm)     ≃ _ := Rel.refl
-  exact NonzeroWithSign.intro
-    (am * bm) ‹Positive (am * bm)› ‹a * b ≃ (as * bs) * coe (am * bm)›
+  intro (NonzeroWithSign.intro (m : ℕ) (_ : Positive m) (_ : a ≃ s * m))
+  intro (NonzeroWithSign.intro (n : ℕ) (_ : Positive n) (_ : b ≃ t * n))
+  show NonzeroWithSign (a * b) (s * t)
+  let mn : ℕ := m * n
+  have : Positive mn := Natural.mul_positive ‹Positive m› ‹Positive n›
+  have : a * b ≃ (s * t) * mn := calc
+    _ = a * b                     := rfl
+    _ ≃ (s * m) * (t * n)         := by srw [‹a ≃ s * m›, ‹b ≃ t * n›]
+    _ ≃ (s * t) * ((m:ℤ) * (n:ℤ)) := AA.expr_xxfxxff_lr_swap_rl
+    _ ≃ (s * t) * ((m * n : ℕ):ℤ) := by srw [←AA.compat₂]
+    _ = (s * t) * mn              := rfl
+  exact NonzeroWithSign.intro mn ‹Positive mn› ‹a * b ≃ (s * t) * mn›
 
 /--
 Evidence that an integer is not zero, with no other details.
@@ -249,12 +252,12 @@ The `Nonzero` predicate respects equivalence.
 
 **Proof intuition**: Follows directly from substitution on `NonzeroWithSign`.
 -/
+@[gcongr]
 theorem nonzero_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → Nonzero a₁ → Nonzero a₂ := by
   intro (_ : a₁ ≃ a₂) (Nonzero.intro (s : ℤ) (_ : Sqrt1 s) nws)
   have : NonzeroWithSign a₁ s := nws
   show Nonzero a₂
-  have : NonzeroWithSign a₂ s :=
-    NonzeroWithSign.subst_nonzero ‹a₁ ≃ a₂› ‹NonzeroWithSign a₁ s›
+  have : NonzeroWithSign a₂ s := by prw [‹a₁ ≃ a₂›] ‹NonzeroWithSign a₁ s›
   exact Nonzero.mk ‹NonzeroWithSign a₂ s›
 
 /--
@@ -304,10 +307,10 @@ theorem nonzero_squared_eqv_positive_nat_squared
   have (Nonzero.intro (sa : ℤ) (_ : Sqrt1 sa) nws) := ‹Nonzero a›
   have (NonzeroWithSign.intro (n : ℕ) (_ : Positive n) (_ : a ≃ sa * n)) := nws
   have : a * a ≃ (n * n : ℕ) := calc
-    a * a               ≃ _ := AA.substL ‹a ≃ sa * n›
-    (sa * n) * a        ≃ _ := AA.substR ‹a ≃ sa * n›
+    a * a               ≃ _ := by srw [‹a ≃ sa * n›]
+    (sa * n) * a        ≃ _ := by srw [‹a ≃ sa * n›]
     (sa * n) * (sa * n) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
-    (sa * sa) * (n * n) ≃ _ := AA.substL ‹Sqrt1 sa›.elim
+    (sa * sa) * (n * n) ≃ _ := by srw [‹Sqrt1 sa›.elim]
     (1 : ℤ) * (n * n)   ≃ _ := AA.identL
     (n : ℤ) * n         ≃ _ := Rel.symm AA.compat₂
     ((n * n : ℕ) : ℤ)   ≃ _ := Rel.refl
@@ -324,7 +327,7 @@ positive result, and if the magnitudes are `1`, the result will also be `1`.
 theorem neg_one_mul_neg_one_eqv_one : (-1 : ℤ) * (-1) ≃ 1 := by
   calc
     (-1 : ℤ) * (-1) ≃ _ := Rel.symm AA.scompatL
-    (-(1 * (-1)))   ≃ _ := AA.subst₁ (Rel.symm AA.scompatR)
+    (-(1 * (-1)))   ≃ _ := by srw [←AA.scompatR]
     (-(-(1 * 1)))   ≃ _ := neg_involutive
     1 * 1           ≃ _ := one_mul_one_eqv_one
     1               ≃ _ := Rel.refl
@@ -345,7 +348,7 @@ unity is also a square root of unity.
 -/
 instance neg_preserves_sqrt1 {a : ℤ} [Sqrt1 a] : Sqrt1 (-a) := by
   have : Sqrt1 (-1 * a) := inferInstance
-  have : Sqrt1 (-a) := AA.substFn mul_neg_one ‹Sqrt1 (-1 * a)›
+  have : Sqrt1 (-a) := by prw [mul_neg_one] ‹Sqrt1 (-1 * a)›
   exact this
 
 /--
@@ -366,7 +369,7 @@ theorem nonzeroWithSign_swap_neg
     show NonzeroWithSign a (-s)
     have : a ≃ -s * coe n := calc
       a              ≃ _ := Rel.symm neg_involutive
-      (-(-a))        ≃ _ := AA.subst₁ ‹-a ≃ s * coe n›
+      (-(-a))        ≃ _ := by srw [‹-a ≃ s * coe n›]
       (-(s * coe n)) ≃ _ := AA.scompatL
       (-s) * coe n   ≃ _ := Rel.refl
     exact NonzeroWithSign.intro n ‹Positive n› ‹a ≃ -s * coe n›
@@ -374,9 +377,9 @@ theorem nonzeroWithSign_swap_neg
     intro (NonzeroWithSign.intro (n : ℕ) (_ : Positive n) (_ : a ≃ -s * coe n))
     show NonzeroWithSign (-a) s
     have : -a ≃ s * coe n := calc
-      (-a)            ≃ _ := AA.subst₁ ‹a ≃ -s * coe n›
+      (-a)            ≃ _ := by srw [‹a ≃ -s * coe n›]
       (-(-s * coe n)) ≃ _ := AA.scompatL
-      (-(-s)) * coe n ≃ _ := AA.substL neg_involutive
+      (-(-s)) * coe n ≃ _ := by srw [neg_involutive]
       s * coe n       ≃ _ := Rel.refl
     exact NonzeroWithSign.intro n ‹Positive n› ‹-a ≃ s * coe n›
 
@@ -393,7 +396,7 @@ theorem neg_preserves_nonzero {a : ℤ} : Nonzero a → Nonzero (-a) := by
   show Nonzero (-a)
   have : Nonzero (-1 : ℤ) := nonzero_sqrt1
   have : Nonzero (-1 * a) := mul_preserves_nonzero ‹Nonzero (-1 : ℤ)› ‹Nonzero a›
-  have : Nonzero (-a) := nonzero_subst mul_neg_one ‹Nonzero (-1 * a)›
+  have : Nonzero (-a) := by prw [mul_neg_one] ‹Nonzero (-1 * a)›
   exact this
 
 /-- Instance version of `neg_preserves_nonzero`. -/
@@ -420,14 +423,13 @@ property, because `Ordering` values can be compared for equality.
 **Proof intuition**: Use substitution of equality to make the result follow
 trivially from reflexivity of equivalence.
 -/
+@[gcongr]
 theorem ord_sgn_subst
     {o₁ o₂ : Ordering} : o₁ = o₂ → ord_sgn o₁ ≃ ord_sgn (ℤ := ℤ) o₂
     := by
   intro (_ : o₁ = o₂)
   show ord_sgn o₁ ≃ ord_sgn o₂
   rw [‹o₁ = o₂›]
-  show ord_sgn o₂ ≃ ord_sgn o₂
-  exact Rel.refl
 
 /--
 Every integer result of the `ord_sgn` function is obtained from a unique
@@ -548,9 +550,10 @@ attribute [instance] Sign.toSgnProps
 ## Derived properties
 -/
 
-variable {ℕ : Type} [Natural ℕ]
-variable {ℤ : Type} [Core ℤ] [Addition ℤ] [Multiplication (ℕ := ℕ) ℤ]
-variable [Negation ℤ] [Sign ℤ]
+variable
+  {ℕ : Type} [Natural ℕ]
+  {ℤ : Type}
+    [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ] [Negation ℤ] [Sign ℤ]
 
 /--
 The `Positive` predicate respects equivalence.
@@ -562,6 +565,7 @@ predicate.
 integer argument of the predicate and an expression. Since we also have an
 equivalence for substitution, the result follows by transitivity.
 -/
+@[gcongr]
 theorem positive_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → Positive a₁ → Positive a₂ := by
   intro (_ : a₁ ≃ a₂) (_ : Positive a₁)
   show Positive a₂
@@ -583,6 +587,7 @@ predicate.
 integer argument of the predicate and an expression. Since we also have an
 equivalence for substitution, the result follows by transitivity.
 -/
+@[gcongr]
 theorem negative_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → Negative a₁ → Negative a₂ := by
   intro (_ : a₁ ≃ a₂) (_ : Negative a₁)
   show Negative a₂
@@ -697,64 +702,64 @@ theorem sqrt1_cases {a : ℤ} : Sqrt1 a ↔ a ≃ 1 ∨ a ≃ -1 := by
     | AA.OneOfThree.first (_ : a ≃ 0) =>
       apply False.elim
       show False
-      have : (1 : ℤ) ≃ 0 := calc
-        1     ≃ _ := Rel.symm ‹Sqrt1 a›.elim
-        a * a ≃ _ := AA.substL ‹a ≃ 0›
-        0 * a ≃ _ := AA.absorbL
-        0     ≃ _ := Rel.refl
-      exact absurd ‹(1 : ℤ) ≃ 0› one_neqv_zero
+      have : (1:ℤ) ≃ 0 := calc
+        _ = 1     := rfl
+        _ ≃ a * a := Rel.symm ‹Sqrt1 a›.elim
+        _ ≃ 0 * a := by srw [‹a ≃ 0›]
+        _ ≃ 0     := AA.absorbL
+      exact absurd ‹(1:ℤ) ≃ 0› one_neqv_zero
     | AA.OneOfThree.second (_ : Positive a) =>
       apply Or.inl
       show a ≃ 1
-      have (Exists.intro (n : ℕ) (And.intro _ (_ : a ≃ (n : ℤ)))) :=
+      have (Exists.intro (n : ℕ) (And.intro _ (_ : a ≃ (n:ℤ)))) :=
         positive_elim_nat ‹Positive a›
-      have : ((n * n : ℕ) : ℤ) ≃ (1 : ℤ) := calc
-        ((n * n : ℕ) : ℤ) ≃ _ := AA.compat₂
-        (n : ℤ) * (n : ℤ) ≃ _ := AA.substL (Rel.symm ‹a ≃ (n : ℤ)›)
-        a * (n : ℤ)       ≃ _ := AA.substR (Rel.symm ‹a ≃ (n : ℤ)›)
-        a * a             ≃ _ := ‹Sqrt1 a›.elim
-        1                 ≃ _ := Rel.refl
-      have : n * n ≃ 1 := AA.inject ‹((n * n : ℕ) : ℤ) ≃ ((1 : ℕ) : ℤ)›
+      have : ((n * n : ℕ):ℤ) ≃ (1:ℤ) := calc
+        _ = ((n * n : ℕ):ℤ) := rfl
+        _ ≃ (n:ℤ) * (n:ℤ)   := AA.compat₂
+        _ ≃ a * (n:ℤ)       := by srw [←‹a ≃ (n:ℤ)›]
+        _ ≃ a * a           := by srw [←‹a ≃ (n:ℤ)›]
+        _ ≃ 1               := ‹Sqrt1 a›.elim
+      have : n * n ≃ 1 := AA.inject ‹((n * n : ℕ):ℤ) ≃ ((1:ℕ):ℤ)›
       have : n ≃ 1 := Natural.sqrt1.mp ‹n * n ≃ 1›
       show a ≃ 1
       calc
-        a       ≃ _ := ‹a ≃ (n : ℤ)›
-        (n : ℤ) ≃ _ := AA.subst₁ ‹n ≃ 1›
-        (1 : ℤ) ≃ _ := Rel.refl
-        (1 : ℤ) ≃ _ := Rel.refl
+        _ = a         := rfl
+        _ ≃ (n:ℤ)     := ‹a ≃ (n:ℤ)›
+        _ ≃ ((1:ℕ):ℤ) := by srw [‹n ≃ 1›]
+        _ = 1         := rfl
     | AA.OneOfThree.third (_ : Negative a) =>
       apply Or.inr
       show a ≃ -1
-      have (Exists.intro (n : ℕ) (And.intro _ (_ : a ≃ -(n : ℤ)))) :=
+      have (Exists.intro (n : ℕ) (And.intro _ (_ : a ≃ -(n:ℤ)))) :=
         negative_elim_nat ‹Negative a›
-      have : ((n * n : ℕ) : ℤ) ≃ (1 : ℤ) := calc
-        ((n * n : ℕ) : ℤ)         ≃ _ := AA.compat₂
-        (n : ℤ) * (n : ℤ)         ≃ _ := Rel.symm neg_involutive
-        (-(-((n : ℤ) * (n : ℤ)))) ≃ _ := AA.subst₁ AA.scompatR
-        (-((n : ℤ) * -(n : ℤ)))   ≃ _ := AA.scompatL
-        (-(n : ℤ)) * (-(n : ℤ))   ≃ _ := AA.substL (Rel.symm ‹a ≃ -(n : ℤ)›)
-        a * (-(n : ℤ))            ≃ _ := AA.substR (Rel.symm ‹a ≃ -(n : ℤ)›)
-        a * a                     ≃ _ := ‹Sqrt1 a›.elim
-        1                         ≃ _ := Rel.refl
-      have : n * n ≃ 1 := AA.inject ‹((n * n : ℕ) : ℤ) ≃ ((1 : ℕ) : ℤ)›
+      have : ((n * n : ℕ):ℤ) ≃ (1:ℤ) := calc
+        _ = ((n * n : ℕ):ℤ)       := rfl
+        _ ≃ (n:ℤ) * (n:ℤ)         := AA.compat₂
+        _ ≃ (-(-((n:ℤ) * (n:ℤ)))) := Rel.symm neg_involutive
+        _ ≃ (-((n:ℤ) * -(n:ℤ)))   := by srw [AA.scompatR]
+        _ ≃ (-(n:ℤ)) * (-(n:ℤ))   := AA.scompatL
+        _ ≃ a * (-(n:ℤ))          := by srw [←‹a ≃ -(n:ℤ)›]
+        _ ≃ a * a                 := by srw [←‹a ≃ -(n:ℤ)›]
+        _ ≃ 1                     := ‹Sqrt1 a›.elim
+      have : n * n ≃ 1 := AA.inject ‹((n * n : ℕ):ℤ) ≃ ((1:ℕ):ℤ)›
       have : n ≃ 1 := Natural.sqrt1.mp ‹n * n ≃ 1›
       show a ≃ -1
       calc
-        a          ≃ _ := ‹a ≃ -(n : ℤ)›
-        (-(n : ℤ)) ≃ _ := AA.subst₁ (AA.subst₁ ‹n ≃ 1›)
-        (-(1 : ℤ)) ≃ _ := Rel.refl
-        (-1)       ≃ _ := Rel.refl
+        _ = a          := rfl
+        _ ≃ -(n:ℤ)     := ‹a ≃ -(n:ℤ)›
+        _ ≃ -((1:ℕ):ℤ) := by srw [‹n ≃ 1›]
+        _ = -1         := rfl
   case mpr =>
     intro (_ : a ≃ 1 ∨ a ≃ -1)
     show Sqrt1 a
     match ‹a ≃ 1 ∨ a ≃ -1› with
     | Or.inl (_ : a ≃ 1) =>
-      have : Sqrt1 (1 : ℤ) := sqrt1_one
-      have : Sqrt1 a := AA.substFn (Rel.symm ‹a ≃ 1›) ‹Sqrt1 (1 : ℤ)›
+      have : Sqrt1 (1:ℤ) := sqrt1_one
+      have : Sqrt1 a := by prw [←‹a ≃ 1›] ‹Sqrt1 (1:ℤ)›
       exact this
     | Or.inr (_ : a ≃ -1) =>
-      have : Sqrt1 (-1 : ℤ) := sqrt1_neg_one
-      have : Sqrt1 a := AA.substFn (Rel.symm ‹a ≃ -1›) ‹Sqrt1 (-1 : ℤ)›
+      have : Sqrt1 (-1:ℤ) := sqrt1_neg_one
+      have : Sqrt1 a := by prw [←‹a ≃ -1›] ‹Sqrt1 (-1:ℤ)›
       exact this
 
 /--
@@ -775,7 +780,7 @@ theorem mul_sqrt1_neqv {a b : ℤ} [Sqrt1 a] [Sqrt1 b] : a * b ≃ -1 ↔ a ≄ 
     show False
     have : (-1 : ℤ) ≃ 1 := calc
       (-1 : ℤ) ≃ _ := Rel.symm ‹a * b ≃ -1›
-      a * b    ≃ _ := AA.substL ‹a ≃ b›
+      a * b    ≃ _ := by srw [‹a ≃ b›]
       b * b    ≃ _ := ‹Sqrt1 b›.elim
       1        ≃ _ := Rel.refl
     have : (-1 : ℤ) ≄ 1 := neg_one_neqv_one
@@ -793,7 +798,7 @@ theorem mul_sqrt1_neqv {a b : ℤ} [Sqrt1 a] [Sqrt1 b] : a * b ≃ -1 ↔ a ≄ 
         exact absurd ‹a ≃ b› ‹a ≄ b›
       | Or.inr (_ : b ≃ -1) =>
         calc
-          a * b ≃ _ := AA.substL ‹a ≃ 1›
+          a * b ≃ _ := by srw [‹a ≃ 1›]
           1 * b ≃ _ := AA.identL
           b     ≃ _ := ‹b ≃ -1›
           (-1)  ≃ _ := Rel.refl
@@ -801,7 +806,7 @@ theorem mul_sqrt1_neqv {a b : ℤ} [Sqrt1 a] [Sqrt1 b] : a * b ≃ -1 ↔ a ≄ 
       match b_cases with
       | Or.inl (_ : b ≃ 1) =>
         calc
-          a * b ≃ _ := AA.substR ‹b ≃ 1›
+          a * b ≃ _ := by srw [‹b ≃ 1›]
           a * 1 ≃ _ := AA.identR
           a     ≃ _ := ‹a ≃ -1›
           (-1)  ≃ _ := Rel.refl
@@ -827,12 +832,10 @@ theorem nonzeroWithSign_cases
   have : s ≃ 1 ∨ s ≃ -1 := sqrt1_cases.mp ‹Sqrt1 s›
   match ‹s ≃ 1 ∨ s ≃ -1› with
   | Or.inl (_ : s ≃ 1) =>
-    have : NonzeroWithSign a 1 :=
-      NonzeroWithSign.subst_sign ‹s ≃ 1› ‹NonzeroWithSign a s›
+    have : NonzeroWithSign a 1 := by prw [‹s ≃ 1›] ‹NonzeroWithSign a s›
     exact Or.inl ‹NonzeroWithSign a 1›
   | Or.inr (_ : s ≃ -1) =>
-    have : NonzeroWithSign a (-1) :=
-      NonzeroWithSign.subst_sign ‹s ≃ -1› ‹NonzeroWithSign a s›
+    have : NonzeroWithSign a (-1) := by prw [‹s ≃ -1›] ‹NonzeroWithSign a s›
     exact Or.inr ‹NonzeroWithSign a (-1)›
 
 /--
@@ -849,7 +852,7 @@ theorem nonzeroWithSign_sign_inject
     {a s₁ s₂ : ℤ} {_ : Sqrt1 s₁} {_ : Sqrt1 s₂}
     : NonzeroWithSign a s₁ → NonzeroWithSign a s₂ → s₁ ≃ s₂
     := by
-  intro (_ : NonzeroWithSign a s₁) (_ : NonzeroWithSign a s₂)
+  intro (nws_s₁ : NonzeroWithSign a s₁) (nws_s₂ : NonzeroWithSign a s₂)
   show s₁ ≃ s₂
   have : s₁ ≃ 1 ∨ s₁ ≃ -1 := sqrt1_cases.mp ‹Sqrt1 s₁›
   have : s₂ ≃ 1 ∨ s₂ ≃ -1 := sqrt1_cases.mp ‹Sqrt1 s₂›
@@ -861,18 +864,14 @@ theorem nonzeroWithSign_sign_inject
         have : s₁ ≃ s₂ := Rel.trans ‹s₁ ≃ 1› (Rel.symm ‹s₂ ≃ 1›)
         Or.inl ‹s₁ ≃ s₂›
       | Or.inr (_ : s₂ ≃ -1) =>
-        have : NonzeroWithSign a 1 :=
-          NonzeroWithSign.subst_sign ‹s₁ ≃ 1› ‹NonzeroWithSign a s₁›
-        have : NonzeroWithSign a (-1) :=
-          NonzeroWithSign.subst_sign ‹s₂ ≃ -1› ‹NonzeroWithSign a s₂›
+        have : NonzeroWithSign a 1 := by prw [‹s₁ ≃ 1›] nws_s₁
+        have : NonzeroWithSign a (-1) := by prw [‹s₂ ≃ -1›] nws_s₂
         Or.inr (And.intro ‹NonzeroWithSign a 1› ‹NonzeroWithSign a (-1)›)
     | Or.inr (_ : s₁ ≃ -1) =>
       match ‹s₂ ≃ 1 ∨ s₂ ≃ -1› with
       | Or.inl (_ : s₂ ≃ 1) =>
-        have : NonzeroWithSign a (-1) :=
-          NonzeroWithSign.subst_sign ‹s₁ ≃ -1› ‹NonzeroWithSign a s₁›
-        have : NonzeroWithSign a 1 :=
-          NonzeroWithSign.subst_sign ‹s₂ ≃ 1› ‹NonzeroWithSign a s₂›
+        have : NonzeroWithSign a (-1) := by prw [‹s₁ ≃ -1›] nws_s₁
+        have : NonzeroWithSign a 1 := by prw [‹s₂ ≃ 1›] nws_s₂
         Or.inr (And.intro ‹NonzeroWithSign a 1› ‹NonzeroWithSign a (-1)›)
       | Or.inr (_ : s₂ ≃ -1) =>
         have : s₁ ≃ s₂ := Rel.trans ‹s₁ ≃ -1› (Rel.symm ‹s₂ ≃ -1›)
@@ -933,8 +932,7 @@ theorem same_sign_positive
   have : NonzeroWithSign a 1 := positive_iff_sign_pos1.mp ‹Positive a›
   have : s ≃ 1 :=
     nonzeroWithSign_sign_inject ‹NonzeroWithSign a s› ‹NonzeroWithSign a 1›
-  have : NonzeroWithSign b 1 :=
-    NonzeroWithSign.subst_sign ‹s ≃ 1› ‹NonzeroWithSign b s›
+  have : NonzeroWithSign b 1 := by prw [‹s ≃ 1›] ‹NonzeroWithSign b s›
   have : Positive b := positive_iff_sign_pos1.mpr ‹NonzeroWithSign b 1›
   exact this
 
@@ -1134,11 +1132,11 @@ theorem mul_split_zero {a b : ℤ} : a * b ≃ 0 ↔ a ≃ 0 ∨ b ≃ 0 := by
     show a * b ≃ 0
     match ‹a ≃ 0 ∨ b ≃ 0› with
     | Or.inl (_ : a ≃ 0) => calc
-      a * b ≃ _ := AA.substL ‹a ≃ 0›
+      a * b ≃ _ := by srw [‹a ≃ 0›]
       0 * b ≃ _ := AA.absorbL
       0     ≃ _ := Rel.refl
     | Or.inr (_ : b ≃ 0) => calc
-      a * b ≃ _ := AA.substR ‹b ≃ 0›
+      a * b ≃ _ := by srw [‹b ≃ 0›]
       a * 0 ≃ _ := AA.absorbR
       0     ≃ _ := Rel.refl
 
@@ -1193,30 +1191,24 @@ theorem sqrt1_factors_if_sqrt1_product
   have (Exists.intro (m : ℕ) (And.intro (_ : Positive m) b_eqv)) :=
     nonzero_squared_eqv_positive_nat_squared ‹Nonzero b›
   have : b * b ≃ (m * m : ℕ) := b_eqv
-  have : (((n * n) * (m * m) : ℕ) : ℤ) ≃ ((1 : ℕ) : ℤ) := calc
-    (((n * n) * (m * m) : ℕ) : ℤ)
-      ≃ _ := AA.compat₂
-    ((n * n : ℕ) : ℤ) * ((m * m : ℕ) : ℤ)
-      ≃ _ := AA.substL (Rel.symm ‹a * a ≃ (n * n : ℕ)›)
-    (a * a) * ((m * m : ℕ) : ℤ)
-      ≃ _ := AA.substR (Rel.symm ‹b * b ≃ (m * m : ℕ)›)
-    (a * a) * (b * b)
-      ≃ _ := AA.expr_xxfxxff_lr_swap_rl
-    (a * b) * (a * b)
-      ≃ _ := ‹Sqrt1 (a * b)›.elim
-    1
-      ≃ _ := Rel.refl
+  have : (((n * n) * (m * m) : ℕ):ℤ) ≃ ((1:ℕ):ℤ) := calc
+    _ = (((n * n) * (m * m) : ℕ):ℤ)       := rfl
+    _ ≃ ((n * n : ℕ):ℤ) * ((m * m : ℕ):ℤ) := AA.compat₂
+    _ ≃ (a * a) * ((m * m : ℕ):ℤ)         := by srw [←‹a * a ≃ (n * n : ℕ)›]
+    _ ≃ (a * a) * (b * b)                 := by srw [←‹b * b ≃ (m * m : ℕ)›]
+    _ ≃ (a * b) * (a * b)                 := AA.expr_xxfxxff_lr_swap_rl
+    _ ≃ 1                                 := ‹Sqrt1 (a * b)›.elim
   have : (n * n) * (m * m) ≃ 1 := AA.inject this
   have (And.intro (_ : n * n ≃ 1) (_ : m * m ≃ 1)) :=
     Natural.factors_eqv_1.mp this
   have : a * a ≃ 1 := calc
-    a * a             ≃ _ := ‹a * a ≃ (n * n : ℕ)›
-    ((n * n : ℕ) : ℤ) ≃ _ := AA.subst₁ ‹n * n ≃ 1›
-    (1 : ℤ)           ≃ _ := Rel.refl
+    a * a           ≃ _ := ‹a * a ≃ (n * n : ℕ)›
+    ((n * n : ℕ):ℤ) ≃ _ := by srw [‹n * n ≃ 1›]
+    ((1:ℕ):ℤ)       ≃ _ := Rel.refl
   have : b * b ≃ 1 := calc
-    b * b             ≃ _ := ‹b * b ≃ (m * m : ℕ)›
-    ((m * m : ℕ) : ℤ) ≃ _ := AA.subst₁ ‹m * m ≃ 1›
-    (1 : ℤ)           ≃ _ := Rel.refl
+    b * b           ≃ _ := ‹b * b ≃ (m * m : ℕ)›
+    ((m * m : ℕ):ℤ) ≃ _ := by srw [‹m * m ≃ 1›]
+    ((1:ℕ):ℤ)       ≃ _ := Rel.refl
   have : Sqrt1 a := Sqrt1.mk ‹a * a ≃ 1›
   have : Sqrt1 b := Sqrt1.mk ‹b * b ≃ 1›
   exact And.intro ‹Sqrt1 a› ‹Sqrt1 b›
@@ -1240,10 +1232,10 @@ theorem mul_sqrt1_eqv {a b : ℤ} : a * b ≃ 1 ↔ Sqrt1 b ∧ a ≃ b := by
     intro (_ : a * b ≃ 1)
     show Sqrt1 b ∧ a ≃ b
     have : (a * b) * (a * b) ≃ 1 := calc
-      (a * b) * (a * b) ≃ _ := AA.substL ‹a * b ≃ 1›
-      1 * (a * b)       ≃ _ := AA.identL
-      a * b             ≃ _ := ‹a * b ≃ 1›
-      1                 ≃ _ := Rel.refl
+      _ = (a * b) * (a * b) := rfl
+      _ ≃ 1 * (a * b)       := by srw [‹a * b ≃ 1›]
+      _ ≃ 1 * 1             := by srw [‹a * b ≃ 1›]
+      _ ≃ 1                 := AA.identL
     have : Sqrt1 (a * b) := Sqrt1.mk this
     have (And.intro (_ : Sqrt1 a) (_ : Sqrt1 b)) :=
       sqrt1_factors_if_sqrt1_product this
@@ -1252,16 +1244,16 @@ theorem mul_sqrt1_eqv {a b : ℤ} : a * b ≃ 1 ↔ Sqrt1 b ∧ a ≃ b := by
       match this with
       | Or.inl (_ : b ≃ 1) => calc
         a     ≃ _ := Rel.symm AA.identR
-        a * 1 ≃ _ := AA.substR (Rel.symm ‹b ≃ 1›)
+        a * 1 ≃ _ := by srw [←‹b ≃ 1›]
         a * b ≃ _ := ‹a * b ≃ 1›
         1     ≃ _ := Rel.symm ‹b ≃ 1›
         b     ≃ _ := Rel.refl
       | Or.inr (_ : b ≃ -1) => calc
         a             ≃ _ := Rel.symm neg_involutive
-        (-(-a))       ≃ _ := AA.subst₁ (AA.subst₁ (Rel.symm AA.identR))
-        (-(-(a * 1))) ≃ _ := AA.subst₁ AA.scompatR
-        (-(a * -1))   ≃ _ := AA.subst₁ (AA.substR (Rel.symm ‹b ≃ -1›))
-        (-(a * b))    ≃ _ := AA.subst₁ ‹a * b ≃ 1›
+        (-(-a))       ≃ _ := by srw [←mul_identR]
+        (-(-(a * 1))) ≃ _ := by srw [AA.scompatR]
+        (-(a * -1))   ≃ _ := by srw [←‹b ≃ -1›]
+        (-(a * b))    ≃ _ := by srw [‹a * b ≃ 1›]
         (-1)          ≃ _ := Rel.symm ‹b ≃ -1›
         b             ≃ _ := Rel.refl
     exact And.intro ‹Sqrt1 b› ‹a ≃ b›
@@ -1269,7 +1261,7 @@ theorem mul_sqrt1_eqv {a b : ℤ} : a * b ≃ 1 ↔ Sqrt1 b ∧ a ≃ b := by
     intro (And.intro (_ : Sqrt1 b) (_ : a ≃ b))
     show a * b ≃ 1
     calc
-      a * b ≃ _ := AA.substL ‹a ≃ b›
+      a * b ≃ _ := by srw [‹a ≃ b›]
       b * b ≃ _ := ‹Sqrt1 b›.elim
       1     ≃ _ := Rel.refl
 
@@ -1312,7 +1304,7 @@ theorem positive_mul_iff_same_sign
         have : NonzeroWithSign ab (1 * -1) :=
           mul_preserves_nonzeroWithSign nwsa nwsb
         have : NonzeroWithSign ab (-1) :=
-          NonzeroWithSign.subst_sign AA.identL ‹NonzeroWithSign ab (1 * -1)›
+          by prw [mul_identL] ‹NonzeroWithSign ab (1 * -1)›
         Or.inr ‹NonzeroWithSign ab (-1)›
     | Or.inr (nwsa : NonzeroWithSign a (-1)) =>
       match nwsbc with
@@ -1320,7 +1312,7 @@ theorem positive_mul_iff_same_sign
         have : NonzeroWithSign ab (-1 * 1) :=
           mul_preserves_nonzeroWithSign nwsa nwsb
         have : NonzeroWithSign ab (-1) :=
-          NonzeroWithSign.subst_sign AA.identR ‹NonzeroWithSign ab (-1 * 1)›
+          by prw [mul_identR] ‹NonzeroWithSign ab (-1 * 1)›
         Or.inr ‹NonzeroWithSign ab (-1)›
       | Or.inr (nwsb : NonzeroWithSign b (-1)) =>
         Or.inl (SameSign.mk nwsa nwsb)
@@ -1343,7 +1335,7 @@ theorem positive_mul_iff_same_sign
     have : NonzeroWithSign ab (s * s) :=
       mul_preserves_nonzeroWithSign nwsa nwsb
     have : NonzeroWithSign ab 1 :=
-      NonzeroWithSign.subst_sign ‹s * s ≃ 1› ‹NonzeroWithSign ab (s * s)›
+      by prw [‹s * s ≃ 1›] ‹NonzeroWithSign ab (s * s)›
     have : Positive ab := positive_iff_sign_pos1.mpr ‹NonzeroWithSign ab 1›
     exact this
 
@@ -1410,8 +1402,7 @@ theorem positive_iff_negated_negative
     intro (_ : Positive a)
     show Negative (-a)
     have nwsa : NonzeroWithSign a 1 := positive_iff_sign_pos1.mp ‹Positive a›
-    have : NonzeroWithSign a (-(-1)) :=
-      NonzeroWithSign.subst_sign (Rel.symm neg_involutive) nwsa
+    have : NonzeroWithSign a (-(-1)) := by prw [←neg_involutive] nwsa
     have : NonzeroWithSign (-a) (-1) :=
       nonzeroWithSign_swap_neg.mpr ‹NonzeroWithSign a (-(-1))›
     have : Negative (-a) :=
@@ -1425,7 +1416,7 @@ theorem positive_iff_negated_negative
     have : NonzeroWithSign a (-(-1)) :=
       nonzeroWithSign_swap_neg.mp ‹NonzeroWithSign (-a) (-1)›
     have : NonzeroWithSign a 1 :=
-      NonzeroWithSign.subst_sign neg_involutive ‹NonzeroWithSign a (-(-1))›
+      by prw [neg_involutive] ‹NonzeroWithSign a (-(-1))›
     have : Positive a := positive_iff_sign_pos1.mpr ‹NonzeroWithSign a 1›
     exact this
 
@@ -1476,12 +1467,12 @@ theorem sgn_nonzero {a : ℤ} : Nonzero a ↔ Sqrt1 (sgn a) := by
     | Or.inl (_ : Positive a) =>
       have : 1 ≃ sgn a := Rel.symm (sgn_positive.mp ‹Positive a›)
       have : Sqrt1 (1:ℤ) := sqrt1_one
-      have : Sqrt1 (sgn a) := sqrt1_subst ‹1 ≃ sgn a› ‹Sqrt1 (1:ℤ)›
+      have : Sqrt1 (sgn a) := by prw [‹1 ≃ sgn a›] ‹Sqrt1 (1:ℤ)›
       exact this
     | Or.inr (_ : Negative a) =>
       have : -1 ≃ sgn a := Rel.symm (sgn_negative.mp ‹Negative a›)
       have : Sqrt1 (-1:ℤ) := sqrt1_neg_one
-      have : Sqrt1 (sgn a) := sqrt1_subst ‹-1 ≃ sgn a› ‹Sqrt1 (-1:ℤ)›
+      have : Sqrt1 (sgn a) := by prw [‹-1 ≃ sgn a›] ‹Sqrt1 (-1:ℤ)›
       exact this
   case mpr =>
     intro (_ : Sqrt1 (sgn a))
@@ -1516,14 +1507,12 @@ theorem sgn_nonzeroWithSign
   | Or.inl (_ : sgn a ≃ 1) =>
     have : Positive a := sgn_positive.mpr ‹sgn a ≃ 1›
     have : NonzeroWithSign a 1 := positive_iff_sign_pos1.mp this
-    have : NonzeroWithSign a (sgn a) :=
-      NonzeroWithSign.subst_sign (Rel.symm ‹sgn a ≃ 1›) this
+    have : NonzeroWithSign a (sgn a) := by prw [←‹sgn a ≃ 1›] this
     exact this
   | Or.inr (_ : sgn a ≃ -1) =>
     have : Negative a := sgn_negative.mpr ‹sgn a ≃ -1›
     have : NonzeroWithSign a (-1) := negative_iff_sign_neg1.mp this
-    have : NonzeroWithSign a (sgn a) :=
-      NonzeroWithSign.subst_sign (Rel.symm ‹sgn a ≃ -1›) this
+    have : NonzeroWithSign a (sgn a) := by prw [←‹sgn a ≃ -1›] this
     exact this
 
 /--
@@ -1536,6 +1525,7 @@ each case, `a₂` must have the same property because it's equivalent to `a₁`.
 But the result of `sgn` only depends on those properties, so `sgn a₁` and
 `sgn a₂` must have the same value.
 -/
+@[gcongr]
 theorem sgn_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → sgn a₁ ≃ sgn a₂ := by
   intro (_ : a₁ ≃ a₂)
   show sgn a₁ ≃ sgn a₂
@@ -1543,19 +1533,22 @@ theorem sgn_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → sgn a₁ ≃ sgn a₂ :=
     (sign_trichotomy a₁).atLeastOne
   match this with
   | AA.OneOfThree.first (_ : a₁ ≃ 0) =>
-    have : a₂ ≃ 0 := AA.substLFn ‹a₁ ≃ a₂› ‹a₁ ≃ 0›
+    have : a₂ ≃ 0 := calc
+      _ = a₂ := rfl
+      _ ≃ a₁ := Rel.symm ‹a₁ ≃ a₂›
+      _ ≃ 0  := ‹a₁ ≃ 0›
     calc
       sgn a₁ ≃ _ := sgn_zero.mp ‹a₁ ≃ 0›
       0      ≃ _ := Rel.symm (sgn_zero.mp ‹a₂ ≃ 0›)
       sgn a₂ ≃ _ := Rel.refl
   | AA.OneOfThree.second (_ : Positive a₁) =>
-    have : Positive a₂ := positive_subst ‹a₁ ≃ a₂› ‹Positive a₁›
+    have : Positive a₂ := by prw [‹a₁ ≃ a₂›] ‹Positive a₁›
     calc
       sgn a₁ ≃ _ := sgn_positive.mp ‹Positive a₁›
       1      ≃ _ := Rel.symm (sgn_positive.mp ‹Positive a₂›)
       sgn a₂ ≃ _ := Rel.refl
   | AA.OneOfThree.third (_ : Negative a₁) =>
-    have : Negative a₂ := negative_subst ‹a₁ ≃ a₂› ‹Negative a₁›
+    have : Negative a₂ := by prw [‹a₁ ≃ a₂›] ‹Negative a₁›
     calc
       sgn a₁ ≃ _ := sgn_negative.mp ‹Negative a₁›
       (-1)   ≃ _ := Rel.symm (sgn_negative.mp ‹Negative a₂›)
@@ -1599,13 +1592,13 @@ theorem sgn_fixed_points {a : ℤ} : sgn a ≃ a ↔ a ≃ 0 ∨ a ≃ 1 ∨ a �
         _ ≃ 0     := sgn_zero.mp ‹a ≃ 0›
         _ ≃ a     := Rel.symm ‹a ≃ 0›
     | Or.inr (Or.inl (_ : a ≃ 1)) =>
-      have : Positive a := AA.substFn (Rel.symm ‹a ≃ 1›) one_positive
+      have : Positive a := by prw [←‹a ≃ 1›] one_positive
       calc
         _ = sgn a := rfl
         _ ≃ 1     := sgn_positive.mp ‹Positive a›
         _ ≃ a     := Rel.symm ‹a ≃ 1›
     | Or.inr (Or.inr (_ : a ≃ -1)) =>
-      have : Negative a := AA.substFn (Rel.symm ‹a ≃ -1›) neg_one_negative
+      have : Negative a := by prw [←‹a ≃ -1›] neg_one_negative
       calc
         _ = sgn a := rfl
         _ ≃ -1    := sgn_negative.mp ‹Negative a›
@@ -1705,8 +1698,7 @@ theorem positive_mul_iff_sgn_eqv
     have : Sqrt1 (sgn b) ∧ sgn a ≃ sgn b :=
       And.intro ‹Sqrt1 (sgn b)› ‹sgn a ≃ sgn b›
     have : sgn a * sgn b ≃ 1 := mul_sqrt1_eqv.mpr this
-    have : NonzeroWithSign (a * b) 1 :=
-      NonzeroWithSign.subst_sign ‹sgn a * sgn b ≃ 1› nws_ab_sgn
+    have : NonzeroWithSign (a * b) 1 := by prw [‹sgn a * sgn b ≃ 1›] nws_ab_sgn
     have : Positive (a * b) := positive_iff_sign_pos1.mpr this
     exact this
 
@@ -1742,8 +1734,7 @@ theorem negative_mul_iff_sgn_neqv
     have nws_ab : NonzeroWithSign (a * b) (sgn a * sgn b) :=
       nonzeroWithSign_mul_from_sqrt1_sgn
     have : sgn a * sgn b ≃ -1 := mul_sqrt1_neqv.mpr ‹sgn a ≄ sgn b›
-    have : NonzeroWithSign (a * b) (-1) :=
-      NonzeroWithSign.subst_sign this nws_ab
+    have : NonzeroWithSign (a * b) (-1) := by prw [‹sgn a * sgn b ≃ -1›] nws_ab
     have : Negative (a * b) := negative_iff_sign_neg1.mpr this
     exact this
 
@@ -1768,13 +1759,13 @@ theorem sgn_compat_mul {a b : ℤ} : sgn (a * b) ≃ sgn a * sgn b := by
       calc
         sgn (a * b)   ≃ _ := sgn_zero.mp ‹a * b ≃ 0›
         0             ≃ _ := Rel.symm AA.absorbL
-        0 * sgn b     ≃ _ := AA.substL (Rel.symm (sgn_zero.mp ‹a ≃ 0›))
+        0 * sgn b     ≃ _ := by srw [←sgn_zero.mp ‹a ≃ 0›]
         sgn a * sgn b ≃ _ := Rel.refl
     | Or.inr (_ : b ≃ 0) =>
       calc
         sgn (a * b)   ≃ _ := sgn_zero.mp ‹a * b ≃ 0›
         0             ≃ _ := Rel.symm AA.absorbR
-        sgn a * 0     ≃ _ := AA.substR (Rel.symm (sgn_zero.mp ‹b ≃ 0›))
+        sgn a * 0     ≃ _ := by srw [←sgn_zero.mp ‹b ≃ 0›]
         sgn a * sgn b ≃ _ := Rel.refl
   | Or.inr (_ : Nonzero (a * b)) =>
     have (And.intro (_ : Sqrt1 (sgn a)) (_ : Sqrt1 (sgn b))) :=
@@ -1807,9 +1798,9 @@ negation function inverts the sign.
 use compatibility of multiplication and `sgn`.
 -/
 theorem sgn_compat_neg {a : ℤ} : sgn (-a) ≃ -(sgn a) := calc
-  sgn (-a)             ≃ _ := sgn_subst (Rel.symm mul_neg_one)
+  sgn (-a)             ≃ _ := by srw [←mul_neg_one]
   sgn (-1 * a)         ≃ _ := sgn_compat_mul
-  sgn (-1 : ℤ) * sgn a ≃ _ := AA.substL (sgn_negative.mp neg_one_negative)
+  sgn (-1 : ℤ) * sgn a ≃ _ := by srw [sgn_negative.mp neg_one_negative]
   (-1) * sgn a         ≃ _ := mul_neg_one
   (-(sgn a))           ≃ _ := Rel.refl
 
@@ -1827,7 +1818,7 @@ theorem positive_mul_sgn_self {a : ℤ} : Nonzero a → Positive (a * sgn a) := 
   have : sgn a * sgn a ≃ 1 := this.elim
   have : sgn (a * sgn a) ≃ 1 := calc
     sgn (a * sgn a)     ≃ _ := sgn_compat_mul
-    sgn a * sgn (sgn a) ≃ _ := AA.substR sgn_idemp
+    sgn a * sgn (sgn a) ≃ _ := by srw [sgn_idemp]
     sgn a * sgn a       ≃ _ := ‹sgn a * sgn a ≃ 1›
     1                   ≃ _ := Rel.refl
   have : Positive (a * sgn a) := sgn_positive.mpr ‹sgn (a * sgn a) ≃ 1›
@@ -1872,7 +1863,7 @@ theorem sgn_two_eqv_one : sgn (2:ℤ) ≃ 1 := by
   have : sgn (1:ℤ) ≃ 1 := sgn_positive.mp one_positive
   calc
     _ ≃ sgn (2:ℤ)       := Rel.refl
-    _ ≃ sgn (1 + 1 : ℤ) := sgn_subst (Rel.symm add_one_one)
+    _ ≃ sgn (1 + 1 : ℤ) := by srw [←add_one_one]
     _ ≃ 1               := add_preserves_sign ‹sgn (1:ℤ) ≃ 1› ‹sgn (1:ℤ) ≃ 1›
 
 /--
@@ -1895,11 +1886,11 @@ theorem nonneg_square {a : ℤ} : sgn (a * a) ≄ -1 := by
     Rel.trans (Rel.symm sgn_compat_mul) ‹sgn (a * a) ≃ -1›
   have : Nonzero (-1:ℤ) := nonzero_sqrt1
   have : Nonzero (sgn a * sgn a) :=
-    nonzero_subst (Rel.symm ‹sgn a * sgn a ≃ -1›) ‹Nonzero (-1:ℤ)›
+    by prw [←‹sgn a * sgn a ≃ -1›] ‹Nonzero (-1:ℤ)›
   have (And.intro (_ : Nonzero (sgn a)) _) :=
     nonzero_factors_if_nonzero_product ‹Nonzero (sgn a * sgn a)›
   have : Sqrt1 (sgn (sgn a)) := sgn_nonzero.mp ‹Nonzero (sgn a)›
-  have : Sqrt1 (sgn a) := sqrt1_subst sgn_idemp ‹Sqrt1 (sgn (sgn a))›
+  have : Sqrt1 (sgn a) := by prw [sgn_idemp] ‹Sqrt1 (sgn (sgn a))›
   have : sgn a ≄ sgn a := mul_sqrt1_neqv.mp ‹sgn a * sgn a ≃ -1›
   exact absurd Rel.refl this
 
@@ -1920,10 +1911,10 @@ theorem sgn_sum_zero_term
     show sgn (x + y) ≃ sgn x + sgn y
     calc
       _ = sgn (x + y)   := rfl
-      _ ≃ sgn (0 + y)   := sgn_subst (AA.substL ‹x ≃ 0›)
-      _ ≃ sgn y         := sgn_subst AA.identL
+      _ ≃ sgn (0 + y)   := by srw [‹x ≃ 0›]
+      _ ≃ sgn y         := by srw [add_identL]
       _ ≃ 0 + sgn y     := Rel.symm AA.identL
-      _ ≃ sgn x + sgn y := AA.substL (Rel.symm (sgn_zero.mp ‹x ≃ 0›))
+      _ ≃ sgn x + sgn y := by srw [←sgn_zero.mp ‹x ≃ 0›]
 
   match ‹a ≃ 0 ∨ b ≃ 0› with
   | Or.inl (_ : a ≃ 0) =>
@@ -1932,7 +1923,7 @@ theorem sgn_sum_zero_term
   | Or.inr (_ : b ≃ 0) =>
     calc
       _ = sgn (a + b)   := rfl
-      _ ≃ sgn (b + a)   := sgn_subst AA.comm
+      _ ≃ sgn (b + a)   := by srw [AA.comm]
       _ ≃ sgn b + sgn a := sgn_sum_zeroL ‹b ≃ 0›
       _ ≃ sgn a + sgn b := AA.comm
 

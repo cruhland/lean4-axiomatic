@@ -150,7 +150,7 @@ theorem impl_le_from_prelude_le {n m : Nat} : n ≤ m → le n m
   have (Exists.intro k (_ : n + k ≃ m')) := ‹le n m'›
   have : n + step k ≃ step m' := calc
     n + step k   ≃ _ := add_step
-    step (n + k) ≃ _ := AA.subst₁ ‹n + k ≃ m'›
+    step (n + k) ≃ _ := by srw [‹n + k ≃ m'›]
     step m'      ≃ _ := Rel.refl
   have : ∃ k, n + k ≃ step m' := Exists.intro (step k) ‹n + step k ≃ step m'›
   have : le n (step m') := ‹∃ k, n + k ≃ step m'›

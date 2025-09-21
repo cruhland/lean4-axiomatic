@@ -52,12 +52,13 @@ Subtraction is left-substitutive.
 
 **Proof intuition**: Trivial; just substitutes on the underlying addition.
 -/
+@[gcongr]
 theorem sub_substL {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → a₁ - b ≃ a₂ - b := by
   intro (_ : a₁ ≃ a₂)
   show a₁ - b ≃ a₂ - b
   calc
     a₁ - b    ≃ _ := sub_defn
-    a₁ + (-b) ≃ _ := AA.substL ‹a₁ ≃ a₂›
+    a₁ + (-b) ≃ _ := by srw [‹a₁ ≃ a₂›]
     a₂ + (-b) ≃ _ := Rel.symm sub_defn
     a₂ - b    ≃ _ := Rel.refl
 
@@ -73,12 +74,13 @@ Subtraction is right-substitutive.
 **Proof intuition**: Trivial; just substitutes on the underlying addition and
 negation.
 -/
+@[gcongr]
 theorem sub_substR {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → b - a₁ ≃ b - a₂ := by
   intro (_ : a₁ ≃ a₂)
   show b - a₁ ≃ b - a₂
   calc
     b - a₁    ≃ _ := sub_defn
-    b + (-a₁) ≃ _ := AA.substR (AA.subst₁ ‹a₁ ≃ a₂›)
+    b + (-a₁) ≃ _ := by srw [‹a₁ ≃ a₂›]
     b + (-a₂) ≃ _ := Rel.symm sub_defn
     b - a₂    ≃ _ := Rel.refl
 
@@ -126,8 +128,8 @@ identity.
 theorem sub_identR {a : ℤ} : a - 0 ≃ a := calc
   _ = a - 0        := rfl
   _ ≃ a + -0       := sub_defn
-  _ ≃ a + (-0 + 0) := AA.substR (Rel.symm AA.identR)
-  _ ≃ a + 0        := AA.substR AA.inverseL
+  _ ≃ a + (-0 + 0) := by srw [←add_identR]
+  _ ≃ a + 0        := by srw [neg_invL]
   _ ≃ a            := AA.identR
 
 /--
@@ -144,17 +146,17 @@ theorem zero_diff_iff_eqv {a b : ℤ} : a - b ≃ 0 ↔ a ≃ b := by
     show a ≃ b
     calc
       a            ≃ _ := Rel.symm AA.identR
-      a + 0        ≃ _ := AA.substR (Rel.symm AA.inverseL)
+      a + 0        ≃ _ := by srw [←neg_invL]
       a + (-b + b) ≃ _ := Rel.symm AA.assoc
-      (a + -b) + b ≃ _ := AA.substL (Rel.symm sub_defn)
-      (a - b) + b  ≃ _ := AA.substL ‹a - b ≃ 0›
+      (a + -b) + b ≃ _ := by srw [←sub_defn]
+      (a - b) + b  ≃ _ := by srw [‹a - b ≃ 0›]
       0 + b        ≃ _ := AA.identL
       b            ≃ _ := Rel.refl
   case mpr =>
     intro (_ : a ≃ b)
     show a - b ≃ 0
     calc
-      a - b  ≃ _ := AA.substL ‹a ≃ b›
+      a - b  ≃ _ := by srw [‹a ≃ b›]
       b - b  ≃ _ := sub_same
       0      ≃ _ := Rel.refl
 
@@ -172,7 +174,7 @@ theorem sub_assoc_addL {a b c : ℤ} : (a + b) - c ≃ a + (b - c) := calc
   _ = (a + b) - c  := rfl
   _ ≃ (a + b) + -c := sub_defn
   _ ≃ a + (b + -c) := AA.assoc
-  _ ≃ a + (b - c)  := AA.substR (Rel.symm sub_defn)
+  _ ≃ a + (b - c)  := by srw [←sub_defn]
 
 /--
 Subtraction "associates" with addition to its right.
@@ -186,10 +188,10 @@ matter in what order that occurs.
 -/
 theorem sub_assoc_addR {a b c : ℤ} : (a - b) + c ≃ a + (c - b) := calc
   _ = (a - b) + c  := rfl
-  _ ≃ (a + -b) + c := AA.substL sub_defn
+  _ ≃ (a + -b) + c := by srw [sub_defn]
   _ ≃ a + (-b + c) := AA.assoc
-  _ ≃ a + (c + -b) := AA.substR AA.comm
-  _ ≃ a + (c - b)  := AA.substR (Rel.symm sub_defn)
+  _ ≃ a + (c + -b) := by srw [AA.comm]
+  _ ≃ a + (c - b)  := by srw [←sub_defn]
 
 /--
 Move a subtraction's right operand to an addition's right operand, from left to
@@ -204,9 +206,7 @@ simplify.
 theorem subR_moveR_addR {a b c : ℤ} : a - b ≃ c ↔ a ≃ c + b := calc
   _ ↔       a - b ≃ c     := Iff.rfl
   _ ↔ (a - b) + b ≃ c + b := add_bijectR
-  _ ↔ a + (b - b) ≃ c + b := AA.eqv_substL_iff sub_assoc_addR
-  _ ↔       a + 0 ≃ c + b := AA.eqv_substL_iff (AA.substR sub_same)
-  _ ↔           a ≃ c + b := AA.eqv_substL_iff AA.identR
+  _ ↔           a ≃ c + b := by srw [sub_assoc_addR, sub_same, add_identR]
 
 /--
 Move a subtraction's right operand to an addition's left operand, from left to
@@ -220,7 +220,7 @@ which follows directly from addition obeying substitution and cancellation.
 theorem subR_moveR_addL {a b c : ℤ} : a - b ≃ c ↔ a ≃ b + c := calc
   _ ↔ a - b ≃ c     := Iff.rfl
   _ ↔     a ≃ c + b := subR_moveR_addR
-  _ ↔     a ≃ b + c := AA.eqv_substR_iff AA.comm
+  _ ↔     a ≃ b + c := by srw [AA.comm]
 
 /--
 Move a subtraction's right operand to an addition's right operand, from right
@@ -249,7 +249,7 @@ which follows directly from addition obeying substitution and cancellation.
 theorem subR_moveL_addL {a b c : ℤ} : a ≃ b - c ↔ c + a ≃ b := calc
   _ ↔     a ≃ b - c := Iff.rfl
   _ ↔ a + c ≃ b     := subR_moveL_addR
-  _ ↔ c + a ≃ b     := AA.eqv_substL_iff AA.comm
+  _ ↔ c + a ≃ b     := by srw [AA.comm]
 
 /--
 Convert an equivalence of subtractions to one of additions by exchanging
@@ -263,8 +263,8 @@ intuition in fewer steps.
 theorem sub_swap_add {a b c d : ℤ} : a - b ≃ c - d ↔ a + d ≃ c + b := calc
   _ ↔ a - b ≃ c - d       := Iff.rfl
   _ ↔     a ≃ (c - d) + b := subR_moveR_addR
-  _ ↔     a ≃ c + (b - d) := AA.eqv_substR_iff sub_assoc_addR
-  _ ↔     a ≃ (c + b) - d := AA.eqv_substR_iff (Rel.symm sub_assoc_addL)
+  _ ↔     a ≃ c + (b - d) := by srw [sub_assoc_addR]
+  _ ↔     a ≃ (c + b) - d := by srw [←sub_assoc_addL]
   _ ↔ a + d ≃ c + b       := subR_moveL_addR
 
 /--
@@ -276,10 +276,9 @@ sum's arguments, and negative in the other. Those are additive inverses so they
 sum to zero and disappear from the result.
 -/
 theorem add_sub_telescope {a b c : ℤ} : (a - b) + (b - c) ≃ a - c := calc
-  (a - b) + (b - c)   ≃ _ := AA.substL sub_defn
-  (a + -b) + (b - c)  ≃ _ := AA.substR sub_defn
+  (a - b) + (b - c)   ≃ _ := by srw [sub_defn, sub_defn]
   (a + -b) + (b + -c) ≃ _ := AA.expr_xxfxxff_lr_swap_rr
-  (a + -c) + (b + -b) ≃ _ := AA.substR AA.inverseR
+  (a + -c) + (b + -b) ≃ _ := by srw [neg_invR]
   (a + -c) + 0        ≃ _ := AA.identR
   a + -c              ≃ _ := Rel.symm sub_defn
   a - c               ≃ _ := Rel.refl
@@ -297,9 +296,9 @@ is equivalent to subtracting `b` and `c` from `a` together.
 theorem sub_assoc_subR {a b c : ℤ} : (a - b) - c ≃ a - (b + c) := calc
   _ = (a - b) - c   := rfl
   _ ≃ (a - b) + -c  := sub_defn
-  _ ≃ (a + -b) + -c := AA.substL sub_defn
+  _ ≃ (a + -b) + -c := by srw [sub_defn]
   _ ≃ a + (-b + -c) := AA.assoc
-  _ ≃ a + -(b + c)  := AA.substR (Rel.symm neg_compat_add)
+  _ ≃ a + -(b + c)  := by srw [←neg_compat_add]
   _ ≃ a - (b + c)   := Rel.symm sub_defn
 
 /--
@@ -313,10 +312,9 @@ theorem sub_xchg_add
     {a b c d : ℤ} : (a - b) + (c - d) ≃ (a + c) - (b + d)
     := calc
   _ = (a - b) + (c - d)       := rfl
-  _ ≃ (a + (-b)) + (c - d)    := AA.substL sub_defn
-  _ ≃ (a + (-b)) + (c + (-d)) := AA.substR sub_defn
+  _ ≃ (a + (-b)) + (c + (-d)) := by srw [sub_defn, sub_defn]
   _ ≃ (a + c) + ((-b) + (-d)) := AA.expr_xxfxxff_lr_swap_rl
-  _ ≃ (a + c) + (-(b + d))    := AA.substR (Rel.symm neg_compat_add)
+  _ ≃ (a + c) + (-(b + d))    := by srw [←neg_compat_add]
   _ ≃ (a + c) - (b + d)       := Rel.symm sub_defn
 
 /--
@@ -326,21 +324,27 @@ Multiplication distributes over subtraction (on the left).
 distributing over addition: just expand the definition of subtraction.
 -/
 theorem mul_distribL_sub {a b c : ℤ} : a * (b - c) ≃ a * b - a * c := calc
-  a * (b - c)      ≃ _ := AA.substR sub_defn
+  a * (b - c)      ≃ _ := by srw [sub_defn]
   a * (b + -c)     ≃ _ := AA.distribL
-  a * b + a * -c   ≃ _ := AA.substR (Rel.symm AA.scompatR)
+  a * b + a * -c   ≃ _ := by srw [←AA.scompatR]
   a * b + -(a * c) ≃ _ := Rel.symm sub_defn
   a * b - a * c    ≃ _ := Rel.refl
 
-def mul_distributiveL_sub
-    : AA.DistributiveOn Hand.L (α := ℤ) (· * ·) (· - ·)
-    := {
-  distrib := mul_distribL_sub
-}
+/--
+Multiplication distributes over subtraction (on the right).
+
+**Property and proof intuition**: Use left distribution and commutativity.
+-/
+theorem mul_distribR_sub {a b c : ℤ} : (b - c) * a ≃ b * a - c * a := calc
+  _ = (b - c) * a   := rfl
+  _ ≃ a * (b - c)   := AA.comm
+  _ ≃ a * b - a * c := mul_distribL_sub
+  _ ≃ b * a - a * c := by srw [AA.comm]
+  _ ≃ b * a - c * a := by srw [AA.comm]
 
 instance mul_distributive_sub : AA.Distributive (α := ℤ) (· * ·) (· - ·) := {
-  distributiveL := mul_distributiveL_sub
-  distributiveR := AA.distributiveR_from_distributiveL mul_distributiveL_sub
+  distributiveL := { distrib := mul_distribL_sub }
+  distributiveR := { distrib := mul_distribR_sub }
 }
 
 /--
@@ -351,13 +355,13 @@ can be removed, leaving just the difference of the left-hand operands.
 -/
 theorem sub_sums_sameR {a b c : ℤ} : a + c - (b + c) ≃ a - b := calc
   a + c - (b + c)           ≃ _ := sub_defn
-  a + c + -(b + c)          ≃ _ := AA.substR (Rel.symm mul_neg_one)
-  a + c + -1 * (b + c)      ≃ _ := AA.substR AA.distribL
+  a + c + -(b + c)          ≃ _ := by srw [←mul_neg_one]
+  a + c + -1 * (b + c)      ≃ _ := by srw [mul_distribL]
   a + c + (-1 * b + -1 * c) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
-  a + -1 * b + (c + -1 * c) ≃ _ := AA.substR (AA.substR mul_neg_one)
-  a + -1 * b + (c + -c)     ≃ _ := AA.substR AA.inverseR
+  a + -1 * b + (c + -1 * c) ≃ _ := by srw [mul_neg_one]
+  a + -1 * b + (c + -c)     ≃ _ := by srw [neg_invR]
   a + -1 * b + 0            ≃ _ := AA.identR
-  a + -1 * b                ≃ _ := AA.substR mul_neg_one
+  a + -1 * b                ≃ _ := by srw [mul_neg_one]
   a + -b                    ≃ _ := Rel.symm sub_defn
   a - b                     ≃ _ := Rel.refl
 
@@ -374,9 +378,9 @@ negation to the other. With negation swapped, the sum is still equivalent to
 subtraction, but in the opposite order.
 -/
 theorem sub_neg_flip {a b : ℤ} : -(a - b) ≃ b - a := calc
-  (-(a - b))   ≃ _ := AA.subst₁ sub_defn
+  (-(a - b))   ≃ _ := by srw [sub_defn]
   (-(a + -b))  ≃ _ := neg_compat_add
-  (-a) + -(-b) ≃ _ := AA.substR neg_involutive
+  (-a) + -(-b) ≃ _ := by srw [neg_involutive]
   (-a) + b     ≃ _ := AA.comm
   b + -a       ≃ _ := Rel.symm sub_defn
   b - a        ≃ _ := Rel.refl
@@ -397,9 +401,9 @@ with trivial algebra this gives the result.
 -/
 theorem mul_identR_reasons {a b : ℤ} : a * b ≃ a ↔ a ≃ 0 ∨ b ≃ 1 := calc
   _ ↔ a * b ≃ a         := Iff.rfl
-  _ ↔ a * b ≃ a * 1     := AA.eqv_substR_iff (Rel.symm AA.identR)
+  _ ↔ a * b ≃ a * 1     := by srw [←mul_identR]
   _ ↔ a * b - a * 1 ≃ 0 := zero_diff_iff_eqv.symm
-  _ ↔ a * (b - 1) ≃ 0   := AA.eqv_substL_iff (Rel.symm mul_distribL_sub)
+  _ ↔ a * (b - 1) ≃ 0   := by srw [←mul_distribL_sub]
   _ ↔ a ≃ 0 ∨ b - 1 ≃ 0 := mul_split_zero
   _ ↔ a ≃ 0 ∨ b ≃ 1     := iff_subst_covar or_mapR zero_diff_iff_eqv
 
@@ -479,14 +483,14 @@ instance eqv? (a b : ℤ) : Decidable (a ≃ b) := by
     exact this
   | AA.OneOfThree₁.second (_ : sgn (a-b) ≃ 1) =>
     have : (1:ℤ) ≄ 0 := one_neqv_zero
-    have : sgn (a-b) ≄ 0 := AA.neqv_substL (Rel.symm ‹sgn (a-b) ≃ 1›) this
+    have : sgn (a-b) ≄ 0 := by prw [←‹sgn (a-b) ≃ 1›] ‹(1:ℤ) ≄ 0›
     have : a-b ≄ 0 := mt sgn_zero.mp this
     have : a ≄ b := mt zero_diff_iff_eqv.mpr this
     have : Decidable (a ≃ b) := isFalse this
     exact this
   | AA.OneOfThree₁.third (_ : sgn (a-b) ≃ -1) =>
     have : (-1:ℤ) ≄ 0 := neg_one_neqv_zero
-    have : sgn (a-b) ≄ 0 := AA.neqv_substL (Rel.symm ‹sgn (a-b) ≃ -1›) this
+    have : sgn (a-b) ≄ 0 := by prw [←‹sgn (a-b) ≃ -1›] ‹(-1:ℤ) ≄ 0›
     have : a-b ≄ 0 := mt sgn_zero.mp this
     have : a ≄ b := mt zero_diff_iff_eqv.mpr this
     have : Decidable (a ≃ b) := isFalse this

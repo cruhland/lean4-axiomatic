@@ -50,26 +50,32 @@ fractions.
 **Proof intuition**: Expand the fraction definitions and `sgn` on fractions to
 obtain integer expressions. Then use integer `sgn` properties and algebra.
 -/
+@[gcongr]
 theorem sgn_subst {p₁ p₂ : Fraction ℤ} : p₁ ≃ p₂ → sgn p₁ ≃ sgn p₂ := by
-  revert p₁; intro (a//b); revert p₂; intro (c//d)
-  intro (_ : a//b ≃ c//d)
-  show sgn (a//b) ≃ sgn (c//d)
+  revert p₁; intro (a//b); let p₁ := a//b
+  revert p₂; intro (c//d); let p₂ := c//d
+  intro (_ : p₁ ≃ p₂)
+  show sgn p₁ ≃ sgn p₂
+
+  have : a//b ≃ c//d := ‹p₁ ≃ p₂›
   have : a * d ≃ c * b := ‹a//b ≃ c//d›
   have : Positive b := ‹AP (Positive b)›.ev
   have : sgn b ≃ 1 := Integer.sgn_positive.mp this
   have : Positive d := ‹AP (Positive d)›.ev
-  have : 1 ≃ sgn d := Rel.symm (Integer.sgn_positive.mp this)
+  have : sgn d ≃ 1 := Integer.sgn_positive.mp this
   calc
-    sgn (a//b)    ≃ _ := Rel.refl
-    sgn a         ≃ _ := Rel.symm AA.identR
-    sgn a * 1     ≃ _ := AA.substR ‹1 ≃ sgn d›
-    sgn a * sgn d ≃ _ := Rel.symm Integer.sgn_compat_mul
-    sgn (a * d)   ≃ _ := Integer.sgn_subst ‹a * d ≃ c * b›
-    sgn (c * b)   ≃ _ := Integer.sgn_compat_mul
-    sgn c * sgn b ≃ _ := AA.substR ‹sgn b ≃ 1›
-    sgn c * 1     ≃ _ := AA.identR
-    sgn c         ≃ _ := Rel.refl
-    sgn (c//d)    ≃ _ := Rel.refl
+    _ = sgn p₁        := rfl
+    _ = sgn (a//b)    := rfl
+    _ = sgn a         := rfl
+    _ ≃ sgn a * 1     := Rel.symm AA.identR
+    _ ≃ sgn a * sgn d := by srw [←‹sgn d ≃ 1›]
+    _ ≃ sgn (a * d)   := Rel.symm Integer.sgn_compat_mul
+    _ ≃ sgn (c * b)   := by srw [‹a * d ≃ c * b›]
+    _ ≃ sgn c * sgn b := Integer.sgn_compat_mul
+    _ ≃ sgn c * 1     := by srw [‹sgn b ≃ 1›]
+    _ ≃ sgn c         := AA.identR
+    _ = sgn (c//d)    := rfl
+    _ = sgn p₂        := rfl
 
 /--
 Fractions that are equivalent to zero are the only ones with sign zero.
@@ -109,14 +115,16 @@ fractions (which are just rescaled integers).
 property.
 -/
 theorem sgn_compat_mul {p q : Fraction ℤ} : sgn (p * q) ≃ sgn p * sgn q := by
-  revert p; intro (a//b); revert q; intro (c//d)
-  show sgn (a//b * c//d) ≃ sgn (a//b) * sgn (c//d)
+  revert p; intro (a//b); let p := a//b; revert q; intro (c//d); let q := c//d
+  show sgn (p * q) ≃ sgn p * sgn q
   calc
-    sgn (a//b * c//d)       ≃ _ := sgn_subst eqv_refl
-    sgn ((a * c)//(b * d))  ≃ _ := Rel.refl
-    sgn (a * c)             ≃ _ := Integer.sgn_compat_mul
-    sgn a * sgn c           ≃ _ := Rel.refl
-    sgn (a//b) * sgn (c//d) ≃ _ := Rel.refl
+    _ = sgn (p * q)             := rfl
+    _ = sgn (a//b * c//d)       := rfl
+    _ = sgn ((a * c)//(b * d))  := rfl
+    _ = sgn (a * c)             := rfl
+    _ ≃ sgn a * sgn c           := Integer.sgn_compat_mul
+    _ = sgn (a//b) * sgn (c//d) := rfl
+    _ = sgn p * sgn q           := rfl
 
 /--
 The sign of a fraction is `0`, `1`, or `-1`.

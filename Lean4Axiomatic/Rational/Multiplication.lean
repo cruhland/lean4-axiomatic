@@ -59,6 +59,8 @@ export Multiplication.Props (
   mul_identL mul_identR mul_substL mul_substR
 )
 
+attribute [gcongr] mul_substL mul_substR
+
 /-- All axioms of multiplication for rational numbers. -/
 class Multiplication
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
@@ -102,13 +104,14 @@ The `Sqrt1` predicate respects equivalence of rational numbers.
 **Proof intuition**: Expand the definition of `Sqrt1`; the result follows by
 substitution on the underlying equivalence.
 -/
+@[gcongr]
 theorem sqrt1_subst {p₁ p₂ : ℚ} : p₁ ≃ p₂ → Sqrt1 p₁ → Sqrt1 p₂ := by
   intro (_ : p₁ ≃ p₂) (_ : Sqrt1 p₁)
   show Sqrt1 p₂
   have (Sqrt1.from_integer_intro (a : ℤ) (_ : Integer.Sqrt1 a) eqv) :=
     ‹Sqrt1 p₁›
   have : p₁ ≃ (a : ℚ) := eqv
-  have : p₂ ≃ (a : ℚ) := AA.substLFn ‹p₁ ≃ p₂› this
+  have : p₂ ≃ (a : ℚ) := Rel.trans (Rel.symm ‹p₁ ≃ p₂›) this
   have : Sqrt1 p₂ := Sqrt1.from_integer_intro a ‹Integer.Sqrt1 a› this
   exact this
 
@@ -133,7 +136,7 @@ theorem from_integer_preserves_sqrt1
       ‹Sqrt1 (a : ℚ)›
     have : (b : ℚ) ≃ (a : ℚ) := eqv_symm eqv
     have : b ≃ a := from_integer_inject this
-    have : Integer.Sqrt1 a := Integer.sqrt1_subst this ‹Integer.Sqrt1 b›
+    have : Integer.Sqrt1 a := by prw [‹b ≃ a›] ‹Integer.Sqrt1 b›
     exact this
   case mpr =>
     intro (_ : Integer.Sqrt1 a)
@@ -153,14 +156,14 @@ theorem Sqrt1.elim {p : ℚ} : Sqrt1 p → p * p ≃ 1 := by
   show p * p ≃ 1
   have (Sqrt1.from_integer_intro (a : ℤ) (_ : Integer.Sqrt1 a) eqv) :=
     ‹Sqrt1 p›
-  have : p ≃ (a : ℚ) := eqv
+  have : p ≃ (a:ℚ) := eqv
   have : p * p ≃ 1 := calc
-    p * p             ≃ _ := mul_substL ‹p ≃ (a : ℚ)›
-    (a : ℚ) * p       ≃ _ := mul_substR ‹p ≃ (a : ℚ)›
-    (a : ℚ) * (a : ℚ) ≃ _ := eqv_symm mul_compat_from_integer
-    ((a * a : ℤ) : ℚ) ≃ _ := from_integer_subst ‹Integer.Sqrt1 a›.elim
-    (1 : ℚ)           ≃ _ := eqv_refl
-    1                 ≃ _ := eqv_refl
+    p * p           ≃ _ := by srw [‹p ≃ (a:ℚ)›]
+    (a:ℚ) * p       ≃ _ := by srw [‹p ≃ (a:ℚ)›]
+    (a:ℚ) * (a:ℚ)   ≃ _ := eqv_symm mul_compat_from_integer
+    ((a * a : ℤ):ℚ) ≃ _ := by srw [‹Integer.Sqrt1 a›.elim]
+    ((1:ℤ):ℚ)       ≃ _ := eqv_refl
+    (1:ℚ)           ≃ _ := eqv_refl
   exact this
 
 /-- Enables the use of `AA.substL`, `AA.substR`, etc. for multiplication. -/
@@ -195,11 +198,11 @@ Doubling a rational number can be written either as a sum or a product.
 **Proof intuition**: Split `2` into `1 + 1`; use the distributive property.
 -/
 theorem mul_two_add {p : ℚ} : 2 * p ≃ p + p := calc
-  _ ≃ 2 * p         := eqv_refl
-  _ ≃ (1 + 1) * p   := mul_substL (eqv_symm add_one_one)
+  _ = 2 * p         := rfl
+  _ ≃ (1 + 1) * p   := by srw [←add_one_one]
   _ ≃ 1 * p + 1 * p := mul_distribR
-  _ ≃ p + 1 * p     := add_substL mul_identL
-  _ ≃ p + p         := add_substR mul_identL
+  _ ≃ p + 1 * p     := by srw [mul_identL]
+  _ ≃ p + p         := by srw [mul_identL]
 
 /--
 The rational number `1` is a square root of unity.

@@ -105,13 +105,14 @@ The absolute value function preserves equivalence over its argument.
 **Proof intuition**: Expand `abs` into its `sgn` definition, and use
 substitution on multiplication and `sgn`.
 -/
+@[gcongr]
 theorem abs_subst {p₁ p₂ : ℚ} : p₁ ≃ p₂ → abs p₁ ≃ abs p₂ := by
   intro (_ : p₁ ≃ p₂)
   show abs p₁ ≃ abs p₂
   calc
     abs p₁      ≃ _ := abs_sgn
-    p₁ * sgn p₁ ≃ _ := mul_substL ‹p₁ ≃ p₂›
-    p₂ * sgn p₁ ≃ _ := mul_substR (from_integer_subst (sgn_subst ‹p₁ ≃ p₂›))
+    p₁ * sgn p₁ ≃ _ := by srw [‹p₁ ≃ p₂›]
+    p₂ * sgn p₁ ≃ _ := by srw [‹p₁ ≃ p₂›]
     p₂ * sgn p₂ ≃ _ := eqv_symm abs_sgn
     abs p₂      ≃ _ := eqv_refl
 
@@ -130,8 +131,11 @@ theorem abs_zero {p : ℚ} : abs p ≃ 0 ↔ p ≃ 0 := by
   case mp =>
     intro (_ : abs p ≃ 0)
     show p ≃ 0
-    have : p * sgn p ≃ 0 := AA.eqv_substL abs_sgn ‹abs p ≃ 0›
-    have : p ≃ 0 ∨ (sgn p : ℚ) ≃ 0 := mul_split_zero.mp this
+    have : p * sgn p ≃ 0 := calc
+      _ = p * sgn p := rfl
+      _ ≃ abs p     := eqv_symm abs_sgn
+      _ ≃ 0         := ‹abs p ≃ 0›
+    have : p ≃ 0 ∨ (sgn p : ℚ) ≃ 0 := mul_split_zero.mp ‹p * sgn p ≃ 0›
     match this with
     | Or.inl (_ : p ≃ 0) =>
       exact ‹p ≃ 0›
@@ -144,7 +148,7 @@ theorem abs_zero {p : ℚ} : abs p ≃ 0 ↔ p ≃ 0 := by
     show abs p ≃ 0
     calc
       abs p           ≃ _ := abs_sgn
-      p * sgn p       ≃ _ := mul_substL ‹p ≃ 0›
+      p * sgn p       ≃ _ := by srw [‹p ≃ 0›]
       (0 : ℚ) * sgn p ≃ _ := mul_absorbL
       0               ≃ _ := eqv_refl
 
@@ -172,7 +176,7 @@ theorem abs_positive {p : ℚ} : sgn p ≃ 1 → abs p ≃ p := by
   calc
     _ ≃ abs p     := eqv_refl
     _ ≃ p * sgn p := abs_sgn
-    _ ≃ p * 1     := mul_substR (from_integer_subst ‹sgn p ≃ 1›)
+    _ ≃ p * (1:ℤ) := by srw [‹sgn p ≃ 1›]
     _ ≃ p         := mul_identR
 
 /--
@@ -188,18 +192,13 @@ negative number's sign is negative one.
 theorem abs_negative {p : ℚ} : sgn p ≃ -1 → abs p ≃ -p := by
   intro (_ : sgn p ≃ -1)
   show abs p ≃ -p
-  have : (sgn p : ℚ) ≃ -1 := calc
-    _ ≃ (sgn p : ℚ)    := eqv_refl
-    _ ≃ ((-1 : ℤ) : ℚ) := from_integer_subst ‹sgn p ≃ -1›
-    _ ≃ -((1 : ℤ) : ℚ) := neg_compat_from_integer
-    _ ≃ -1             := eqv_refl
-  have : abs p ≃ -p := calc
-    _ ≃ abs p     := eqv_refl
-    _ ≃ p * sgn p := abs_sgn
-    _ ≃ p * -1    := mul_substR ‹(sgn p : ℚ) ≃ -1›
-    _ ≃ -1 * p    := mul_comm
-    _ ≃ -p        := mul_neg_one
-  exact this
+  calc
+    _ = abs p      := rfl
+    _ ≃ p * sgn p  := abs_sgn
+    _ ≃ p * (-1:ℤ) := by srw [‹sgn p ≃ -1›]
+    _ ≃ p * -(1:ℤ) := by srw [neg_compat_from_integer]
+    _ = p * -1     := rfl
+    _ ≃ -p         := by srw [mul_comm, mul_neg_one]
 
 /--
 Every rational number's absolute value is either itself, or its negation.
@@ -240,11 +239,11 @@ equivalent to theirs.
 theorem abs_ge_self {p : ℚ} : abs p ≥ p := by
   show p ≤ abs p
   calc
-    _ ≃ p               := eqv_refl
-    _ ≃ p * 1           := eqv_symm mul_identR
-    _ ≃ p * sgn (1 : ℚ) := mul_substR (from_integer_subst (Rel.symm sgn_one))
-    _ ≤ p * sgn p       := mul_sgn_self_max
-    _ ≃ abs p           := eqv_symm abs_sgn
+    _ = p             := rfl
+    _ ≃ p * (1:ℤ)     := eqv_symm mul_identR
+    _ ≃ p * sgn (1:ℚ) := by srw [←sgn_one]
+    _ ≤ p * sgn p     := mul_sgn_self_max
+    _ ≃ abs p         := eqv_symm abs_sgn
 
 /--
 A rational number is always greater than or equivalent to the negation of its
@@ -260,23 +259,14 @@ negated absolute values. Nonpositive numbers are equivalent to theirs.
 `p * sgn (-1)`. This is always less than or equivalent to `p * sgn p ≃ abs p`.
 Negating both sides of that ordering gives us the result.
 -/
-theorem neg_abs_le_self {p : ℚ} : -abs p ≤ p := by
-  have : (sgn (-1 : ℚ) : ℚ) ≃ -1 := calc
-    _ ≃ (sgn (-1 : ℚ) : ℚ) := eqv_refl
-    _ ≃ ((-1 : ℤ) : ℚ)     := from_integer_subst sgn_neg_one
-    _ ≃ (-1)               := neg_compat_from_integer
-  have : -p ≤ abs p := calc
-    _ ≃ -p               := eqv_refl
-    _ ≃ (-1) * p         := eqv_symm mul_neg_one
-    _ ≃ p * (-1)         := mul_comm
-    _ ≃ p * sgn (-1 : ℚ) := mul_substR (eqv_symm this)
-    _ ≤ p * sgn p        := mul_sgn_self_max
-    _ ≃ abs p            := eqv_symm abs_sgn
-  have : -abs p ≤ p := calc
-    _ ≃ -abs p := eqv_refl
-    _ ≤ -(-p)  := le_subst_neg ‹-p ≤ abs p›
-    _ ≃ p      := neg_involutive
-  exact this
+theorem neg_abs_le_self {p : ℚ} : -abs p ≤ p := calc
+  _ = -abs p            := rfl
+  _ ≃ -(p * sgn p)      := by srw [abs_sgn]
+  _ ≤ -(p * sgn (-1:ℚ)) := by srw [mul_sgn_self_max]
+  _ ≃ -(p * -(1:ℤ))     := by srw [sgn_neg_one, neg_compat_from_integer]
+  _ = -(p * -1)         := rfl
+  _ ≃ -(-p)             := by srw [mul_comm, mul_neg_one]
+  _ ≃ p                 := neg_involutive
 
 /--
 A rational number product's absolute value is the product of the absolute
@@ -288,19 +278,13 @@ the signs of its factors.
 **Proof intuition**: Expand `abs (p * q)` into its `sgn` representation.
 Regroup the factors so that `abs p` and `abs q` are separate.
 -/
-theorem abs_compat_mul {p q : ℚ} : abs (p * q) ≃ abs p * abs q := by
-  have : (sgn (p * q) : ℚ) ≃ (sgn p : ℚ) * (sgn q : ℚ) := calc
-    _ ≃ (sgn (p * q) : ℚ)         := eqv_refl
-    _ ≃ ((sgn p * sgn q : ℤ) : ℚ) := from_integer_subst sgn_compat_mul
-    _ ≃ (sgn p : ℚ) * (sgn q : ℚ) := mul_compat_from_integer
-  have : abs (p * q) ≃ abs p * abs q := calc
-    _ ≃ abs (p * q)                           := eqv_refl
-    _ ≃ (p * q) * (sgn (p * q) : ℚ)           := abs_sgn
-    _ ≃ (p * q) * ((sgn p : ℚ) * (sgn q : ℚ)) := mul_substR this
-    _ ≃ (p * sgn p) * (q * sgn q)             := AA.expr_xxfxxff_lr_swap_rl
-    _ ≃ abs p * (q * sgn q)                   := mul_substL (eqv_symm abs_sgn)
-    _ ≃ abs p * abs q                         := mul_substR (eqv_symm abs_sgn)
-  exact this
+theorem abs_compat_mul {p q : ℚ} : abs (p * q) ≃ abs p * abs q := calc
+  _ = abs (p * q)                           := rfl
+  _ ≃ (p * q) * sgn (p * q)                 := abs_sgn
+  _ ≃ (p * q) * ((sgn p * sgn q : ℤ):ℚ)     := by srw [sgn_compat_mul]
+  _ ≃ (p * q) * ((sgn p : ℚ) * (sgn q : ℚ)) := by srw [mul_compat_from_integer]
+  _ ≃ (p * sgn p) * (q * sgn q)             := AA.expr_xxfxxff_lr_swap_rl
+  _ ≃ abs p * abs q                         := by srw [←abs_sgn, ←abs_sgn]
 
 /--
 The absolute values of a rational number and its negation are the same.
@@ -311,11 +295,11 @@ The absolute values of a rational number and its negation are the same.
 `abs_compat_mul` to split into a product of absolute values and simplify.
 -/
 theorem abs_absorb_neg {p : ℚ} : abs (-p) ≃ abs p := calc
-  _ ≃ abs (-p)         := eqv_refl
-  _ ≃ abs (-1 * p)     := abs_subst (eqv_symm mul_neg_one)
+  _ = abs (-p)         := rfl
+  _ ≃ abs (-1 * p)     := by srw [←mul_neg_one]
   _ ≃ abs (-1) * abs p := abs_compat_mul
-  _ ≃ -(-1) * abs p    := mul_substL (abs_negative sgn_neg_one)
-  _ ≃ 1 * abs p        := mul_substL neg_involutive
+  _ ≃ -(-1) * abs p    := by srw [abs_negative sgn_neg_one]
+  _ ≃ 1 * abs p        := by srw [neg_involutive]
   _ ≃ abs p            := mul_identL
 
 /--
@@ -327,13 +311,14 @@ with an equivalent value.
 **Proof intuition**: Expand `dist` into its `abs` representation. The left
 argument can be substituted under `abs` and subtraction.
 -/
+@[gcongr]
 theorem dist_substL {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → dist p₁ q ≃ dist p₂ q := by
   intro (_ : p₁ ≃ p₂)
   show dist p₁ q ≃ dist p₂ q
   calc
-    _ ≃ dist p₁ q    := eqv_refl
+    _ = dist p₁ q    := rfl
     _ ≃ abs (p₁ - q) := dist_abs
-    _ ≃ abs (p₂ - q) := abs_subst (sub_substL ‹p₁ ≃ p₂›)
+    _ ≃ abs (p₂ - q) := by srw [‹p₁ ≃ p₂›]
     _ ≃ dist p₂ q    := eqv_symm dist_abs
 
 /--
@@ -345,13 +330,14 @@ replaced with an equivalent value.
 **Proof intuition**: Expand `dist` into its `abs` representation. The right
 argument can be substituted under `abs` and subtraction.
 -/
+@[gcongr]
 theorem dist_substR {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → dist q p₁ ≃ dist q p₂ := by
   intro (_ : p₁ ≃ p₂)
   show dist q p₁ ≃ dist q p₂
   calc
-    _ ≃ dist q p₁    := eqv_refl
+    _ = dist q p₁    := rfl
     _ ≃ abs (q - p₁) := dist_abs
-    _ ≃ abs (q - p₂) := abs_subst (sub_substR ‹p₁ ≃ p₂›)
+    _ ≃ abs (q - p₂) := by srw [‹p₁ ≃ p₂›]
     _ ≃ dist q p₂    := eqv_symm dist_abs
 
 /--
@@ -363,23 +349,11 @@ apart.
 **Proof intuition**: In both directions, use properties of `abs` and
 subtraction when their results are zero.
 -/
-theorem dist_zero {p q : ℚ} : dist p q ≃ 0 ↔ p ≃ q := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : dist p q ≃ 0)
-    show p ≃ q
-    have : abs (p - q) ≃ 0 := AA.eqv_substL dist_abs ‹dist p q ≃ 0›
-    have : p - q ≃ 0 := abs_zero.mp this
-    have : p ≃ q := sub_eqv_zero_iff_eqv.mp this
-    exact this
-  case mpr =>
-    intro (_ : p ≃ q)
-    show dist p q ≃ 0
-    calc
-      _ ≃ dist p q    := eqv_refl
-      _ ≃ abs (p - q) := dist_abs
-      _ ≃ abs 0       := abs_subst (sub_eqv_zero_iff_eqv.mpr ‹p ≃ q›)
-      _ ≃ 0           := abs_zero.mpr eqv_refl
+theorem dist_zero {p q : ℚ} : dist p q ≃ 0 ↔ p ≃ q := calc
+  _ ↔ dist p q ≃ 0    := Iff.rfl
+  _ ↔ abs (p - q) ≃ 0 := by srw [dist_abs]
+  _ ↔ p - q ≃ 0       := abs_zero
+  _ ↔ p ≃ q           := sub_eqv_zero_iff_eqv
 
 /--
 The arguments to `dist` can be swapped without changing its value (i.e.,
@@ -393,9 +367,9 @@ absolute value absorbs the negation generated by swapping the difference's
 operands.
 -/
 theorem dist_comm {p q : ℚ} : dist p q ≃ dist q p := calc
-  _ ≃ dist p q       := eqv_refl
+  _ = dist p q       := rfl
   _ ≃ abs (p - q)    := dist_abs
-  _ ≃ abs (-(q - p)) := abs_subst (eqv_symm neg_sub)
+  _ ≃ abs (-(q - p)) := by srw [←neg_sub]
   _ ≃ abs (q - p)    := abs_absorb_neg
   _ ≃ dist q p       := eqv_symm dist_abs
 
@@ -410,9 +384,9 @@ are translated by the same amount.
 simplify.
 -/
 theorem dist_cancelL_add {p q r : ℚ} : dist (r + p) (r + q) ≃ dist p q := calc
-  _ ≃ dist (r + p) (r + q)    := eqv_refl
+  _ = dist (r + p) (r + q)    := rfl
   _ ≃ abs ((r + p) - (r + q)) := dist_abs
-  _ ≃ abs (p - q)             := abs_subst sub_cancelL_add
+  _ ≃ abs (p - q)             := by srw [sub_cancelL_add]
   _ ≃ dist p q                := eqv_symm dist_abs
 
 /--
@@ -426,9 +400,8 @@ are translated by the same amount.
 invoke the left-handed version of this property.
 -/
 theorem dist_cancelR_add {p q r : ℚ} : dist (p + r) (q + r) ≃ dist p q := calc
-  _ ≃ dist (p + r) (q + r) := eqv_refl
-  _ ≃ dist (r + p) (q + r) := dist_substL add_comm
-  _ ≃ dist (r + p) (r + q) := dist_substR add_comm
+  _ = dist (p + r) (q + r) := rfl
+  _ ≃ dist (r + p) (r + q) := by srw [add_comm, add_comm]
   _ ≃ dist p q             := dist_cancelL_add
 
 /--
@@ -445,9 +418,9 @@ theorem dist_distribL
     {p q r : ℚ} : abs r * dist p q ≃ dist (r * p) (r * q)
     := calc
   _ ≃ abs r * dist p q     := eqv_refl
-  _ ≃ abs r * abs (p - q)  := mul_substR dist_abs
+  _ ≃ abs r * abs (p - q)  := by srw [dist_abs]
   _ ≃ abs (r * (p - q))    := eqv_symm abs_compat_mul
-  _ ≃ abs (r * p - r * q)  := abs_subst mul_distribL_sub
+  _ ≃ abs (r * p - r * q)  := by srw [mul_distribL_sub]
   _ ≃ dist (r * p) (r * q) := eqv_symm dist_abs
 
 /--
@@ -464,11 +437,10 @@ commutativity of multiplication.
 theorem dist_distribR
     {p q r : ℚ} : (dist p q) * abs r ≃ dist (p * r) (q * r)
     := calc
-  _ ≃ (dist p q) * abs r := eqv_refl
-  _ ≃ abs r * dist p q := mul_comm
+  _ ≃ (dist p q) * abs r   := eqv_refl
+  _ ≃ abs r * dist p q     := mul_comm
   _ ≃ dist (r * p) (r * q) := dist_distribL
-  _ ≃ dist (p * r) (r * q) := dist_substL mul_comm
-  _ ≃ dist (p * r) (q * r) := dist_substR mul_comm
+  _ ≃ dist (p * r) (q * r) := by srw [mul_comm, mul_comm]
 
 /--
 Drop negations from both of the distance function's arguments.
@@ -482,11 +454,9 @@ distance function's arguments.
 -/
 theorem dist_cancel_neg {p q : ℚ} : dist (-p) (-q) ≃ dist p q := calc
   _ ≃ dist (-p) (-q)         := eqv_refl
-  _ ≃ dist (-1 * p) (-q)     := dist_substL (eqv_symm mul_neg_one)
-  _ ≃ dist (-1 * p) (-1 * q) := dist_substR (eqv_symm mul_neg_one)
+  _ ≃ dist (-1 * p) (-1 * q) := by srw [←mul_neg_one, ←mul_neg_one]
   _ ≃ abs (-1) * dist p q    := eqv_symm dist_distribL
-  _ ≃ abs 1 * dist p q       := mul_substL abs_absorb_neg
-  _ ≃ 1 * dist p q           := mul_substL (abs_positive sgn_one)
+  _ ≃ 1 * dist p q           := by srw [abs_absorb_neg, abs_positive sgn_one]
   _ ≃ dist p q               := mul_identL
 
 /--
@@ -500,7 +470,7 @@ theorem close_symm {ε p q : ℚ} : p ⊢ε⊣ q → q ⊢ε⊣ p := by
   show q ⊢ε⊣ p
   have : dist p q ≤ ε := close_dist.mp ‹p ⊢ε⊣ q›
   have : dist q p ≤ ε := le_substL_eqv dist_comm this
-  have : q ⊢ε⊣ p := close_dist.mpr this
+  have : q ⊢ε⊣ p      := close_dist.mpr this
   exact this
 
 /--
@@ -512,12 +482,13 @@ the implementation of rational numbers.
 **Proof intuition**: Expand the distance definition of ε-closeness, then use
 substitution.
 -/
+@[gcongr]
 theorem close_substL_eqv {ε p₁ p₂ q : ℚ} : p₁ ≃ p₂ → p₁ ⊢ε⊣ q → p₂ ⊢ε⊣ q := by
   intro (_ : p₁ ≃ p₂) (_ : p₁ ⊢ε⊣ q)
   show p₂ ⊢ε⊣ q
   have : dist p₁ q ≤ ε := close_dist.mp ‹p₁ ⊢ε⊣ q›
-  have : dist p₂ q ≤ ε := le_substL_eqv (dist_substL ‹p₁ ≃ p₂›) this
-  have : p₂ ⊢ε⊣ q := close_dist.mpr this
+  have : dist p₂ q ≤ ε := by prw [‹p₁ ≃ p₂›] this
+  have : p₂ ⊢ε⊣ q      := close_dist.mpr this
   exact this
 
 /--
@@ -529,12 +500,13 @@ the implementation of rational numbers.
 **Proof intuition**: Expand the distance definition of ε-closeness, then use
 substitution.
 -/
+@[gcongr]
 theorem close_substM_eqv {ε₁ ε₂ p q : ℚ} : ε₁ ≃ ε₂ → p ⊢ε₁⊣ q → p ⊢ε₂⊣ q := by
   intro (_ : ε₁ ≃ ε₂) (_ : p ⊢ε₁⊣ q)
   show p ⊢ε₂⊣ q
   have : dist p q ≤ ε₁ := close_dist.mp ‹p ⊢ε₁⊣ q›
-  have : dist p q ≤ ε₂ := le_substR_eqv ‹ε₁ ≃ ε₂› this
-  have : p ⊢ε₂⊣ q := close_dist.mpr this
+  have : dist p q ≤ ε₂ := by prw [‹ε₁ ≃ ε₂›] this
+  have : p ⊢ε₂⊣ q      := close_dist.mpr this
   exact this
 
 /--
@@ -546,102 +518,125 @@ the implementation of rational numbers.
 **Proof intuition**: Swap the left and right arguments via symmetry, then use
 the left-handed version of this property.
 -/
+@[gcongr]
 theorem close_substR_eqv {ε p q₁ q₂ : ℚ} : q₁ ≃ q₂ → p ⊢ε⊣ q₁ → p ⊢ε⊣ q₂ := by
   intro (_ : q₁ ≃ q₂) (_ : p ⊢ε⊣ q₁)
   show p ⊢ε⊣ q₂
   have : q₁ ⊢ε⊣ p := close_symm ‹p ⊢ε⊣ q₁›
-  have : q₂ ⊢ε⊣ p := close_substL_eqv ‹q₁ ≃ q₂› this
+  have : q₂ ⊢ε⊣ p := by prw [‹q₁ ≃ q₂›] this
   have : p ⊢ε⊣ q₂ := close_symm this
   exact this
 
 /--
-Add a common right term to ε-closeness's outer arguments.
+Remove a common left term from ε-closeness's outer arguments.
 
 **Property intuition**: Translating two points by the same amount doesn't
 change the distance between them.
-
-**Proof intuition**: Expand ε-closeness into distance and delegate to its
-properties.
 -/
-theorem close_substL_add {ε p q r : ℚ} : p ⊢ε⊣ q → p + r ⊢ε⊣ q + r := by
-  intro (_ : p ⊢ε⊣ q)
-  show p + r ⊢ε⊣ q + r
-  have : dist p q ≤ ε := close_dist.mp ‹p ⊢ε⊣ q›
-  have : dist (p + r) (q + r) ≤ ε := calc
-    _ ≃ dist (p + r) (q + r) := eqv_refl
-    _ ≃ dist p q             := dist_cancelR_add
-    _ ≤ ε                    := ‹dist p q ≤ ε›
-  have : p + r ⊢ε⊣ q + r := close_dist.mpr this
-  exact this
+theorem close_addL {ε p q r : ℚ} : r + p ⊢ε⊣ r + q ↔ p ⊢ε⊣ q := calc
+  _ ↔ r + p ⊢ε⊣ r + q          := Iff.rfl
+  _ ↔ dist (r + p) (r + q) ≤ ε := close_dist
+  _ ↔ dist p q ≤ ε             := by srw [dist_cancelL_add]
+  _ ↔ p ⊢ε⊣ q                  := close_dist.symm
+
+/--
+Remove a common right term from ε-closeness's outer arguments.
+
+**Property intuition**: Translating two points by the same amount doesn't
+change the distance between them.
+-/
+theorem close_addR {ε p q r : ℚ} : p + r ⊢ε⊣ q + r ↔ p ⊢ε⊣ q := by
+  let P := (· ⊢ε⊣ q + r)
+  calc
+    _ ↔ p + r ⊢ε⊣ q + r := Iff.rfl
+    _ ↔ r + p ⊢ε⊣ q + r := iff_subst_eqv (P := P) close_substL_eqv add_comm
+    _ ↔ r + p ⊢ε⊣ r + q := iff_subst_eqv close_substR_eqv add_comm
+    _ ↔ p ⊢ε⊣ q         := close_addL
+
+/--
+Add a common right term to ε-closeness's outer arguments.
+
+Corollary of `close_addR` that's useful for the `gcongr` tactic.
+-/
+@[gcongr]
+abbrev close_substL_add {ε p q r : ℚ} : p ⊢ε⊣ q → p + r ⊢ε⊣ q + r :=
+  close_addR.mpr
 
 /--
 Add a common left term to ε-closeness's outer arguments.
 
-**Property intuition**: Translating two points by the same amount doesn't
-change the distance between them.
-
-**Proof intuition**: Convert the left-handed version of this property using
-commutativity of addition.
+Corollary of `close_addL` that's useful for the `gcongr` tactic.
 -/
-theorem close_substR_add {ε p q r : ℚ} : p ⊢ε⊣ q → r + p ⊢ε⊣ r + q := by
-  intro (_ : p ⊢ε⊣ q)
-  show r + p ⊢ε⊣ r + q
-  have : p + r ⊢ε⊣ q + r := close_substL_add ‹p ⊢ε⊣ q›
-  have : r + p ⊢ε⊣ q + r := close_substL_eqv add_comm this
-  have : r + p ⊢ε⊣ r + q := close_substR_eqv add_comm this
-  exact this
+@[gcongr]
+abbrev close_substR_add {ε p q r : ℚ} : p ⊢ε⊣ q → r + p ⊢ε⊣ r + q :=
+  close_addL.mpr
+
+/--
+Remove negation from ε-closeness's outer arguments.
+
+**Property intuition**: Reflecting two points through zero doesn't change the
+distance between them.
+-/
+theorem close_neg {ε p q : ℚ} : -p ⊢ε⊣ -q ↔ p ⊢ε⊣ q := calc
+  _ ↔ -p ⊢ε⊣ -q          := Iff.rfl
+  _ ↔ dist (-p) (-q) ≤ ε := close_dist
+  _ ↔ dist p q ≤ ε       := by srw [dist_cancel_neg]
+  _ ↔ p ⊢ε⊣ q            := close_dist.symm
 
 /--
 Negate ε-closeness's outer arguments.
 
-**Property intuition**: Reflecting two points through zero doesn't change the
-distance between them.
-
-**Proof intuition**: Expand ε-closeness into distance and delegate to its
-properties.
+Corollary of `close_neg` that's useful for the `gcongr` tactic.
 -/
-theorem close_subst_neg {ε p q : ℚ} : p ⊢ε⊣ q → -p ⊢ε⊣ -q := by
-  intro (_ : p ⊢ε⊣ q)
-  show -p ⊢ε⊣ -q
-  have : dist p q ≤ ε := close_dist.mp ‹p ⊢ε⊣ q›
-  have : dist (-p) (-q) ≤ ε := le_substL_eqv (eqv_symm dist_cancel_neg) this
-  have : -p ⊢ε⊣ -q := close_dist.mpr this
-  exact this
+@[gcongr]
+abbrev close_subst_neg {ε p q : ℚ} : p ⊢ε⊣ q → -p ⊢ε⊣ -q := close_neg.mpr
+
+/--
+Remove a common term that ε-closeness's outer arguments are subtracted from.
+
+**Property intuition**: Translating two points by the same amount doesn't
+change the distance between them.
+-/
+theorem close_subL {ε p q r : ℚ} : r - p ⊢ε⊣ r - q ↔ p ⊢ε⊣ q := by
+  let P := (· ⊢ε⊣ r - q)
+  calc
+    _ ↔ r - p ⊢ε⊣ r - q   := Iff.rfl
+    _ ↔ r + -p ⊢ε⊣ r - q  := iff_subst_eqv (P := P) close_substL_eqv sub_add_neg
+    _ ↔ r + -p ⊢ε⊣ r + -q := iff_subst_eqv close_substR_eqv sub_add_neg
+    _ ↔ -p ⊢ε⊣ -q         := close_addL
+    _ ↔ p ⊢ε⊣ q           := close_neg
+
+/--
+Remove a common term subtracted from the right of ε-closeness's outer arguments.
+
+**Property intuition**: Translating two points by the same amount doesn't
+change the distance between them.
+-/
+theorem close_subR {ε p q r : ℚ} : p - r ⊢ε⊣ q - r ↔ p ⊢ε⊣ q := by
+  let P := (· ⊢ε⊣ q - r)
+  calc
+    _ ↔ p - r ⊢ε⊣ q - r   := Iff.rfl
+    _ ↔ p + -r ⊢ε⊣ q - r  := iff_subst_eqv (P := P) close_substL_eqv sub_add_neg
+    _ ↔ p + -r ⊢ε⊣ q + -r := iff_subst_eqv close_substR_eqv sub_add_neg
+    _ ↔ p ⊢ε⊣ q           := close_addR
 
 /--
 Subtract a common term from ε-closeness's outer arguments.
 
-**Property intuition**: Translating two points by the same amount doesn't
-change the distance between them.
-
-**Proof intuition**: Add a negated right term to the outer arguments, then
-convert into subtraction.
+Corollary of `close_subR` that's useful for the `gcongr` tactic.
 -/
-theorem close_substL_sub {ε p q r : ℚ} : p ⊢ε⊣ q → p - r ⊢ε⊣ q - r := by
-  intro (_ : p ⊢ε⊣ q)
-  show p - r ⊢ε⊣ q - r
-  have : p + (-r) ⊢ε⊣ q + (-r) := close_substL_add ‹p ⊢ε⊣ q›
-  have : p - r ⊢ε⊣ q + (-r) := close_substL_eqv (eqv_symm sub_add_neg) this
-  have : p - r ⊢ε⊣ q - r := close_substR_eqv (eqv_symm sub_add_neg) this
-  exact this
+@[gcongr]
+abbrev close_substL_sub {ε p q r : ℚ} : p ⊢ε⊣ q → p - r ⊢ε⊣ q - r :=
+  close_subR.mpr
 
 /--
 Subtract ε-closeness's outer arguments from a common term.
 
-**Property intuition**: Translating two points by the same amount doesn't
-change the distance between them.
-
-**Proof intuition**: Negate the outer arguments, add a common left term, and
-then convert into subtraction.
+Corollary of `close_subL` that's useful for the `gcongr` tactic.
 -/
-theorem close_substR_sub {ε p q r : ℚ} : p ⊢ε⊣ q → r - p ⊢ε⊣ r - q := by
-  intro (_ : p ⊢ε⊣ q)
-  show r - p ⊢ε⊣ r - q
-  have : -p ⊢ε⊣ -q := close_subst_neg ‹p ⊢ε⊣ q›
-  have : r + (-p) ⊢ε⊣ r + (-q) := close_substR_add this
-  have : r - p ⊢ε⊣ r + (-q) := close_substL_eqv (eqv_symm sub_add_neg) this
-  have : r - p ⊢ε⊣ r - q := close_substR_eqv (eqv_symm sub_add_neg) this
-  exact this
+@[gcongr]
+abbrev close_substR_sub {ε p q r : ℚ} : p ⊢ε⊣ q → r - p ⊢ε⊣ r - q :=
+  close_subL.mpr
 
 variable [Reciprocation ℚ]
 
@@ -653,10 +648,10 @@ theorem abs_compat_recip {p : ℚ} [AP (p ≄ 0)] : abs (p⁻¹) ≃ (abs p)⁻�
   _ = abs (p⁻¹)         := rfl
   -- ↓ begin key steps ↓
   _ ≃ p⁻¹ * sgn (p⁻¹)   := abs_sgn
-  _ ≃ p⁻¹ * (sgn p:ℚ)⁻¹ := mul_substR sgn_swap_recip
+  _ ≃ p⁻¹ * (sgn p:ℚ)⁻¹ := by srw [sgn_swap_recip]
   -- ↑  end key steps  ↑
   _ ≃ (p * sgn p)⁻¹     := eqv_symm recip_compat_mul
-  _ ≃ (abs p)⁻¹         := recip_subst (eqv_symm abs_sgn)
+  _ ≃ (abs p)⁻¹         := by srw [←abs_sgn]
 
 variable [Division ℚ]
 
@@ -668,10 +663,10 @@ theorem abs_compat_div
     {p q : ℚ} [AP (q ≄ 0)] : abs (p / q) ≃ abs p / abs q
     := calc
   _ = abs (p / q)       := rfl
-  _ ≃ abs (p * q⁻¹)     := abs_subst div_mul_recip
+  _ ≃ abs (p * q⁻¹)     := by srw [div_mul_recip]
   -- ↓ begin key steps ↓
   _ ≃ abs p * abs (q⁻¹) := abs_compat_mul
-  _ ≃ abs p * (abs q)⁻¹ := mul_substR abs_compat_recip
+  _ ≃ abs p * (abs q)⁻¹ := by srw [abs_compat_recip]
   -- ↑  end key steps  ↑
   _ ≃ abs p / abs q     := eqv_symm div_mul_recip
 
@@ -696,7 +691,7 @@ theorem abs_upper_bound {p q : ℚ} : abs p ≤ q ↔ -q ≤ p ∧ p ≤ q := by
     show -q ≤ p ∧ p ≤ q
     have : -q ≤ p := calc
       _ ≃ -q       := eqv_refl
-      _ ≤ (-abs p) := le_subst_neg ‹abs p ≤ q›
+      _ ≤ (-abs p) := by srw [‹abs p ≤ q›]
       _ ≤ p        := neg_abs_le_self
     have : p ≤ q := calc
       _ ≃ p     := eqv_refl
@@ -717,7 +712,7 @@ theorem abs_upper_bound {p q : ℚ} : abs p ≤ q ↔ -q ≤ p ∧ p ≤ q := by
       calc
         _ ≃ abs p   := eqv_refl
         _ ≃ (-p)    := ‹abs p ≃ -p›
-        _ ≤ (-(-q)) := le_subst_neg ‹-q ≤ p›
+        _ ≤ (-(-q)) := by srw [‹-q ≤ p›]
         _ ≃ q       := neg_involutive
 
 /--
@@ -733,13 +728,12 @@ that a rational number times an arbitrary sign value will never be greater than
 that rational number times its own sign, i.e. the number's absolute value.
 -/
 theorem abs_compat_add {p q : ℚ} : abs (p + q) ≤ abs p + abs q := calc
-  _ ≃ abs (p + q)                       := eqv_refl
+  _ = abs (p + q)                       := rfl
   _ ≃ (p + q) * sgn (p + q)             := abs_sgn
   _ ≃ p * sgn (p + q) + q * sgn (p + q) := mul_distribR
-  _ ≤ p * sgn p + q * sgn (p + q)       := le_substL_add mul_sgn_self_max
-  _ ≤ p * sgn p + q * sgn q             := le_substR_add mul_sgn_self_max
-  _ ≃ abs p + q * sgn q                 := add_substL (eqv_symm abs_sgn)
-  _ ≃ abs p + abs q                     := add_substR (eqv_symm abs_sgn)
+  _ ≤ p * sgn p + q * sgn (p + q)       := by srw [mul_sgn_self_max]
+  _ ≤ p * sgn p + q * sgn q             := by srw [mul_sgn_self_max]
+  _ ≃ abs p + abs q                     := by srw [←abs_sgn, ←abs_sgn]
 
 /--
 The sign of a rational number's absolute value is the squared sign of the
@@ -749,11 +743,10 @@ rational number.
 times its sign; taking the `sgn` of that gives the result.
 -/
 theorem sgn_abs {p : ℚ} : sgn (abs p) ≃ sgn p * sgn p := calc
-  sgn (abs p)             ≃ _ := sgn_subst abs_sgn
-  sgn (p * sgn p)         ≃ _ := sgn_compat_mul
-  sgn p * sgn (sgn p : ℚ) ≃ _ := AA.substR sgn_from_integer
-  sgn p * sgn (sgn p)     ≃ _ := AA.substR sgn_idemp
-  sgn p * sgn p           ≃ _ := Rel.refl
+  _ = sgn (abs p)             := rfl
+  _ ≃ sgn (p * sgn p)         := by srw [abs_sgn]
+  _ ≃ sgn p * sgn (sgn p : ℚ) := sgn_compat_mul
+  _ ≃ sgn p * sgn p           := by srw [sgn_from_integer, sgn_idemp]
 
 /--
 The absolute value of a rational number is nonnegative.
@@ -767,11 +760,12 @@ must be positive or zero.
 -/
 theorem abs_nonneg {p : ℚ} : abs p ≥ 0 := by
   have : sgn (p * p) ≃ sgn (abs p) := calc
-    _ ≃ sgn (p * p)   := Rel.refl
+    _ = sgn (p * p)   := rfl
     _ ≃ sgn p * sgn p := sgn_compat_mul
     _ ≃ sgn (abs p)   := Rel.symm sgn_abs
-  have : sgn (abs p) ≄ -1 := AA.neqv_substL this nonneg_square
-  have : abs p ≥ 0 := ge_zero_sgn.mpr this
+
+  have : sgn (abs p) ≄ -1 := by prw [‹sgn (p * p) ≃ sgn (abs p)›] nonneg_square
+  have : abs p ≥ 0        := ge_zero_sgn.mpr this
   exact this
 
 /--
@@ -799,11 +793,10 @@ result follows from the triangle inequality for absolute value and the
 telescoping addition of differences.
 -/
 theorem dist_triangle {p q r : ℚ} : dist p r ≤ dist p q + dist q r := calc
-  _ ≃ dist p q + dist q r       := eqv_refl
-  _ ≃ abs (p - q) + dist q r    := add_substL dist_abs
-  _ ≃ abs (p - q) + abs (q - r) := add_substR dist_abs
+  _ = dist p q + dist q r       := rfl
+  _ ≃ abs (p - q) + abs (q - r) := by srw [dist_abs, dist_abs]
   _ ≥ abs ((p - q) + (q - r))   := abs_compat_add
-  _ ≃ abs (p - r)               := abs_subst add_sub_telescope
+  _ ≃ abs (p - r)               := by srw [add_sub_telescope]
   _ ≃ dist p r                  := eqv_symm dist_abs
 
 /--
@@ -822,10 +815,13 @@ theorem close_trans {ε δ p q r : ℚ} : p ⊢ε⊣ q → q ⊢δ⊣ r → p �
   have : dist p r ≤ ε + δ := calc
     _ ≃ dist p r            := eqv_refl
     _ ≤ dist p q + dist q r := dist_triangle
-    _ ≤ ε + dist q r        := le_substL_add ‹dist p q ≤ ε›
-    _ ≤ ε + δ               := le_substR_add ‹dist q r ≤ δ›
+    _ ≤ ε + δ               := by srw [‹dist p q ≤ ε›, ‹dist q r ≤ δ›]
   have : p ⊢ε+δ⊣ r := close_dist.mpr this
   exact this
+
+instance close_trans_inst {ε δ : ℚ} : Trans (· ⊢ε⊣ ·) (· ⊢δ⊣ ·) (· ⊢ε+δ⊣ ·) := {
+  trans := close_trans
+}
 
 /--
 Two rational numbers are "at most" a distance of zero apart iff they are
@@ -854,6 +850,34 @@ theorem close_zero {p q : ℚ} : p ⊢0⊣ q ↔ p ≃ q := by
     have : dist p q ≤ 0 := le_cases.mpr (Or.inr this)
     have : p ⊢0⊣ q := close_dist.mpr this
     exact this
+
+/--
+The ε in ε-closeness can always be replaced by a greater value.
+
+**Property intuition**: ε-closeness represents a maximum distance, so a larger
+maximum is trivial because it's less precise.
+
+**Proof intuition**: Convert ε-closeness to a distance inequality; the result
+follows by transitivity of order.
+-/
+theorem close_widen {ε ε' p q : ℚ} : p ⊢ε⊣ q → ε' ≥ ε → p ⊢ε'⊣ q := by
+  intro (_ : p ⊢ε⊣ q) (_ : ε' ≥ ε)
+  show p ⊢ε'⊣ q
+  have : dist p q ≤ ε' := calc
+    _ = dist p q := rfl
+    _ ≤ ε        := close_dist.mp ‹p ⊢ε⊣ q›
+    _ ≤ ε'       := ‹ε ≤ ε'›
+  have : p ⊢ε'⊣ q := close_dist.mpr ‹dist p q ≤ ε'›
+  exact this
+
+/-- ε-closeness is reflexive. -/
+@[refl]
+theorem close_refl {ε p : ℚ} : ε ≥ 0 → p ⊢ε⊣ p := by
+  intro (_ : ε ≥ 0)
+  show p ⊢ε⊣ p
+  have : p ⊢0⊣ p := close_zero.mpr eqv_refl
+  have : p ⊢ε⊣ p := close_widen ‹p ⊢0⊣ p› ‹ε ≥ 0›
+  exact this
 
 /--
 The `ε` in ε-closeness is nonnegative.
@@ -921,10 +945,9 @@ theorem close_add_pointwise
     := by
   intro (_ : p ⊢ε⊣ q) (_ : r ⊢δ⊣ s)
   show p + r ⊢ε+δ⊣ q + s
-  have : p + r ⊢ε⊣ q + r := close_substL_add ‹p ⊢ε⊣ q›
-  have : q + r ⊢δ⊣ q + s := close_substR_add ‹r ⊢δ⊣ s›
-  have : p + r ⊢ε+δ⊣ q + s := close_trans ‹p + r ⊢ε⊣ q + r› ‹q + r ⊢δ⊣ q + s›
-  exact this
+  calc
+    p + r ⊢ε⊣ q + r := by srw [‹p ⊢ε⊣ q›]
+    q + r ⊢δ⊣ q + s := by srw [‹r ⊢δ⊣ s›]
 
 /--
 Statements of ε-closeness can be subtracted argument-by-argument.
@@ -940,28 +963,9 @@ theorem close_sub_pointwise
     := by
   intro (_ : p ⊢ε⊣ q) (_ : r ⊢δ⊣ s)
   show p - r ⊢ε+δ⊣ q - s
-  have : p - r ⊢ε⊣ q - r := close_substL_sub ‹p ⊢ε⊣ q›
-  have : q - r ⊢δ⊣ q - s := close_substR_sub ‹r ⊢δ⊣ s›
-  have : p - r ⊢ε+δ⊣ q - s := close_trans ‹p - r ⊢ε⊣ q - r› ‹q - r ⊢δ⊣ q - s›
-  exact this
-
-/--
-The ε in ε-closeness can always be replaced by a greater value.
-
-**Property intuition**: ε-closeness represents a maximum distance, so a larger
-maximum is trivial because it's less precise.
-
-**Proof intuition**: Convert ε-closeness to a distance inequality; the result
-follows by transitivity of order.
--/
-theorem close_widen {ε ε' p q : ℚ} : p ⊢ε⊣ q → ε' > ε → p ⊢ε'⊣ q := by
-  intro (_ : p ⊢ε⊣ q) (_ : ε' > ε)
-  show p ⊢ε'⊣ q
-  have : dist p q ≤ ε := close_dist.mp ‹p ⊢ε⊣ q›
-  have : ε ≤ ε' := le_cases.mpr (Or.inl ‹ε < ε'›)
-  have : dist p q ≤ ε' := le_trans ‹dist p q ≤ ε› ‹ε ≤ ε'›
-  have : p ⊢ε'⊣ q := close_dist.mpr this
-  exact this
+  calc
+    p - r ⊢ε⊣ q - r := by srw [‹p ⊢ε⊣ q›]
+    q - r ⊢δ⊣ q - s := by srw [‹r ⊢δ⊣ s›]
 
 /--
 Convert ε-closeness to and from an "ordered betweenness" representation.
@@ -1009,6 +1013,7 @@ we'd expect the scaling factor to be accounted for in the ε part of the
 use the distributive property of distance and the fact that multiplication by a
 nonnegative value preserves order.
 -/
+@[gcongr]
 theorem close_substL_mul
     {ε p q r : ℚ} : p ⊢ε⊣ q → p * r ⊢ε * abs r⊣ q * r
     := by
@@ -1033,15 +1038,16 @@ we'd expect the scaling factor to be accounted for in the ε part of the
 **Proof intuition**: This is equivalent to the opposite-handed theorem, but
 with all multiplications flipped around by commutativity.
 -/
+@[gcongr]
 theorem close_substR_mul
     {ε p q r : ℚ} : p ⊢ε⊣ q → r * p ⊢(abs r) * ε⊣ r * q
     := by
   intro (_ : p ⊢ε⊣ q)
   show r * p ⊢(abs r) * ε⊣ r * q
-  have : p * r ⊢ε * abs r⊣ q * r := close_substL_mul ‹p ⊢ε⊣ q›
-  have : r * p ⊢ε * abs r⊣ q * r := close_substL_eqv mul_comm this
-  have : r * p ⊢(abs r) * ε⊣ q * r := close_substM_eqv mul_comm this
-  have : r * p ⊢(abs r) * ε⊣ r * q := close_substR_eqv mul_comm this
+  have : p * r ⊢ε * abs r⊣ q * r   := by srw [‹p ⊢ε⊣ q›]
+  have : r * p ⊢ε * abs r⊣ q * r   := by prw [mul_comm] this
+  have : r * p ⊢(abs r) * ε⊣ q * r := by prw [mul_comm] this
+  have : r * p ⊢(abs r) * ε⊣ r * q := by prw [mul_comm] this
   exact this
 
 /--
@@ -1065,16 +1071,16 @@ theorem close_mul_pointwise
     show ∃ (d : ℚ), y ≃ x + d ∧ abs d ≤ ζ
     let d := y - x
     have : y ≃ x + d := calc
-      _ ≃ y            := eqv_refl
+      _ = y            := rfl
       _ ≃ y + 0        := eqv_symm add_identR
-      _ ≃ y + (-x + x) := add_substR (eqv_symm add_inverseL)
+      _ ≃ y + (-x + x) := by srw [←add_inverseL]
       _ ≃ (y + -x) + x := eqv_symm add_assoc
-      _ ≃ (y - x) + x  := add_substL (eqv_symm sub_add_neg)
-      _ ≃ d + x        := add_substL eqv_refl
-      _ ≃ x + d        := add_comm
+      _ ≃ (y - x) + x  := by srw [←sub_add_neg]
+      _ ≃ x + (y - x)  := add_comm
+      _ = x + d        := rfl
     have : abs d ≤ ζ := calc
-      _ ≃ abs d       := eqv_refl
-      _ ≃ abs (y - x) := eqv_refl
+      _ = abs d       := rfl
+      _ = abs (y - x) := rfl
       _ ≃ dist y x    := eqv_symm dist_abs
       _ ≃ dist x y    := dist_comm
       _ ≤ ζ           := close_dist.mp ‹x ⊢ζ⊣ y›
@@ -1085,57 +1091,49 @@ theorem close_mul_pointwise
   have (Exists.intro (b : ℚ) (And.intro (_ : s ≃ r + b) (_ : abs b ≤ δ))) :=
     close_diff ‹r ⊢δ⊣ s›
 
+  have le_mulL {x y z : ℚ} : z ≥ 0 → x ≤ y → x * z ≤ y * z :=
+    le_substL_mul_nonneg
+  have le_mulR {x y z : ℚ} : z ≥ 0 → x ≤ y → z * x ≤ z * y :=
+    le_substR_mul_nonneg
+  let ma := abs a; let mb := abs b; let mp := abs p; let mr := abs r
+  have : ma * mr ≤ ε * mr := le_mulL abs_nonneg ‹ma ≤ ε›
+  have : mp * mb ≤ mp * δ := le_mulR abs_nonneg ‹mb ≤ δ›
+  have : ma * mb ≤ ε * mb := le_mulL abs_nonneg ‹ma ≤ ε›
   have : ε ≥ 0 := close_nonneg ‹p ⊢ε⊣ q›
-  have : s - r ≃ b := calc
-    _ ≃ s - r        := eqv_refl
-    _ ≃ s + -r       := sub_add_neg
-    _ ≃ -r + s       := add_comm
-    _ ≃ -r + (r + b) := add_substR ‹s ≃ r + b›
-    _ ≃ (-r + r) + b := eqv_symm add_assoc
-    _ ≃ 0 + b        := add_substL add_inverseL
-    _ ≃ b            := add_identL
-  have qs_pr_eqv_pb_ar_ab : q * s - p * r ≃ p * b + a * r + a * b := calc
-    _ ≃ q * s - p * r                := eqv_refl
-    _ ≃ (p + a) * s - p * r          := sub_substL (mul_substL ‹q ≃ p + a›)
-    _ ≃ p * s + a * s - p * r        := sub_substL mul_distribR
-    _ ≃ p * s + a * s + (-(p * r))   := sub_add_neg
-    _ ≃ p * s + (a * s + (-(p * r))) := add_assoc
-    _ ≃ p * s + (-(p * r) + a * s)   := add_substR add_comm
-    _ ≃ p * s + (-(p * r)) + a * s   := eqv_symm add_assoc
-    _ ≃ p * s - p * r + a * s        := add_substL (eqv_symm sub_add_neg)
-    _ ≃ p * (s - r) + a * s          := add_substL (eqv_symm mul_distribL_sub)
-    _ ≃ p * b + a * s                := add_substL (mul_substR ‹s - r ≃ b›)
-    _ ≃ p * b + a * (r + b)          := add_substR (mul_substR ‹s ≃ r + b›)
-    _ ≃ p * b + (a * r + a * b)      := add_substR mul_distribL
-    _ ≃ p * b + a * r + a * b        := eqv_symm add_assoc
-  have : abs (a * r) ≤ ε * abs r := calc
-    _ ≃ abs (a * r)   := eqv_refl
-    _ ≃ abs a * abs r := abs_compat_mul
-    _ ≤ ε * abs r     := le_substL_mul_nonneg abs_nonneg ‹abs a ≤ ε›
-  have : abs (p * b) ≤ δ * abs p := calc
-    _ ≃ abs (p * b)   := eqv_refl
-    _ ≃ abs p * abs b := abs_compat_mul
-    _ ≤ abs p * δ     := le_substR_mul_nonneg abs_nonneg ‹abs b ≤ δ›
-    _ ≃ δ * abs p     := mul_comm
-  have abs_ab : abs (a * b) ≤ ε * δ := calc
-    _ ≃ abs (a * b)   := eqv_refl
-    _ ≃ abs a * abs b := abs_compat_mul
-    _ ≤ ε * abs b     := le_substL_mul_nonneg abs_nonneg ‹abs a ≤ ε›
-    _ ≤ ε * δ         := le_substR_mul_nonneg ‹ε ≥ 0› ‹abs b ≤ δ›
-  have abs_pb_ar : abs (p * b + a * r) ≤ ε * abs r + δ * abs p := calc
-    _ ≃ abs (p * b + a * r)       := eqv_refl
-    _ ≤ abs (p * b) + abs (a * r) := abs_compat_add
-    _ ≤ δ * abs p + abs (a * r)   := le_substL_add ‹abs (p * b) ≤ δ * abs p›
-    _ ≤ δ * abs p + ε * abs r     := le_substR_add ‹abs (a * r) ≤ ε * abs r›
-    _ ≃ ε * abs r + δ * abs p     := add_comm
-  have : dist (p * r) (q * s) ≤ ε * abs r + δ * abs p + ε * δ := calc
-    _ ≃ dist (p * r) (q * s)                := eqv_refl
-    _ ≃ dist (q * s) (p * r)                := dist_comm
-    _ ≃ abs (q * s - p * r)                 := dist_abs
-    _ ≃ abs (p * b + a * r + a * b)         := abs_subst qs_pr_eqv_pb_ar_ab
-    _ ≤ abs (p * b + a * r) + abs (a * b)   := abs_compat_add
-    _ ≤ ε * abs r + δ * abs p + abs (a * b) := le_substL_add abs_pb_ar
-    _ ≤ ε * abs r + δ * abs p + ε * δ       := le_substR_add abs_ab
+  have : ε * mb ≤ ε*δ := le_mulR ‹ε ≥ 0› ‹mb ≤ δ›
+
+  have : dist (p*r) (q*s) ≤ ε * mr + δ * mp + ε*δ := calc
+    _ = dist (p*r) (q*s)                  := rfl
+    _ ≃ dist (q*s) (p*r)                  := dist_comm
+    _ ≃ abs (q*s - p*r)                   := dist_abs
+    _ ≃ abs ((p + a)*s - p*r)             := by srw [‹q ≃ p + a›]
+    _ ≃ abs (p*s + a*s - p*r)             := by srw [mul_distribR]
+    _ ≃ abs (p*s + a*s + (-(p*r)))        := by srw [sub_add_neg]
+    _ ≃ abs (p*s + (a*s + (-(p*r))))      := by srw [add_assoc]
+    _ ≃ abs (p*s + (-(p*r) + a*s))        := by srw [add_comm]
+    _ ≃ abs (p*s + (-(p*r)) + a*s)        := by srw [←add_assoc]
+    _ ≃ abs (p*s - p*r + a*s)             := by srw [←sub_add_neg]
+    _ ≃ abs (p*(s - r) + a*s)             := by srw [←mul_distribL_sub]
+    _ ≃ abs (p*(s + -r) + a*s)            := by srw [sub_add_neg]
+    _ ≃ abs (p*(-r + s) + a*s)            := by srw [add_comm]
+    _ ≃ abs (p*(-r + (r + b)) + a*s)      := by srw [‹s ≃ r + b›]
+    _ ≃ abs (p*((-r + r) + b) + a*s)      := by srw [←add_assoc]
+    _ ≃ abs (p*(0 + b) + a*s)             := by srw [add_inverseL]
+    _ ≃ abs (p*b + a*s)                   := by srw [add_identL]
+    _ ≃ abs (p*b + a*(r + b))             := by srw [‹s ≃ r + b›]
+    _ ≃ abs (p*b + (a*r + a*b))           := by srw [mul_distribL]
+    _ ≃ abs (p*b + a*r + a*b)             := by srw [←add_assoc]
+    _ ≤ abs (p*b + a*r) + abs (a*b)       := abs_compat_add
+    _ ≤ abs (p*b) + abs (a*r) + abs (a*b) := by srw [abs_compat_add]
+    _ ≃ mp * mb + abs (a*r) + abs (a*b)   := by srw [abs_compat_mul]
+    _ ≤ mp * δ + abs (a*r) + abs (a*b)    := by srw [‹mp*mb ≤ mp*δ›]
+    _ ≃ δ*mp + abs (a*r) + abs (a*b)      := by srw [mul_comm]
+    _ ≃ δ*mp + ma*mr + abs (a*b)          := by srw [abs_compat_mul]
+    _ ≤ δ*mp + ε*mr + abs (a*b)           := by srw [‹ma*mr ≤ ε*mr›]
+    _ ≃ ε*mr + δ*mp + abs (a*b)           := by srw [add_comm]
+    _ ≃ ε*mr + δ*mp + ma*mb               := by srw [abs_compat_mul]
+    _ ≤ ε*mr + δ*mp + ε*mb                := by srw [‹ma*mb ≤ ε*mb›]
+    _ ≤ ε*mr + δ*mp + ε*δ                 := by srw [‹ε*mb ≤ ε*δ›]
   have : p * r ⊢ε * abs r + δ * abs p + ε * δ⊣ q * s := close_dist.mpr this
   exact this
 
@@ -1206,7 +1204,7 @@ theorem close_from_between {ε p q : ℚ} : ε ≥ 0 → p-ε⊣ q ⊢p+ε → p
   have : p-ε ≤ p+ε := calc
     _ ≃ p - ε    := eqv_refl
     _ ≃ p + (-ε) := sub_add_neg
-    _ ≤ p + ε    := le_substR_add ‹-ε ≤ ε›
+    _ ≤ p + ε    := by srw [‹-ε ≤ ε›]
   have : min (p-ε) (p+ε) ≤ q ∧ q ≤ max (p-ε) (p+ε) :=
     between_min_max.mp ‹p-ε⊣ q ⊢p+ε›
   have : p-ε ≤ q ∧ q ≤ p+ε := order_from_min_max this ‹p-ε ≤ p+ε›

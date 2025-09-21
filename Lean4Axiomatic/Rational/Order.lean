@@ -85,14 +85,14 @@ theorem lt_zero_sgn {p : ℚ} : p < 0 ↔ sgn p ≃ -1 := by
     show sgn p ≃ -1
     calc
       _ ≃ sgn p       := Rel.refl
-      _ ≃ sgn (p - 0) := sgn_subst (eqv_symm sub_zero)
+      _ ≃ sgn (p - 0) := by srw [←sub_zero]
       _ ≃ -1          := lt_sgn.mp ‹p < 0›
   case mpr =>
     intro (_ : sgn p ≃ -1)
     show p < 0
     have : sgn (p - 0) ≃ -1 := calc
       _ ≃ sgn (p - 0) := Rel.refl
-      _ ≃ sgn p       := sgn_subst sub_zero
+      _ ≃ sgn p       := by srw [sub_zero]
       _ ≃ -1          := ‹sgn p ≃ -1›
     have : p < 0 := lt_sgn.mpr this
     exact this
@@ -105,31 +105,13 @@ from the former yields a positive number; i.e. a sign of one.
 with the operands swapped. Swapping a subtraction negates its result, thus the
 sign value is `1` instead of `-1`.
 -/
-theorem gt_sgn {p q : ℚ} : p > q ↔ sgn (p - q) ≃ 1 := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : p > q)
-    show sgn (p - q) ≃ 1
-    have : q < p := ‹p > q›
-    have : sgn (q - p) ≃ -1 := lt_sgn.mp this
-    have : sgn (p - q) ≃ 1 := calc
-      sgn (p - q)    ≃ _ := sgn_subst (eqv_symm neg_sub)
-      sgn (-(q - p)) ≃ _ := sgn_compat_neg
-      (-sgn (q - p)) ≃ _ := AA.subst₁ ‹sgn (q - p) ≃ -1›
-      (-(-1))        ≃ _ := Integer.neg_involutive
-      1              ≃ _ := Rel.refl
-    exact this
-  case mpr =>
-    intro (_ : sgn (p - q) ≃ 1)
-    show p > q
-    have : sgn (q - p) ≃ -1 := calc
-      sgn (q - p)    ≃ _ := sgn_subst (eqv_symm neg_sub)
-      sgn (-(p - q)) ≃ _ := sgn_compat_neg
-      (-sgn (p - q)) ≃ _ := AA.subst₁ ‹sgn (p - q) ≃ 1›
-      (-1)           ≃ _ := Rel.refl
-    have : q < p := lt_sgn.mpr this
-    have : p > q := this
-    exact this
+theorem gt_sgn {p q : ℚ} : p > q ↔ sgn (p - q) ≃ 1 := calc
+  _ ↔ p > q               := Iff.rfl
+  _ ↔ q < p               := Iff.rfl
+  _ ↔ sgn (q - p) ≃ -1    := lt_sgn
+  _ ↔ sgn (-(p - q)) ≃ -1 := by srw [←neg_sub]
+  _ ↔ -sgn (p - q) ≃ -1   := by srw [sgn_compat_neg]
+  _ ↔ sgn (p - q) ≃ 1     := Iff.intro Integer.neg_inject Integer.neg_subst
 
 /--
 A rational number is greater than zero iff it has a sign of `1`.
@@ -138,25 +120,10 @@ A rational number is greater than zero iff it has a sign of `1`.
 
 **Proof intuition**: Special case of `gt_sgn`.
 -/
-theorem gt_zero_sgn {p : ℚ} : p > 0 ↔ sgn p ≃ 1 := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : p > 0)
-    show sgn p ≃ 1
-    have : sgn (p - 0) ≃ 1 := gt_sgn.mp ‹p > 0›
-    calc
-      _ ≃ sgn p       := Rel.refl
-      _ ≃ sgn (p - 0) := sgn_subst (eqv_symm sub_zero)
-      _ ≃ 1           := ‹sgn (p - 0) ≃ 1›
-  case mpr =>
-    intro (_ : sgn p ≃ 1)
-    show p > 0
-    have : sgn (p - 0) ≃ 1 := calc
-      _ ≃ sgn (p - 0) := Rel.refl
-      _ ≃ sgn p       := sgn_subst sub_zero
-      _ ≃ 1           := ‹sgn p ≃ 1›
-    have : p > 0 := gt_sgn.mpr ‹sgn (p - 0) ≃ 1›
-    exact this
+theorem gt_zero_sgn {p : ℚ} : p > 0 ↔ sgn p ≃ 1 := calc
+  _ ↔ p > 0           := Iff.rfl
+  _ ↔ sgn (p - 0) ≃ 1 := gt_sgn
+  _ ↔ sgn p ≃ 1       := by srw [sub_zero]
 
 /-- The rational number two is positive. -/
 theorem two_pos : (2:ℚ) > 0 := by
@@ -176,7 +143,7 @@ theorem pos_nonzero {p : ℚ} : p > 0 → p ≄ 0 := by
   show p ≄ 0
   have : sgn p ≃ 1 := gt_zero_sgn.mp ‹p > 0›
   have : (1:ℤ) ≄ 0 := Integer.one_neqv_zero
-  have : sgn p ≄ 0 := AA.neqv_substL (Rel.symm ‹sgn p ≃ 1›) ‹(1:ℤ) ≄ 0›
+  have : sgn p ≄ 0 := by prw [←‹sgn p ≃ 1›] ‹(1:ℤ) ≄ 0›
   have : p ≄ 0 := mt sgn_zero.mp ‹sgn p ≄ 0›
   exact this
 
@@ -198,7 +165,7 @@ theorem mul_preserves_pos {p q : ℚ} : p > 0 → q > 0 → p * q > 0 := by
   have : sgn (p * q) ≃ 1 := calc
     _ = sgn (p * q)   := rfl
     _ ≃ sgn p * sgn q := sgn_compat_mul
-    _ ≃ 1 * sgn q     := AA.substL (gt_zero_sgn.mp ‹p > 0›)
+    _ ≃ 1 * sgn q     := by srw [gt_zero_sgn.mp ‹p > 0›]
     _ ≃ sgn q         := AA.identL
     _ ≃ 1             := gt_zero_sgn.mp ‹q > 0›
   have : p * q > 0 := gt_zero_sgn.mpr ‹sgn (p * q) ≃ 1›
@@ -221,9 +188,9 @@ theorem ge_sgn {p q : ℚ} : p ≥ q ↔ sgn (p - q) ≄ -1 := by
     have : q ≤ p := ‹p ≥ q›
     have : sgn (q - p) ≄ 1 := le_sgn.mp this
     have : sgn (q - p) ≃ 1 := calc
-      sgn (q - p)    ≃ _ := sgn_subst (eqv_symm neg_sub)
+      sgn (q - p)    ≃ _ := by srw [←neg_sub]
       sgn (-(p - q)) ≃ _ := sgn_compat_neg
-      (-sgn (p - q)) ≃ _ := AA.subst₁ ‹sgn (p - q) ≃ -1›
+      (-sgn (p - q)) ≃ _ := by srw [‹sgn (p - q) ≃ -1›]
       (-(-1))        ≃ _ := Integer.neg_involutive
       1              ≃ _ := Rel.refl
     exact absurd ‹sgn (q - p) ≃ 1› ‹sgn (q - p) ≄ 1›
@@ -234,9 +201,9 @@ theorem ge_sgn {p q : ℚ} : p ≥ q ↔ sgn (p - q) ≄ -1 := by
       intro (_ : sgn (q - p) ≃ 1)
       show False
       have : sgn (p - q) ≃ -1 := calc
-        sgn (p - q)    ≃ _ := sgn_subst (eqv_symm neg_sub)
+        sgn (p - q)    ≃ _ := by srw [←neg_sub]
         sgn (-(q - p)) ≃ _ := sgn_compat_neg
-        (-sgn (q - p)) ≃ _ := AA.subst₁ ‹sgn (q - p) ≃ 1›
+        (-sgn (q - p)) ≃ _ := by srw [‹sgn (q - p) ≃ 1›]
         (-1)           ≃ _ := Rel.refl
       exact absurd ‹sgn (p - q) ≃ -1› ‹sgn (p - q) ≄ -1›
     have : q ≤ p := le_sgn.mpr this
@@ -252,22 +219,10 @@ of a number is positive or zero.
 
 **Proof intuition**: This is a corollary of `ge_sgn`.
 -/
-theorem ge_zero_sgn {p : ℚ} : p ≥ 0 ↔ sgn p ≄ -1 := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : p ≥ 0)
-    show sgn p ≄ -1
-    have : sgn (p - 0) ≄ -1 := ge_sgn.mp ‹p ≥ 0›
-    have : sgn (p - 0) ≃ sgn p := sgn_subst sub_zero
-    have : sgn p ≄ -1 := AA.neqv_substL this ‹sgn (p - 0) ≄ -1›
-    exact this
-  case mpr =>
-    intro (_ : sgn p ≄ -1)
-    show p ≥ 0
-    have : sgn p ≃ sgn (p - 0) := sgn_subst (eqv_symm sub_zero)
-    have : sgn (p - 0) ≄ -1 := AA.neqv_substL this ‹sgn p ≄ -1›
-    have : p ≥ 0 := ge_sgn.mpr this
-    exact this
+theorem ge_zero_sgn {p : ℚ} : p ≥ 0 ↔ sgn p ≄ -1 := calc
+  _ ↔ p ≥ 0            := Iff.rfl
+  _ ↔ sgn (p - 0) ≄ -1 := ge_sgn
+  _ ↔ sgn p ≄ -1       := by srw [sub_zero]
 
 /--
 The ordering of any two rational numbers must be in exactly one of three
@@ -396,6 +351,7 @@ In other words, _less than or equivalent to_ is a reflexive relation.
 **Property and proof intuition**: Every rational number is equivalent to
 itself, and thus is less than _or_ equivalent to itself as well.
 -/
+@[refl]
 theorem le_refl {p : ℚ} : p ≤ p := by
   have : p ≃ p := eqv_refl
   have : p ≤ p := le_cases.mpr (Or.inr this)
@@ -489,17 +445,14 @@ theorem le_dichotomy {p q : ℚ} : p ≤ q ∨ q ≤ p := by
 The _less than_ relation on rationals is consistent with its integer
 equivalent.
 -/
-theorem lt_respects_from_integer {a b : ℤ} : a < b ↔ (a:ℚ) < (b:ℚ) := by
-  have lift_eqv {c₁ c₂ d : ℤ} : c₁ ≃ c₂ → (c₁ ≃ d ↔ c₂ ≃ d ) :=
-    Rel.iff_subst_eqv AA.eqv_substL
-  have : sgn (a-b) ≃ sgn ((a:ℚ)-(b:ℚ)) := sgn_diff_respects_from_integer
-  calc
-    _ ↔ a < b                    := Iff.rfl
-    -- ↓ begin key lines ↓
-    _ ↔ sgn (a - b) ≃ -1         := Integer.lt_sgn
-    _ ↔ sgn ((a:ℚ) - (b:ℚ)) ≃ -1 := lift_eqv ‹sgn (a-b) ≃ sgn ((a:ℚ)-(b:ℚ))›
-    -- ↑  end key lines  ↑
-    _ ↔ (a:ℚ) < (b:ℚ)            := lt_sgn.symm
+theorem lt_respects_from_integer {a b : ℤ} : a < b ↔ (a:ℚ) < (b:ℚ) := calc
+  _ ↔ a < b                    := Iff.rfl
+  -- ↓ begin key lines ↓
+  _ ↔ sgn (a - b) ≃ -1         := Integer.lt_sgn
+  _ ↔ sgn ((a - b : ℤ):ℚ) ≃ -1 := by srw [←sgn_from_integer]
+  _ ↔ sgn ((a:ℚ) - (b:ℚ)) ≃ -1 := by srw [sub_compat_from_integer]
+  -- ↑  end key lines  ↑
+  _ ↔ (a:ℚ) < (b:ℚ)            := lt_sgn.symm
 
 /-- The rational number two is greater than one. -/
 theorem two_gt_one : (2:ℚ) > 1 :=
@@ -510,17 +463,14 @@ theorem two_gt_one : (2:ℚ) > 1 :=
 Conversion between integers and rationals preserves the _less than or
 equivalent to_ relation.
 -/
-theorem le_respects_from_integer {a b : ℤ} : a ≤ b ↔ (a:ℚ) ≤ (b:ℚ) := by
-  have lift_neqv {c₁ c₂ d : ℤ} : c₁ ≃ c₂ → (c₁ ≄ d ↔ c₂ ≄ d ) :=
-    Rel.iff_subst_eqv AA.neqv_substL
-  have : sgn (a-b) ≃ sgn ((a:ℚ)-(b:ℚ)) := sgn_diff_respects_from_integer
-  calc
-    _ ↔ a ≤ b                   := Iff.rfl
-    -- ↓ begin key lines ↓
-    _ ↔ sgn (a - b) ≄ 1         := Integer.le_sgn
-    _ ↔ sgn ((a:ℚ) - (b:ℚ)) ≄ 1 := lift_neqv ‹sgn (a-b) ≃ sgn ((a:ℚ)-(b:ℚ))›
-    -- ↑  end key lines  ↑
-    _ ↔ (a:ℚ) ≤ (b:ℚ)           := le_sgn.symm
+theorem le_respects_from_integer {a b : ℤ} : a ≤ b ↔ (a:ℚ) ≤ (b:ℚ) := calc
+  _ ↔ a ≤ b                   := Iff.rfl
+  -- ↓ begin key lines ↓
+  _ ↔ sgn (a - b) ≄ 1         := Integer.le_sgn
+  _ ↔ sgn ((a - b : ℤ):ℚ) ≄ 1 := by srw [←sgn_from_integer]
+  _ ↔ sgn ((a:ℚ) - (b:ℚ)) ≄ 1 := by srw [sub_compat_from_integer]
+  -- ↑  end key lines  ↑
+  _ ↔ (a:ℚ) ≤ (b:ℚ)           := le_sgn.symm
 
 /--
 One is greater than or equivalent to zero in the rationals.
@@ -542,12 +492,13 @@ on rational numbers.
 **Proof intuition**: Expand _less than_ into its `sgn`-of-difference form;
 those operations allow substitution so _less than_ does as well.
 -/
+@[gcongr]
 theorem lt_substL_eqv {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → p₁ < q → p₂ < q := by
   intro (_ : p₁ ≃ p₂) (_ : p₁ < q)
   show p₂ < q
   have : sgn (p₁ - q) ≃ -1 := lt_sgn.mp ‹p₁ < q›
   have : sgn (p₂ - q) ≃ -1 := calc
-    sgn (p₂ - q) ≃ _ := sgn_subst (sub_substL (eqv_symm ‹p₁ ≃ p₂›))
+    sgn (p₂ - q) ≃ _ := by srw [←‹p₁ ≃ p₂›]
     sgn (p₁ - q) ≃ _ := ‹sgn (p₁ - q) ≃ -1›
     (-1)         ≃ _ := Rel.refl
   have : p₂ < q := lt_sgn.mpr this
@@ -560,7 +511,7 @@ _less than_.
 theorem trans_eqv_lt_lt {p₁ p₂ q : ℚ} : p₂ ≃ p₁ → p₁ < q → p₂ < q := by
   intro (_ : p₂ ≃ p₁) (_ : p₁ < q)
   show p₂ < q
-  exact lt_substL_eqv (eqv_symm ‹p₂ ≃ p₁›) ‹p₁ < q›
+  prw [←‹p₂ ≃ p₁›] ‹p₁ < q›
 
 instance trans_eqv_lt_lt_inst : Trans (α := ℚ) (· ≃ ·) (· < ·) (· < ·) := {
   trans := trans_eqv_lt_lt
@@ -575,12 +526,13 @@ on rational numbers.
 **Proof intuition**: Expand _less than_ into its `sgn`-of-difference form;
 those operations allow substitution so _less than_ does as well.
 -/
+@[gcongr]
 theorem lt_substR_eqv {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → q < p₁ → q < p₂ := by
   intro (_ : p₁ ≃ p₂) (_ : q < p₁)
   show q < p₂
   have : sgn (q - p₁) ≃ -1 := lt_sgn.mp ‹q < p₁›
   have : sgn (q - p₂) ≃ -1 := calc
-    sgn (q - p₂) ≃ _ := sgn_subst (sub_substR (eqv_symm ‹p₁ ≃ p₂›))
+    sgn (q - p₂) ≃ _ := by srw [←‹p₁ ≃ p₂›]
     sgn (q - p₁) ≃ _ := ‹sgn (q - p₁) ≃ -1›
     (-1)         ≃ _ := Rel.refl
   have : q < p₂ := lt_sgn.mpr this
@@ -593,7 +545,7 @@ equivalence.
 theorem trans_lt_eqv_lt {p₁ p₂ q : ℚ} : q < p₁ → p₁ ≃ p₂ → q < p₂ := by
   intro (_ : q < p₁) (_ : p₁ ≃ p₂)
   show q < p₂
-  exact lt_substR_eqv ‹p₁ ≃ p₂› ‹q < p₁›
+  prw [‹p₁ ≃ p₂›] ‹q < p₁›
 
 instance trans_lt_eqv_lt_inst : Trans (α := ℚ) (· < ·) (· ≃ ·) (· < ·) := {
   trans := trans_lt_eqv_lt
@@ -636,13 +588,13 @@ valid relation on rational numbers.
 `sgn`-of-difference form; those operations allow substitution so
 _less than or equivalent to_ does as well.
 -/
+@[gcongr]
 theorem le_substL_eqv {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → p₁ ≤ q → p₂ ≤ q := by
   intro (_ : p₁ ≃ p₂) (_ : p₁ ≤ q)
   show p₂ ≤ q
   have : sgn (p₁ - q) ≄ 1 := le_sgn.mp ‹p₁ ≤ q›
-  have : sgn (p₁ - q) ≃ sgn (p₂ - q) := sgn_subst (sub_substL ‹p₁ ≃ p₂›)
-  have : sgn (p₂ - q) ≄ 1 := AA.neqv_substL this ‹sgn (p₁ - q) ≄ 1›
-  have : p₂ ≤ q := le_sgn.mpr this
+  have : sgn (p₂ - q) ≄ 1 := by prw [‹p₁ ≃ p₂›] this
+  have : p₂ ≤ q           := le_sgn.mpr this
   exact this
 
 /--
@@ -652,7 +604,7 @@ _less than or equivalent to_.
 theorem trans_eqv_le_le {p₁ p₂ q : ℚ} : p₂ ≃ p₁ → p₁ ≤ q → p₂ ≤ q := by
   intro (_ : p₂ ≃ p₁) (_ : p₁ ≤ q)
   show p₂ ≤ q
-  exact le_substL_eqv (eqv_symm ‹p₂ ≃ p₁›) ‹p₁ ≤ q›
+  prw [←‹p₂ ≃ p₁›] ‹p₁ ≤ q›
 
 instance trans_eqv_le_le_inst : Trans (α := ℚ) (· ≃ ·) (· ≤ ·) (· ≤ ·) := {
   trans := trans_eqv_le_le
@@ -669,12 +621,12 @@ valid relation on rational numbers.
 `sgn`-of-difference form; those operations allow substitution so
 _less than or equivalent to_ does as well.
 -/
+@[gcongr]
 theorem le_substR_eqv {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → q ≤ p₁ → q ≤ p₂ := by
   intro (_ : p₁ ≃ p₂) (_ : q ≤ p₁)
   show q ≤ p₂
   have : sgn (q - p₁) ≄ 1 := le_sgn.mp ‹q ≤ p₁›
-  have : sgn (q - p₁) ≃ sgn (q - p₂) := sgn_subst (sub_substR ‹p₁ ≃ p₂›)
-  have : sgn (q - p₂) ≄ 1 := AA.neqv_substL this ‹sgn (q - p₁) ≄ 1›
+  have : sgn (q - p₂) ≄ 1 := by prw [‹p₁ ≃ p₂›] ‹sgn (q - p₁) ≄ 1›
   have : q ≤ p₂ := le_sgn.mpr this
   exact this
 
@@ -685,7 +637,7 @@ _less than or equivalent to_ and equivalence.
 theorem trans_le_eqv_le {p₁ p₂ q : ℚ} : q ≤ p₁ → p₁ ≃ p₂ → q ≤ p₂ := by
   intro (_ : q ≤ p₁) (_ : p₁ ≃ p₂)
   show q ≤ p₂
-  exact le_substR_eqv ‹p₁ ≃ p₂› ‹q ≤ p₁›
+  prw [‹p₁ ≃ p₂›] ‹q ≤ p₁›
 
 instance trans_le_eqv_le_inst : Trans (α := ℚ) (· ≤ ·) (· ≃ ·) (· ≤ ·) := {
   trans := trans_le_eqv_le
@@ -718,6 +670,26 @@ instance trans_ge_eqv_ge_inst : Trans (α := ℚ) (· ≥ ·) (· ≃ ·) (· �
 }
 
 /--
+The left-hand side of a _less than or equivalent to_ relation can be replaced
+by an equivalent value, bidirectionally.
+-/
+@[gcongr]
+theorem iff_substL_le {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → (p₁ ≤ q ↔ p₂ ≤ q) := by
+  intro (_ : p₁ ≃ p₂)
+  show p₁ ≤ q ↔ p₂ ≤ q
+  exact Iff.intro (by prw [‹p₁ ≃ p₂›] ·) (by prw [←‹p₁ ≃ p₂›] ·)
+
+/--
+The right-hand side of a _less than or equivalent to_ relation can be replaced
+by an equivalent value, bidirectionally.
+-/
+@[gcongr]
+theorem iff_substR_le {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → (q ≤ p₁ ↔ q ≤ p₂) := by
+  intro (_ : p₁ ≃ p₂)
+  show q ≤ p₁ ↔ q ≤ p₂
+  exact Iff.intro (by prw [‹p₁ ≃ p₂›] ·) (by prw [←‹p₁ ≃ p₂›] ·)
+
+/--
 The _less than or equivalent to_ relation on rational numbers is antisymmetric.
 
 **Property and proof intuition**: Two numbers can't be both less than and
@@ -742,28 +714,24 @@ theorem le_antisymm {p q : ℚ} : p ≤ q → q ≤ p → p ≃ q := by
     exact ‹p ≃ q›
 
 /--
-Add the same value on the right to both operands of
+Add the same value on the left to both operands of
 _less than or equivalent to_.
 
 **Property intuition**: Shifting two values by the same amount doesn't change
 their relative ordering.
 
-**Proof intuition**: Express the order relations in the hypothesis and the goal
-via their `sgn`-based definitions. Show that they are equivalent using algebra
-and substitution.
+**Proof intuition**: Express the order relations on both sides of the iff via
+their `sgn`-based definitions. Show that they are equivalent using algebra and
+substitution.
 -/
-theorem le_substL_add {p₁ p₂ q : ℚ} : p₁ ≤ p₂ → p₁ + q ≤ p₂ + q := by
-  intro (_ : p₁ ≤ p₂)
-  show p₁ + q ≤ p₂ + q
-  have : sgn (p₁ - p₂) ≄ 1 := le_sgn.mp ‹p₁ ≤ p₂›
-  have : sgn ((p₁ + q) - (p₂ + q)) ≃ sgn (p₁ - p₂) := sgn_subst sub_cancelR_add
-  have : sgn ((p₁ + q) - (p₂ + q)) ≄ 1 :=
-    AA.neqv_substL (Rel.symm this) ‹sgn (p₁ - p₂) ≄ 1›
-  have : p₁ + q ≤ p₂ + q := le_sgn.mpr this
-  exact this
+theorem le_addL_iff {p₁ p₂ q : ℚ} : p₁ ≤ p₂ ↔ q + p₁ ≤ q + p₂ := calc
+  _ ↔ p₁ ≤ p₂                       := Iff.rfl
+  _ ↔ sgn (p₁ - p₂) ≄ 1             := le_sgn
+  _ ↔ sgn ((q + p₁) - (q + p₂)) ≄ 1 := by srw [←sub_cancelL_add]
+  _ ↔ q + p₁ ≤ q + p₂               := le_sgn.symm
 
 /--
-Add the same value on the left to both operands of
+Add the same value on the right to both operands of
 _less than or equivalent to_.
 
 **Property intuition**: Shifting two values by the same amount doesn't change
@@ -772,14 +740,18 @@ their relative ordering.
 **Proof intuition**: Follows from the opposite-handed version because addition
 is commutative.
 -/
-theorem le_substR_add {p₁ p₂ q : ℚ} : p₁ ≤ p₂ → q + p₁ ≤ q + p₂ := by
-  intro (_ : p₁ ≤ p₂)
-  show q + p₁ ≤ q + p₂
-  calc
-    _ ≃ q + p₁ := eqv_refl
-    _ ≃ p₁ + q := add_comm
-    _ ≤ p₂ + q := le_substL_add ‹p₁ ≤ p₂›
-    _ ≃ q + p₂ := add_comm
+theorem le_addR_iff {p₁ p₂ q : ℚ} : p₁ ≤ p₂ ↔ p₁ + q ≤ p₂ + q := calc
+  _ ↔ p₁ ≤ p₂         := Iff.rfl
+  _ ↔ q + p₁ ≤ q + p₂ := le_addL_iff
+  _ ↔ p₁ + q ≤ p₂ + q := by srw [add_comm, add_comm]
+
+/-- Corollary of `le_addR_iff` that's useful for congruence tactics. -/
+@[gcongr]
+abbrev le_substL_add {p₁ p₂ q : ℚ} : p₁ ≤ p₂ → p₁ + q ≤ p₂ + q := le_addR_iff.mp
+
+/-- Corollary of `le_addL_iff` that's useful for congruence tactics. -/
+@[gcongr]
+abbrev le_substR_add {p₁ p₂ q : ℚ} : p₁ ≤ p₂ → q + p₁ ≤ q + p₂ := le_addL_iff.mp
 
 /--
 Add the same value on the right to both operands of _less than_.
@@ -791,14 +763,15 @@ their relative ordering.
 via their `sgn`-based definitions. Show that they are equivalent using algebra
 and substitution.
 -/
+@[gcongr]
 theorem lt_substL_add {p₁ p₂ q : ℚ} : p₁ < p₂ → p₁ + q < p₂ + q := by
   intro (_ : p₁ < p₂)
   show p₁ + q < p₂ + q
-  have : sgn (p₁ - p₂) ≃ -1 := lt_sgn.mp ‹p₁ < p₂›
-  have : sgn ((p₁ + q) - (p₂ + q)) ≃ sgn (p₁ - p₂) := sgn_subst sub_cancelR_add
-  have : sgn ((p₁ + q) - (p₂ + q)) ≃ -1 :=
-    AA.eqv_substL (Rel.symm this) ‹sgn (p₁ - p₂) ≃ -1›
-  have : p₁ + q < p₂ + q := lt_sgn.mpr this
+  have : sgn ((p₁ + q) - (p₂ + q)) ≃ -1 := calc
+    _ = sgn ((p₁ + q) - (p₂ + q)) := rfl
+    _ ≃ sgn (p₁ - p₂)             := by srw [sub_cancelR_add]
+    _ ≃ -1                        := lt_sgn.mp ‹p₁ < p₂›
+  have : p₁ + q < p₂ + q := lt_sgn.mpr ‹sgn ((p₁ + q) - (p₂ + q)) ≃ -1›
   exact this
 
 /--
@@ -810,13 +783,14 @@ their relative ordering.
 **Proof intuition**: Follows from the opposite-handed version because addition
 is commutative.
 -/
+@[gcongr]
 theorem lt_substR_add {p₁ p₂ q : ℚ} : p₁ < p₂ → q + p₁ < q + p₂ := by
   intro (_ : p₁ < p₂)
   show q + p₁ < q + p₂
   calc
     _ ≃ q + p₁ := eqv_refl
     _ ≃ p₁ + q := add_comm
-    _ < p₂ + q := lt_substL_add ‹p₁ < p₂›
+    _ < p₂ + q := by srw [‹p₁ < p₂›]
     _ ≃ q + p₂ := add_comm
 
 /--
@@ -833,12 +807,11 @@ theorem lt_substL_mul_pos {p q r : ℚ} : r > 0 → p < q → p * r < q * r := b
   intro (_ : r > 0) (_ : p < q)
   show p * r < q * r
   have : sgn r ≃ 1 := gt_zero_sgn.mp ‹r > 0›
-  have : sgn (p - q) ≃ -1 := lt_sgn.mp ‹p < q›
-  have : sgn (p * r - q * r) ≃ sgn (p - q) :=
-    sgn_sub_cancelR_mul_pos ‹sgn r ≃ 1›
-  have : sgn (p * r - q * r) ≃ -1 :=
-    AA.eqv_substL (Rel.symm this) ‹sgn (p - q) ≃ -1›
-  have : p * r < q * r := lt_sgn.mpr this
+  have : sgn (p * r - q * r) ≃ -1 := calc
+    _ = sgn (p * r - q * r) := rfl
+    _ ≃ sgn (p - q)         := sgn_sub_cancelR_mul_pos ‹sgn r ≃ 1›
+    _ ≃ -1                  := lt_sgn.mp ‹p < q›
+  have : p * r < q * r := lt_sgn.mpr ‹sgn (p * r - q * r) ≃ -1›
   exact this
 
 /--
@@ -870,16 +843,15 @@ them across zero.
 via their `sgn`-based definitions. Show that they are equivalent using algebra
 and substitution.
 -/
-theorem lt_substL_mul_neg {p q r : ℚ} : r < 0 → p < q → q * r < p * r := by
+theorem lt_substL_mul_neg {p q r : ℚ} : r < 0 → q > p → q * r < p * r := by
   intro (_ : r < 0) (_ : p < q)
   show q * r < p * r
   have : sgn r ≃ -1 := lt_zero_sgn.mp ‹r < 0›
-  have : sgn (p - q) ≃ -1 := lt_sgn.mp ‹p < q›
-  have : sgn (q * r - p * r) ≃ sgn (p - q) :=
-    sgn_sub_cancelR_mul_neg ‹sgn r ≃ -1›
-  have : sgn (q * r - p * r) ≃ -1 :=
-    AA.eqv_substL (Rel.symm this) ‹sgn (p - q) ≃ -1›
-  have : q * r < p * r := lt_sgn.mpr this
+  have : sgn (q * r - p * r) ≃ -1 := calc
+    _ = sgn (q * r - p * r) := rfl
+    _ ≃ sgn (p - q)         := sgn_sub_cancelR_mul_neg ‹sgn r ≃ -1›
+    _ ≃ -1                  := lt_sgn.mp ‹p < q›
+  have : q * r < p * r := lt_sgn.mpr ‹sgn (q * r - p * r) ≃ -1›
   exact this
 
 /--
@@ -917,11 +889,9 @@ theorem le_substL_mul_pos {p q r : ℚ} : r > 0 → p ≤ q → p * r ≤ q * r 
   show p * r ≤ q * r
   have : sgn r ≃ 1 := gt_zero_sgn.mp ‹r > 0›
   have : sgn (p - q) ≄ 1 := le_sgn.mp ‹p ≤ q›
-  have : sgn (p * r - q * r) ≃ sgn (p - q) :=
-    sgn_sub_cancelR_mul_pos ‹sgn r ≃ 1›
   have : sgn (p * r - q * r) ≄ 1 :=
-    AA.neqv_substL (Rel.symm this) ‹sgn (p - q) ≄ 1›
-  have : p * r ≤ q * r := le_sgn.mpr this
+    by prw [←sgn_sub_cancelR_mul_pos ‹sgn r ≃ 1›] this
+  have : p * r ≤ q * r := le_sgn.mpr ‹sgn (p * r - q * r) ≄ 1›
   exact this
 
 /--
@@ -960,14 +930,13 @@ theorem le_substL_mul_nonneg {p q r : ℚ} : r ≥ 0 → p ≤ q → p * r ≤ q
     have : p * r ≤ q * r := le_substL_mul_pos ‹r > 0› ‹p ≤ q›
     exact this
   | Or.inr (_ : r ≃ 0) =>
-    have : p * r ≃ q * r := calc
-      _ ≃ p * r := eqv_refl
-      _ ≃ p * 0 := mul_substR ‹r ≃ 0›
+    calc
+      _ = p * r := rfl
+      _ ≃ p * 0 := by srw [‹r ≃ 0›]
       _ ≃ 0     := mul_absorbR
       _ ≃ q * 0 := eqv_symm mul_absorbR
-      _ ≃ q * r := mul_substR (eqv_symm ‹r ≃ 0›)
-    have : p * r ≤ q * r := le_cases.mpr (Or.inr ‹p * r ≃ q * r›)
-    exact this
+      _ ≃ q * r := by srw [←‹r ≃ 0›]
+      _ ≤ q * r := le_refl
 
 /--
 Multiply both operands of _less than or equivalent to_ by the same nonnegative
@@ -1001,10 +970,8 @@ theorem le_substL_mul_neg {p q r : ℚ} : r < 0 → p ≤ q → q * r ≤ p * r 
   show q * r ≤ p * r
   have : sgn r ≃ -1 := lt_zero_sgn.mp ‹r < 0›
   have : sgn (p - q) ≄ 1 := le_sgn.mp ‹p ≤ q›
-  have : sgn (q * r - p * r) ≃ sgn (p - q) :=
-    sgn_sub_cancelR_mul_neg ‹sgn r ≃ -1›
   have : sgn (q * r - p * r) ≄ 1 :=
-    AA.neqv_substL (Rel.symm this) ‹sgn (p - q) ≄ 1›
+    by prw [←sgn_sub_cancelR_mul_neg ‹sgn r ≃ -1›] this
   have : q * r ≤ p * r := le_sgn.mpr this
   exact this
 
@@ -1043,6 +1010,7 @@ Negate both operands of _less than_, reversing their ordering.
 **Property and proof intuition**: Follows directly from the substitution
 property on _less than_ for multiplication by negative one.
 -/
+@[gcongr]
 theorem lt_subst_neg {p₁ p₂ : ℚ} : p₁ < p₂ → -p₂ < -p₁ := by
   intro (_ : p₁ < p₂)
   show -p₂ < -p₁
@@ -1058,6 +1026,7 @@ Negate both operands of _less than or equivalent to_, reversing their ordering.
 **Property and proof intuition**: Follows directly from the substitution
 property on _less than or equivalent to_ for multiplication by negative one.
 -/
+@[gcongr]
 theorem le_subst_neg {p₁ p₂ : ℚ} : p₁ ≤ p₂ → -p₂ ≤ -p₁ := by
   intro (_ : p₁ ≤ p₂)
   show -p₂ ≤ -p₁
@@ -1087,46 +1056,38 @@ theorem mul_sgn_self_max {p q : ℚ} : p * sgn q ≤ p * sgn p := by
   intro (_ : sgn (p * sgn q - p * sgn p) ≃ 1)
   show False
 
-  have : sgn (sgn q - sgn p) * sgn p ≃ sgn (p * sgn q - p * sgn p) := calc
-    sgn (sgn q - sgn p) * sgn p
-      ≃ _ := AA.comm
-    sgn p * sgn (sgn q - sgn p)
-      ≃ _ := AA.substR (Rel.symm sgn_from_integer)
-    sgn p * sgn ((sgn q - sgn p : ℤ) : ℚ)
-      ≃ _ := Rel.symm sgn_compat_mul
-    sgn (p * ((sgn q - sgn p : ℤ) : ℚ))
-      ≃ _ := sgn_subst (mul_substR sub_compat_from_integer)
-    sgn (p * ((sgn q : ℚ) - (sgn p : ℚ)))
-      ≃ _ := sgn_subst mul_distribL_sub
-    sgn (p * sgn q - p * sgn p)
-      ≃ _ := Rel.refl
-  have : sgn (sgn q - sgn p) * sgn p ≃ 1 :=
-    Rel.trans this ‹sgn (p * sgn q - p * sgn p) ≃ 1›
+  have : sgn (sgn q - sgn p) * sgn p ≃ 1 := calc
+    _ = sgn (sgn q - sgn p) * sgn p         := rfl
+    _ ≃ sgn p * sgn (sgn q - sgn p)         := AA.comm
+    _ ≃ sgn p * sgn ((sgn q - sgn p : ℤ):ℚ) := by srw [←sgn_from_integer]
+    _ ≃ sgn (p * ((sgn q - sgn p : ℤ):ℚ))   := Rel.symm sgn_compat_mul
+    _ ≃ sgn (p * ((sgn q:ℚ) - (sgn p:ℚ)))   := by srw [sub_compat_from_integer]
+    _ ≃ sgn (p * sgn q - p * sgn p)         := by srw [mul_distribL_sub]
+    _ ≃ 1                                   := ‹sgn (p * sgn q - p * sgn p) ≃ 1›
 
-  have sqrt1_and_eqv := Integer.mul_sqrt1_eqv.mp this
+  have sqrt1_and_eqv :=
+    Integer.mul_sqrt1_eqv.mp ‹sgn (sgn q - sgn p) * sgn p ≃ 1›
   have : Integer.Sqrt1 (sgn p) := sqrt1_and_eqv.left
   have : sgn (sgn q - sgn p) ≃ sgn p := sqrt1_and_eqv.right
   have : sgn p ≃ 1 ∨ sgn p ≃ -1 :=
     Integer.sqrt1_cases.mp ‹Integer.Sqrt1 (sgn p)›
 
-  match this with
+  match ‹sgn p ≃ 1 ∨ sgn p ≃ -1› with
   | Or.inl (_ : sgn p ≃ 1) =>
-    have : 1 ≃ sgn p := Rel.symm ‹sgn p ≃ 1›
     have : sgn (sgn q - 1) ≃ 1 := calc
-      sgn (sgn q - 1)     ≃ _ := Integer.sgn_subst (Integer.sub_substR this)
-      sgn (sgn q - sgn p) ≃ _ := ‹sgn (sgn q - sgn p) ≃ sgn p›
-      sgn p               ≃ _ := ‹sgn p ≃ 1›
-      1                   ≃ _ := Rel.refl
-    have : sgn q > 1 := Integer.gt_sgn.mpr this
+      _ = sgn (sgn q - 1)     := rfl
+      _ ≃ sgn (sgn q - sgn p) := by srw [←‹sgn p ≃ 1›]
+      _ ≃ sgn p               := ‹sgn (sgn q - sgn p) ≃ sgn p›
+      _ ≃ 1                   := ‹sgn p ≃ 1›
+    have : sgn q > 1 := Integer.gt_sgn.mpr ‹sgn (sgn q - 1) ≃ 1›
     have : sgn q ≤ 1 := sgn_max
     exact Integer.le_gt_false this ‹sgn q > 1›
   | Or.inr (_ : sgn p ≃ -1) =>
-    have : -1 ≃ sgn p := Rel.symm ‹sgn p ≃ -1›
     have : sgn (sgn q - (-1)) ≃ -1 := calc
-      sgn (sgn q - (-1))  ≃ _ := Integer.sgn_subst (Integer.sub_substR this)
-      sgn (sgn q - sgn p) ≃ _ := ‹sgn (sgn q - sgn p) ≃ sgn p›
-      sgn p               ≃ _ := ‹sgn p ≃ -1›
-      (-1)                ≃ _ := Rel.refl
+      _ = sgn (sgn q - (-1))  := rfl
+      _ ≃ sgn (sgn q - sgn p) := by srw [←‹sgn p ≃ -1›]
+      _ ≃ sgn p               := ‹sgn (sgn q - sgn p) ≃ sgn p›
+      _ ≃ (-1)                := ‹sgn p ≃ -1›
     have : sgn q < -1 := Integer.lt_sgn.mpr this
     have : sgn q ≥ -1 := sgn_min
     exact Integer.lt_ge_false ‹sgn q < -1› this
@@ -1138,32 +1099,12 @@ argument.
 **Property and proof intuition**: The second argument of the difference can be
 moved to the other side of the ordering relation via algebra.
 -/
-theorem le_diff_lower {ε p q : ℚ} : -ε ≤ q - p ↔ p - ε ≤ q := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : -ε ≤ q - p)
-    show p - ε ≤ q
-    calc
-      _ ≃ p - ε          := eqv_refl
-      _ ≃ p + (-ε)       := sub_add_neg
-      _ ≤ p + (q - p)    := le_substR_add ‹-ε ≤ q - p›
-      _ ≃ p + (q + (-p)) := add_substR sub_add_neg
-      _ ≃ p + ((-p) + q) := add_substR add_comm
-      _ ≃ (p + (-p)) + q := eqv_symm add_assoc
-      _ ≃ 0 + q          := add_substL add_inverseR
-      _ ≃ q              := add_identL
-  case mpr =>
-    intro (_ : p - ε ≤ q)
-    show -ε ≤ q - p
-    calc
-      _ ≃ -ε              := eqv_refl
-      _ ≃ 0 + (-ε)        := eqv_symm add_identL
-      _ ≃ (-p + p) + (-ε) := add_substL (eqv_symm add_inverseL)
-      _ ≃ -p + (p + (-ε)) := add_assoc
-      _ ≃ -p + (p - ε)    := add_substR (eqv_symm sub_add_neg)
-      _ ≤ -p + q          := le_substR_add ‹p-ε ≤ q›
-      _ ≃ q + (-p)        := add_comm
-      _ ≃ q - p           := eqv_symm sub_add_neg
+theorem le_diff_lower {ε p q : ℚ} : -ε ≤ q - p ↔ p - ε ≤ q := calc
+  _ ↔     -ε ≤ q - p      := Iff.rfl
+  _ ↔     -ε ≤ q + -p     := by srw [sub_add_neg]
+  _ ↔ -ε + p ≤ q + -p + p := le_addR_iff
+  _ ↔ -ε + p ≤ q          := by srw [add_assoc, add_inverseL, add_identR]
+  _ ↔  p - ε ≤ q          := by srw [add_comm, ←sub_add_neg]
 
 /--
 A lemma rewriting a difference's upper bound into an upper bound on its first
@@ -1172,30 +1113,12 @@ argument.
 **Property and proof intuition**: The second argument of the difference can be
 moved to the other side of the ordering relation via algebra.
 -/
-theorem le_diff_upper {ε p q : ℚ} : q - p ≤ ε ↔ q ≤ p + ε := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : q - p ≤ ε)
-    show q ≤ p + ε
-    calc
-      _ ≃ q              := eqv_refl
-      _ ≃ q + 0          := eqv_symm add_identR
-      _ ≃ q + ((-p) + p) := add_substR (eqv_symm add_inverseL)
-      _ ≃ (q + (-p)) + p := eqv_symm add_assoc
-      _ ≃ (q - p) + p    := add_substL (eqv_symm sub_add_neg)
-      _ ≤ ε + p          := le_substL_add ‹q - p ≤ ε›
-      _ ≃ p + ε          := add_comm
-  case mpr =>
-    intro (_ : q ≤ p + ε)
-    show q - p ≤ ε
-    calc
-      _ ≃ q - p          := eqv_refl
-      _ ≃ q + (-p)       := sub_add_neg
-      _ ≤ (p + ε) + (-p) := le_substL_add ‹q ≤ p+ε›
-      _ ≃ (ε + p) + (-p) := add_substL add_comm
-      _ ≃ ε + (p + (-p)) := add_assoc
-      _ ≃ ε + 0          := add_substR add_inverseR
-      _ ≃ ε              := add_identR
+theorem le_diff_upper {ε p q : ℚ} : q - p ≤ ε ↔ q ≤ p + ε := calc
+  _ ↔      q - p ≤ ε     := Iff.rfl
+  _ ↔     q + -p ≤ ε     := by srw [sub_add_neg]
+  _ ↔ q + -p + p ≤ ε + p := le_addR_iff
+  _ ↔          q ≤ ε + p := by srw [add_assoc, add_inverseL, add_identR]
+  _ ↔          q ≤ p + ε := by srw [add_comm]
 
 variable [Reciprocation ℚ] [Division ℚ]
 
@@ -1221,20 +1144,14 @@ theorem sgn_sub_recip
     := by
   intro _ _ (_ : AP (p ≄ 0)) (_ : AP (q ≄ 0))
   show sgn (p⁻¹ - q⁻¹) ≃ sgn (q - p)
-
-  have sub_recips : p⁻¹ - q⁻¹ ≃ (q - p)/(p * q) := calc
-    _ = p⁻¹ - q⁻¹               := rfl
-    _ ≃ 1/p - q⁻¹               := sub_substL (eqv_symm div_identL)
-    _ ≃ 1/p - 1/q               := sub_substR (eqv_symm div_identL)
-    _ ≃ (1 * q - p * 1)/(p * q) := sub_fractions
-    _ ≃ (q - p * 1)/(p * q)     := div_substL (sub_substL mul_identL)
-    _ ≃ (q - p)/(p * q)         := div_substL (sub_substR mul_identR)
   calc
-    _ = sgn (p⁻¹ - q⁻¹)           := rfl
-    _ ≃ sgn ((q - p)/(p * q))     := sgn_subst sub_recips
-    _ ≃ sgn (q - p) * sgn (p * q) := sgn_div
-    _ ≃ sgn (q - p) * 1           := AA.substR (gt_zero_sgn.mp ‹p * q > 0›)
-    _ ≃ sgn (q - p)               := AA.identR
+    _ = sgn (p⁻¹ - q⁻¹)               := rfl
+    _ ≃ sgn (1/p - 1/q)               := by srw [←div_identL, ←div_identL]
+    _ ≃ sgn ((1 * q - p * 1)/(p * q)) := by srw [sub_fractions]
+    _ ≃ sgn ((q - p)/(p * q))         := by srw [mul_identL, mul_identR]
+    _ ≃ sgn (q - p) * sgn (p * q)     := sgn_div
+    _ ≃ sgn (q - p) * 1               := by srw [gt_zero_sgn.mp ‹p * q > 0›]
+    _ ≃ sgn (q - p)                   := AA.identR
 
 variable [Induction.{1} ℚ]
 
@@ -1335,7 +1252,7 @@ theorem lt_trans {p q r : ℚ} : p < q → q < r → p < r := by
   have : sgn ((p - q) + (q - r)) ≃ -1 :=
     add_preserves_sign ‹sgn (p - q) ≃ -1› ‹sgn (q - r) ≃ -1›
   have : sgn (p - r) ≃ -1 := calc
-    sgn (p - r)             ≃ _ := sgn_subst (eqv_symm add_sub_telescope)
+    sgn (p - r)             ≃ _ := by srw [←add_sub_telescope]
     sgn ((p - q) + (q - r)) ≃ _ := ‹sgn ((p - q) + (q - r)) ≃ -1›
     (-1)                    ≃ _ := Rel.refl
   have : p < r := lt_sgn.mpr ‹sgn (p - r) ≃ -1›
@@ -1420,7 +1337,7 @@ theorem trans_lt_le_lt {p q r : ℚ} : p < q → q ≤ r → p < r := by
     have : p < r := lt_trans ‹p < q› ‹q < r›
     exact this
   | Or.inr (_ : q ≃ r) =>
-    have : p < r := lt_substR_eqv ‹q ≃ r› ‹p < q›
+    have : p < r := by prw [‹q ≃ r›] ‹p < q›
     exact this
 
 instance trans_lt_le_lt_inst : Trans (α := ℚ) (· < ·) (· ≤ ·) (· < ·) := {
@@ -1444,7 +1361,7 @@ theorem trans_le_lt_lt {p q r : ℚ} : p ≤ q → q < r → p < r := by
     have : p < r := lt_trans ‹p < q› ‹q < r›
     exact this
   | Or.inr (_ : p ≃ q) =>
-    have : p < r := lt_substL_eqv (eqv_symm ‹p ≃ q›) ‹q < r›
+    have : p < r := by prw [←‹p ≃ q›] ‹q < r›
     exact this
 
 instance trans_le_lt_lt_inst : Trans (α := ℚ) (· ≤ ·) (· < ·) (· < ·) := {
@@ -1487,7 +1404,7 @@ theorem trans_gt_ge_gt {p q r : ℚ} : p > q → q ≥ r → p > r := by
     have : p > r := gt_trans ‹p > q› ‹q > r›
     exact this
   | Or.inr (_ : q ≃ r) =>
-    have : p > r := lt_substL_eqv ‹q ≃ r› ‹p > q›
+    have : r < p := by prw [‹q ≃ r›] ‹q < p›
     exact this
 
 instance trans_gt_ge_gt_inst : Trans (α := ℚ) (· > ·) (· ≥ ·) (· > ·) := {
@@ -1511,7 +1428,7 @@ theorem trans_ge_gt_gt {p q r : ℚ} : p ≥ q → q > r → p > r := by
     have : p > r := gt_trans ‹p > q› ‹q > r›
     exact this
   | Or.inr (_ : p ≃ q) =>
-    have : p > r := lt_substR_eqv (eqv_symm ‹p ≃ q›) ‹q > r›
+    have : r < p := by prw [←‹p ≃ q›] ‹r < q›
     exact this
 
 instance trans_ge_gt_gt_inst : Trans (α := ℚ) (· ≥ ·) (· > ·) (· > ·) := {
@@ -1535,11 +1452,11 @@ theorem lt_substN_div_pos
     := by
   intro (_ : AP (r ≄ 0)) (_ : p < q)
   show p/r < q/r
-  have : sgn (p - q) ≃ -1 := lt_sgn.mp ‹p < q›
-  have : sgn (p/r - q/r) ≃ sgn (p - q) := sgn_sub_cancelR_div_pos ‹sgn r ≃ 1›
-  have : sgn (p/r - q/r) ≃ -1 :=
-    AA.eqv_substL (Rel.symm this) ‹sgn (p - q) ≃ -1›
-  have : p/r < q/r := lt_sgn.mpr this
+  have : sgn (p/r - q/r) ≃ -1 := calc
+    _ = sgn (p/r - q/r) := rfl
+    _ ≃ sgn (p - q)     := sgn_sub_cancelR_div_pos ‹sgn r ≃ 1›
+    _ ≃ -1              := lt_sgn.mp ‹p < q›
+  have : p/r < q/r := lt_sgn.mpr ‹sgn (p/r - q/r) ≃ -1›
   exact this
 
 /--
@@ -1560,11 +1477,11 @@ theorem lt_substD_div_neg
     := by
   intro (_ : AP (r ≄ 0)) (_ : p < q)
   show q/r < p/r
-  have : sgn (p - q) ≃ -1 := lt_sgn.mp ‹p < q›
-  have : sgn (q/r - p/r) ≃ sgn (p - q) := sgn_sub_cancelR_div_neg ‹sgn r ≃ -1›
-  have : sgn (q/r - p/r) ≃ -1 :=
-    AA.eqv_substL (Rel.symm this) ‹sgn (p - q) ≃ -1›
-  have : q/r < p/r := lt_sgn.mpr this
+  have : sgn (q/r - p/r) ≃ -1 := calc
+    _ = sgn (q/r - p/r) := rfl
+    _ ≃ sgn (p - q)     := sgn_sub_cancelR_div_neg ‹sgn r ≃ -1›
+    _ ≃ -1              := lt_sgn.mp ‹p < q›
+  have : q/r < p/r := lt_sgn.mpr ‹sgn (q/r - p/r) ≃ -1›
   exact this
 
 /--
@@ -1587,14 +1504,14 @@ theorem average
   intro (_ : AP ((2:ℚ) ≄ 0)) (_ : p < q)
   show p < (p + q)/2 ∧ (p + q)/2 < q
   have : p < (p + q)/2 := calc
-    _ ≃ p         := eqv_refl
+    _ = p         := rfl
     _ ≃ (2 * p)/2 := eqv_symm mulL_div_same
-    _ ≃ (p + p)/2 := div_substL mul_two_add
-    _ < (p + q)/2 := lt_substN_div_pos sgn_two (lt_substR_add ‹p < q›)
+    _ ≃ (p + p)/2 := by srw [mul_two_add]
+    _ < (p + q)/2 := lt_substN_div_pos sgn_two (by srw [‹p < q›])
   have : (p + q)/2 < q := calc
-    _ ≃ (p + q)/2 := eqv_refl
-    _ < (q + q)/2 := lt_substN_div_pos sgn_two (lt_substL_add ‹p < q›)
-    _ ≃ (2 * q)/2 := div_substL (eqv_symm mul_two_add)
+    _ = (p + q)/2 := rfl
+    _ < (q + q)/2 := lt_substN_div_pos sgn_two (by srw [‹p < q›])
+    _ ≃ (2 * q)/2 := by srw [←mul_two_add]
     _ ≃ q         := mulL_div_same
   exact And.intro ‹p < (p + q)/2› ‹(p + q)/2 < q›
 
@@ -1615,10 +1532,10 @@ theorem halve
   have : p > p/2 := calc
     _ ≃ p         := eqv_refl
     _ > (0 + p)/2 := ‹(0 + p)/2 < p›
-    _ ≃ p/2       := div_substL add_identL
+    _ ≃ p/2       := by srw [add_identL]
   have : p/2 > 0 := calc
     _ ≃ p/2       := eqv_refl
-    _ ≃ (0 + p)/2 := div_substL (eqv_symm add_identL)
+    _ ≃ (0 + p)/2 := by srw [←add_identL]
     _ > 0         := ‹0 < (0 + p)/2›
   exact And.intro ‹p > p/2› ‹p/2 > 0›
 
@@ -1634,7 +1551,7 @@ theorem le_neg_nonneg {p : ℚ} : p ≥ 0 → -p ≤ p := by
   show -p ≤ p
   have : -p ≤ 0 := calc
     _ ≃ -p := eqv_refl
-    _ ≤ -0 := le_subst_neg ‹0 ≤ p›
+    _ ≤ -0 := by srw [‹0 ≤ p›]
     _ ≃ 0  := neg_preserves_zero.mpr eqv_refl
   have : -p ≤ p := le_trans ‹-p ≤ 0› ‹0 ≤ p›
   exact this
@@ -1688,16 +1605,14 @@ theorem as_nonneg_ratio {p : ℚ} : p ≥ 0 → NonnegRatio p := by
   have : p ≃ x/y := p_eqv
   let a := x * sgn y
   let b := y * sgn y
-  have : x * sgn y ≃ a := Rel.symm Rel.refl
-  have : y * sgn y ≃ b := Rel.symm Rel.refl
 
   have : sgn a ≥ 0 := calc
     _ = sgn a               := rfl
     _ = sgn (x * sgn y)     := rfl
     _ ≃ sgn x * sgn (sgn y) := Integer.sgn_compat_mul
-    _ ≃ sgn x * sgn y       := AA.substR Integer.sgn_idemp
+    _ ≃ sgn x * sgn y       := by srw [Integer.sgn_idemp]
     _ ≃ sgn ((x:ℚ)/y)       := Rel.symm sgn_div_integers
-    _ ≃ sgn p               := sgn_subst (eqv_symm ‹p ≃ x/y›)
+    _ ≃ sgn p               := by srw [←‹p ≃ x/y›]
     _ ≥ 0                   := sgn_preserves_ge_zero.mp ‹p ≥ 0›
   have : a ≥ 0 := Integer.sgn_preserves_ge_zero.mpr ‹sgn a ≥ 0›
 
@@ -1706,27 +1621,20 @@ theorem as_nonneg_ratio {p : ℚ} : p ≥ 0 → NonnegRatio p := by
     _ = sgn b               := rfl
     _ = sgn (y * sgn y)     := rfl
     _ ≃ sgn y * sgn (sgn y) := Integer.sgn_compat_mul
-    _ ≃ sgn y * sgn y       := AA.substR Integer.sgn_idemp
+    _ ≃ sgn y * sgn y       := by srw [Integer.sgn_idemp]
     _ ≃ 1                   := ‹Integer.Sqrt1 (sgn y)›.elim
   have : b > 0 := Integer.gt_zero_sgn.mpr ‹sgn b ≃ 1›
 
-  have : (x:ℚ)/y ≃ ((x:ℚ) * sgn y)/(y * sgn y) := calc
-    _ = (x:ℚ)/y                             := rfl
-    _ ≃ ((x:ℚ)/y) * 1                       := eqv_symm mul_identR
-    _ ≃ ((x:ℚ)/y) * (((sgn y:ℤ):ℚ)/(sgn y)) := mul_substR (eqv_symm div_same)
-    _ ≃ ((x:ℚ) * sgn y)/(y * sgn y)         := div_mul_swap
-  have liftQ {c z : ℤ} : z * sgn y ≃ c → (z:ℚ) * sgn y ≃ (c:ℚ) := by
-    intro (_ : z * sgn y ≃ c)
-    calc
-      _ = (z:ℚ) * sgn y       := rfl
-      _ ≃ ((z * sgn y : ℤ):ℚ) := eqv_symm mul_compat_from_integer
-      _ ≃ (c:ℚ)               := from_integer_subst ‹z * sgn y ≃ c›
   have : p ≃ a/b := calc
-    _ = p                           := rfl
-    _ ≃ x/y                         := ‹p ≃ x/y›
-    _ ≃ ((x:ℚ) * sgn y)/(y * sgn y) := ‹(x:ℚ)/y ≃ ((x:ℚ) * sgn y)/(y * sgn y)›
-    _ ≃ (a:ℚ)/(y * sgn y)           := div_substL (liftQ ‹x * sgn y ≃ a›)
-    _ ≃ (a:ℚ)/b                     := div_substR (liftQ ‹y * sgn y ≃ b›)
+    _ = p                                   := rfl
+    _ ≃ x/y                                 := ‹p ≃ x/y›
+    _ ≃ ((x:ℚ)/y) * 1                       := eqv_symm mul_identR
+    _ ≃ ((x:ℚ)/y) * (((sgn y:ℤ):ℚ)/(sgn y)) := by srw [←div_same]
+    _ ≃ ((x:ℚ) * sgn y)/(y * sgn y)         := div_mul_swap
+    _ ≃ ((x * sgn y : ℤ):ℚ)/(y * sgn y)     := by srw [←mul_compat_from_integer]
+    _ = (a:ℚ)/(y * sgn y)                   := rfl
+    _ ≃ (a:ℚ)/((y * sgn y : ℤ):ℚ)           := by srw [←mul_compat_from_integer]
+    _ = (a:ℚ)/b                             := rfl
 
   have : NonnegRatio p := NonnegRatio.intro a b ‹a ≥ 0› ‹b > 0› _ ‹p ≃ a/b›
   exact this

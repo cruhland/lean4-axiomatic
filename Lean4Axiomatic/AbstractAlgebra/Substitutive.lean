@@ -1,5 +1,6 @@
 import Lean4Axiomatic.AbstractAlgebra.Commutative
 import Lean4Axiomatic.AbstractAlgebra.Core
+import Lean4Axiomatic.Tactic.Rewrite
 
 namespace Lean4Axiomatic.AA
 
@@ -575,6 +576,7 @@ bidirectionally.
 **Intuition**: Given `eqv_substL`, symmetry of equivalence means it works in
 the other direction too.
 -/
+@[gcongr]
 theorem eqv_substL_iff
     {α : Sort u} [EqvOp α] {x₁ x₂ y : α} : x₁ ≃ x₂ → (x₁ ≃ y ↔ x₂ ≃ y)
     := by
@@ -601,6 +603,7 @@ bidirectionally.
 **Intuition**: Given `eqv_substR`, symmetry of equivalence means it works in
 the other direction too.
 -/
+@[gcongr]
 theorem eqv_substR_iff
     {α : Sort u} [EqvOp α] {x y₁ y₂ : α} : y₁ ≃ y₂ → (x ≃ y₁ ↔ x ≃ y₂)
     := by
@@ -623,6 +626,7 @@ value.
 with an equivalent term, the right-hand term should still be unequal to the new
 term.
 -/
+@[gcongr]
 theorem neqv_substL
     {α : Sort u} [EqvOp α] {x₁ x₂ y : α} : x₁ ≃ x₂ → x₁ ≄ y → x₂ ≄ y
     := by
@@ -639,6 +643,7 @@ value.
 with an equivalent term, the left-hand term should still be unequal to the new
 term.
 -/
+@[gcongr]
 theorem neqv_substR
     {α : Sort u} [EqvOp α] {x₁ x₂ y : α} : x₁ ≃ x₂ → y ≄ x₁ → y ≄ x₂
     := by
@@ -654,6 +659,64 @@ instance neqv_substitutive
   substitutiveL := { subst₂ := λ (_ : True) => neqv_substL }
   substitutiveR := { subst₂ := λ (_ : True) => neqv_substR }
 }
+
+/-- Negated equivalence is transitive with equivalence on the right. -/
+theorem trans_neqv_eqv
+    {α : Sort u} [EqvOp α] {x y z : α} : x ≄ y → y ≃ z → x ≄ z
+    := by
+  intro (_ : x ≄ y) (_ : y ≃ z)
+  show x ≄ z
+  prw [‹y ≃ z›] ‹x ≄ y›
+
+/-- Enables negated equivalence usage in `calc` tactics. -/
+instance trans_neqv_eqv_inst
+    {α : Sort u} [EqvOp α] : Trans (β := α) (· ≄ ·) (· ≃ ·) (· ≄ ·) := {
+  trans := trans_neqv_eqv
+}
+
+/-- Negated equivalence is transitive with equivalence on the left. -/
+theorem trans_eqv_neqv
+    {α : Sort u} [EqvOp α] {x y z : α} : x ≃ y → y ≄ z → x ≄ z
+    := by
+  intro (_ : x ≃ y) (_ : y ≄ z)
+  show x ≄ z
+  prw [←‹x ≃ y›] ‹y ≄ z›
+
+/-- Enables negated equivalence usage in `calc` tactics. -/
+instance trans_eqv_neqv_inst
+    {α : Sort u} [EqvOp α] : Trans (β := α) (· ≃ ·) (· ≄ ·) (· ≄ ·) := {
+  trans := trans_eqv_neqv
+}
+
+/--
+The left-hand side of a negated equivalence can be replaced by an equivalent
+value, bidirectionally.
+
+**Intuition**: Given `neqv_substL`, symmetry of equivalence means it works in
+the other direction too.
+-/
+@[gcongr]
+theorem neqv_substL_iff
+    {α : Sort u} [EqvOp α] {x₁ x₂ y : α} : x₁ ≃ x₂ → (x₁ ≄ y ↔ x₂ ≄ y)
+    := by
+  intro (_ : x₁ ≃ x₂)
+  show x₁ ≄ y ↔ x₂ ≄ y
+  exact Iff.intro (neqv_substL ‹x₁ ≃ x₂›) (neqv_substL (Rel.symm ‹x₁ ≃ x₂›))
+
+/--
+The right-hand side of a negated equivalence can be replaced by an equivalent
+value, bidirectionally.
+
+**Intuition**: Given `neqv_substR`, symmetry of equivalence means it works in
+the other direction too.
+-/
+@[gcongr]
+theorem neqv_substR_iff
+    {α : Sort u} [EqvOp α] {x₁ x₂ y : α} : x₁ ≃ x₂ → (y ≄ x₁ ↔ y ≄ x₂)
+    := by
+  intro (_ : x₁ ≃ x₂)
+  show y ≄ x₁ ↔ y ≄ x₂
+  exact Iff.intro (neqv_substR ‹x₁ ≃ x₂›) (neqv_substR (Rel.symm ‹x₁ ≃ x₂›))
 
 namespace Prod
 
@@ -681,6 +744,7 @@ equivalent.
 **Class parameters**
 - `EqvOp α`, `EqvOp β`: Needed for equivalence between pairs.
 -/
+@[gcongr]
 theorem substL {x₁ x₂ : α} {y : β} : x₁ ≃ x₂ → (x₁, y) ≃ (x₂, y) := by
   intro (_ : x₁ ≃ x₂)
   apply eqv_defn.mpr
@@ -709,6 +773,7 @@ equivalent.
 **Class parameters**
 - `EqvOp α`, `EqvOp β`: Needed for equivalence between pairs.
 -/
+@[gcongr]
 theorem substR {x₁ x₂ : β} {y : α} : x₁ ≃ x₂ → (y, x₁) ≃ (y, x₂) := by
   intro (_ : x₁ ≃ x₂)
   apply eqv_defn.mpr

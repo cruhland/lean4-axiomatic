@@ -1,3 +1,4 @@
+import Mathlib.Tactic.GCongr
 
 namespace Lean4Axiomatic.Logic
 
@@ -220,5 +221,9 @@ class AP (p : Prop) : Prop where
 
 /-- Apply `f`, a conversion from one proposition to another, inside `AP`. -/
 def AP.map {p q : Prop} (ap : AP p) (f : p → q) : AP q := AP.mk (f ap.ev)
+
+/-- Lift an implication into `AP`. -/
+@[gcongr]
+def AP.subst {p q : Prop} : (p → q) → AP p → AP q := λ f ap => ap.map f
 
 end Lean4Axiomatic.Logic

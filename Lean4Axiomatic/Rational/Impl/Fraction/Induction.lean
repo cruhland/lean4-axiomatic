@@ -26,13 +26,12 @@ then simplifying via algebraic identities, gives the result.
 theorem div_eqv_fraction
     {a b : ℤ} [AP (Positive b)] : (a : Fraction ℤ) / b ≃ a//b
     := calc
-  (a : Fraction ℤ) / b ≃ _ := eqv_refl
-  (a//1) / (b//1)      ≃ _ := eqv_refl
-  (a//1) * (b//1)⁻¹    ≃ _ := mul_substR recip_positive
-  (a//1) * (1//b)      ≃ _ := eqv_refl
-  (a * 1)//(1 * b)     ≃ _ := substN AA.identR
-  a//(1 * b)           ≃ _ := substD AA.identL
-  a//b                 ≃ _ := eqv_refl
+  _ = (a : Fraction ℤ) / b := rfl
+  _ = (a//1) / (b//1)      := rfl
+  _ = (a//1) * (b//1)⁻¹    := rfl
+  _ ≃ (a//1) * (1//b)      := by srw [recip_positive]
+  _ = (a * 1)//(1 * b)     := rfl
+  _ ≃ a//b                 := by srw [Integer.mul_identR, Integer.mul_identL]
 
 /-- Implementation of rational "ratio" induction for formal fractions. -/
 def ind_ratio
@@ -40,11 +39,13 @@ def ind_ratio
     (ctx : Induction.Context motive)
     : (p : Fraction ℤ) → motive p
     := by
-  intro (a//b)
-  show motive (a//b)
+  intro (a//b); let p := a//b
+  show motive p
+
   have : AP (b ≄ 0) := ‹AP (Positive b)›.map Integer.neqv_zero_from_positive
   have : motive (a / b) := ctx.on_ratio a b
-  have : motive (a//b) := fsubst div_eqv_fraction ‹motive (a / b)›
+  have : motive (a//b)  := fsubst div_eqv_fraction ‹motive (a / b)›
+  have : motive p       := this
   exact this
 
 local instance ind_ops : Induction.Ops (Fraction ℤ) := {
@@ -59,13 +60,12 @@ theorem ind_ratio_subst
     {ctx : Induction.Context motive} {p₁ p₂ : Fraction ℤ} {p_eqv : p₁ ≃ p₂}
     : fsubst ‹p₁ ≃ p₂› (ctx.ind_ratio p₁) ≃ ctx.ind_ratio p₂
     := by
-  revert p₁ p₂; intro (a₁//b₁) (a₂//b₂)
-  have : AP (b₁ ≄ 0) := ‹AP (Positive b₁)›.map Integer.neqv_zero_from_positive
-  have : AP (b₂ ≄ 0) := ‹AP (Positive b₂)›.map Integer.neqv_zero_from_positive
-
-  let p₁ := a₁//b₁; let p₂ := a₂//b₂
+  revert p₁ p₂; intro (a₁//b₁) (a₂//b₂); let p₁ := a₁//b₁; let p₂ := a₂//b₂
   intro (_ : p₁ ≃ p₂)
   show fsubst ‹p₁ ≃ p₂› (ctx.ind_ratio p₁) ≃ ctx.ind_ratio p₂
+
+  have : AP (b₁ ≄ 0) := ‹AP (Positive b₁)›.map Integer.neqv_zero_from_positive
+  have : AP (b₂ ≄ 0) := ‹AP (Positive b₂)›.map Integer.neqv_zero_from_positive
 
   let r₁ := (a₁:Fraction ℤ) / b₁; let r₂ := (a₂:Fraction ℤ) / b₂
   have : r₁ ≃ p₁ := div_eqv_fraction
@@ -81,7 +81,7 @@ theorem ind_ratio_subst
     _ = fsubst ‹p₁ ≃ p₂› (fsubst ‹r₁ ≃ p₁› or₁)    := rfl
     _ ≃ fsubst (eqv_trans ‹r₁ ≃ p₁› ‹p₁ ≃ p₂›) or₁ := fsubst_trans
     _ = fsubst ‹r₁ ≃ p₂› or₁                       := rfl
-    _ ≃ fsubst ‹r₁ ≃ p₂› (fsubst ‹r₂ ≃ r₁› or₂)    := fsubst_substR or_subst
+    _ ≃ fsubst ‹r₁ ≃ p₂› (fsubst ‹r₂ ≃ r₁› or₂)    := by srw [or_subst]
     _ ≃ fsubst (Rel.trans ‹r₂ ≃ r₁› ‹r₁ ≃ p₂›) or₂ := fsubst_trans
     _ = fsubst ‹r₂ ≃ p₂› or₂                       := rfl
     _ = ctx.ind_ratio p₂                           := rfl
@@ -124,21 +124,20 @@ theorem ind_ratio_eval
     _ ≃ a / b                    := div_cancelR_mul
   have rsf : (a:Fℤ) / b ≃ asb//bsb := eqv_symm sfr
   have rsr : (a:Fℤ) / b ≃ asb / bsb := eqv_trans rsf (eqv_symm srsf)
-  have or_drop_sgn : ctx.on_ratio asb bsb ≃ fsubst rsr (ctx.on_ratio a b) :=
-    Rel.symm (ctx.on_ratio_subst rsr)
+  let or_sgn := ctx.on_ratio asb bsb
+  let or_ab := ctx.on_ratio a b
+  have or_incl_sgn : fsubst rsr or_ab ≃ or_sgn := ctx.on_ratio_subst rsr
 
   -- Prove via equational reasoning
-  have unfold : ctx.ind_ratio (asb//bsb) ≃ fsubst rsf (ctx.on_ratio a b) := calc
-    _ = ctx.ind_ratio (asb//bsb)                    := rfl
-    _ = fsubst srsf (ctx.on_ratio asb bsb)          := rfl
-    _ ≃ fsubst srsf (fsubst rsr (ctx.on_ratio a b)) := fsubst_substR or_drop_sgn
-    _ ≃ fsubst rsf (ctx.on_ratio a b)               := fsubst_trans
   calc
-    _ = ctx.ind_ratio (a / b)                      := rfl
-    _ ≃ fsubst sfr (ctx.ind_ratio (asb//bsb))      := Rel.symm ind_ratio_subst
-    _ ≃ fsubst sfr (fsubst rsf (ctx.on_ratio a b)) := fsubst_substR unfold
-    _ ≃ fsubst eqv_refl (ctx.on_ratio a b)         := fsubst_trans
-    _ ≃ ctx.on_ratio a b                           := fsubst_refl
+    _ = ctx.ind_ratio (a / b)                       := rfl
+    _ ≃ fsubst sfr (ctx.ind_ratio (asb//bsb))       := Rel.symm ind_ratio_subst
+    _ = fsubst sfr (fsubst srsf or_sgn)             := rfl
+    _ ≃ fsubst sfr (fsubst srsf (fsubst rsr or_ab)) := by srw [←or_incl_sgn]
+    _ ≃ fsubst sfr (fsubst rsf or_ab)               := by srw [fsubst_trans]
+    _ ≃ fsubst eqv_refl or_ab                       := fsubst_trans
+    _ ≃ or_ab                                       := fsubst_refl
+    _ = ctx.on_ratio a b                            := rfl
 
 def ind_props : Induction.Props (Fraction ℤ) := {
   ind_ratio_subst := ind_ratio_subst

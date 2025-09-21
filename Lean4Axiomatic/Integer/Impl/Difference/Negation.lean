@@ -32,18 +32,29 @@ a consistent definition as a function) on integers, this property must be true.
 **Proof intuition**: Nothing too insightful here, it's just expanding the
 definitions of negation and equality and performing some algebra.
 -/
+@[gcongr]
 theorem neg_subst {a₁ a₂ : Difference ℕ} : a₁ ≃ a₂ → -a₁ ≃ -a₂ := by
-  revert a₁; intro (n——m); revert a₂; intro (k——j)
-  intro (_ : n——m ≃ k——j)
-  show -(n——m) ≃ -(k——j)
+  revert a₁; intro (n——m); let a₁ := n——m
+  revert a₂; intro (k——j); let a₂ := k——j
+  intro (_ : a₁ ≃ a₂)
+  show -a₁ ≃ -a₂
+
+  have : n——m ≃ k——j := ‹a₁ ≃ a₂›
   have : n + j ≃ k + m := ‹n——m ≃ k——j›
-  show m——n ≃ j——k
-  show m + k ≃ j + n
+  have : m + k ≃ j + n := calc
+    _ = m + k := rfl
+    _ ≃ k + m := Natural.add_comm
+    _ ≃ n + j := Rel.symm ‹n + j ≃ k + m›
+    _ ≃ j + n := Natural.add_comm
+  have : m——n ≃ j——k := ‹m + k ≃ j + n›
+
   calc
-    m + k ≃ _ := Natural.add_comm
-    k + m ≃ _ := Rel.symm ‹n + j ≃ k + m›
-    n + j ≃ _ := Natural.add_comm
-    j + n ≃ _ := Rel.refl
+    _ = -a₁     := rfl
+    _ = -(n——m) := rfl
+    _ = m——n    := rfl
+    _ ≃ j——k    := ‹m——n ≃ j——k›
+    _ = -(k——j) := rfl
+    _ = -a₂     := rfl
 
 def neg_substitutive
     : AA.Substitutive₁ (α := Difference ℕ) (-·) (· ≃ ·) (· ≃ ·)
@@ -63,22 +74,32 @@ difference to its negation will result in a difference with equal elements. All
 differences with equal elements represent zero.
 -/
 theorem neg_invL {a : Difference ℕ} : (-a) + a ≃ 0 := by
-  revert a; intro (n——m)
-  show -(n——m) + n——m ≃ 0——0
-  show m——n + n——m ≃ 0——0
-  show (m + n)——(n + m) ≃ 0——0
-  show (m + n) + 0 ≃ 0 + (n + m)
-  apply Natural.add_swapped_zeros_eqv.mpr
-  show m + n ≃ n + m
-  exact Natural.add_comm
+  revert a; intro (n——m); let a := n——m
 
-def neg_inverseL : AA.InverseOn Hand.L (α := Difference ℕ) (-·) (· + ·) := {
-  inverse := neg_invL
-}
+  have : m + n ≃ n + m := Natural.add_comm
+  have : (m + n) + 0 ≃ 0 + (n + m) := Natural.add_swapped_zeros_eqv.mpr this
+  have diff_eqv : (m + n)——(n + m) ≃ 0——0 := this
+
+  calc
+    _ = (-a) + a         := rfl
+    _ = -(n——m) + n——m   := rfl
+    _ = m——n + n——m      := rfl
+    _ = (m + n)——(n + m) := rfl
+    _ ≃ 0——0             := diff_eqv
+    _ = 0                := rfl
+
+/--
+The negation of a natural number difference is that difference's right additive
+inverse.
+-/
+theorem neg_invR {a : Difference ℕ} : a + (-a) ≃ 0 := calc
+  _ = a + (-a) := rfl
+  _ ≃ (-a) + a := add_comm
+  _ ≃ 0        := neg_invL
 
 def neg_inverse : AA.Inverse (α := Difference ℕ) (-·) (· + ·) := {
-  inverseL := neg_inverseL
-  inverseR := AA.inverseR_from_inverseL neg_inverseL
+  inverseL := { inverse := neg_invL }
+  inverseR := { inverse := neg_invR }
 }
 
 instance negation : Negation (ℕ := ℕ) (Difference ℕ) := {

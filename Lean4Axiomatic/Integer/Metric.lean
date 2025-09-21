@@ -65,13 +65,13 @@ theorem abs_ident {a : ℤ} : a ≥ 0 → abs a ≃ a := by
     calc
       _ = abs a     := rfl
       _ ≃ a * sgn a := abs_sgn
-      _ ≃ a * 1     := AA.substR (gt_zero_sgn.mp ‹a > 0›)
+      _ ≃ a * 1     := by srw [gt_zero_sgn.mp ‹a > 0›]
       _ ≃ a         := AA.identR
   | Or.inr (_ : a ≃ 0) =>
     calc
       _ = abs a     := rfl
       _ ≃ a * sgn a := abs_sgn
-      _ ≃ 0 * sgn a := AA.substL ‹a ≃ 0›
+      _ ≃ 0 * sgn a := by srw [‹a ≃ 0›]
       _ ≃ 0         := AA.absorbL
       _ ≃ a         := Rel.symm ‹a ≃ 0›
 

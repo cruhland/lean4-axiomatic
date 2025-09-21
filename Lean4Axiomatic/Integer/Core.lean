@@ -43,17 +43,23 @@ class Conversion {ℕ : Type} [Natural ℕ] (ℤ : Type) [Equivalence ℤ] where
   from_natural : Coe ℕ ℤ
 
   /-- Every natural number maps to a unique integer. -/
-  from_natural_substitutive
-    : AA.Substitutive₁ (α := ℕ) (β := ℤ) coe (· ≃ ·) (· ≃ ·)
+  from_natural_subst {n₁ n₂ : ℕ} : n₁ ≃ n₂ → (n₁:ℤ) ≃ (n₂:ℤ)
 
   /-- Every integer representation comes from a unique natural number. -/
   from_natural_injective : AA.Injective (α := ℕ) (β := ℤ) coe (· ≃ ·) (· ≃ ·)
 
-export Conversion (from_natural_substitutive)
+export Conversion (from_natural_subst)
 
+attribute [gcongr] from_natural_subst
 attribute [instance] Conversion.from_natural
 attribute [instance] Conversion.from_natural_injective
-attribute [instance] Conversion.from_natural_substitutive
+
+instance from_natural_substitutive
+    {ℕ ℤ : Type} [Natural ℕ] [Equivalence ℤ] [Conversion (ℕ := ℕ) ℤ]
+    : AA.Substitutive₁ (α := ℕ) (β := ℤ) coe (· ≃ ·) (· ≃ ·)
+    := {
+  subst₁ := from_natural_subst
+}
 
 /--
 Bundles all core integer classes into one, to reduce the number of core

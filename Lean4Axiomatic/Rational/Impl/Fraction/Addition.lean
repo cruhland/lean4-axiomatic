@@ -41,15 +41,14 @@ on the numerator and denominator.
 -/
 theorem add_compat_from_integer
     {a b : ℤ} : from_integer (a + b) ≃ from_integer a + from_integer b
-    := by
-  show (a + b)//1 ≃ a//1 + b//1
-  have : a//1 + b//1 ≃ (a + b)//1 := calc
-    a//1 + b//1              ≃ _ := eqv_refl
-    (a * 1 + 1 * b)//(1 * 1) ≃ _ := substN (Integer.add_substL AA.identR)
-    (a + 1 * b)//(1 * 1)     ≃ _ := substN (Integer.add_substR AA.identL)
-    (a + b)//(1 * 1)         ≃ _ := substD AA.identL
-    (a + b)//1               ≃ _ := eqv_refl
-  exact eqv_symm this
+    := eqv_symm $ calc
+  _ = from_integer a + from_integer b := rfl
+  _ = a//1 + b//1                     := rfl
+  _ = (a * 1 + 1 * b)//(1 * 1)        := rfl
+  _ ≃ (a + 1 * b)//(1 * 1)            := by srw [Integer.mul_identR]
+  _ ≃ (a + b)//(1 * 1)                := by srw [Integer.mul_identL]
+  _ ≃ (a + b)//1                      := by srw [Integer.mul_identR]
+  _ = from_integer (a + b)            := rfl
 
 /--
 Addition of integer fractions is commutative.
@@ -61,16 +60,19 @@ fractions are scaled integers.
 on the numerator and denominator.
 -/
 theorem add_comm {p q : Fraction ℤ} : p + q ≃ q + p := by
-  revert p; intro (pn//pd); revert q; intro (qn//qd)
-  show pn//pd + qn//qd ≃ qn//qd + pn//pd
+  revert p; intro (pn//pd); let p := pn//pd
+  revert q; intro (qn//qd); let q := qn//qd
+  show p + q ≃ q + p
   calc
-    pn//pd + qn//qd                ≃ _ := eqv_refl
-    (pn * qd + pd * qn)//(pd * qd) ≃ _ := substN (Integer.add_substL AA.comm)
-    (qd * pn + pd * qn)//(pd * qd) ≃ _ := substN (Integer.add_substR AA.comm)
-    (qd * pn + qn * pd)//(pd * qd) ≃ _ := substN Integer.add_comm
-    (qn * pd + qd * pn)//(pd * qd) ≃ _ := substD AA.comm
-    (qn * pd + qd * pn)//(qd * pd) ≃ _ := eqv_refl
-    qn//qd + pn//pd                ≃ _ := eqv_refl
+    _ = p + q                          := rfl
+    _ = pn//pd + qn//qd                := rfl
+    _ = (pn * qd + pd * qn)//(pd * qd) := rfl
+    _ ≃ (qd * pn + pd * qn)//(pd * qd) := by srw [Integer.mul_comm]
+    _ ≃ (qd * pn + qn * pd)//(pd * qd) := by srw [Integer.mul_comm]
+    _ ≃ (qn * pd + qd * pn)//(pd * qd) := by srw [Integer.add_comm]
+    _ ≃ (qn * pd + qd * pn)//(qd * pd) := by srw [Integer.mul_comm]
+    _ = qn//qd + pn//pd                := rfl
+    _ = q + p                          := rfl
 
 /--
 Replacing the left operand in a sum of fractions with an equivalent value gives
@@ -83,41 +85,37 @@ valid function.
 equivalences involving only integers are reached. Show the goal equivalence
 using algebra and the equivalence from the `p₁ ≃ p₂` hypothesis.
 -/
+@[gcongr]
 theorem add_substL {p₁ p₂ q : Fraction ℤ} : p₁ ≃ p₂ → p₁ + q ≃ p₂ + q := by
-  revert p₁; intro (p₁n//p₁d); revert p₂; intro (p₂n//p₂d)
-  revert q; intro (qn//qd)
-  intro (_ : p₁n//p₁d ≃ p₂n//p₂d)
-  show p₁n//p₁d + qn//qd ≃ p₂n//p₂d + qn//qd
-  show (p₁n * qd + p₁d * qn)//(p₁d * qd) ≃ (p₂n * qd + p₂d * qn)//(p₂d * qd)
-  show (p₁n * qd + p₁d * qn) * (p₂d * qd) ≃ (p₂n * qd + p₂d * qn) * (p₁d * qd)
-  have : p₁n * p₂d ≃ p₂n * p₁d := ‹p₁n//p₁d ≃ p₂n//p₂d›
+  revert p₁; intro (n₁//m₁); let p₁ := n₁//m₁
+  revert p₂; intro (n₂//m₂); let p₂ := n₂//m₂
+  revert q; intro (k//j); let q := k//j
+  intro (_ : p₁ ≃ p₂)
+  show p₁ + q ≃ p₂ + q
+
+  have : n₁//m₁ ≃ n₂//m₂ := ‹p₁ ≃ p₂›
+  have : n₁ * m₂ ≃ n₂ * m₁ := ‹n₁//m₁ ≃ n₂//m₂›
+  have : (n₁ * j + m₁ * k) * (m₂ * j) ≃ (n₂ * j + m₂ * k) * (m₁ * j) := calc
+    _ = (n₁ * j + m₁ * k) * (m₂ * j)        := rfl
+    _ ≃ ((n₁ * j + m₁ * k) * m₂) * j        := Rel.symm AA.assoc
+    _ ≃ ((n₁ * j) * m₂ + (m₁ * k) * m₂) * j := by srw [Integer.mul_distribR]
+    _ ≃ ((j * n₁) * m₂ + (m₁ * k) * m₂) * j := by srw [AA.comm]
+    _ ≃ (j * (n₁ * m₂) + (m₁ * k) * m₂) * j := by srw [AA.assoc]
+    _ ≃ (j * (n₂ * m₁) + (m₁ * k) * m₂) * j := by srw [‹n₁ * m₂ ≃ n₂ * m₁›]
+    _ ≃ ((j * n₂) * m₁ + (m₁ * k) * m₂) * j := by srw [←AA.assoc]
+    _ ≃ ((j * n₂) * m₁ + m₁ * (k * m₂)) * j := by srw [AA.assoc]
+    _ ≃ ((j * n₂) * m₁ + (k * m₂) * m₁) * j := by srw [AA.comm]
+    _ ≃ ((j * n₂ + k * m₂) * m₁) * j        := by srw [←Integer.mul_distribR]
+    _ ≃ (j * n₂ + k * m₂) * (m₁ * j)        := AA.assoc
+    _ ≃ (n₂ * j + k * m₂) * (m₁ * j)        := by srw [AA.comm]
+    _ ≃ (n₂ * j + m₂ * k) * (m₁ * j)        := by srw [AA.comm]
   calc
-    (p₁n * qd + p₁d * qn) * (p₂d * qd)
-      ≃ _ := Rel.symm AA.assoc
-    ((p₁n * qd + p₁d * qn) * p₂d) * qd
-      ≃ _ := AA.substL AA.distribR
-    ((p₁n * qd) * p₂d + (p₁d * qn) * p₂d) * qd
-      ≃ _ := AA.substL (Integer.add_substL (AA.substL AA.comm))
-    ((qd * p₁n) * p₂d + (p₁d * qn) * p₂d) * qd
-      ≃ _ := AA.substL (Integer.add_substL AA.assoc)
-    (qd * (p₁n * p₂d) + (p₁d * qn) * p₂d) * qd
-      ≃ _ := AA.substL (Integer.add_substL (AA.substR ‹p₁n * p₂d ≃ p₂n * p₁d›))
-    (qd * (p₂n * p₁d) + (p₁d * qn) * p₂d) * qd
-      ≃ _ := AA.substL (Integer.add_substL (Rel.symm AA.assoc))
-    ((qd * p₂n) * p₁d + (p₁d * qn) * p₂d) * qd
-      ≃ _ := AA.substL (Integer.add_substR AA.assoc)
-    ((qd * p₂n) * p₁d + p₁d * (qn * p₂d)) * qd
-      ≃ _ := AA.substL (Integer.add_substR AA.comm)
-    ((qd * p₂n) * p₁d + (qn * p₂d) * p₁d) * qd
-      ≃ _ := AA.substL (Rel.symm AA.distribR)
-    ((qd * p₂n + qn * p₂d) * p₁d) * qd
-      ≃ _ := AA.assoc
-    (qd * p₂n + qn * p₂d) * (p₁d * qd)
-      ≃ _ := AA.substL (Integer.add_substL AA.comm)
-    (p₂n * qd + qn * p₂d) * (p₁d * qd)
-      ≃ _ := AA.substL (Integer.add_substR AA.comm)
-    (p₂n * qd + p₂d * qn) * (p₁d * qd)
-      ≃ _ := Rel.refl
+    _ = p₁ + q                := rfl
+    _ = n₁//m₁ + k//j         := rfl
+    _ = (n₁*j + m₁*k)//(m₁*j) := rfl
+    _ ≃ (n₂*j + m₂*k)//(m₂*j) := ‹(n₁*j + m₁*k)*(m₂*j) ≃ (n₂*j + m₂*k)*(m₁*j)›
+    _ = n₂//m₂ + k//j         := rfl
+    _ = p₂ + q                := rfl
 
 /--
 Replacing the right operand in a sum of fractions with an equivalent value
@@ -129,14 +127,15 @@ valid function.
 **Proof intuition**: Flip the sum around using commutativity, perform left
 substitution, then flip it back.
 -/
+@[gcongr]
 theorem add_substR {p q₁ q₂ : Fraction ℤ} : q₁ ≃ q₂ → p + q₁ ≃ p + q₂ := by
   intro (_ : q₁ ≃ q₂)
   show p + q₁ ≃ p + q₂
   calc
-    p + q₁ ≃ _ := add_comm
-    q₁ + p ≃ _ := add_substL ‹q₁ ≃ q₂›
-    q₂ + p ≃ _ := add_comm
-    p + q₂ ≃ _ := eqv_refl
+    _ = p + q₁ := rfl
+    _ ≃ q₁ + p := add_comm
+    _ ≃ q₂ + p := by srw [‹q₁ ≃ q₂›]
+    _ ≃ p + q₂ := add_comm
 
 /--
 Fraction addition is associative.
@@ -150,33 +149,28 @@ integer multiplication. The numerators are equivalent via distributivity, and
 associativity of addition, over integers.
 -/
 theorem add_assoc {p q r : Fraction ℤ} : (p + q) + r ≃ p + (q + r) := by
-  revert p; intro (pn//pd); revert q; intro (qn//qd); revert r; intro (rn//rd)
-  show (pn//pd + qn//qd) + rn//rd ≃ pn//pd + (qn//qd + rn//rd)
+  revert p; intro (n//m); let p := n//m
+  revert q; intro (k//j); let q := k//j
+  revert r; intro (u//t); let r := u//t
+  show (p + q) + r ≃ p + (q + r)
+
+  have int_distribL {a b c : ℤ} : a*(b + c) ≃ a*b + a*c := Integer.mul_distribL
+  have int_distribR {a b c : ℤ} : (b + c)*a ≃ b*a + c*a := Integer.mul_distribR
   calc
-    (pn//pd + qn//qd) + rn//rd
-      ≃ _ := eqv_refl
-    (pn * qd + pd * qn)//(pd * qd) + rn//rd
-      ≃ _ := eqv_refl
-    ((pn * qd + pd * qn) * rd + (pd * qd) * rn)//((pd * qd) * rd)
-      ≃ _ := substN (Integer.add_substL AA.distribR)
-    (((pn * qd) * rd + (pd * qn) * rd) + (pd * qd) * rn)//((pd * qd) * rd)
-      ≃ _ := substN (Integer.add_substL (Integer.add_substL AA.assoc))
-    ((pn * (qd * rd) + (pd * qn) * rd) + (pd * qd) * rn)//((pd * qd) * rd)
-      ≃ _ := substN (Integer.add_substL (Integer.add_substR AA.assoc))
-    ((pn * (qd * rd) + pd * (qn * rd)) + (pd * qd) * rn)//((pd * qd) * rd)
-      ≃ _ := substN (Integer.add_substR AA.assoc)
-    ((pn * (qd * rd) + pd * (qn * rd)) + pd * (qd * rn))//((pd * qd) * rd)
-      ≃ _ := substN Integer.add_assoc
-    (pn * (qd * rd) + (pd * (qn * rd) + pd * (qd * rn)))//((pd * qd) * rd)
-      ≃ _ := substN (Integer.add_substR (Rel.symm AA.distribL))
-    (pn * (qd * rd) + pd * (qn * rd + qd * rn))//((pd * qd) * rd)
-      ≃ _ := substD AA.assoc
-    (pn * (qd * rd) + pd * (qn * rd + qd * rn))//(pd * (qd * rd))
-      ≃ _ := eqv_refl
-    pn//pd + (qn * rd + qd * rn)//(qd * rd)
-      ≃ _ := eqv_refl
-    pn//pd + (qn//qd + rn//rd)
-      ≃ _ := eqv_refl
+    _ = (p + q) + r                              := rfl
+    _ = (n//m + k//j) + u//t                     := rfl
+    _ = (n*j + m*k)//(m*j) + u//t                := rfl
+    _ = ((n*j+m*k)*t + (m*j)*u)//((m*j)*t)       := rfl
+    _ ≃ (((n*j)*t+(m*k)*t) + (m*j)*u)//((m*j)*t) := by srw [int_distribR]
+    _ ≃ ((n*(j*t)+(m*k)*t) + (m*j)*u)//((m*j)*t) := by srw [Integer.mul_assoc]
+    _ ≃ ((n*(j*t)+m*(k*t)) + (m*j)*u)//((m*j)*t) := by srw [Integer.mul_assoc]
+    _ ≃ ((n*(j*t)+m*(k*t)) + m*(j*u))//((m*j)*t) := by srw [Integer.mul_assoc]
+    _ ≃ (n*(j*t) + (m*(k*t)+m*(j*u)))//((m*j)*t) := by srw [Integer.add_assoc]
+    _ ≃ (n*(j*t) + m*(k*t+j*u))//((m*j)*t)       := by srw [←int_distribL]
+    _ ≃ (n*(j*t) + m*(k*t+j*u))//(m*(j*t))       := by srw [Integer.mul_assoc]
+    _ = n//m + (k*t + j*u)//(j*t)                := rfl
+    _ = n//m + (k//j + u//t)                     := rfl
+    _ = p + (q + r)                              := rfl
 
 /--
 Zero is a left identity element for fraction addition.
@@ -187,15 +181,16 @@ identity elements to carry over.
 **Proof intuition**: Expand definitions, add, and simplify.
 -/
 theorem add_identL {p : Fraction ℤ} : 0 + p ≃ p := by
-  revert p; intro (pn//pd)
-  show 0//1 + pn//pd ≃ pn//pd
+  revert p; intro (pn//pd); let p := pn//pd
+  show 0 + p ≃ p
   calc
-    (0 : ℤ)//1 + pn//pd         ≃ _ := eqv_refl
-    (0 * pd + 1 * pn)//(1 * pd) ≃ _ := substN (Integer.add_substL AA.absorbL)
-    (0 + 1 * pn)//(1 * pd)      ≃ _ := substN AA.identL
-    (1 * pn)//(1 * pd)          ≃ _ := substN AA.identL
-    pn//(1 * pd)                ≃ _ := substD AA.identL
-    pn//pd                      ≃ _ := eqv_refl
+    _ = (0:ℤ)//1 + pn//pd           := rfl
+    _ = (0 * pd + 1 * pn)//(1 * pd) := rfl
+    _ ≃ (0 + 1 * pn)//(1 * pd)      := by srw [Integer.mul_absorbL]
+    _ ≃ (1 * pn)//(1 * pd)          := by srw [Integer.add_identL]
+    _ ≃ pn//(1 * pd)                := by srw [Integer.mul_identL]
+    _ ≃ pn//pd                      := by srw [Integer.mul_identL]
+    _ = p                           := rfl
 
 /--
 Zero is a right identity element for fraction addition.

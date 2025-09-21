@@ -89,6 +89,8 @@ class Conversion.Props
   /-- Equivalent converted rationals came from the same integer. -/
   from_integer_inject {a₁ a₂ : ℤ} : (a₁ : ℚ) ≃ (a₂ : ℚ) → a₁ ≃ a₂
 
+attribute [gcongr] Conversion.Props.from_integer_subst
+
 export Conversion.Props (from_integer_inject from_integer_subst)
 
 /-- All rational number conversion axioms. -/

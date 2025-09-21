@@ -54,7 +54,7 @@ def divide (n m : ℕ) [AP (m ≄ 0)] : EuclideanDivision n m := by
       let r := step r'
       have : step n' ≃ m * q + r := calc
         _ = step n'            := rfl
-        _ ≃ step (m * q' + r') := AA.subst₁ ‹n' ≃ m * q' + r'›
+        _ ≃ step (m * q' + r') := by srw [‹n' ≃ m * q' + r'›]
         _ ≃ m * q' + step r'   := AA.scompatR
         _ = m * q + r          := rfl
       have : r < m := ‹step r' < m›
@@ -75,12 +75,12 @@ def divide (n m : ℕ) [AP (m ≄ 0)] : EuclideanDivision n m := by
       let r := 0
       have : step n' ≃ m * q + r := calc
         _ = step n'            := rfl
-        _ ≃ step (m * q' + r') := AA.subst₁ ‹n' ≃ m * q' + r'›
+        _ ≃ step (m * q' + r') := by srw [‹n' ≃ m * q' + r'›]
         _ ≃ m * q' + step r'   := AA.scompatR
-        _ ≃ m * q' + m         := AA.substR ‹step r' ≃ m›
-        _ ≃ m * q' + m * 1     := AA.substR (Rel.symm AA.identR)
+        _ ≃ m * q' + m         := by srw [‹step r' ≃ m›]
+        _ ≃ m * q' + m * 1     := by srw [←mul_identR]
         _ ≃ m * (q' + 1)       := Rel.symm AA.distribL
-        _ ≃ m * step q'        := AA.substR add_one_step
+        _ ≃ m * step q'        := by srw [add_one_step]
         _ ≃ m * step q' + 0    := Rel.symm AA.identR
         _ = m * q + r          := rfl
       have : r < m := ‹m > 0›

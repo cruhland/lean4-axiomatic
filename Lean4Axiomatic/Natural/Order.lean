@@ -56,6 +56,7 @@ variable {ℕ : Type} [Core ℕ] [Addition ℕ] [order_inst : Order ℕ]
 The _less than or equal to_ relation is preserved when both sides are
 incremented.
 -/
+@[gcongr]
 theorem le_subst_step {n₁ n₂ : ℕ} : n₁ ≤ n₂ → step n₁ ≤ step n₂ := by
   intro (_ : n₁ ≤ n₂)
   show step n₁ ≤ step n₂
@@ -65,7 +66,7 @@ theorem le_subst_step {n₁ n₂ : ℕ} : n₁ ≤ n₂ → step n₁ ≤ step n
   show step n₁ + d ≃ step n₂
   calc
     step n₁ + d   ≃ _ := step_add
-    step (n₁ + d) ≃ _ := AA.subst₁ ‹n₁ + d ≃ n₂›
+    step (n₁ + d) ≃ _ := by srw [‹n₁ + d ≃ n₂›]
     step n₂       ≃ _ := Rel.refl
 
 instance le_substitutive_step
@@ -99,6 +100,7 @@ instance le_injective_step : AA.Injective (α := ℕ) step (· ≤ ·) (· ≤ �
 Equal natural numbers can be substituted on the right side of
 _less than or equal to_.
 -/
+@[gcongr]
 theorem le_eqv_subst {n m₁ m₂ : ℕ} : m₁ ≃ m₂ → n ≤ m₁ → n ≤ m₂ := by
   intro (_ : m₁ ≃ m₂) (_ : n ≤ m₁)
   show n ≤ m₂
@@ -115,7 +117,7 @@ to_ and equivalence.
 theorem trans_le_eqv_le {n m k : ℕ} : n ≤ m → m ≃ k → n ≤ k := by
   intro (_ : n ≤ m) (_ : m ≃ k)
   show n ≤ k
-  exact le_eqv_subst ‹m ≃ k› ‹n ≤ m›
+  prw [‹m ≃ k›] ‹n ≤ m›
 
 instance trans_le_eqv_le_inst : Trans (α := ℕ) (· ≤ ·) (· ≃ ·) (· ≤ ·) := {
   trans := trans_le_eqv_le
@@ -127,12 +129,39 @@ def le_substR_eqv
   subst₂ := λ (_ : True) => le_eqv_subst
 }
 
+/--
+Equivalent natural numbers can be substituted on the right side of _less than_.
+-/
+@[gcongr]
+theorem lt_eqv_subst {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m < n₁ → m < n₂ := by
+  intro (_ : n₁ ≃ n₂) (_ : m < n₁)
+  show m < n₂
+  have ⟨(_ : m ≤ n₁), (_ : m ≄ n₁)⟩ := lt_defn.mp ‹m < n₁›
+  have : m ≤ n₂ := by prw [‹n₁ ≃ n₂›] ‹m ≤ n₁›
+  have : m ≄ n₂ := by prw [‹n₁ ≃ n₂›] ‹m ≄ n₁›
+  apply lt_defn.mpr
+  exact ⟨‹m ≤ n₂›, ‹m ≄ n₂›⟩
+
+/--
+Corollary of `lt_eqv_subst` to support transitivity of _less than_ and
+equivalence.
+-/
+theorem trans_lt_eqv_lt {n m k : ℕ} : n < m → m ≃ k → n < k := by
+  intro (_ : n < m) (_ : m ≃ k)
+  show n < k
+  prw [‹m ≃ k›] ‹n < m›
+
+instance trans_lt_eqv_lt_inst : Trans (α := ℕ) (· < ·) (· ≃ ·) (· < ·) := {
+  trans := trans_lt_eqv_lt
+}
+
 variable [Induction.{0} ℕ]
 
 /--
 Equal natural numbers can be substituted on the left side of
 _less than or equal to_.
 -/
+@[gcongr]
 theorem le_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ ≤ m → n₂ ≤ m := by
   intro (_ : n₁ ≃ n₂) (_ : n₁ ≤ m)
   show n₂ ≤ m
@@ -141,7 +170,7 @@ theorem le_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ ≤ m → n₂
   exists d
   show n₂ + d ≃ m
   calc
-    n₂ + d ≃ _ := Rel.symm (AA.substL ‹n₁ ≃ n₂›)
+    n₂ + d ≃ _ := by srw [←‹n₁ ≃ n₂›]
     n₁ + d ≃ _ := ‹n₁ + d ≃ m›
     m      ≃ _ := Rel.refl
 
@@ -152,7 +181,7 @@ _less than or equivalent to_.
 theorem trans_eqv_le_le {n m k : ℕ} : n ≃ m → m ≤ k → n ≤ k := by
   intro (_ : n ≃ m) (_ : m ≤ k)
   show n ≤ k
-  exact le_subst_eqv (Rel.symm ‹n ≃ m›) ‹m ≤ k›
+  prw [←‹n ≃ m›] ‹m ≤ k›
 
 instance trans_eqv_le_le_inst : Trans (α := ℕ) (· ≃ ·) (· ≤ ·) (· ≤ ·) := {
   trans := trans_eqv_le_le
@@ -206,7 +235,7 @@ theorem le_step_split {n m : ℕ} : n ≤ step m → n ≤ m ∨ n ≃ step m :=
     show n ≃ step m
     calc
       n      ≃ _ := Rel.symm add_zero
-      n + 0  ≃ _ := AA.substR (Rel.symm ‹d ≃ 0›)
+      n + 0  ≃ _ := by srw [←‹d ≃ 0›]
       n + d  ≃ _ := ‹n + d ≃ step m›
       step m ≃ _ := Rel.refl
   · intro e (_ : d ≃ step e)
@@ -219,7 +248,7 @@ theorem le_step_split {n m : ℕ} : n ≤ step m → n ≤ m ∨ n ≃ step m :=
     show step (n + e) ≃ step m
     calc
       step (n + e) ≃ _ := Rel.symm add_step
-      n + step e   ≃ _ := AA.substR (Rel.symm ‹d ≃ step e›)
+      n + step e   ≃ _ := by srw [←‹d ≃ step e›]
       n + d        ≃ _ := ‹n + d ≃ step m›
       step m       ≃ _ := Rel.refl
 
@@ -232,7 +261,7 @@ theorem le_step {n m : ℕ} : n ≤ m → n ≤ step m := by
   show n + step d ≃ step m
   calc
     n + step d   ≃ _ := add_step
-    step (n + d) ≃ _ := AA.subst₁ ‹n + d ≃ m›
+    step (n + d) ≃ _ := by srw [‹n + d ≃ m›]
     step m       ≃ _ := Rel.refl
 
 /--
@@ -252,7 +281,7 @@ theorem le_trans {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k := by
     show n + (d + e) ≃ 0
     calc
       n + (d + e) ≃ _ := Rel.symm AA.assoc
-      (n + d) + e ≃ _ := AA.substL ‹n + d ≃ m›
+      (n + d) + e ≃ _ := by srw [‹n + d ≃ m›]
       m + e       ≃ _ := ‹m + e ≃ 0›
       0           ≃ _ := Rel.refl
   case step =>
@@ -260,9 +289,12 @@ theorem le_trans {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k := by
     show n ≤ step k
     match le_step_split ‹m ≤ step k› with
     | Or.inl (_ : m ≤ k) =>
-      exact le_step (ih ‹m ≤ k›)
+      have : n ≤ k := ih ‹m ≤ k›
+      have : n ≤ step k := le_step ‹n ≤ k›
+      exact this
     | Or.inr (_ : m ≃ step k) =>
-      exact AA.substRFn ‹m ≃ step k› ‹n ≤ m›
+      have : n ≤ step k := by prw [‹m ≃ step k›] ‹n ≤ m›
+      exact this
 
 instance trans_le_le_le : Trans (α := ℕ) (· ≤ ·) (· ≤ ·) (· ≤ ·) := {
   trans := le_trans
@@ -270,9 +302,10 @@ instance trans_le_le_le : Trans (α := ℕ) (· ≤ ·) (· ≤ ·) (· ≤ ·) 
 
 /--
 The _less than or equal to_ relation is preserved when the same value is
-added on the left to both sides.
+added on the right to both sides.
 -/
-theorem le_subst_add {n₁ n₂ m : ℕ} : n₁ ≤ n₂ → n₁ + m ≤ n₂ + m := by
+@[gcongr]
+theorem add_substL_le {n₁ n₂ m : ℕ} : n₁ ≤ n₂ → n₁ + m ≤ n₂ + m := by
   intro (_ : n₁ ≤ n₂)
   show n₁ + m ≤ n₂ + m
   have ⟨d, (_ : n₁ + d ≃ n₂)⟩ := le_defn.mp ‹n₁ ≤ n₂›
@@ -281,22 +314,30 @@ theorem le_subst_add {n₁ n₂ m : ℕ} : n₁ ≤ n₂ → n₁ + m ≤ n₂ +
   show (n₁ + m) + d ≃ n₂ + m
   calc
     (n₁ + m) + d ≃ _ := AA.assoc
-    n₁ + (m + d) ≃ _ := AA.substR AA.comm
+    n₁ + (m + d) ≃ _ := by srw [AA.comm]
     n₁ + (d + m) ≃ _ := Rel.symm AA.assoc
-    (n₁ + d) + m ≃ _ := AA.substL ‹n₁ + d ≃ n₂›
+    (n₁ + d) + m ≃ _ := by srw [‹n₁ + d ≃ n₂›]
     n₂ + m       ≃ _ := Rel.refl
 
-def le_substL_add
-    : AA.SubstitutiveOn Hand.L (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·)
-    := {
-  subst₂ := λ (_ : True) => le_subst_add
-}
+/--
+The _less than or equal to_ relation is preserved when the same value is
+added on the left to both sides.
+-/
+@[gcongr]
+theorem add_substR_le {n₁ n₂ m : ℕ} : n₁ ≤ n₂ → m + n₁ ≤ m + n₂ := by
+  intro (_ : n₁ ≤ n₂)
+  show m + n₁ ≤ m + n₂
+  calc
+    _ = m + n₁ := rfl
+    _ ≃ n₁ + m := add_comm
+    _ ≤ n₂ + m := by srw [‹n₁ ≤ n₂›]
+    _ ≃ m + n₂ := add_comm
 
 instance le_substitutive_add
     : AA.Substitutive₂ (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·)
     := {
-  substitutiveL := le_substL_add
-  substitutiveR := AA.substR_from_substL_swap (rS := (· ≃ ·)) le_substL_add
+  substitutiveL := { subst₂ := λ (_ : True) => add_substL_le }
+  substitutiveR := { subst₂ := λ (_ : True) => add_substR_le }
 }
 
 /--
@@ -336,7 +377,7 @@ theorem le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m := by
   have (Exists.intro (d₂ : ℕ) (_ : m + d₂ ≃ n)) := le_defn.mp ‹m ≤ n›
   have : n + (d₁ + d₂) ≃ n + 0 := calc
     n + (d₁ + d₂) ≃ _ := Rel.symm AA.assoc
-    (n + d₁) + d₂ ≃ _ := AA.substL ‹n + d₁ ≃ m›
+    (n + d₁) + d₂ ≃ _ := by srw [‹n + d₁ ≃ m›]
     m + d₂        ≃ _ := ‹m + d₂ ≃ n›
     n             ≃ _ := Rel.symm add_zero
     n + 0         ≃ _ := Rel.refl
@@ -344,19 +385,20 @@ theorem le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m := by
   have (And.intro (_ : d₁ ≃ 0) _) := zero_sum_split.mp ‹d₁ + d₂ ≃ 0›
   calc
     n      ≃ _ := Rel.symm add_zero
-    n + 0  ≃ _ := AA.substR (Rel.symm ‹d₁ ≃ 0›)
+    n + 0  ≃ _ := by srw [←‹d₁ ≃ 0›]
     n + d₁ ≃ _ := ‹n + d₁ ≃ m›
     m      ≃ _ := Rel.refl
 
 /--
 Equivalent natural numbers can be substituted on the left side of _less than_.
 -/
+@[gcongr]
 theorem lt_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ < m → n₂ < m := by
   intro (_ : n₁ ≃ n₂) (_ : n₁ < m)
   show n₂ < m
   have ⟨(_ : n₁ ≤ m), (_ : n₁ ≄ m)⟩ := lt_defn.mp ‹n₁ < m›
-  have : n₂ ≤ m := AA.substLFn ‹n₁ ≃ n₂› ‹n₁ ≤ m›
-  have : n₂ ≄ m := AA.neqv_substL ‹n₁ ≃ n₂› ‹n₁ ≄ m›
+  have : n₂ ≤ m := by prw [‹n₁ ≃ n₂›] ‹n₁ ≤ m›
+  have : n₂ ≄ m := by prw [‹n₁ ≃ n₂›] ‹n₁ ≄ m›
   apply lt_defn.mpr
   exact ⟨‹n₂ ≤ m›, ‹n₂ ≄ m›⟩
 
@@ -367,7 +409,7 @@ than_.
 theorem trans_eqv_lt_lt {n m k : ℕ} : n ≃ m → m < k → n < k := by
   intro (_ : n ≃ m) (_ : m < k)
   show n < k
-  exact lt_subst_eqv (Rel.symm ‹n ≃ m›) ‹m < k›
+  prw [←‹n ≃ m›] ‹m < k›
 
 instance trans_eqv_lt_lt_inst : Trans (α := ℕ) (· ≃ ·) (· < ·) (· < ·) := {
   trans := trans_eqv_lt_lt
@@ -377,31 +419,6 @@ def lt_substL_eqv
     : AA.SubstitutiveOn Hand.L (α := ℕ) (· < ·) AA.tc (· ≃ ·) (· → ·)
     := {
   subst₂ := λ (_ : True) => lt_subst_eqv
-}
-
-/--
-Equivalent natural numbers can be substituted on the right side of _less than_.
--/
-theorem lt_eqv_subst {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m < n₁ → m < n₂ := by
-  intro (_ : n₁ ≃ n₂) (_ : m < n₁)
-  show m < n₂
-  have ⟨(_ : m ≤ n₁), (_ : m ≄ n₁)⟩ := lt_defn.mp ‹m < n₁›
-  have : m ≤ n₂ := AA.substRFn ‹n₁ ≃ n₂› ‹m ≤ n₁›
-  have : m ≄ n₂ := AA.neqv_substR ‹n₁ ≃ n₂› ‹m ≄ n₁›
-  apply lt_defn.mpr
-  exact ⟨‹m ≤ n₂›, ‹m ≄ n₂›⟩
-
-/--
-Corollary of `lt_eqv_subst` to support transitivity of _less than_ and
-equivalence.
--/
-theorem trans_lt_eqv_lt {n m k : ℕ} : n < m → m ≃ k → n < k := by
-  intro (_ : n < m) (_ : m ≃ k)
-  show n < k
-  exact lt_eqv_subst ‹m ≃ k› ‹n < m›
-
-instance trans_lt_eqv_lt_inst : Trans (α := ℕ) (· < ·) (· ≃ ·) (· < ·) := {
-  trans := trans_lt_eqv_lt
 }
 
 def lt_substR_eqv
@@ -431,10 +448,10 @@ theorem lt_step {n : ℕ} : n < step n := by
     exact Rel.symm step_neqv
 
 /-- The natural number two is greater than one. -/
-theorem two_gt_one : (2:ℕ) > 1 := by
-  have : step 1 > 1 := lt_step
-  have : (2:ℕ) > 1 := lt_eqv_subst (Rel.symm literal_step) ‹step 1 > 1›
-  exact this
+theorem two_gt_one : (2:ℕ) > 1 := calc
+  _ = (1:ℕ)  := rfl
+  _ < step 1 := lt_step
+  _ ≃ 2      := Rel.symm literal_step
 
 /--
 The same number can be added (on the right) to both sides of a _less than_
@@ -447,11 +464,12 @@ the same distance apart.
 _not equivalent to_. Show that both of them are preserved under addition. Put
 them back together.
 -/
+@[gcongr]
 theorem lt_substL_add {n₁ n₂ m : ℕ} : n₁ < n₂ → n₁ + m < n₂ + m := by
   intro (_ : n₁ < n₂)
   show n₁ + m < n₂ + m
   have (And.intro (_ : n₁ ≤ n₂) (_ : n₁ ≄ n₂)) := lt_defn.mp ‹n₁ < n₂›
-  have : n₁ + m ≤ n₂ + m := AA.substL ‹n₁ ≤ n₂›
+  have : n₁ + m ≤ n₂ + m := by srw [‹n₁ ≤ n₂›]
   have : n₁ + m ≄ n₂ + m := mt AA.cancelR ‹n₁ ≄ n₂›
   have : n₁ + m < n₂ + m :=
     lt_defn.mpr (And.intro ‹n₁ + m ≤ n₂ + m› ‹n₁ + m ≄ n₂ + m›)
@@ -467,13 +485,15 @@ the same distance apart.
 **Proof intuition**: Use commutativity of addition with the opposite-hand
 version of this theorem.
 -/
+@[gcongr]
 theorem lt_substR_add {n₁ n₂ m : ℕ} : n₁ < n₂ → m + n₁ < m + n₂ := by
   intro (_ : n₁ < n₂)
   show m + n₁ < m + n₂
-  have : n₁ + m < n₂ + m := lt_substL_add ‹n₁ < n₂›
-  have : m + n₁ < n₂ + m := AA.substLFn AA.comm ‹n₁ + m < n₂ + m›
-  have : m + n₁ < m + n₂ := AA.substRFn AA.comm ‹m + n₁ < n₂ + m›
-  exact this
+  calc
+    _ = m + n₁ := rfl
+    _ ≃ n₁ + m := add_comm
+    _ < n₂ + m := by srw [‹n₁ < n₂›]
+    _ ≃ m + n₂ := add_comm
 
 variable [Sign ℕ]
 
@@ -494,7 +514,7 @@ theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
       show n ≃ m
       calc
         n     ≃ _ := Rel.symm add_zero
-        n + 0 ≃ _ := AA.substR (Rel.symm ‹d ≃ 0›)
+        n + 0 ≃ _ := by srw [←‹d ≃ 0›]
         n + d ≃ _ := ‹n + d ≃ m›
         m     ≃ _ := Rel.refl
     have : Positive d := Signed.positive_defn.mpr ‹d ≄ 0›
@@ -506,7 +526,7 @@ theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
     calc
       step n + d'   ≃ _ := step_add
       step (n + d') ≃ _ := Rel.symm add_step
-      n + step d'   ≃ _ := AA.substR ‹step d' ≃ d›
+      n + step d'   ≃ _ := by srw [‹step d' ≃ d›]
       n + d         ≃ _ := ‹n + d ≃ m›
       m             ≃ _ := Rel.refl
   · intro (_ : step n ≤ m)
@@ -586,7 +606,7 @@ theorem lt_defn_add {n m : ℕ} : n < m ↔ ∃ k, Positive k ∧ m ≃ n + k :=
     calc
       step n + k'   ≃ _ := step_add
       step (n + k') ≃ _ := Rel.symm add_step
-      n + step k'   ≃ _ := AA.substR ‹step k' ≃ k›
+      n + step k'   ≃ _ := by srw [‹step k' ≃ k›]
       n + k         ≃ _ := Rel.symm ‹m ≃ n + k›
       m             ≃ _ := Rel.refl
 
@@ -625,7 +645,8 @@ theorem lt_zero_pos {n : ℕ} : Positive n ↔ n > 0 := by
     show Positive n
     have ⟨k, ⟨(_ : Positive k), (_ : n ≃ 0 + k)⟩⟩ := lt_defn_add.mp ‹0 < n›
     have : k ≃ n := Rel.symm (Rel.trans ‹n ≃ 0 + k› zero_add)
-    exact AA.substFn ‹k ≃ n› ‹Positive k›
+    have : Positive n := by prw [‹k ≃ n›] ‹Positive k›
+    exact this
 
 /--
 The _less than or equivalent to_ relation can be formed from, or split into,
@@ -648,14 +669,14 @@ theorem le_split {n m : ℕ} : n ≤ m ↔ n < m ∨ n ≃ m := by
       have : n ≃ m := calc
         _ = n     := rfl
         _ ≃ n + 0 := Rel.symm add_zero
-        _ ≃ n + d := AA.substR (Rel.symm ‹d ≃ 0›)
+        _ ≃ n + d := by srw [←‹d ≃ 0›]
         _ ≃ m     := ‹n + d ≃ m›
       exact Or.inr ‹n ≃ m›
     | Or.inr (Exists.intro (d' : ℕ) (_ : d ≃ step d')) =>
       have : step n + d' ≃ m := calc
         _ = step n + d'   := rfl
         _ ≃ n + step d'   := step_add_swap
-        _ ≃ n + d         := AA.substR (Rel.symm ‹d ≃ step d'›)
+        _ ≃ n + d         := by srw [←‹d ≃ step d'›]
         _ ≃ m             := ‹n + d ≃ m›
       have : step n ≤ m := le_defn.mpr (Exists.intro d' ‹step n + d' ≃ m›)
       have : n < m := lt_step_le.mpr ‹step n ≤ m›
@@ -669,7 +690,8 @@ theorem le_split {n m : ℕ} : n ≤ m ↔ n < m ∨ n ≃ m := by
       exact ‹n ≤ m›
     | Or.inr (_ : n ≃ m) =>
       have : n ≤ n := Rel.refl
-      exact AA.substRFn ‹n ≃ m› ‹n ≤ n›
+      have : n ≤ m := by prw [‹n ≃ m›] ‹n ≤ n›
+      exact this
 
 /--
 Split _greater than or equivalent to_ into the relations implied by its name.
@@ -749,43 +771,6 @@ theorem ind_from
   have : n ≥ m → motive n := ind_on n z s
   have : motive n := this ‹n ≥ m›
   exact this
-
-/--
-Positive natural numbers are exactly those that are greater than or equivalent
-to one.
-
-**Property and proof intuition**: Follows directly from `lt_zero_pos` (positive
-naturals are greater than zero) and ordering properties.
--/
-theorem positive_ge {n : ℕ} : Positive n ↔ n ≥ 1 := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : Positive n)
-    show n ≥ 1
-    have : n > 0 := lt_zero_pos.mp ‹Positive n›
-    have : n ≥ step 0 := lt_step_le.mp this
-    have : n ≥ 1 := AA.substLFn (Rel.symm literal_step) this
-    exact this
-  case mpr =>
-    intro (_ : n ≥ 1)
-    show Positive n
-    have : n ≥ step 0 := AA.substLFn literal_step ‹n ≥ 1›
-    have : n > 0 := lt_step_le.mpr this
-    have : Positive n := lt_zero_pos.mpr this
-    exact this
-
-/--
-Integers greater than zero are exactly those that are greater than or
-equivalent to one.
-
-**Property intuition**: There's no integer between zero and one.
-
-**Proof intuition**: Follows from `lt_zero_pos` and `positive_ge`.
--/
-theorem gt_zero_iff_ge_one {n : ℕ} : n > 0 ↔ n ≥ 1 := calc
-  _ ↔ n > 0      := Iff.rfl
-  _ ↔ Positive n := lt_zero_pos.symm
-  _ ↔ n ≥ 1      := positive_ge
 
 /--
 Useful result when needing to decrement the larger number in a _less than_
@@ -886,6 +871,47 @@ instance trans_le_lt_lt_inst : Trans (α := ℕ) (· ≤ ·) (· < ·) (· < ·)
 }
 
 /--
+Positive natural numbers are exactly those that are greater than or equivalent
+to one.
+
+**Property and proof intuition**: Follows directly from `lt_zero_pos` (positive
+naturals are greater than zero) and ordering properties.
+-/
+theorem positive_ge {n : ℕ} : Positive n ↔ n ≥ 1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : Positive n)
+    show n ≥ 1
+    have : n > 0 := lt_zero_pos.mp ‹Positive n›
+    calc
+      _ = (1:ℕ)  := rfl
+      _ ≃ step 0 := literal_step
+      _ ≤ n      := lt_step_le.mp ‹n > 0›
+  case mpr =>
+    intro (_ : n ≥ 1)
+    show Positive n
+    have : n > 0 := calc
+      _ = (0:ℕ) := rfl
+      _ < step 0 := lt_step
+      _ ≃ 1      := Rel.symm literal_step
+      _ ≤ n      := ‹n ≥ 1›
+    have : Positive n := lt_zero_pos.mpr this
+    exact this
+
+/--
+Integers greater than zero are exactly those that are greater than or
+equivalent to one.
+
+**Property intuition**: There's no integer between zero and one.
+
+**Proof intuition**: Follows from `lt_zero_pos` and `positive_ge`.
+-/
+theorem gt_zero_iff_ge_one {n : ℕ} : n > 0 ↔ n ≥ 1 := calc
+  _ ↔ n > 0      := Iff.rfl
+  _ ↔ Positive n := lt_zero_pos.symm
+  _ ↔ n ≥ 1      := positive_ge
+
+/--
 Very general property about ordering which often simplifies proofs that would
 otherwise have had to use induction.
 -/
@@ -928,7 +954,7 @@ theorem trichotomy (n m : ℕ)
       | AA.OneOfThree.second (_ : n ≃ m) =>
         have : m ≃ n := Rel.symm ‹n ≃ m›
         have : m ≤ n := le_split.mpr (Or.inr ‹m ≃ n›)
-        have : step m ≤ step n := AA.subst₁ ‹m ≤ n›
+        have : step m ≤ step n := by srw [‹m ≤ n›]
         have : m < step n := lt_step_le.mpr ‹step m ≤ step n›
         apply AA.OneOfThree.third
         exact ‹m < step n›
@@ -1021,7 +1047,7 @@ theorem compare_add {n m k : ℕ} : compare n m = compare (n + k) (m + k) := by
   match tri with
   | AA.OneOfThree.first (_ : n < m) =>
     have : compare n m = Ordering.lt := compare_lt.mpr ‹n < m›
-    have : n + k < m + k := lt_substL_add ‹n < m›
+    have : n + k < m + k := by srw [‹n < m›]
     have : compare (n + k) (m + k) = Ordering.lt := compare_lt.mpr this
     calc
       compare n m
@@ -1032,7 +1058,7 @@ theorem compare_add {n m k : ℕ} : compare n m = compare (n + k) (m + k) := by
         = _ := rfl
   | AA.OneOfThree.second (_ : n ≃ m) =>
     have : compare n m = Ordering.eq := compare_eq.mpr ‹n ≃ m›
-    have : n + k ≃ m + k := AA.substL ‹n ≃ m›
+    have : n + k ≃ m + k := by srw [‹n ≃ m›]
     have : compare (n + k) (m + k) = Ordering.eq :=
       compare_eq.mpr ‹n + k ≃ m + k›
     calc
@@ -1044,7 +1070,7 @@ theorem compare_add {n m k : ℕ} : compare n m = compare (n + k) (m + k) := by
         = _ := rfl
   | AA.OneOfThree.third (_ : n > m) =>
     have : compare n m = Ordering.gt := compare_gt.mpr ‹n > m›
-    have : n + k > m + k := lt_substL_add ‹n > m›
+    have : n + k > m + k := by srw [‹n > m›]
     have : compare (n + k) (m + k) = Ordering.gt :=
       compare_gt.mpr ‹n + k > m + k›
     calc
@@ -1079,9 +1105,7 @@ theorem add_preserves_compare
     show compare (n + k) (m + j) = Ordering.lt
     have : n < m := compare_lt.mp ‹compare n m = Ordering.lt›
     have : k < j := compare_lt.mp ‹compare k j = Ordering.lt›
-    have : n + k < m + j := calc
-      n + k < m + k := lt_substL_add ‹n < m›
-      m + k < m + j := lt_substR_add ‹k < j›
+    have : n + k < m + j := by srw [‹n < m›, ‹k < j›]
     have : compare (n + k) (m + j) = Ordering.lt := compare_lt.mpr this
     exact this
   | Ordering.eq =>
@@ -1089,9 +1113,7 @@ theorem add_preserves_compare
     show compare (n + k) (m + j) = Ordering.eq
     have : n ≃ m := compare_eq.mp ‹compare n m = Ordering.eq›
     have : k ≃ j := compare_eq.mp ‹compare k j = Ordering.eq›
-    have : n + k ≃ m + j := calc
-      n + k ≃ m + k := AA.substL ‹n ≃ m›
-      m + k ≃ m + j := AA.substR ‹k ≃ j›
+    have : n + k ≃ m + j := by srw [‹n ≃ m›, ‹k ≃ j›]
     have : compare (n + k) (m + j) = Ordering.eq := compare_eq.mpr this
     exact this
   | Ordering.gt =>
@@ -1099,9 +1121,7 @@ theorem add_preserves_compare
     show compare (n + k) (m + j) = Ordering.gt
     have : n > m := compare_gt.mp ‹compare n m = Ordering.gt›
     have : k > j := compare_gt.mp ‹compare k j = Ordering.gt›
-    have : m + j < n + k := calc
-      m + j < m + k := lt_substR_add ‹j < k›
-      m + k < n + k := lt_substL_add ‹m < n›
+    have : m + j < n + k := by srw [‹j < k›, ‹m < n›]
     have : compare (n + k) (m + j) = Ordering.gt := compare_gt.mpr this
     exact this
 

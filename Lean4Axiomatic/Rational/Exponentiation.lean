@@ -47,16 +47,17 @@ theorem pow_scompatL_from_integer {a : ℤ} {n : ℕ} : ((a^n:ℤ):ℚ) ≃ (a:�
     show ((a^0:ℤ):ℚ) ≃ (a:ℚ)^0
     calc
       _ = ((a^0:ℤ):ℚ) := rfl
-      _ ≃ 1           := from_integer_subst Natural.pow_zero
+      _ ≃ ((1:ℤ):ℚ)   := by srw [Natural.pow_zero]
+      _ = 1           := rfl
       _ ≃ (a:ℚ)^0     := eqv_symm Natural.pow_zero
   case step =>
     intro (n' : ℕ) (ih : ((a^n':ℤ):ℚ) ≃ (a:ℚ)^n')
     show ((a^(step n'):ℤ):ℚ) ≃ (a:ℚ)^(step n')
     calc
       _ = ((a^(step n'):ℤ):ℚ)  := rfl
-      _ ≃ ((a^n' * a : ℤ):ℚ)   := from_integer_subst Natural.pow_step
+      _ ≃ ((a^n' * a : ℤ):ℚ)   := by srw [Natural.pow_step]
       _ ≃ ((a^n':ℤ):ℚ) * (a:ℚ) := mul_compat_from_integer
-      _ ≃ (a:ℚ)^n' * (a:ℚ)     := mul_substL ih
+      _ ≃ (a:ℚ)^n' * (a:ℚ)     := by srw [ih]
       _ ≃ (a:ℚ)^(step n')      := eqv_symm Natural.pow_step
 
 variable [Negation ℚ] [Sign ℚ]
@@ -80,7 +81,7 @@ theorem pow_nat_scompatL_abs {p : ℚ} {n : ℕ} : abs (p^n) ≃ (abs p)^n := by
     have : abs (1:ℚ) ≃ 1 := abs_positive this
     calc
       _ ≃ abs (p^0) := eqv_refl
-      _ ≃ abs 1     := abs_subst pow_zero
+      _ ≃ abs 1     := by srw [pow_zero]
       _ ≃ 1         := ‹abs (1:ℚ) ≃ 1›
       _ ≃ (abs p)^0 := eqv_symm pow_zero
   case step =>
@@ -88,9 +89,9 @@ theorem pow_nat_scompatL_abs {p : ℚ} {n : ℕ} : abs (p^n) ≃ (abs p)^n := by
     show abs (p^(step n')) ≃ (abs p)^(step n')
     calc
       _ ≃ abs (p^(step n'))  := eqv_refl
-      _ ≃ abs (p^n' * p)     := abs_subst pow_step
+      _ ≃ abs (p^n' * p)     := by srw [pow_step]
       _ ≃ abs (p^n') * abs p := abs_compat_mul
-      _ ≃ (abs p)^n' * abs p := mul_substL ih
+      _ ≃ (abs p)^n' * abs p := by srw [ih]
       _ ≃ (abs p)^(step n')  := eqv_symm pow_step
 
 end metric_only
@@ -115,7 +116,7 @@ theorem pow_scompatL_recip
     show (p^(0:ℕ))⁻¹ ≃ (p⁻¹)^(0:ℕ)
     calc
       _ = (p^(0:ℕ))⁻¹ := rfl
-      _ ≃ 1⁻¹         := recip_subst pow_zero
+      _ ≃ 1⁻¹         := by srw [pow_zero]
       _ ≃ 1           := recip_sqrt1
       _ ≃ (p⁻¹)^(0:ℕ) := eqv_symm pow_zero
   case step =>
@@ -123,9 +124,9 @@ theorem pow_scompatL_recip
     show (p^(step n'))⁻¹ ≃ (p⁻¹)^(step n')
     calc
       _ ≃ (p^(step n'))⁻¹ := eqv_refl
-      _ ≃ (p^n' * p)⁻¹    := recip_subst pow_step
+      _ ≃ (p^n' * p)⁻¹    := by srw [pow_step]
       _ ≃ (p^n')⁻¹ * p⁻¹  := recip_compat_mul
-      _ ≃ (p⁻¹)^n' * p⁻¹  := mul_substL ih
+      _ ≃ (p⁻¹)^n' * p⁻¹  := by srw [ih]
       _ ≃ (p⁻¹)^(step n') := eqv_symm pow_step
 
 variable [Division ℚ]
@@ -144,9 +145,9 @@ theorem pow_distribR_div
     {p q : ℚ} [AP (q ≄ 0)] {n : ℕ} : (p / q)^n ≃ p^n / q^n
     := calc
   _ = (p / q)^n     := rfl
-  _ ≃ (p * q⁻¹)^n   := Natural.pow_substL div_mul_recip
+  _ ≃ (p * q⁻¹)^n   := by srw [div_mul_recip]
   _ ≃ p^n * (q⁻¹)^n := Natural.pow_distribR_mul
-  _ ≃ p^n * (q^n)⁻¹ := mul_substR (eqv_symm pow_scompatL_recip)
+  _ ≃ p^n * (q^n)⁻¹ := by srw [←pow_scompatL_recip]
   _ ≃ p^n / q^n     := eqv_symm div_mul_recip
 
 variable [Induction.{1} ℚ]
@@ -162,27 +163,25 @@ theorem sgn_int_pow_nat {p : ℚ} {n : ℕ} : sgn (p^n) ≃ (sgn p)^n := by
   -- Helpers to keep the main proof short and avoid repetition
   have int_sgn_pow {x : ℤ} : sgn ((x:ℚ)^n) ≃ (sgn x)^n := calc
     _ = sgn ((x:ℚ)^n)   := rfl
-    _ ≃ sgn ((x^n:ℤ):ℚ) := sgn_subst (eqv_symm pow_scompatL_from_integer)
+    _ ≃ sgn ((x^n:ℤ):ℚ) := by srw [←pow_scompatL_from_integer]
     _ ≃ sgn (x^n)       := sgn_from_integer
     -- This is the key step of the whole proof
     _ ≃ (sgn x)^n       := Integer.sgn_pow
   have sgn_merge : sgn a * sgn b ≃ sgn p := Rel.symm $ calc
     _ = sgn p                 := rfl
-    _ ≃ sgn ((a:ℚ)/b)         := sgn_subst ‹p ≃ a/b›
+    _ ≃ sgn ((a:ℚ)/b)         := by srw [‹p ≃ a/b›]
     _ ≃ sgn (a:ℚ) * sgn (b:ℚ) := sgn_div
-    _ ≃ sgn a * sgn (b:ℚ)     := AA.substL sgn_from_integer
-    _ ≃ sgn a * sgn b         := AA.substR sgn_from_integer
+    _ ≃ sgn a * sgn b         := by srw [sgn_from_integer, sgn_from_integer]
 
   calc
     _ = sgn (p^n)                     := rfl
-    _ ≃ sgn (((a:ℚ)/b)^n)             := sgn_subst (Natural.pow_substL p_eqv)
-    _ ≃ sgn ((a:ℚ)^n/b^n)             := sgn_subst pow_distribR_div
+    _ ≃ sgn (((a:ℚ)/b)^n)             := by srw [p_eqv]
+    _ ≃ sgn ((a:ℚ)^n/b^n)             := by srw [pow_distribR_div]
     _ ≃ sgn ((a:ℚ)^n) * sgn ((b:ℚ)^n) := sgn_div
-    -- The following two steps are the most important at this level
-    _ ≃ (sgn a)^n * sgn ((b:ℚ)^n)     := AA.substL int_sgn_pow
-    _ ≃ (sgn a)^n * (sgn b)^n         := AA.substR int_sgn_pow
+    -- The following step is the most important at this level
+    _ ≃ (sgn a)^n * (sgn b)^n         := by srw [int_sgn_pow, int_sgn_pow]
     _ ≃ (sgn a * sgn b)^n             := Rel.symm Natural.pow_distribR_mul
-    _ ≃ (sgn p)^n                     := Natural.pow_substL sgn_merge
+    _ ≃ (sgn p)^n                     := by srw [sgn_merge]
 
 /--
 Swap the order of two operations on a rational number: raising it to a natural
@@ -191,7 +190,7 @@ number power, and extracting its (rational-valued) sign.
 theorem sgn_pow_nat {p : ℚ} {n : ℕ} : (sgn (p^n):ℚ) ≃ (sgn p:ℚ)^n := calc
   _ = (sgn (p^n):ℚ)     := rfl
   -- This is the key step
-  _ ≃ (((sgn p)^n:ℤ):ℚ) := from_integer_subst sgn_int_pow_nat
+  _ ≃ (((sgn p)^n:ℤ):ℚ) := by srw [sgn_int_pow_nat]
   _ ≃ (sgn p:ℚ)^n       := pow_scompatL_from_integer
 
 variable [Subtraction ℚ] [Order ℚ]
@@ -211,7 +210,7 @@ theorem pow_preserves_pos {p : ℚ} {n : ℕ} : p > 0 → p^n > 0 := by
   have : sgn (p^n) ≃ 1 := calc
     _ = sgn (p^n) := rfl
     _ ≃ (sgn p)^n := sgn_int_pow_nat
-    _ ≃ 1^n       := Natural.pow_substL ‹sgn p ≃ 1›
+    _ ≃ 1^n       := by srw [‹sgn p ≃ 1›]
     _ ≃ 1         := Natural.pow_absorbL
   have : p^n > 0 := gt_zero_sgn.mpr ‹sgn (p^n) ≃ 1›
   exact this
@@ -244,13 +243,13 @@ theorem pow_preserves_nonneg {p : ℚ} {n : ℕ} : p ≥ 0 → p^n ≥ 0 := by
     | Or.inl (_ : (0:ℚ)^n ≃ 0) =>
       calc
         _ = p^n := rfl
-        _ ≃ 0^n := Natural.pow_substL ‹p ≃ 0›
+        _ ≃ 0^n := by srw [‹p ≃ 0›]
         _ ≃ 0   := ‹(0:ℚ)^n ≃ 0›
         _ ≥ 0   := le_refl
     | Or.inr (_ : (0:ℚ)^n ≃ 1) =>
       calc
         _ = p^n := rfl
-        _ ≃ 0^n := Natural.pow_substL ‹p ≃ 0›
+        _ ≃ 0^n := by srw [‹p ≃ 0›]
         _ ≃ 1   := ‹(0:ℚ)^n ≃ 1›
         _ ≥ 0   := one_ge_zero
 
@@ -295,7 +294,7 @@ theorem sgn_diff_pow_pos
     calc
       _ = sgn (x * y)   := rfl
       _ ≃ sgn x * sgn y := Integer.sgn_compat_mul
-      _ ≃ 1 * sgn y     := AA.substL (Integer.gt_zero_sgn.mp ‹x > 0›)
+      _ ≃ 1 * sgn y     := by srw [Integer.gt_zero_sgn.mp ‹x > 0›]
       _ ≃ sgn y         := AA.identL
   have : sgn (b * d) ≃ 1 := calc
     _ = sgn (b * d)   := rfl
@@ -306,7 +305,7 @@ theorem sgn_diff_pow_pos
   have sgn_bd_pow {k : ℕ} : sgn ((b * d)^k) ≃ 1 := calc
     _ = sgn ((b * d)^k) := rfl
     _ ≃ (sgn (b * d))^k := Integer.sgn_pow
-    _ ≃ 1^k             := Natural.pow_substL ‹sgn (b * d) ≃ 1›
+    _ ≃ 1^k             := by srw [‹sgn (b * d) ≃ 1›]
     _ ≃ 1               := Natural.pow_absorbL
   have : Integer.Sqrt1 (sgn (b * d)) :=
     Integer.sqrt1_cases.mpr (Or.inl ‹sgn (b * d) ≃ 1›)
@@ -327,27 +326,23 @@ theorem sgn_diff_pow_pos
     eqv_symm sub_compat_from_integer
   have mul_liftQ {x y : ℤ} : (x:ℚ) * y ≃ ((x * y : ℤ):ℚ) :=
     eqv_symm mul_compat_from_integer
-  have mul_pow_liftQ
-      {x y : ℤ} {k : ℕ} : (x:ℚ)^k * (y:ℚ)^k ≃ (((x * y)^k : ℤ):ℚ)
-      := calc
+  have mpℚ {x y : ℤ} {k : ℕ} : (x:ℚ)^k * (y:ℚ)^k ≃ (((x * y)^k : ℤ):ℚ) := calc
     _ = (x:ℚ)^k * (y:ℚ)^k   := rfl
     _ ≃ ((x:ℚ) * y)^k       := eqv_symm Natural.pow_distribR_mul
-    _ ≃ ((x * y : ℤ):ℚ)^k   := Natural.pow_substL mul_liftQ
+    _ ≃ ((x * y : ℤ):ℚ)^k   := by srw [mul_liftQ]
     _ ≃ (((x * y)^k : ℤ):ℚ) := eqv_symm pow_scompatL_from_integer
   have sub_mul_liftQ
       {k : ℕ}
       : (a:ℚ)^k * (d:ℚ)^k - (b:ℚ)^k * (c:ℚ)^k ≃ (((a * d)^k - (b * c)^k : ℤ):ℚ)
       := calc
-    _ = (a:ℚ)^k * (d:ℚ)^k - (b:ℚ)^k * (c:ℚ)^k     := rfl
-    _ ≃ (((a * d)^k : ℤ):ℚ) - (b:ℚ)^k * (c:ℚ)^k   := sub_substL mul_pow_liftQ
-    _ ≃ (((a * d)^k : ℤ):ℚ) - (((b * c)^k : ℤ):ℚ) := sub_substR mul_pow_liftQ
-    _ ≃ (((a * d)^k - (b * c)^k : ℤ):ℚ)           := sub_liftQ
+    _ = (a:ℚ)^k * (d:ℚ)^k - (b:ℚ)^k * (c:ℚ)^k := rfl
+    _ ≃ (((a*d)^k:ℤ):ℚ) - (((b*c)^k:ℤ):ℚ)     := by srw [mpℚ, mpℚ]
+    _ ≃ (((a*d)^k - (b*c)^k : ℤ):ℚ)           := sub_liftQ
   have sub_pow_expand {k : ℕ} : p^k - q^k ≃ (a:ℚ)^k/b^k - (c:ℚ)^k/d^k := calc
     _ = p^k - q^k                 := rfl
-    _ ≃ ((a:ℚ)/b)^k - q^k         := sub_substL (Natural.pow_substL ‹p ≃ a/b›)
-    _ ≃ ((a:ℚ)/b)^k - ((c:ℚ)/d)^k := sub_substR (Natural.pow_substL ‹q ≃ c/d›)
-    _ ≃ (a:ℚ)^k/b^k - ((c:ℚ)/d)^k := sub_substL pow_distribR_div
-    _ ≃ (a:ℚ)^k/b^k - (c:ℚ)^k/d^k := sub_substR pow_distribR_div
+    _ ≃ (a:ℚ)^k/b^k - q^k         := by srw [‹p ≃ a/b›, pow_distribR_div]
+    _ ≃ (a:ℚ)^k/b^k - ((c:ℚ)/d)^k := by srw [‹q ≃ c/d›]
+    _ ≃ (a:ℚ)^k/b^k - (c:ℚ)^k/d^k := by srw [pow_distribR_div]
   have sub_pow_frac
       {k : ℕ}
       : have : Integer.Nonzero ((b * d)^k) := nonzero_bd_pow
@@ -358,46 +353,38 @@ theorem sgn_diff_pow_pos
     _ = p^k - q^k                                   := rfl
     _ ≃ (a:ℚ)^k/b^k - (c:ℚ)^k/d^k                   := sub_pow_expand
     _ ≃ ((a:ℚ)^k*(d:ℚ)^k - (b:ℚ)^k*(c:ℚ)^k)/((b:ℚ)^k*(d:ℚ)^k) := sub_fractions
-    _ ≃ (((a*d)^k-(b*c)^k:ℤ):ℚ)/((b:ℚ)^k * (d:ℚ)^k) := div_substL sub_mul_liftQ
-    _ ≃ (((a*d)^k-(b*c)^k:ℤ):ℚ)/(((b*d)^k:ℤ):ℚ)     := div_substR mul_pow_liftQ
+    _ ≃ (((a*d)^k-(b*c)^k:ℤ):ℚ)/((b:ℚ)^k * (d:ℚ)^k) := by srw [sub_mul_liftQ]
+    _ ≃ (((a*d)^k-(b*c)^k:ℤ):ℚ)/(((b*d)^k:ℤ):ℚ)     := by srw [mpℚ]
 
+  let ad := a * d; let bc := b * c; let bd := b * d
   have sgn_sub_pow_factor
-      : sgn (p^n - q^n) ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n)
+      : sgn (p^n - q^n) ≃ sgn (ad^n - bc^n) * sgn (bd^n)
       := calc
-    _ = sgn (p^n - q^n)                               := rfl
-    _ ≃ sgn ((((a*d)^n-(b*c)^n:ℤ):ℚ)/(((b*d)^n:ℤ):ℚ)) := sgn_subst sub_pow_frac
-    _ ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n)         := sgn_div_integers
-  have sgn_diff_int_pow : sgn ((a * d)^n - (b * c)^n) ≃ sgn (a * d - b * c) :=
-    Integer.sgn_diff_pow_pos ‹a * d ≥ 0› ‹b * c ≥ 0› ‹n ≥ 1›
-  have sgn_bd_drop_pow : sgn ((b * d)^n) ≃ sgn (b * d) := calc
-    _ = sgn ((b * d)^n) := rfl
-    _ ≃ (sgn (b * d))^n := Integer.sgn_pow
-    _ ≃ sgn (b * d)     := Integer.pow_absorbL ‹n ≥ 1› sqr_sgn_bd_idemp
+    _ = sgn (p^n - q^n)                      := rfl
+    _ ≃ sgn (((ad^n-bc^n:ℤ):ℚ)/((bd^n:ℤ):ℚ)) := by srw [sub_pow_frac]
+    _ ≃ sgn (ad^n-bc^n) * sgn (bd^n)         := sgn_div_integers
+  have sgn_diff_int_pow : sgn (ad^n - bc^n) ≃ sgn (ad - bc) :=
+    Integer.sgn_diff_pow_pos ‹ad ≥ 0› ‹bc ≥ 0› ‹n ≥ 1›
+  have sgn_bd_drop_pow : sgn (bd^n) ≃ sgn bd := calc
+    _ = sgn (bd^n) := rfl
+    _ ≃ (sgn bd)^n := Integer.sgn_pow
+    _ ≃ sgn bd     := Integer.pow_absorbL ‹n ≥ 1› sqr_sgn_bd_idemp
 
-  have drop_pow_ones_ℚ : p^1 - q^1 ≃ p - q := calc
-    _ = p^1 - q^1 := rfl
-    _ ≃ p - q^1   := sub_substL Natural.pow_one
-    _ ≃ p - q     := sub_substR Natural.pow_one
-  have drop_pow_num {x y : ℤ} : ((x^1 - y^1 : ℤ):ℚ) ≃ ((x - y : ℤ):ℚ) := calc
-    _ = ((x^1 - y^1 : ℤ):ℚ) := rfl
-    _ ≃ ((x - y^1 : ℤ):ℚ)   := from_integer_subst (AA.substL Natural.pow_one)
-    _ ≃ ((x - y : ℤ):ℚ)     := from_integer_subst (AA.substR Natural.pow_one)
-  have drop_pow_den {x : ℤ} : ((x^1:ℤ):ℚ) ≃ (x:ℚ) :=
-    from_integer_subst Natural.pow_one
+  have p1ℤ {x : ℤ} : x^1 ≃ x := Natural.pow_one
+  have p1ℚ {x : ℚ} : x^1 ≃ x := Natural.pow_one
   have sub_frac : p - q ≃ ((a * d - b * c : ℤ):ℚ)/((b * d : ℤ):ℚ) := calc
-    _ = p - q                                       := rfl
-    _ ≃ p^1 - q^1                                   := eqv_symm drop_pow_ones_ℚ
-    _ ≃ (((a*d)^1 - (b*c)^1 : ℤ):ℚ)/(((b*d)^1:ℤ):ℚ) := sub_pow_frac
-    _ ≃ ((a*d - b*c : ℤ):ℚ)/(((b*d)^1:ℤ):ℚ)         := div_substL drop_pow_num
-    _ ≃ ((a*d - b*c : ℤ):ℚ)/((b*d:ℤ):ℚ)             := div_substR drop_pow_den
+    _ = p - q                              := rfl
+    _ ≃ p^1 - q^1                          := eqv_symm (by srw [p1ℚ, p1ℚ])
+    _ ≃ ((ad^1 - bc^1 : ℤ):ℚ)/((bd^1:ℤ):ℚ) := sub_pow_frac
+    _ ≃ ((ad - bc : ℤ):ℚ)/((bd:ℤ):ℚ)       := by srw [p1ℤ, p1ℤ, p1ℤ]
 
   calc
-    _ = sgn (p^n - q^n)                       := rfl
-    _ ≃ sgn ((a*d)^n-(b*c)^n) * sgn ((b*d)^n) := sgn_sub_pow_factor
-    _ ≃ sgn (a*d - b*c) * sgn ((b*d)^n)       := AA.substL sgn_diff_int_pow
-    _ ≃ sgn (a*d - b*c) * sgn (b*d)           := AA.substR sgn_bd_drop_pow
-    _ ≃ sgn (((a*d - b*c:ℤ):ℚ)/((b*d:ℤ):ℚ))   := Rel.symm sgn_div_integers
-    _ ≃ sgn (p - q)                           := sgn_subst (eqv_symm sub_frac)
+    _ = sgn (p^n - q^n)                  := rfl
+    _ ≃ sgn (ad^n-bc^n) * sgn (bd^n)     := sgn_sub_pow_factor
+    _ ≃ sgn (ad - bc) * sgn (bd^n)       := by srw [sgn_diff_int_pow]
+    _ ≃ sgn (ad - bc) * sgn bd           := by srw [sgn_bd_drop_pow]
+    _ ≃ sgn (((ad - bc:ℤ):ℚ)/((bd:ℤ):ℚ)) := Rel.symm sgn_div_integers
+    _ ≃ sgn (p - q)                      := by srw [←sub_frac]
 
 /--
 The greater-than relation between two nonnegative rational numbers is
@@ -448,10 +435,10 @@ theorem pow_preserves_ge_nonneg
   | Or.inr (_ : n ≃ 0) =>
     have : p^n ≃ q^n := calc
       _ = p^n := rfl
-      _ ≃ p^0 := Natural.pow_substR ‹n ≃ 0›
+      _ ≃ p^0 := by srw [‹n ≃ 0›]
       _ ≃ 1   := Natural.pow_zero
       _ ≃ q^0 := eqv_symm Natural.pow_zero
-      _ ≃ q^n := Natural.pow_substR (Rel.symm ‹n ≃ 0›)
+      _ ≃ q^n := by srw [←‹n ≃ 0›]
     have : p^n ≥ q^n := ge_cases.mpr (Or.inr ‹p^n ≃ q^n›)
     exact this
 
@@ -501,6 +488,8 @@ class Exponentiation.Props
 
 export Exponentiation.Props (pow_diff pow_substR)
 
+attribute [gcongr] pow_substR
+
 /-- All integer exponentiation axioms. -/
 class Exponentiation
     {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
@@ -534,6 +523,7 @@ on rationals, this needs to be true.
 numbers, and use `pow_diff` to convert the integer power into a ratio of
 natural number powers. Then delegate to `Natural.pow_substL`.
 -/
+@[gcongr]
 theorem pow_substL
     {p₁ p₂ : ℚ} {a : ℤ} [AP (p₁ ≄ 0)] [AP (p₂ ≄ 0)] : p₁ ≃ p₂ → p₁^a ≃ p₂^a
     := by
@@ -544,12 +534,12 @@ theorem pow_substL
     Integer.as_diff a
   calc
     _ = p₁^a           := rfl
-    _ ≃ p₁^((n:ℤ) - m) := pow_substR ‹a ≃ n - m›
+    _ ≃ p₁^((n:ℤ) - m) := by srw [‹a ≃ n - m›]
     _ ≃ p₁^n / p₁^m    := pow_diff
-    _ ≃ p₂^n / p₁^m    := div_substL (Natural.pow_substL ‹p₁ ≃ p₂›)
-    _ ≃ p₂^n / p₂^m    := div_substR (Natural.pow_substL ‹p₁ ≃ p₂›)
+    _ ≃ p₂^n / p₁^m    := by srw [‹p₁ ≃ p₂›]
+    _ ≃ p₂^n / p₂^m    := by srw [‹p₁ ≃ p₂›]
     _ ≃ p₂^((n:ℤ) - m) := eqv_symm pow_diff
-    _ ≃ p₂^a           := pow_substR (Rel.symm ‹a ≃ n - m›)
+    _ ≃ p₂^a           := by srw [←‹a ≃ n - m›]
 
 /--
 Raising a nonzero rational number to any integer power gives a nonzero result.
@@ -574,7 +564,7 @@ theorem pow_preserves_nonzero {p : ℚ} {a : ℤ} [AP (p ≄ 0)] : p^a ≄ 0 := 
   have : p^n / p^m ≃ 0 := calc
     _ = p^n / p^m     := rfl
     _ ≃ p^((n:ℤ) - m) := eqv_symm pow_diff
-    _ ≃ p^a           := pow_substR (Rel.symm ‹a ≃ n - m›)
+    _ ≃ p^a           := by srw [←‹a ≃ n - m›]
     _ ≃ 0             := ‹p^a ≃ 0›
   have : p^n ≃ 0 := div_eqv_0.mp this
   have : p^n ≄ 0 := Natural.pow_preserves_nonzero_base ‹AP (p ≄ 0)›.ev
@@ -598,9 +588,9 @@ numbers and simplify.
 -/
 theorem pow_nonneg {p : ℚ} {n : ℕ} [AP (p ≄ 0)] : p^(n:ℤ) ≃ p^n := calc
   _ ≃ p^(n:ℤ)       := eqv_refl
-  _ ≃ p^((n:ℤ) - 0) := pow_substR (Rel.symm Integer.sub_identR)
+  _ ≃ p^((n:ℤ) - 0) := by srw [←Integer.sub_identR]
   _ ≃ p^n / p^(0:ℕ) := pow_diff
-  _ ≃ p^n / 1       := div_substR Natural.pow_zero
+  _ ≃ p^n / 1       := by srw [Natural.pow_zero]
   _ ≃ p^n           := div_identR
 
 /--
@@ -617,9 +607,9 @@ numbers and simplify.
 -/
 theorem pow_neg {p : ℚ} {n : ℕ} [AP (p ≄ 0)] : p^(-(n:ℤ)) ≃ 1 / p^n := calc
   _ = p^(-(n:ℤ))    := rfl
-  _ ≃ p^(0 - (n:ℤ)) := pow_substR (Rel.symm Integer.sub_identL)
+  _ ≃ p^(0 - (n:ℤ)) := by srw [←Integer.sub_identL]
   _ ≃ p^(0:ℕ) / p^n := pow_diff
-  _ ≃ 1 / p^n       := div_substL Natural.pow_zero
+  _ ≃ 1 / p^n       := by srw [Natural.pow_zero]
 
 /--
 Exponentiation of rationals to integer powers is consistent with reciprocation.
@@ -634,7 +624,7 @@ theorem pow_neg_one {p : ℚ} [AP (p ≄ 0)] : p^(-1:ℤ) ≃ p⁻¹ := calc
   _ = p^(-1:ℤ)    := rfl
   _ = p^(-(1:ℤ))  := rfl
   _ ≃ 1 / p^(1:ℕ) := pow_neg
-  _ ≃ 1 / p       := div_substR Natural.pow_one
+  _ ≃ 1 / p       := by srw [Natural.pow_one]
   _ ≃ p⁻¹         := div_identL
 
 /--
@@ -660,26 +650,29 @@ theorem pow_compatL_add
     Integer.as_diff b
   have : a + b ≃ (n + k : ℕ) - (m + j : ℕ) := calc
     _ = a + b                     := rfl
-    _ ≃ (n - m) + b               := Integer.add_substL ‹a ≃ n - m›
-    _ ≃ (n - m) + (k - j)         := Integer.add_substR ‹b ≃ k - j›
+    _ ≃ (n - m) + (k - j)         := by srw [‹a ≃ n - m›, ‹b ≃ k - j›]
     _ ≃ (n + k) - (m + j)         := Integer.sub_xchg_add
-    _ ≃ (n + k : ℕ) - (m + j)     := AA.substL (Rel.symm AA.compat₂)
-    _ ≃ (n + k : ℕ) - (m + j : ℕ) := AA.substR (Rel.symm AA.compat₂)
-  have pow_lift {x y : ℕ} {z : ℤ} : z ≃ x - y → p^x / p^y ≃ p^z := by
-    intro (_ : z ≃ x - y)
-    calc
-      _ = p^x / p^y     := rfl
-      _ ≃ p^((x:ℤ) - y) := eqv_symm pow_diff
-      _ ≃ p^z           := pow_substR (Rel.symm ‹z ≃ x - y›)
-  calc
+    _ ≃ (n + k : ℕ) - (m + j)     := by srw [←AA.compat₂]
+    _ ≃ (n + k : ℕ) - (m + j : ℕ) := by srw [←AA.compat₂]
+  have : p^(a + b) ≃ p^(n + k) / p^(m + j) := calc
     _ = p^(a + b)                         := rfl
-    _ ≃ p^(((n + k : ℕ):ℤ) - (m + j : ℕ)) := pow_substR ‹a+b ≃ (n+k:ℕ)-(m+j:ℕ)›
+    _ ≃ p^(((n + k : ℕ):ℤ) - (m + j : ℕ)) := by srw [‹a+b ≃ (n+k:ℕ)-(m+j:ℕ)›]
     _ ≃ p^(n + k) / p^(m + j)             := pow_diff
-    _ ≃ (p^n * p^k) / p^(m + j)           := div_substL Natural.pow_compatL_add
-    _ ≃ (p^n * p^k) / (p^m * p^j)         := div_substR Natural.pow_compatL_add
-    _ ≃ (p^n / p^m) * (p^k / p^j)         := Rel.symm div_mul_swap
-    _ ≃ p^a * (p^k / p^j)                 := mul_substL (pow_lift ‹a ≃ n - m›)
-    _ ≃ p^a * p^b                         := mul_substR (pow_lift ‹b ≃ k - j›)
+  have : p^n / p^m ≃ p^a := calc
+    _ = p^n / p^m     := rfl
+    _ ≃ p^((n:ℤ) - m) := eqv_symm pow_diff
+    _ ≃ p^a           := by srw [←‹a ≃ n - m›]
+  have : p^k / p^j ≃ p^b := calc
+    _ = p^k / p^j     := rfl
+    _ ≃ p^((k:ℤ) - j) := eqv_symm pow_diff
+    _ ≃ p^b           := by srw [←‹b ≃ k - j›]
+  calc
+    _ = p^(a + b)                 := rfl
+    _ ≃ p^(n + k) / p^(m + j)     := by srw [‹p^(a+b) ≃ p^(n+k)/p^(m+j)›]
+    _ ≃ (p^n * p^k) / p^(m + j)   := by srw [Natural.pow_compatL_add]
+    _ ≃ (p^n * p^k) / (p^m * p^j) := by srw [Natural.pow_compatL_add]
+    _ ≃ (p^n / p^m) * (p^k / p^j) := Rel.symm div_mul_swap
+    _ ≃ p^a * p^b                 := by srw [‹p^n/p^m ≃ p^a›, ‹p^k/p^j ≃ p^b›]
 
 /--
 Powers of powers flatten into a single power whose exponent is the product of
@@ -703,24 +696,29 @@ theorem pow_flatten {p : ℚ} [AP (p ≄ 0)] {a b : ℤ} : (p^a)^b ≃ p^(a * b)
   have Exists.intro (k : ℕ) (Exists.intro (j : ℕ) (b_eqv : b ≃ k - j)) :=
     Integer.as_diff b
 
-  have pow_expand : (p^a)^b ≃ ((p^n)^k/(p^m)^k) / ((p^n)^j/(p^m)^j) := calc
-    _ = (p^a)^b                               := rfl
-    _ ≃ (p^((n:ℤ)-m))^b                       := pow_substL (pow_substR a_eqv)
-    _ ≃ (p^n/p^m)^b                           := pow_substL pow_diff
-    _ ≃ (p^n/p^m)^((k:ℤ)-j)                   := pow_substR b_eqv
-    _ ≃ (p^n/p^m)^k / (p^n/p^m)^j             := pow_diff
-    _ ≃ ((p^n)^k/(p^m)^k) / (p^n/p^m)^j       := div_substL pow_distribR_div
-    _ ≃ ((p^n)^k/(p^m)^k) / ((p^n)^j/(p^m)^j) := div_substR pow_distribR_div
+  let pn := p^n; let pm := p^m
+  have : p^a ≃ pn / pm := calc
+    _ = p^a           := rfl
+    _ ≃ p^((n:ℤ) - m) := by srw [‹a ≃ n - m›]
+    _ ≃ pn / pm       := pow_diff
+  have pow_expand : (p^a)^b ≃ (pn^k/pm^k) / (pn^j/pm^j) := calc
+    _ = (p^a)^b                   := rfl
+    _ ≃ (pn/pm)^b                 := by srw [‹p^a ≃ pn / pm›]
+    _ ≃ (pn/pm)^((k:ℤ)-j)         := by srw [‹b ≃ k - j›]
+    _ ≃ (pn/pm)^k / (pn/pm)^j     := pow_diff
+    _ ≃ (pn^k/pm^k) / (pn^j/pm^j) := by srw [pow_distribR_div, pow_distribR_div]
   have pow_combine {w x y z : ℕ} : (p^w)^x*(p^y)^z ≃ p^(w*x + y*z) := calc
     _ = (p^w)^x*(p^y)^z := rfl
-    _ ≃ p^(w*x)*(p^y)^z := mul_substL Natural.pow_flatten
-    _ ≃ p^(w*x)*p^(y*z) := mul_substR Natural.pow_flatten
+    _ ≃ p^(w*x)*p^(y*z) := by srw [Natural.pow_flatten, Natural.pow_flatten]
     _ ≃ p^(w*x + y*z)   := Rel.symm Natural.pow_compatL_add
   have multi_compat {w x y z : ℕ} : ((w*x + y*z : ℕ):ℤ) ≃ (w:ℤ)*x + y*z := calc
     _ = ((w*x + y*z : ℕ):ℤ)           := rfl
     _ ≃ ((w*x : ℕ):ℤ) + ((y*z : ℕ):ℤ) := AA.compat₂
-    _ ≃ (w:ℤ)*x + ((y*z : ℕ):ℤ)       := Integer.add_substL AA.compat₂
-    _ ≃ (w:ℤ)*x + y*z                 := Integer.add_substR AA.compat₂
+    _ ≃ (w:ℤ)*x + ((y*z : ℕ):ℤ)       := by srw [AA.compat₂]
+    _ ≃ (w:ℤ)*x + y*z                 := by srw [AA.compat₂]
+  have pow_reduce₁
+    : ((n*k+m*j:ℕ):ℤ) - ((m*k+n*j:ℕ):ℤ) ≃ ((n:ℤ)*k+m*j) - (m*k+n*j)
+    := by srw [multi_compat, multi_compat]
   have diff_expand
       {w x y z : ℤ} : (w-x) * (y-z) ≃ (w*y + x*z) - (x*y + w*z)
       := by
@@ -729,31 +727,31 @@ theorem pow_flatten {p : ℚ} [AP (p ≄ 0)] {a b : ℤ} : (p^a)^b ≃ p^(a * b)
     calc
       _ = (w-x) * (y-z)           := rfl
       _ ≃ w * (y-z) - x * (y-z)   := AA.distribR
-      _ ≃ (wy - wz) - x * (y-z)   := AA.substL AA.distribL
-      _ ≃ (wy - wz) - (xy - xz)   := AA.substR AA.distribL
+      _ ≃ (wy - wz) - x * (y-z)   := by srw [Integer.mul_distribL_sub]
+      _ ≃ (wy - wz) - (xy - xz)   := by srw [Integer.mul_distribL_sub]
       _ ≃ (wy - wz) + -(xy - xz)  := Integer.sub_defn
-      _ ≃ (wy - wz) + (xz - xy)   := Integer.add_substR Integer.sub_neg_flip
-      _ ≃ (wy + -wz) + (xz - xy)  := Integer.add_substL Integer.sub_defn
-      _ ≃ (wy + -wz) + (xz + -xy) := Integer.add_substR Integer.sub_defn
+      _ ≃ (wy - wz) + (xz - xy)   := by srw [Integer.sub_neg_flip]
+      _ ≃ (wy + -wz) + (xz + -xy) := by srw [Integer.sub_defn, Integer.sub_defn]
       _ ≃ (wy + xz) + (-wz + -xy) := AA.expr_xxfxxff_lr_swap_rl (f := (· + ·))
-      _ ≃ (wy + xz) + (-xy + -wz) := Integer.add_substR Integer.add_comm
-      _ ≃ (wy + xz) + -(xy + wz)  := Integer.add_substR ‹-xy + -wz ≃ -(xy + wz)›
+      _ ≃ (wy + xz) + (-xy + -wz) := by srw [Integer.add_comm]
+      _ ≃ (wy + xz) + -(xy + wz)  := by srw [‹-xy + -wz ≃ -(xy + wz)›]
       _ ≃ (wy + xz) - (xy + wz)   := Rel.symm Integer.sub_defn
-  have pow_reduce : ((n*k + m*j : ℕ):ℤ) - ((m*k + n*j : ℕ):ℤ) ≃ a * b := calc
-    _ = ((n*k + m*j : ℕ):ℤ) - ((m*k + n*j : ℕ):ℤ) := rfl
-    _ ≃ ((n:ℤ)*k + m*j) - ((m*k + n*j : ℕ):ℤ)     := AA.substL multi_compat
-    _ ≃ ((n:ℤ)*k + m*j) - (m*k + n*j)             := AA.substR multi_compat
-    _ ≃ ((n:ℤ) - m) * (k - j)                     := Rel.symm diff_expand
-    _ ≃ a * (k - j)                               := AA.substL (Rel.symm a_eqv)
-    _ ≃ a * b                                     := AA.substR (Rel.symm b_eqv)
-  calc
-    _ = (p^a)^b                                       := rfl
-    _ ≃ ((p^n)^k/(p^m)^k) / ((p^n)^j/(p^m)^j)         := pow_expand
-    _ ≃ ((p^n)^k*(p^m)^j) / ((p^m)^k*(p^n)^j)         := div_div_div
-    _ ≃ p^(n*k + m*j) / ((p^m)^k*(p^n)^j)             := div_substL pow_combine
-    _ ≃ p^(n*k + m*j) / p^(m*k + n*j)                 := div_substR pow_combine
+  have pow_reduce₂ : ((n:ℤ)*k + m*j) - (m*k + n*j) ≃ a * b := calc
+    _ = ((n:ℤ)*k + m*j) - (m*k + n*j) := rfl
+    _ ≃ ((n:ℤ) - m) * (k - j)         := Rel.symm diff_expand
+    _ ≃ a * b                         := Rel.symm (by srw [a_eqv, b_eqv])
+  have div_pow_reduce : p^(n*k + m*j) / p^(m*k + n*j) ≃ p^(a * b) := calc
+    _ = p^(n*k + m*j) / p^(m*k + n*j)                 := rfl
     _ ≃ p^(((n*k + m*j : ℕ):ℤ) - ((m*k + n*j : ℕ):ℤ)) := eqv_symm pow_diff
-    _ ≃ p^(a * b)                                     := pow_substR pow_reduce
+    _ ≃ p^(((n:ℤ)*k + m*j) - (m*k + n*j))             := by srw [pow_reduce₁]
+    _ ≃ p^(a * b)                                     := by srw [pow_reduce₂]
+  calc
+    _ = (p^a)^b                               := rfl
+    _ ≃ ((p^n)^k/(p^m)^k) / ((p^n)^j/(p^m)^j) := pow_expand
+    _ ≃ ((p^n)^k*(p^m)^j) / ((p^m)^k*(p^n)^j) := div_div_div
+    _ ≃ p^(n*k + m*j) / ((p^m)^k*(p^n)^j)     := by srw [pow_combine]
+    _ ≃ p^(n*k + m*j) / p^(m*k + n*j)         := by srw [pow_combine]
+    _ ≃ p^(a * b)                             := div_pow_reduce
 
 /--
 Integer exponents distribute over multiplication.
@@ -777,15 +775,14 @@ theorem pow_distribR_mul
 
   calc
     _ = (p * q)^a                 := rfl
-    _ ≃ (p * q)^((n:ℤ)-m)         := pow_substR a_eqv
+    _ ≃ (p * q)^((n:ℤ)-m)         := by srw [a_eqv]
     _ ≃ (p * q)^n / (p * q)^m     := pow_diff
-    _ ≃ (p^n * q^n) / (p * q)^m   := div_substL Natural.pow_distribR_mul
-    _ ≃ (p^n * q^n) / (p^m * q^m) := div_substR Natural.pow_distribR_mul
+    _ ≃ (p^n * q^n) / (p * q)^m   := by srw [Natural.pow_distribR_mul]
+    _ ≃ (p^n * q^n) / (p^m * q^m) := by srw [Natural.pow_distribR_mul]
     _ ≃ (p^n / p^m) * (q^n / q^m) := eqv_symm div_mul_swap
-    _ ≃ p^((n:ℤ)-m) * (q^n / q^m) := mul_substL (eqv_symm pow_diff)
-    _ ≃ p^((n:ℤ)-m) * q^((n:ℤ)-m) := mul_substR (eqv_symm pow_diff)
-    _ ≃ p^a * q^((n:ℤ)-m)         := mul_substL (pow_substR (Rel.symm a_eqv))
-    _ ≃ p^a * q^a                 := mul_substR (pow_substR (Rel.symm a_eqv))
+    _ ≃ p^((n:ℤ)-m) * q^((n:ℤ)-m) := by srw [←pow_diff, ←pow_diff]
+    _ ≃ p^a * q^((n:ℤ)-m)         := by srw [←a_eqv]
+    _ ≃ p^a * q^a                 := by srw [←a_eqv]
 
 /--
 The rational number one, raised to any integer exponent, is one.
@@ -803,9 +800,9 @@ theorem one_pow {a : ℤ} : (1:ℚ)^a ≃ 1 := by
     Integer.as_diff a
   calc
     _ = (1:ℚ)^a           := rfl
-    _ ≃ (1:ℚ)^((n:ℤ) - m) := pow_substR ‹a ≃ n - m›
+    _ ≃ (1:ℚ)^((n:ℤ) - m) := by srw [‹a ≃ n - m›]
     _ ≃ (1:ℚ)^n / (1:ℚ)^m := pow_diff
-    _ ≃ (1:ℚ)^n / 1       := div_substR Natural.pow_absorbL
+    _ ≃ (1:ℚ)^n / 1       := by srw [Natural.pow_absorbL]
     _ ≃ (1:ℚ)^n           := div_identR
     _ ≃ 1                 := Natural.pow_absorbL
 
@@ -824,15 +821,15 @@ theorem pow_int_scompatL_abs
 
   calc
     _ = abs (p^a)             := rfl
-    _ ≃ abs (p^((n:ℤ)-m))     := abs_subst (pow_substR ‹a ≃ n - m›)
-    _ ≃ abs (p^n/p^m)         := abs_subst pow_diff
+    _ ≃ abs (p^((n:ℤ)-m))     := by srw [‹a ≃ n - m›]
+    _ ≃ abs (p^n/p^m)         := by srw [pow_diff]
     -- ↓ begin key steps ↓
     _ ≃ abs (p^n) / abs (p^m) := abs_compat_div
-    _ ≃ (abs p)^n / abs (p^m) := div_substL pow_nat_scompatL_abs
-    _ ≃ (abs p)^n / (abs p)^m := div_substR pow_nat_scompatL_abs
+    _ ≃ (abs p)^n / abs (p^m) := by srw [pow_nat_scompatL_abs]
+    _ ≃ (abs p)^n / (abs p)^m := by srw [pow_nat_scompatL_abs]
     -- ↑  end key steps  ↑
     _ ≃ (abs p)^((n:ℤ)-m)     := eqv_symm pow_diff
-    _ ≃ (abs p)^a             := pow_substR (Rel.symm ‹a ≃ n - m›)
+    _ ≃ (abs p)^a             := by srw [←‹a ≃ n - m›]
 
 end
 variable [Induction.{1} ℚ]
@@ -846,17 +843,15 @@ theorem sgn_pow_int
     := by
   have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : a ≃ n - m)) :=
     Integer.as_diff a
-  have pow_eqv : p^a ≃ p^((n:ℤ) - m) := pow_substR ‹a ≃ n - m›
   calc
     _ = (sgn (p^a):ℚ)               := rfl
-    _ ≃ (sgn (p^((n:ℤ) - m)):ℚ)     := from_integer_subst (sgn_subst pow_eqv)
-    _ ≃ (sgn (p^n/p^m):ℚ)           := from_integer_subst (sgn_subst pow_diff)
+    _ ≃ (sgn (p^n/p^m):ℚ)           := by srw [‹a ≃ n - m›, pow_diff]
     _ ≃ (sgn (p^n):ℚ)/(sgn (p^m):ℚ) := sgn_compat_div
-    -- The next two steps are the key to the proof
-    _ ≃ (sgn p:ℚ)^n/(sgn (p^m):ℚ)   := div_substL sgn_pow_nat
-    _ ≃ (sgn p:ℚ)^n/(sgn p:ℚ)^m     := div_substR sgn_pow_nat
+    -- ↓ begin key steps ↓
+    _ ≃ (sgn p:ℚ)^n/(sgn p:ℚ)^m     := by srw [sgn_pow_nat, sgn_pow_nat]
+    -- ↑  end key steps  ↑
     _ ≃ (sgn p:ℚ)^((n:ℤ) - m)       := eqv_symm pow_diff
-    _ ≃ (sgn p:ℚ)^a                 := pow_substR (Rel.symm ‹a ≃ n - m›)
+    _ ≃ (sgn p:ℚ)^a                 := by srw [←‹a ≃ n - m›]
 
 variable [Subtraction ℚ] [Order ℚ]
 
@@ -872,9 +867,10 @@ theorem pow_preserves_pos_base
   have : sgn p ≃ 1 := gt_zero_sgn.mp ‹p > 0›
   have : (sgn (p^a):ℚ) ≃ 1 := calc
     _ = (sgn (p^a):ℚ) := rfl
-    -- The next two steps are the key
+    -- ↓ begin key steps ↓
     _ ≃ (sgn p:ℚ)^a   := sgn_pow_int
-    _ ≃ (1:ℚ)^a       := pow_substL (from_integer_subst ‹sgn p ≃ 1›)
+    _ ≃ ((1:ℤ):ℚ)^a   := by srw [‹sgn p ≃ 1›]
+    -- ↑  end key steps  ↑
     _ ≃ 1             := one_pow
   have : sgn (p^a) ≃ 1 := from_integer_inject ‹(sgn (p^a):ℚ) ≃ 1›
   have : p^a > 0 := gt_zero_sgn.mpr ‹sgn (p^a) ≃ 1›
@@ -918,20 +914,19 @@ theorem sgn_diff_pow
   | Or.inl (_ : a ≃ 0) =>
     have pow_a_simp {x : ℚ} [AP (x ≄ 0)] : x^a ≃ 1 := calc
       _ = x^a     := rfl
-      _ ≃ x^(0:ℤ) := pow_substR ‹a ≃ 0›
+      _ ≃ x^(0:ℤ) := by srw [‹a ≃ 0›]
       _ ≃ x^(0:ℕ) := pow_nonneg
       _ ≃ 1       := Natural.pow_zero
     have : sgn a ≃ 0 := Integer.sgn_zero.mp ‹a ≃ 0›
     calc
-      -- V begin key steps V
+      -- ↓ begin key steps ↓
       _ = sgn (p^a - q^a)     := rfl
-      _ ≃ sgn (1 - q^a)       := sgn_subst (sub_substL pow_a_simp)
-      _ ≃ sgn ((1:ℚ) - 1)     := sgn_subst (sub_substR pow_a_simp)
-      _ ≃ sgn (0:ℚ)           := sgn_subst (sub_eqv_zero_iff_eqv.mpr eqv_refl)
-      -- ^  end key steps  ^
+      _ ≃ sgn ((1:ℚ) - 1)     := by srw [pow_a_simp, pow_a_simp]
+      _ ≃ sgn (0:ℚ)           := by srw [sub_eqv_zero_iff_eqv.mpr eqv_refl]
+      -- ↑  end key steps ↑
       _ ≃ 0                   := sgn_zero.mp eqv_refl
       _ ≃ sgn (p - q) * 0     := Rel.symm AA.absorbR
-      _ ≃ sgn (p - q) * sgn a := AA.substR (Rel.symm ‹sgn a ≃ 0›)
+      _ ≃ sgn (p - q) * sgn a := by srw [←‹sgn a ≃ 0›]
   | Or.inr (_ : Integer.Nonzero a) =>
     /-
     It's important to express `a` as a natural number with a sign, so that the
@@ -947,43 +942,40 @@ theorem sgn_diff_pow
     | Or.inl (_ : sgn a ≃ 1) =>
       have pow_a_simp {x : ℚ} [AP (x ≄ 0)] : x^a ≃ x^n := calc
         _ = x^a               := rfl
-        _ ≃ x^((n:ℤ) * sgn a) := pow_substR ‹a ≃ n * sgn a›
-        _ ≃ x^((n:ℤ) * 1)     := pow_substR (AA.substR ‹sgn a ≃ 1›)
-        _ ≃ x^(n:ℤ)           := pow_substR AA.identR
+        _ ≃ x^((n:ℤ) * sgn a) := by srw [‹a ≃ n * sgn a›]
+        _ ≃ x^(n:ℤ)           := by srw [‹sgn a ≃ 1›, Integer.mul_identR]
         _ ≃ x^n               := pow_nonneg
       calc
         _ = sgn (p^a - q^a)     := rfl
-        _ ≃ sgn (p^n - q^a)     := sgn_subst (sub_substL pow_a_simp)
-        -- V begin key steps V
-        _ ≃ sgn (p^n - q^n)     := sgn_subst (sub_substR pow_a_simp)
+        -- ↓ begin key steps ↓
+        _ ≃ sgn (p^n - q^n)     := by srw [pow_a_simp, pow_a_simp]
         _ ≃ sgn (p - q)         := sgn_diff_pow_pos ‹p ≥ 0› ‹q ≥ 0› ‹n ≥ 1›
-        -- ^  end key steps  ^
+        -- ↑  end key steps  ↑
         _ ≃ sgn (p - q) * 1     := Rel.symm AA.identR
-        _ ≃ sgn (p - q) * sgn a := AA.substR (Rel.symm ‹sgn a ≃ 1›)
+        _ ≃ sgn (p - q) * sgn a := by srw [←‹sgn a ≃ 1›]
     | Or.inr (_ : sgn a ≃ -1) =>
       have pow_a_simp {x : ℚ} [AP (x ≄ 0)] : x^a ≃ (x^n)⁻¹ := calc
         _ = x^a               := rfl
-        _ ≃ x^((n:ℤ) * sgn a) := pow_substR ‹a ≃ n * sgn a›
-        _ ≃ x^((n:ℤ) * -1)    := pow_substR (AA.substR ‹sgn a ≃ -1›)
+        _ ≃ x^((n:ℤ) * sgn a) := by srw [‹a ≃ n * sgn a›]
+        _ ≃ x^((n:ℤ) * -1)    := by srw [‹sgn a ≃ -1›]
         _ ≃ (x^(n:ℤ))^(-1:ℤ)  := eqv_symm pow_flatten
         _ ≃ (x^(n:ℤ))⁻¹       := pow_neg_one
-        _ ≃ (x^n)⁻¹           := recip_subst pow_nonneg
+        _ ≃ (x^n)⁻¹           := by srw [pow_nonneg]
       have : p^n > 0 := pow_preserves_pos ‹p > 0›
       have : q^n > 0 := pow_preserves_pos ‹q > 0›
       have : p^n * q^n > 0 := mul_preserves_pos ‹p^n > 0› ‹q^n > 0›
       calc
         _ = sgn (p^a - q^a)         := rfl
-        _ ≃ sgn ((p^n)⁻¹ - q^a)     := sgn_subst (sub_substL pow_a_simp)
-        -- V begin key steps V
-        _ ≃ sgn ((p^n)⁻¹ - (q^n)⁻¹) := sgn_subst (sub_substR pow_a_simp)
+        -- ↓ begin key steps ↓
+        _ ≃ sgn ((p^n)⁻¹ - (q^n)⁻¹) := by srw [pow_a_simp, pow_a_simp]
         _ ≃ sgn (q^n - p^n)         := sgn_sub_recip ‹p^n * q^n > 0›
         _ ≃ sgn (q - p)             := sgn_diff_pow_pos ‹q ≥ 0› ‹p ≥ 0› ‹n ≥ 1›
-        -- ^  end key steps  ^
-        _ ≃ sgn (-(p - q))          := sgn_subst (eqv_symm neg_sub)
+        -- ↑  end key steps  ↑
+        _ ≃ sgn (-(p - q))          := by srw [←neg_sub]
         _ ≃ -sgn (p - q)            := sgn_compat_neg
         _ ≃ -1 * sgn (p - q)        := Rel.symm Integer.mul_neg_one
         _ ≃ sgn (p - q) * -1        := AA.comm
-        _ ≃ sgn (p - q) * sgn a     := AA.substR (Rel.symm ‹sgn a ≃ -1›)
+        _ ≃ sgn (p - q) * sgn a     := by srw [←‹sgn a ≃ -1›]
 
 /--
 Raising two positive rational numbers (with one greater than or equivalent to
@@ -1001,11 +993,11 @@ theorem pow_pos_preserves_ge_pos
   show p^a ≥ q^a
 
   have : sgn (p^a - q^a) ≥ 0 := calc
-    -- V begin key steps V
+    -- ↓ begin key steps ↓
     _ = sgn (p^a - q^a)     := rfl
     _ ≃ sgn (p - q) * sgn a := sgn_diff_pow ‹p > 0› ‹q > 0›
-    -- ^  end key steps  ^
-    _ ≃ sgn (p - q) * 1     := AA.substR (Integer.gt_zero_sgn.mp ‹a > 0›)
+    -- ↑  end key steps  ↑
+    _ ≃ sgn (p - q) * 1     := by srw [Integer.gt_zero_sgn.mp ‹a > 0›]
     _ ≃ sgn (p - q)         := AA.identR
     _ ≥ 0                   := ge_iff_sub_sgn_nonneg.mp ‹p ≥ q›
   have : p^a ≥ q^a := ge_iff_sub_sgn_nonneg.mpr ‹sgn (p^a - q^a) ≥ 0›
@@ -1026,15 +1018,15 @@ theorem pow_neg_reverses_ge_pos
   show p^a ≤ q^a
 
   have : sgn (q^a - p^a) ≥ 0 := calc
-    -- V begin key steps V
+    -- ↓ begin key steps ↓
     _ = sgn (q^a - p^a)     := rfl
     _ ≃ sgn (q - p) * sgn a := sgn_diff_pow ‹q > 0› ‹p > 0›
-    -- ^  end key steps  ^
-    _ ≃ sgn (q - p) * -1    := AA.substR (Integer.lt_zero_sgn.mp ‹a < 0›)
+    -- ↑  end key steps  ↑
+    _ ≃ sgn (q - p) * -1    := by srw [Integer.lt_zero_sgn.mp ‹a < 0›]
     _ ≃ -1 * sgn (q - p)    := AA.comm
     _ ≃ -sgn (q - p)        := Integer.mul_neg_one
     _ ≃ sgn (-(q - p))      := Rel.symm sgn_compat_neg
-    _ ≃ sgn (p - q)         := sgn_subst neg_sub
+    _ ≃ sgn (p - q)         := by srw [neg_sub]
     _ ≥ 0                   := ge_iff_sub_sgn_nonneg.mp ‹p ≥ q›
   have : p^a ≤ q^a := ge_iff_sub_sgn_nonneg.mpr ‹sgn (q^a - p^a) ≥ 0›
   exact this
@@ -1066,10 +1058,10 @@ theorem pow_bijectL
   calc
     _ ↔ p^a ≃ q^a                   := Iff.rfl
     _ ↔ p^a - q^a ≃ 0               := sub_eqv_zero_iff_eqv.symm
-    -- V begin key steps V
+    -- ↓ begin key steps ↓
     _ ↔ sgn (p^a - q^a) ≃ 0         := sgn_zero
-    _ ↔ sgn (p - q) * sgn a ≃ 0     := AA.eqv_substL_iff factor
-    -- ^  end key steps  ^
+    _ ↔ sgn (p - q) * sgn a ≃ 0     := by srw [factor]
+    -- ↑  end key steps  ↑
     _ ↔ sgn (p - q) ≃ 0 ∨ sgn a ≃ 0 := Integer.mul_split_zero
     _ ↔ sgn (p - q) ≃ 0 ∨ False     := iff_subst_covar or_mapR a_neqv_0
     _ ↔ sgn (p - q) ≃ 0             := or_identR
@@ -1100,9 +1092,9 @@ theorem pow_two_lower_bound {a : ℤ} : a ≥ 1 → (2:ℚ)^a ≥ a := by
     show (2:ℚ)^c₂ ≥ c₂
     calc
       _ = (2:ℚ)^c₂ := rfl
-      _ ≃ (2:ℚ)^c₁ := pow_substR (Rel.symm ‹c₁ ≃ c₂›)
+      _ ≃ (2:ℚ)^c₁ := by srw [←‹c₁ ≃ c₂›]
       _ ≥ c₁       := ‹(2:ℚ)^c₁ ≥ c₁›
-      _ ≃ c₂       := from_integer_subst ‹c₁ ≃ c₂›
+      _ ≃ c₂       := by srw [‹c₁ ≃ c₂›]
 
   apply Integer.ind_from motive_subst ‹a ≥ 1›
   case base =>
@@ -1117,17 +1109,17 @@ theorem pow_two_lower_bound {a : ℤ} : a ≥ 1 → (2:ℚ)^a ≥ a := by
     show (2:ℚ)^(c + 1) ≥ ((c + 1 : ℤ):ℚ)
     have : (c:ℚ) ≥ 1 := le_respects_from_integer.mp ‹c ≥ 1›
     calc
-      _ = (2:ℚ)^(c + 1)         := rfl
-      _ ≃ (2:ℚ)^c * (2:ℚ)^(1:ℤ) := pow_compatL_add
-      _ ≃ (2:ℚ)^c * (2:ℚ)^(1:ℕ) := mul_substR pow_nonneg
+      _ = (2:ℚ)^(c + 1)             := rfl
+      _ ≃ (2:ℚ)^c * (2:ℚ)^((1:ℕ):ℤ) := pow_compatL_add
+      _ ≃ (2:ℚ)^c * (2:ℚ)^(1:ℕ)     := by srw [pow_nonneg]
       -- ↓ begin key steps ↓
-      _ ≃ (2:ℚ)^c * 2           := mul_substR Natural.pow_one
-      _ ≥ (c:ℚ) * 2             := le_substL_mul_pos two_pos ‹(2:ℚ)^c ≥ c›
-      _ ≃ (2:ℚ) * c             := mul_comm
-      _ ≃ (c:ℚ) + c             := mul_two_add
-      _ ≥ (c:ℚ) + 1             := le_substR_add ‹(c:ℚ) ≥ 1›
+      _ ≃ (2:ℚ)^c * 2               := by srw [Natural.pow_one]
+      _ ≥ (c:ℚ) * 2                 := le_substL_mul_pos two_pos ‹(2:ℚ)^c ≥ c›
+      _ ≃ (2:ℚ) * c                 := mul_comm
+      _ ≃ (c:ℚ) + c                 := mul_two_add
+      _ ≥ (c:ℚ) + 1                 := by srw [‹1 ≤ (c:ℚ)›]
       -- ↑  end key steps  ↑
-      _ ≃ ((c + 1 : ℤ):ℚ)       := eqv_symm add_compat_from_integer
+      _ ≃ ((c + 1 : ℤ):ℚ)           := eqv_symm add_compat_from_integer
 
 /--
 Sufficient conditions for an integer power of a rational number being no
@@ -1150,7 +1142,7 @@ theorem pow_lower_bound
     -- ↑  end key steps  ↑
     have : p^a ≥ 0 := ge_cases.mpr (Or.inl ‹p^a > 0›)
     have : (a:ℚ) ≤ 0 := le_respects_from_integer.mp ‹a ≤ 0›
-    have : p^a ≥ a := trans ‹p^a ≥ 0› ‹(0:ℚ) ≥ a›
+    have : p^a ≥ a := Trans.trans ‹p^a ≥ 0› ‹(0:ℚ) ≥ a›
     exact this
   | Or.inr (_ : a > 0) =>
     have : a ≥ 1 := Integer.pos_gt_iff_ge.mp ‹a > 0›
@@ -1158,7 +1150,7 @@ theorem pow_lower_bound
     have : (2:ℚ)^a ≥ a := pow_two_lower_bound ‹a ≥ 1›
     have : p^a ≥ (2:ℚ)^a := pow_pos_preserves_ge_pos ‹(2:ℚ) > 0› ‹a > 0› ‹p ≥ 2›
     -- ↑  end key steps  ↑
-    have : p^a ≥ a := trans ‹p^a ≥ (2:ℚ)^a› ‹(2:ℚ)^a ≥ a›
+    have : p^a ≥ a := Trans.trans ‹p^a ≥ (2:ℚ)^a› ‹(2:ℚ)^a ≥ a›
     exact this
 
 end Lean4Axiomatic.Rational

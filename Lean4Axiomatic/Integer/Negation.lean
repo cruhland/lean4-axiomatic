@@ -50,11 +50,26 @@ open Natural (step)
 open Signed (Positive)
 
 /--
+Non-typeclass version of `neg_substitutive.subst₁`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+@[gcongr]
+theorem neg_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → -a₁ ≃ -a₂ := AA.subst₁
+
+/--
 Non-typeclass version of `neg_inverse.inverseL`.
 
 Eventually, this should become the axiom and the typeclass should be derived.
 -/
 theorem neg_invL {a : ℤ} : -a + a ≃ 0 := AA.inverseL
+
+/--
+Non-typeclass version of `neg_inverse.inverseR`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+theorem neg_invR {a : ℤ} : a + -a ≃ 0 := AA.inverseR
 
 /--
 Negation is an involution: applying it twice is equivalent to not applying it
@@ -68,9 +83,9 @@ reflection across zero. Reflecting twice gives back the original integer.
 -/
 theorem neg_involutive {a : ℤ} : -(-a) ≃ a := calc
   -(-a)            ≃ _ := Rel.symm AA.identL
-  0 + -(-a)        ≃ _ := AA.substL (Rel.symm AA.inverseR)
+  0 + -(-a)        ≃ _ := by srw [←neg_invR]
   (a + -a) + -(-a) ≃ _ := AA.assoc
-  a + (-a + -(-a)) ≃ _ := AA.substR AA.inverseR
+  a + (-a + -(-a)) ≃ _ := by srw [neg_invR]
   a + 0            ≃ _ := AA.identR
   a                ≃ _ := Rel.refl
 
@@ -88,7 +103,7 @@ theorem neg_inject {a₁ a₂ : ℤ} : -a₁ ≃ -a₂ → a₁ ≃ a₂ := by
   show a₁ ≃ a₂
   calc
     a₁       ≃ _ := Rel.symm neg_involutive
-    (-(-a₁)) ≃ _ := AA.subst₁ ‹-a₁ ≃ -a₂›
+    (-(-a₁)) ≃ _ := by srw [‹-a₁ ≃ -a₂›]
     (-(-a₂)) ≃ _ := neg_involutive
     a₂       ≃ _ := Rel.refl
 
@@ -108,12 +123,12 @@ theorem add_cancelL {a b₁ b₂ : ℤ} : a + b₁ ≃ a + b₂ → b₁ ≃ b�
   have reduce {x y : ℤ} : -x + (x + y) ≃ y := calc
     _ = -x + (x + y) := rfl
     _ ≃ (-x + x) + y := Rel.symm AA.assoc
-    _ ≃ 0 + y        := AA.substL AA.inverseL
+    _ ≃ 0 + y        := by srw [neg_invL]
     _ ≃ y            := AA.identL
   calc
     _ = b₁            := rfl
     _ ≃ -a + (a + b₁) := Rel.symm reduce
-    _ ≃ -a + (a + b₂) := AA.substR ‹a + b₁ ≃ a + b₂›
+    _ ≃ -a + (a + b₂) := by srw [‹a + b₁ ≃ a + b₂›]
     _ ≃ b₂            := reduce
 
 /--
@@ -142,7 +157,7 @@ Useful when working with chains of `· ↔ ·` relations.
 cancellation of addition.
 -/
 theorem add_bijectL {a b₁ b₂ : ℤ} : b₁ ≃ b₂ ↔ a + b₁ ≃ a + b₂ :=
-  Iff.intro AA.substR add_cancelL
+  Iff.intro add_substR add_cancelL
 
 /--
 Add or remove a right operand to addition on both sides of an equivalence.
@@ -153,7 +168,7 @@ Useful when working with chains of `· ↔ ·` relations.
 cancellation of addition.
 -/
 theorem add_bijectR {a₁ a₂ b : ℤ} : a₁ ≃ a₂ ↔ a₁ + b ≃ a₂ + b :=
-  Iff.intro AA.substL add_cancelR
+  Iff.intro add_substL add_cancelR
 
 variable [Multiplication ℤ]
 
@@ -186,11 +201,11 @@ theorem neg_one_neqv_one : -1 ≄ (1:ℤ) := by
   show False
   have : step 0 ≃ 1 := Rel.symm Natural.literal_step
   have : (step 1:ℤ) ≃ (0:ℤ) := calc
-    (step 1:ℤ)         ≃ _ := AA.subst₁ (AA.subst₁ (Rel.symm Natural.add_zero))
-    (step (1 + 0):ℤ)   ≃ _ := AA.subst₁ AA.scompatR
-    ((1 + step 0:ℕ):ℤ) ≃ _ := AA.subst₁ (Natural.add_substR ‹step 0 ≃ 1›)
+    (step 1:ℤ)         ≃ _ := by srw [←Natural.add_zero]
+    (step (1 + 0):ℤ)   ≃ _ := by srw [AA.scompatR]
+    ((1 + step 0:ℕ):ℤ) ≃ _ := by srw [‹step 0 ≃ 1›]
     ((1 + 1:ℕ):ℤ)      ≃ _ := AA.compat₂
-    (1:ℤ) + (1:ℤ)      ≃ _ := AA.substR (Rel.symm ‹-1 ≃ (1 : ℤ)›)
+    (1:ℤ) + (1:ℤ)      ≃ _ := by srw [←‹-1 ≃ (1 : ℤ)›]
     1 + -1             ≃ _ := AA.inverseR
     0                  ≃ _ := Rel.refl
   have : step 1 ≃ 0 := AA.inject ‹((step 1:ℕ):ℤ) ≃ ((0:ℕ):ℤ)›
@@ -227,22 +242,29 @@ easily get `0 * a + (0 * a + -(0 * a))` from the additive identity and inverse
 properties. The key is then using associativity, distributivity, and again
 additive identity to merge the two instances of `0 * a` into one.
 -/
-def mul_absorbL {a : ℤ} : 0 * a ≃ 0 := calc
+theorem mul_absorbL {a : ℤ} : 0 * a ≃ 0 := calc
   0 * a                      ≃ _ := Rel.symm AA.identR
-  0 * a + 0                  ≃ _ := AA.substR (Rel.symm AA.inverseR)
+  0 * a + 0                  ≃ _ := by srw [←neg_invR]
   0 * a + (0 * a + -(0 * a)) ≃ _ := Rel.symm AA.assoc
-  (0 * a + 0 * a) + -(0 * a) ≃ _ := AA.substL (Rel.symm AA.distribR)
-  (0 + 0) * a + -(0 * a)     ≃ _ := AA.substL (AA.substL AA.identL)
+  (0 * a + 0 * a) + -(0 * a) ≃ _ := by srw [←mul_distribR]
+  (0 + 0) * a + -(0 * a)     ≃ _ := by srw [add_identR]
   0 * a + -(0 * a)           ≃ _ := AA.inverseR
   (0 : ℤ)                    ≃ _ := Rel.refl
 
-def mul_absorbingL : AA.AbsorbingOn Hand.L (α := ℤ) 0 (· * ·) := {
-  absorb := mul_absorbL
-}
+/--
+Zero is a right absorbing element for multiplication.
+
+**Intuition**: Multiplication has zero as a left absorbing element, and is
+commutative.
+-/
+theorem mul_absorbR {a : ℤ} : a * 0 ≃ 0 := calc
+  _ = a * 0 := rfl
+  _ ≃ 0 * a := mul_comm
+  _ ≃ 0     := mul_absorbL
 
 instance mul_absorbing : AA.Absorbing (α := ℤ) 0 (· * ·) := {
-  absorbingL := mul_absorbingL
-  absorbingR := AA.absorbingR_from_absorbingL mul_absorbingL
+  absorbingL := { absorb := mul_absorbL }
+  absorbingR := { absorb := mul_absorbR }
 }
 
 /--
@@ -259,22 +281,14 @@ And it turns out those new terms have a factor of `b` in common, so we can
 produce them using distributivity and the additive inverse property.
 -/
 theorem neg_scompatL_mul {a b : ℤ} : -(a * b) ≃ (-a) * b := calc
-  -(a * b)
-    ≃ _ := Rel.symm AA.identL
-  0 + -(a * b)
-    ≃ _ := AA.substL (Rel.symm AA.absorbL)
-  0 * b + -(a * b)
-    ≃ _ := AA.substL (AA.substL (Rel.symm AA.inverseL))
-  (-a + a) * b + -(a * b)
-    ≃ _ := AA.substL AA.distribR
-  (-a * b + a * b) + -(a * b)
-    ≃ _ := AA.assoc
-  (-a) * b + (a * b + -(a * b))
-    ≃ _ := AA.substR AA.inverseR
-  (-a) * b + 0
-    ≃ _ := AA.identR
-  (-a) * b
-    ≃ _ := Rel.refl
+  _ = -(a * b)                      := rfl
+  _ ≃ 0 + -(a * b)                  := Rel.symm AA.identL
+  _ ≃ 0 * b + -(a * b)              := by srw [←mul_absorbL]
+  _ ≃ (-a + a) * b + -(a * b)       := by srw [←neg_invL]
+  _ ≃ (-a * b + a * b) + -(a * b)   := by srw [mul_distribR]
+  _ ≃ (-a) * b + (a * b + -(a * b)) := AA.assoc
+  _ ≃ (-a) * b + 0                  := by srw [neg_invR]
+  _ ≃ (-a) * b                      := AA.identR
 
 def neg_semicompatibleL_mul
     : AA.SemicompatibleOn Hand.L (α := ℤ) (-·) (· * ·)
@@ -300,7 +314,7 @@ multiplying with the sign (`-`) means the result is negated.
 -/
 theorem mul_neg_one {a : ℤ} : -1 * a ≃ -a := calc
   -1 * a     ≃ _ := Rel.symm AA.scompatL
-  (-(1 * a)) ≃ _ := AA.subst₁ AA.identL
+  (-(1 * a)) ≃ _ := by srw [mul_identL]
   (-a)       ≃ _ := Rel.refl
 
 /--
@@ -316,8 +330,7 @@ follows from the distributive property.
 theorem neg_compat_add {a b : ℤ} : -(a + b) ≃ -a + -b := calc
   -(a + b)            ≃ _ := Rel.symm mul_neg_one
   (-1) * (a + b)      ≃ _ := AA.distribL
-  (-1) * a + (-1) * b ≃ _ := AA.substL mul_neg_one
-  (-a) + (-1) * b     ≃ _ := AA.substR mul_neg_one
+  (-1) * a + (-1) * b ≃ _ := by srw [mul_neg_one, mul_neg_one]
   (-a) + -b           ≃ _ := Rel.refl
 
 end Lean4Axiomatic.Integer

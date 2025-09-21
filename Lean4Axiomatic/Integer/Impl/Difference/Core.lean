@@ -104,10 +104,9 @@ theorem trans {a b c : Difference ℕ} : a ≃ b → b ≃ c → a ≃ c := by
   show a₁ + c₂ ≃ c₁ + a₂
   have : (a₁ + c₂) + (b₂ + b₁) ≃ (c₁ + a₂) + (b₂ + b₁) := calc
     (a₁ + c₂) + (b₂ + b₁) ≃ _ := AA.expr_xxfxxff_lr_swap_rl (f := (· + ·))
-    (a₁ + b₂) + (c₂ + b₁) ≃ _ := Natural.add_substL ‹a₁ + b₂ ≃ b₁ + a₂›
-    (b₁ + a₂) + (c₂ + b₁) ≃ _ := Natural.add_substL Natural.add_comm
-    (a₂ + b₁) + (c₂ + b₁) ≃ _ := Natural.add_substR Natural.add_comm
-    (a₂ + b₁) + (b₁ + c₂) ≃ _ := Natural.add_substR ‹b₁ + c₂ ≃ c₁ + b₂›
+    (a₁ + b₂) + (c₂ + b₁) ≃ _ := by srw [‹a₁ + b₂ ≃ b₁ + a₂›, Natural.add_comm]
+    (a₂ + b₁) + (c₂ + b₁) ≃ _ := by srw [Natural.add_comm]
+    (a₂ + b₁) + (b₁ + c₂) ≃ _ := by srw [‹b₁ + c₂ ≃ c₁ + b₂›]
     (a₂ + b₁) + (c₁ + b₂) ≃ _ := Natural.add_comm
     (c₁ + b₂) + (a₂ + b₁) ≃ _ := AA.expr_xxfxxff_lr_swap_rl (f := (· + ·))
     (c₁ + a₂) + (b₂ + b₁) ≃ _ := Rel.refl
@@ -129,21 +128,24 @@ equivalent; for differences, any values representing the same gap are
 equivalent. Thus one only needs to show that the former is strong enough to
 imply the latter.
 -/
-instance from_prod_substitutive
-    : AA.Substitutive₁ (α := ℕ × ℕ) from_prod (· ≃ ·) (· ≃ ·)
-    := by
-  apply AA.Substitutive₁.mk
-  intro p q; revert p; intro ((n, m)); revert q; intro ((k, j))
-  intro (_ : (n, m) ≃ (k, j))
+@[gcongr]
+theorem from_prod_subst {p q : ℕ × ℕ} : p ≃ q → from_prod p ≃ from_prod q := by
+  revert p; intro ((n, m)); revert q; intro ((k, j)) (_ : (n, m) ≃ (k, j))
   show from_prod (n, m) ≃ from_prod (k, j)
   show n——m ≃ k——j
   show n + j ≃ k + m
   have (And.intro (_ : n ≃ k) (_ : m ≃ j)) :=
     Relation.Equivalence.Impl.Prod.eqv_defn.mp ‹(n, m) ≃ (k, j)›
   calc
-    n + j ≃ _ := Natural.add_substL ‹n ≃ k›
-    k + j ≃ _ := Natural.add_substR (Rel.symm ‹m ≃ j›)
+    n + j ≃ _ := by srw [‹n ≃ k›]
+    k + j ≃ _ := by srw [←‹m ≃ j›]
     k + m ≃ _ := Rel.refl
+
+instance from_prod_substitutive
+    : AA.Substitutive₁ (α := ℕ × ℕ) from_prod (· ≃ ·) (· ≃ ·)
+    := {
+  subst₁ := from_prod_subst
+}
 
 instance equivalence : Equivalence (Difference ℕ) := {
   eqvOp := eqvOp
@@ -158,10 +160,11 @@ subtraction of natural numbers.
 **Proof intuition**: Substitute with natural number addition, then rewrite into
 equivalence of differences.
 -/
+@[gcongr]
 theorem diff_substL {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁——m ≃ n₂——m := by
   intro (_ : n₁ ≃ n₂)
   show n₁——m ≃ n₂——m
-  have : n₁ + m ≃ n₂ + m := Natural.add_substL ‹n₁ ≃ n₂›
+  have : n₁ + m ≃ n₂ + m := by srw [‹n₁ ≃ n₂›]
   have : n₁——m ≃ n₂——m := this
   exact this
 
@@ -174,10 +177,11 @@ subtraction of natural numbers.
 **Proof intuition**: Substitute with natural number addition, then rewrite into
 equivalence of differences.
 -/
+@[gcongr]
 theorem diff_substR {n m₁ m₂ : ℕ} : m₁ ≃ m₂ → n——m₁ ≃ n——m₂ := by
   intro (_ : m₁ ≃ m₂)
   show n——m₁ ≃ n——m₂
-  have : n + m₂ ≃ n + m₁ := Natural.add_substR (Rel.symm ‹m₁ ≃ m₂›)
+  have : n + m₂ ≃ n + m₁ := by srw [←‹m₁ ≃ m₂›]
   have : n——m₁ ≃ n——m₂ := this
   exact this
 
@@ -204,19 +208,13 @@ to be a legitimate function `ℕ → Difference ℕ`.
 **Proof intuition**: Viewing differences as pairs, the proof follows directly
 from the substitution property on pairs.
 -/
-theorem from_ℕ_subst {n₁ n₂ : ℕ} : n₁ ≃ n₂ → (↑n₁ : Difference ℕ) ≃ ↑n₂ := by
+@[gcongr]
+theorem from_ℕ_subst
+    {n₁ n₂ : ℕ} : n₁ ≃ n₂ → (n₁ : Difference ℕ) ≃ (n₂ : Difference ℕ)
+    := by
   intro (_ : n₁ ≃ n₂)
   show n₁——0 ≃ n₂——0
-  show from_prod (n₁, 0) ≃ from_prod (n₂, 0)
-  apply AA.subst₁
-  show (n₁, 0) ≃ (n₂, 0)
-  exact AA.substL ‹n₁ ≃ n₂›
-
-def from_natural_substitutive
-    : AA.Substitutive₁ (α := ℕ) (β := Difference ℕ) (↑·) (· ≃ ·) (· ≃ ·)
-    := {
-  subst₁ := from_ℕ_subst
-}
+  srw [‹n₁ ≃ n₂›]
 
 /--
 If we know that two differences converted from natural numbers are equivalent,
@@ -251,7 +249,7 @@ instance from_natural_injective
 instance conversion : Conversion (ℕ := ℕ) (Difference ℕ) := {
   from_natural := from_natural
   from_natural_injective := from_natural_injective
-  from_natural_substitutive := from_natural_substitutive
+  from_natural_subst := from_ℕ_subst
 }
 
 instance core : Core (ℕ := ℕ) (Difference ℕ) := Core.mk

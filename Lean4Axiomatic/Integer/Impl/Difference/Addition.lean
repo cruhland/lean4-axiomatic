@@ -29,16 +29,15 @@ natural number addition, so convert the differences into ordered pairs and use
 commutativity element-wise.
 -/
 theorem add_comm {a b : Difference ℕ} : a + b ≃ b + a := by
-  revert a; intro (a₁——a₂); revert b; intro (b₁——b₂)
-  show a₁——a₂ + b₁——b₂ ≃ b₁——b₂ + a₁——a₂
-  show (a₁ + b₁)——(a₂ + b₂) ≃ (b₁ + a₁)——(b₂ + a₂)
-  show from_prod (a₁ + b₁, a₂ + b₂) ≃ from_prod (b₁ + a₁, b₂ + a₂)
-  apply AA.subst₁
-  show (a₁ + b₁, a₂ + b₂) ≃ (b₁ + a₁, b₂ + a₂)
+  revert a; intro (n——m); let a := n——m; revert b; intro (k——j); let b := k——j
+  show a + b ≃ b + a
   calc
-    (a₁ + b₁, a₂ + b₂) ≃ _ := AA.substL Natural.add_comm
-    (b₁ + a₁, a₂ + b₂) ≃ _ := AA.substR Natural.add_comm
-    (b₁ + a₁, b₂ + a₂) ≃ _ := Rel.refl
+    _ = a + b            := rfl
+    _ = n——m + k——j      := rfl
+    _ = (n + k)——(m + j) := rfl
+    _ ≃ (k + n)——(j + m) := by srw [Natural.add_comm, Natural.add_comm]
+    _ = k——j + n——m      := rfl
+    _ = b + a            := rfl
 
 instance add_commutative : AA.Commutative (α := Difference ℕ) (· + ·) := {
   comm := add_comm
@@ -53,30 +52,53 @@ extending two line segments of the same length by the same amount. So the proof
 just expands all definitions into equalities of sums of natural numbers, and
 performs algebra to obtain the desired result.
 -/
+@[gcongr]
 theorem add_substL {a₁ a₂ b : Difference ℕ} : a₁ ≃ a₂ → a₁ + b ≃ a₂ + b := by
-  revert a₁; intro (n——m); revert a₂; intro (k——j); revert b; intro (p——q)
-  intro (_ : n——m ≃ k——j)
-  have : n + j ≃ k + m := ‹n——m ≃ k——j›
-  show n——m + p——q ≃ k——j + p——q
-  show (n + p)——(m + q) ≃ (k + p)——(j + q)
-  show (n + p) + (j + q) ≃ (k + p) + (m + q)
-  calc
-    (n + p) + (j + q) ≃ _ := AA.expr_xxfxxff_lr_swap_rl (f := (· + ·))
-    (n + j) + (p + q) ≃ _ := Natural.add_substL ‹n + j ≃ k + m›
-    (k + m) + (p + q) ≃ _ := AA.expr_xxfxxff_lr_swap_rl (f := (· + ·))
-    (k + p) + (m + q) ≃ _ := Rel.refl
+  revert a₁; intro (n——m); let a₁ := n——m
+  revert a₂; intro (k——j); let a₂ := k——j
+  revert b; intro (p——q); let b := p——q
+  intro (_ : a₁ ≃ a₂)
+  show a₁ + b ≃ a₂ + b
 
-def add_substitutiveL
-    : AA.SubstitutiveOn Hand.L (α := Difference ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·)
-    := {
-  subst₂ := λ (_ : True) => add_substL
-}
+  have : n——m ≃ k——j   := ‹a₁ ≃ a₂›
+  have : n + j ≃ k + m := this
+  have : (n + p) + (j + q) ≃ (k + p) + (m + q) := calc
+    _ = (n + p) + (j + q) := rfl
+    _ ≃ (n + j) + (p + q) := AA.expr_xxfxxff_lr_swap_rl (f := (· + ·))
+    _ ≃ (k + m) + (p + q) := by srw [‹n + j ≃ k + m›]
+    _ ≃ (k + p) + (m + q) := AA.expr_xxfxxff_lr_swap_rl (f := (· + ·))
+
+  have diff_eqv : (n + p)——(m + q) ≃ (k + p)——(j + q) :=
+    ‹(n + p) + (j + q) ≃ (k + p) + (m + q)›
+  calc
+    _ = a₁ + b           := rfl
+    _ = n——m + p——q      := rfl
+    _ = (n + p)——(m + q) := rfl
+    _ ≃ (k + p)——(j + q) := diff_eqv
+    _ = k——j + p——q      := rfl
+    _ = a₂ + b           := rfl
+
+/--
+Adding the same difference on the left of two equivalent differences preserves
+their equivalence.
+
+**Proof intuition**: Use commutativity to substitute on the other side.
+-/
+@[gcongr]
+theorem add_substR {a₁ a₂ b : Difference ℕ} : a₁ ≃ a₂ → b + a₁ ≃ b + a₂ := by
+  intro (_ : a₁ ≃ a₂)
+  show b + a₁ ≃ b + a₂
+  calc
+    _ = b + a₁ := rfl
+    _ ≃ a₁ + b := add_comm
+    _ ≃ a₂ + b := by srw [‹a₁ ≃ a₂›]
+    _ ≃ b + a₂ := add_comm
 
 instance add_substitutive
     : AA.Substitutive₂ (α := Difference ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·)
     := {
-  substitutiveL := add_substitutiveL
-  substitutiveR := AA.substR_from_substL_swap (rS := (· ≃ ·)) add_substitutiveL
+  substitutiveL := { subst₂ := λ (_ : True) => add_substL }
+  substitutiveR := { subst₂ := λ (_ : True) => add_substR }
 }
 
 /--
@@ -85,22 +107,23 @@ Addition of natural number differences is associative.
 **Proof intuition**: Expand definitions to see that we need to show the
 equivalence of two differences of natural number sums. The left and right
 elements of the differences are directly equivalent via associativity of
-natural number addition, so convert the differences into ordered pairs and use
-associativity element-wise.
+natural number addition.
 -/
 def add_assoc {a b c : Difference ℕ} : (a + b) + c ≃ a + (b + c) := by
-  revert a; intro (n——m); revert b; intro (k——j); revert c; intro (p——q)
-  show (n——m + k——j) + p——q ≃ n——m + (k——j + p——q)
-  show (n + k)——(m + j) + p——q ≃ n——m + (k + p)——(j + q)
-  show ((n + k) + p)——((m + j) + q) ≃ (n + (k + p))——(m + (j + q))
-  show from_prod ((n + k) + p, (m + j) + q)
-     ≃ from_prod (n + (k + p), m + (j + q))
-  apply AA.subst₁
-  show ((n + k) + p, (m + j) + q) ≃ (n + (k + p), m + (j + q))
+  revert a; intro (n——m); let a := n——m
+  revert b; intro (k——j); let b := k——j
+  revert c; intro (p——q); let c := p——q
+  show (a + b) + c ≃ a + (b + c)
   calc
-    ((n + k) + p, (m + j) + q) ≃ _ := AA.substL Natural.add_assoc
-    (n + (k + p), (m + j) + q) ≃ _ := AA.substR Natural.add_assoc
-    (n + (k + p), m + (j + q)) ≃ _ := Rel.refl
+    _ = (a + b) + c                  := rfl
+    _ = (n——m + k——j) + p——q         := rfl
+    _ = (n + k)——(m + j) + p——q      := rfl
+    _ = ((n + k) + p)——((m + j) + q) := rfl
+    _ ≃ (n + (k + p))——((m + j) + q) := by srw [Natural.add_assoc]
+    _ ≃ (n + (k + p))——(m + (j + q)) := by srw [Natural.add_assoc]
+    _ = n——m + (k + p)——(j + q)      := rfl
+    _ = n——m + (k——j + p——q)         := rfl
+    _ = a + (b + c)                  := rfl
 
 def add_associative : AA.Associative (α := Difference ℕ) (· + ·) := {
   assoc := add_assoc
@@ -115,16 +138,14 @@ The natural number difference `0` is a left additive identity element.
 use the additive identity property on natural numbers elementwise.
 -/
 theorem add_identL {a : Difference ℕ} : 0 + a ≃ a := by
-  revert a; intro (n——m)
-  show 0——0 + n——m ≃ n——m
-  show (0 + n)——(0 + m) ≃ n——m
-  show from_prod (0 + n, 0 + m) ≃ from_prod (n, m)
-  apply AA.subst₁
-  show (0 + n, 0 + m) ≃ (n, m)
+  revert a; intro (n——m); let a := n——m
+  show 0 + a ≃ a
   calc
-    (0 + n, 0 + m) ≃ _ := AA.substL Natural.zero_add
-    (n, 0 + m)     ≃ _ := AA.substR Natural.zero_add
-    (n, m)         ≃ _ := Rel.refl
+    _ = 0 + a            := rfl
+    _ = 0——0 + n——m      := rfl
+    _ = (0 + n)——(0 + m) := rfl
+    _ ≃ n——m             := by srw [Natural.zero_add, Natural.zero_add]
+    _ = a                := rfl
 
 def add_identityL : AA.IdentityOn Hand.L (α := Difference ℕ) 0 (· + ·) := {
   ident := add_identL
@@ -145,12 +166,14 @@ that the set of differences (integers) is a superset of the natural numbers.
 just need to clean up an extra zero.
 -/
 theorem add_compat_natural
-    {n m : ℕ} : (↑(n + m) : Difference ℕ) ≃ ↑n + ↑m
+    {n m : ℕ} : ((n + m : ℕ):Difference ℕ) ≃ (n:Difference ℕ) + (m:Difference ℕ)
     := by
-  show (n + m)——0 ≃ n——0 + m——0
-  show (n + m)——0 ≃ (n + m)——(0 + 0)
-  show (n + m) + (0 + 0) ≃ (n + m) + 0
-  exact Natural.add_substR Natural.add_zero
+  calc
+    _ = ((n + m : ℕ): Difference ℕ)         := rfl
+    _ = (n + m)——0                          := rfl
+    _ ≃ (n + m)——(0 + 0)                    := by srw [←Natural.add_zero]
+    _ = n——0 + m——0                         := rfl
+    _ = (n:Difference ℕ) + (m:Difference ℕ) := rfl
 
 def add_compatible_from_natural
     : AA.Compatible₂ (α := ℕ) (β := Difference ℕ) (↑·) (· + ·) (· + ·)

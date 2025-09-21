@@ -87,6 +87,7 @@ function.
 that has `zero` and `step` cases in the axioms. The base case and inductive
 case both follow from expanding definitions and using substitution.
 -/
+@[gcongr]
 theorem pow_substL {x₁ x₂ : α} {m : ℕ} : x₁ ≃ x₂ → x₁ ^ m ≃ x₂ ^ m := by
   intro (_ : x₁ ≃ x₂)
   show x₁ ^ m ≃ x₂ ^ m
@@ -103,8 +104,8 @@ theorem pow_substL {x₁ x₂ : α} {m : ℕ} : x₁ ≃ x₂ → x₁ ^ m ≃ x
     calc
       _ ≃ x₁ ^ step m' := Rel.refl
       _ ≃ x₁ ^ m' * x₁ := pow_step
-      _ ≃ x₂ ^ m' * x₁ := AA.substL ih
-      _ ≃ x₂ ^ m' * x₂ := AA.substR ‹x₁ ≃ x₂›
+      _ ≃ x₂ ^ m' * x₁ := by srw [ih]
+      _ ≃ x₂ ^ m' * x₂ := by srw [‹x₁ ≃ x₂›]
       _ ≃ x₂ ^ step m' := Rel.symm pow_step
 
 /--
@@ -123,6 +124,7 @@ we need to do a case-split on `n₂` within the base case and inductive case for
 case, which expands definitions, then uses substitution and the inductive
 hypothesis.
 -/
+@[gcongr]
 theorem pow_substR {x : α} {n₁ n₂ : ℕ} : n₁ ≃ n₂ → x ^ n₁ ≃ x ^ n₂ := by
   apply ind_on (motive := λ k => ∀ {j}, k ≃ j → x ^ k ≃ x ^ j) n₁
   case zero =>
@@ -152,7 +154,7 @@ theorem pow_substR {x : α} {n₁ n₂ : ℕ} : n₁ ≃ n₂ → x ^ n₁ ≃ x
       calc
         _ ≃ x ^ step n₁' := Rel.refl
         _ ≃ x ^ n₁' * x  := pow_step
-        _ ≃ x ^ n₂' * x  := AA.substL (ih ‹n₁' ≃ n₂'›)
+        _ ≃ x ^ n₂' * x  := by srw [ih ‹n₁' ≃ n₂'›]
         _ ≃ x ^ step n₂' := Rel.symm pow_step
 
 /--
@@ -174,18 +176,18 @@ theorem pow_distribR_mul
       _ ≃ (x * y)^0 := Rel.refl
       _ ≃ 1         := pow_zero
       _ ≃ 1 * 1     := Rel.symm identR
-      _ ≃ x^0 * 1   := AA.substL (Rel.symm pow_zero)
-      _ ≃ x^0 * y^0 := AA.substR (Rel.symm pow_zero)
+      _ ≃ x^0 * 1   := by srw [←pow_zero]
+      _ ≃ x^0 * y^0 := by srw [←pow_zero]
   case step =>
     intro n' (ih : (x * y)^n' ≃ x^n' * y^n')
     show (x * y)^(step n') ≃ x^(step n') * y^(step n')
     calc
       _ ≃ (x * y)^(step n')         := Rel.refl
       _ ≃ (x * y)^n' * (x * y)      := pow_step
-      _ ≃ (x^n' * y^n') * (x * y)   := AA.substL ih
+      _ ≃ (x^n' * y^n') * (x * y)   := by srw [ih]
       _ ≃ (x^n' * x) * (y^n' * y)   := AA.expr_xxfxxff_lr_swap_rl
-      _ ≃ x^(step n') * (y^n' * y)  := AA.substL (Rel.symm pow_step)
-      _ ≃ x^(step n') * y^(step n') := AA.substR (Rel.symm pow_step)
+      _ ≃ x^(step n') * (y^n' * y)  := by srw [←pow_step]
+      _ ≃ x^(step n') * y^(step n') := by srw [←pow_step]
 
 /--
 If an exponentiation to a natural number evaluates to zero, then the base must
@@ -212,8 +214,11 @@ theorem pow_inputs_for_output_zero
   case step =>
     intro (n' : ℕ) (ih : x^n' ≃ 0 → x ≃ 0 ∧ n' ≄ 0) (_ : x^(step n') ≃ 0)
     show x ≃ 0 ∧ step n' ≄ 0
-    have : x^n' * x ≃ 0 := AA.eqv_substL pow_step ‹x^(step n') ≃ 0›
-    have : x^n' ≃ 0 ∨ x ≃ 0 := AA.zero_prod this
+    have : x^n' * x ≃ 0 := calc
+      _ = x^n' * x    := rfl
+      _ ≃ x^(step n') := Rel.symm pow_step
+      _ ≃ 0           := ‹x^(step n') ≃ 0›
+    have : x^n' ≃ 0 ∨ x ≃ 0 := AA.zero_prod ‹x^n' * x ≃ 0›
     have : x ≃ 0 :=
       match this with
       | Or.inl (_ : x^n' ≃ 0) => (ih ‹x^n' ≃ 0›).left
@@ -264,9 +269,9 @@ multiplication, then that's just the original number.
 -/
 theorem pow_one {x : α} : x^1 ≃ x := calc
   _ = x^1        := rfl
-  _ ≃ x^(step 0) := pow_substR literal_step
+  _ ≃ x^(step 0) := by srw [literal_step]
   _ ≃ x^0 * x    := pow_step
-  _ ≃ 1 * x      := AA.substL pow_zero
+  _ ≃ 1 * x      := by srw [pow_zero]
   _ ≃ x          := identL
 
 /--
@@ -278,9 +283,9 @@ Convert between a square and its representation as a product.
 -/
 theorem pow_two {x : α} : x^2 ≃ x * x := calc
   _ = x^2        := rfl
-  _ ≃ x^(step 1) := pow_substR literal_step
+  _ ≃ x^(step 1) := by srw [literal_step]
   _ ≃ x^1 * x    := pow_step
-  _ ≃ x * x      := AA.substL pow_one
+  _ ≃ x * x      := by srw [pow_one]
 
 /--
 Any power of one is one.
@@ -331,9 +336,9 @@ theorem pow_eqv_zero
     have (Exists.intro (n' : ℕ) (_ : step n' ≃ n)) := positive_step this
     calc
       _ ≃ x^n         := Rel.refl
-      _ ≃ x^(step n') := pow_substR (Rel.symm ‹step n' ≃ n›)
+      _ ≃ x^(step n') := by srw [←‹step n' ≃ n›]
       _ ≃ x^n' * x    := pow_step
-      _ ≃ x^n' * 0    := AA.substR ‹x ≃ 0›
+      _ ≃ x^n' * 0    := by srw [‹x ≃ 0›]
       _ ≃ 0           := AA.absorbR
 
 /--
@@ -352,7 +357,7 @@ theorem pow_of_zero
   | Or.inl (_ : n ≃ 0) =>
     have : (0:α)^n ≃ 1 := calc
       _ = (0:α)^n := rfl
-      _ ≃ 0^0     := pow_substR ‹n ≃ 0›
+      _ ≃ 0^0     := by srw [‹n ≃ 0›]
       _ ≃ 1       := pow_zero
     exact Or.inr ‹(0:α)^n ≃ 1›
   | Or.inr (_ : n ≄ 0) =>
@@ -378,21 +383,21 @@ theorem pow_compatL_add
     show x^(0 + m) ≃ x^(0:ℕ) * x^m
     calc
       _ ≃ x^(0 + m)     := Rel.refl
-      _ ≃ x^m           := pow_substR AA.identL
+      _ ≃ x^m           := by srw [zero_add]
       _ ≃ 1 * x^m       := Rel.symm identL
-      _ ≃ x^(0:ℕ) * x^m := AA.substL (Rel.symm pow_zero)
+      _ ≃ x^(0:ℕ) * x^m := by srw [←pow_zero]
   case step =>
     intro n' (ih : x^(n' + m) ≃ x^n' * x^m)
     show x^(step n' + m) ≃ x^(step n') * x^m
     calc
       _ ≃ x^(step n' + m)   := Rel.refl
-      _ ≃ x^(step (n' + m)) := pow_substR (Rel.symm AA.scompatL)
+      _ ≃ x^(step (n' + m)) := by srw [←AA.scompatL]
       _ ≃ x^(n' + m) * x    := pow_step
-      _ ≃ (x^n' * x^m) * x  := AA.substL ih
+      _ ≃ (x^n' * x^m) * x  := by srw [ih]
       _ ≃ x^n' * (x^m * x)  := AA.assoc
-      _ ≃ x^n' * (x * x^m)  := AA.substR AA.comm
+      _ ≃ x^n' * (x * x^m)  := by srw [AA.comm]
       _ ≃ (x^n' * x) * x^m  := Rel.symm AA.assoc
-      _ ≃ x^(step n') * x^m := AA.substL (Rel.symm pow_step)
+      _ ≃ x^(step n') * x^m := by srw [←pow_step]
 
 variable [Multiplication ℕ]
 
@@ -415,16 +420,16 @@ theorem pow_flatten
       _ ≃ (x^n)^0   := Rel.refl
       _ ≃ 1         := pow_zero
       _ ≃ x^0       := Rel.symm pow_zero
-      _ ≃ x^(n * 0) := pow_substR (Rel.symm mul_zero)
+      _ ≃ x^(n * 0) := by srw [←mul_zero]
   case step =>
     intro m' (ih : (x^n)^m' ≃ x^(n * m'))
     show (x^n)^(step m') ≃ x^(n * step m')
     calc
       _ ≃ (x^n)^(step m')  := Rel.refl
       _ ≃ (x^n)^m' * x^n   := pow_step
-      _ ≃ x^(n * m') * x^n := AA.substL ih
+      _ ≃ x^(n * m') * x^n := by srw [ih]
       _ ≃ x^(n * m' + n)   := Rel.symm pow_compatL_add
-      _ ≃ x^(n * step m')  := pow_substR (Rel.symm mul_step)
+      _ ≃ x^(n * step m')  := by srw [←mul_step]
 
 end general
 

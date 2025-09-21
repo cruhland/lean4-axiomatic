@@ -65,6 +65,7 @@ Non-typeclass version of `add_substitutive.substitutiveL`.
 
 Eventually, this should become the axiom and the typeclass should be derived.
 -/
+@[gcongr]
 theorem add_substL {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → a₁ + b ≃ a₂ + b := AA.substL
 
 /--
@@ -72,6 +73,7 @@ Non-typeclass version of `add_substitutive.substitutiveR`.
 
 Eventually, this should become the axiom and the typeclass should be derived.
 -/
+@[gcongr]
 theorem add_substR {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → b + a₁ ≃ b + a₂ := AA.substR
 
 /--
@@ -89,6 +91,27 @@ Eventually, this should become the axiom and the typeclass should be derived.
 theorem add_comm {a b : ℤ} : a + b ≃ b + a := AA.comm
 
 /--
+Non-typeclass version of `add_identity.identL`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+theorem add_identL {a : ℤ} : 0 + a ≃ a := AA.identL
+
+/--
+Non-typeclass version of `add_identity.identR`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+theorem add_identR {a : ℤ} : a + 0 ≃ a := AA.identR
+
+/--
+Non-typeclass version of `add_compatible_from_natural.compat₂`.
+
+Eventually, this should become the axiom and the typeclass should be derived.
+-/
+theorem add_compat_nat {n m : ℕ} : ((n + m : ℕ):ℤ) ≃ (n:ℤ) + (m:ℤ) := AA.compat₂
+
+/--
 In the integers, one plus one is two.
 
 **Proof intuition**: Delegate to natural numbers.
@@ -97,7 +120,7 @@ theorem add_one_one : (1:ℤ) + 1 ≃ 2 := calc
   _ ≃ (1:ℤ) + 1             := Rel.refl
   _ ≃ ((1:ℕ):ℤ) + ((1:ℕ):ℤ) := Rel.refl
   _ ≃ ((1 + 1 : ℕ):ℤ)       := Rel.symm AA.compat₂
-  _ ≃ ((2:ℕ):ℤ)             := AA.subst₁ Natural.add_one_one
+  _ ≃ ((2:ℕ):ℤ)             := by srw [Natural.add_one_one]
   _ ≃ 2                     := Rel.refl
 
 end Lean4Axiomatic.Integer

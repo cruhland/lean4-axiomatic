@@ -41,6 +41,8 @@ export Negation.Props (
   add_inverseL add_inverseR neg_compat_from_integer neg_subst
 )
 
+attribute [gcongr] neg_subst
+
 /-- All rational number negation axioms. -/
 class Negation
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
@@ -106,7 +108,7 @@ theorem neg_preserves_zero {p : ℚ} : -p ≃ 0 ↔ p ≃ 0 := by
     show p ≃ 0
     calc
       p      ≃ _ := eqv_symm add_identR
-      p + 0  ≃ _ := add_substR (eqv_symm ‹-p ≃ 0›)
+      p + 0  ≃ _ := by srw [←‹-p ≃ 0›]
       p + -p ≃ _ := add_inverseR
       0      ≃ _ := eqv_refl
   case mpr =>
@@ -114,7 +116,7 @@ theorem neg_preserves_zero {p : ℚ} : -p ≃ 0 ↔ p ≃ 0 := by
     show -p ≃ 0
     calc
       -p     ≃ _ := eqv_symm add_identL
-      0 + -p ≃ _ := add_substL (eqv_symm ‹p ≃ 0›)
+      0 + -p ≃ _ := by srw [←‹p ≃ 0›]
       p + -p ≃ _ := add_inverseR
       0      ≃ _ := eqv_refl
 
@@ -143,9 +145,9 @@ intuition.
 -/
 theorem neg_involutive {p : ℚ} : -(-p) ≃ p := calc
   -(-p)            ≃ _ := eqv_symm add_identL
-  0 + -(-p)        ≃ _ := add_substL (eqv_symm add_inverseR)
+  0 + -(-p)        ≃ _ := by srw [←add_inverseR]
   (p + -p) + -(-p) ≃ _ := add_assoc
-  p + (-p + -(-p)) ≃ _ := add_substR add_inverseR
+  p + (-p + -(-p)) ≃ _ := by srw [add_inverseR]
   p + 0            ≃ _ := add_identR
   p                ≃ _ := eqv_refl
 
@@ -159,10 +161,10 @@ The proof is identical to `Integer.mul_absorbL`; see its comment for intuition.
 -/
 theorem mul_absorbL {p : ℚ} : 0 * p ≃ 0 := calc
   0 * p                      ≃ _ := eqv_symm add_identR
-  0 * p + 0                  ≃ _ := add_substR (eqv_symm add_inverseR)
+  0 * p + 0                  ≃ _ := by srw [←add_inverseR]
   0 * p + (0 * p + -(0 * p)) ≃ _ := eqv_symm add_assoc
-  (0 * p + 0 * p) + -(0 * p) ≃ _ := add_substL (eqv_symm mul_distribR)
-  (0 + 0) * p + -(0 * p)     ≃ _ := add_substL (mul_substL add_identL)
+  (0 * p + 0 * p) + -(0 * p) ≃ _ := by srw [←mul_distribR]
+  (0 + 0) * p + -(0 * p)     ≃ _ := by srw [add_identL]
   0 * p + -(0 * p)           ≃ _ := add_inverseR
   0                          ≃ _ := eqv_refl
 
@@ -193,17 +195,15 @@ Negation is left-semicompatible with multiplication.
 The proof is identical to `Integer.neg_scompatL_mul`; see its comment for
 intuition.
 -/
-theorem neg_scompatL_mul {p q : ℚ} : -(p * q) ≃ -p * q := by
-  have : 0 ≃ -p + p := eqv_symm add_inverseL
-  calc
-    -(p * q)                      ≃ _ := eqv_symm add_identL
-    0 + -(p * q)                  ≃ _ := add_substL (eqv_symm mul_absorbL)
-    0 * q + -(p * q)              ≃ _ := add_substL (mul_substL ‹0 ≃ -p + p›)
-    (-p + p) * q + -(p * q)       ≃ _ := add_substL mul_distribR
-    (-p * q + p * q) + -(p * q)   ≃ _ := add_assoc
-    (-p) * q + (p * q + -(p * q)) ≃ _ := add_substR add_inverseR
-    (-p) * q + 0                  ≃ _ := add_identR
-    (-p) * q                      ≃ _ := eqv_refl
+theorem neg_scompatL_mul {p q : ℚ} : -(p * q) ≃ -p * q := calc
+  -(p * q)                      ≃ _ := eqv_symm add_identL
+  0 + -(p * q)                  ≃ _ := by srw [←mul_absorbL]
+  0 * q + -(p * q)              ≃ _ := by srw [←add_inverseL]
+  (-p + p) * q + -(p * q)       ≃ _ := by srw [mul_distribR]
+  (-p * q + p * q) + -(p * q)   ≃ _ := add_assoc
+  (-p) * q + (p * q + -(p * q)) ≃ _ := by srw [add_inverseR]
+  (-p) * q + 0                  ≃ _ := add_identR
+  (-p) * q                      ≃ _ := eqv_refl
 
 /--
 Negation is right-semicompatible with multiplication.
@@ -211,7 +211,7 @@ Negation is right-semicompatible with multiplication.
 This follows from left-semicompatibility because multiplication is commutative.
 -/
 theorem neg_scompatR_mul {p q : ℚ} : -(p * q) ≃ p * -q := calc
-  (-(p * q)) ≃ _ := neg_subst mul_comm
+  (-(p * q)) ≃ _ := by srw [mul_comm]
   (-(q * p)) ≃ _ := neg_scompatL_mul
   (-q) * p   ≃ _ := mul_comm
   p * -q     ≃ _ := eqv_refl
@@ -223,7 +223,7 @@ The proof is identical to `Integer.mul_neg_one`; see its comment for intuition.
 -/
 theorem mul_neg_one {p : ℚ} : -1 * p ≃ -p := calc
   -1 * p     ≃ _ := eqv_symm neg_scompatL_mul
-  (-(1 * p)) ≃ _ := neg_subst mul_identL
+  (-(1 * p)) ≃ _ := by srw [mul_identL]
   (-p)       ≃ _ := eqv_refl
 
 /--
@@ -240,8 +240,7 @@ theorem neg_compat_add {p q : ℚ} : -(p + q) ≃ -p + -q := calc
   _ ≃ -(p + q)        := eqv_refl
   _ ≃ -1 * (p + q)    := eqv_symm mul_neg_one
   _ ≃ -1 * p + -1 * q := mul_distribL
-  _ ≃ -p + -1 * q     := add_substL mul_neg_one
-  _ ≃ -p + -q         := add_substR mul_neg_one
+  _ ≃ -p + -q         := by srw [mul_neg_one, mul_neg_one]
 
 /--
 Square roots of unity are nonzero.
@@ -254,7 +253,7 @@ theorem sqrt1_nonzero {p : ℚ} : Sqrt1 p → p ≄ 0 := by
   show False
   have : (1 : ℚ) ≃ 0 := calc
     (1 : ℚ) ≃ _ := eqv_symm ‹Sqrt1 p›.elim
-    p * p   ≃ _ := mul_substL ‹p ≃ 0›
+    p * p   ≃ _ := by srw [‹p ≃ 0›]
     0 * p   ≃ _ := mul_absorbL
     0       ≃ _ := eqv_refl
   have : (1 : ℚ) ≄ 0 := nonzero_one
@@ -281,12 +280,13 @@ rational numbers.
 **Proof intuition**: Expand subtraction into addition; addition is left
 substitutive.
 -/
+@[gcongr]
 theorem sub_substL {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → p₁ - q ≃ p₂ - q := by
   intro (_ : p₁ ≃ p₂)
   show p₁ - q ≃ p₂ - q
   calc
     p₁ - q  ≃ _ := sub_add_neg
-    p₁ + -q ≃ _ := add_substL ‹p₁ ≃ p₂›
+    p₁ + -q ≃ _ := by srw [‹p₁ ≃ p₂›]
     p₂ + -q ≃ _ := eqv_symm sub_add_neg
     p₂ - q  ≃ _ := eqv_refl
 
@@ -300,12 +300,13 @@ rational numbers.
 **Proof intuition**: Expand subtraction into addition of the negation; addition
 and negation obey substitution.
 -/
+@[gcongr]
 theorem sub_substR {p₁ p₂ q : ℚ} : p₁ ≃ p₂ → q - p₁ ≃ q - p₂ := by
   intro (_ : p₁ ≃ p₂)
   show q - p₁ ≃ q - p₂
   calc
     q - p₁  ≃ _ := sub_add_neg
-    q + -p₁ ≃ _ := add_substR (neg_subst ‹p₁ ≃ p₂›)
+    q + -p₁ ≃ _ := by srw [‹p₁ ≃ p₂›]
     q + -p₂ ≃ _ := eqv_symm sub_add_neg
     q - p₂  ≃ _ := eqv_refl
 
@@ -321,10 +322,10 @@ theorem sub_eqv_zero_iff_eqv {p q : ℚ} : p - q ≃ 0 ↔ p ≃ q := by
     show p ≃ q
     calc
       p            ≃ _ := eqv_symm add_identR
-      p + 0        ≃ _ := add_substR (eqv_symm add_inverseL)
+      p + 0        ≃ _ := by srw [←add_inverseL]
       p + (-q + q) ≃ _ := eqv_symm add_assoc
-      (p + -q) + q ≃ _ := add_substL (eqv_symm sub_add_neg)
-      (p - q) + q  ≃ _ := add_substL ‹p - q ≃ 0›
+      (p + -q) + q ≃ _ := by srw [←sub_add_neg]
+      (p - q) + q  ≃ _ := by srw [‹p - q ≃ 0›]
       0 + q        ≃ _ := add_identL
       q            ≃ _ := eqv_refl
   case mpr =>
@@ -332,7 +333,7 @@ theorem sub_eqv_zero_iff_eqv {p q : ℚ} : p - q ≃ 0 ↔ p ≃ q := by
     show p - q ≃ 0
     calc
       p - q  ≃ _ := sub_add_neg
-      p + -q ≃ _ := add_substL ‹p ≃ q›
+      p + -q ≃ _ := by srw [‹p ≃ q›]
       q + -q ≃ _ := add_inverseR
       0      ≃ _ := eqv_refl
 
@@ -343,7 +344,7 @@ Subtracting zero from any rational number leaves it unchanged.
 -/
 theorem sub_zero {p : ℚ} : p - 0 ≃ p := calc
   p - 0  ≃ _ := sub_add_neg
-  p + -0 ≃ _ := add_substR (neg_preserves_zero.mpr eqv_refl)
+  p + -0 ≃ _ := by srw [neg_preserves_zero.mpr eqv_refl]
   p + 0  ≃ _ := add_identR
   p      ≃ _ := eqv_refl
 
@@ -359,9 +360,9 @@ the `from_integer` compatibility properties for those operations.
 theorem sub_compat_from_integer
     {a b : ℤ} : ((a - b : ℤ) : ℚ) ≃ (a : ℚ) - (b : ℚ)
     := calc
-  ((a - b : ℤ) : ℚ)        ≃ _ := from_integer_subst Integer.sub_defn
+  ((a - b : ℤ) : ℚ)        ≃ _ := by srw [Integer.sub_defn]
   ((a + -b : ℤ) : ℚ)       ≃ _ := add_compat_from_integer
-  (a : ℚ) + ((-b : ℤ) : ℚ) ≃ _ := add_substR neg_compat_from_integer
+  (a : ℚ) + ((-b : ℤ) : ℚ) ≃ _ := by srw [neg_compat_from_integer]
   (a : ℚ) + -(b : ℚ)       ≃ _ := eqv_symm sub_add_neg
   (a : ℚ) - (b : ℚ)        ≃ _ := eqv_refl
 
@@ -374,10 +375,9 @@ sum's arguments, and negative in the other. Those are additive inverses so they
 sum to zero and disappear from the result.
 -/
 theorem add_sub_telescope {p q r : ℚ} : (p - q) + (q - r) ≃ p - r := calc
-  (p - q) + (q - r)   ≃ _ := add_substL sub_add_neg
-  (p + -q) + (q - r)  ≃ _ := add_substR sub_add_neg
+  (p - q) + (q - r)   ≃ _ := by srw [sub_add_neg, sub_add_neg]
   (p + -q) + (q + -r) ≃ _ := AA.expr_xxfxxff_lr_swap_rr
-  (p + -r) + (q + -q) ≃ _ := add_substR add_inverseR
+  (p + -r) + (q + -q) ≃ _ := by srw [add_inverseR]
   (p + -r) + 0        ≃ _ := add_identR
   p + -r              ≃ _ := eqv_symm sub_add_neg
   p - r               ≃ _ := eqv_refl
@@ -395,10 +395,11 @@ syntax for representing `-1` as a rational number is `(-1 : ℚ)`, but this is
 interpreted as `(-(1 : ℤ) : ℚ)` by Lean, instead of the more convenient
 `((-1 : ℤ) : ℚ)`.
 -/
-instance sqrt1_neg_one : Sqrt1 (-1 : ℚ) := by
-  have : Integer.Sqrt1 (-1 : ℤ) := Integer.sqrt1_neg_one
-  have : Sqrt1 ((-1 : ℤ) : ℚ) := from_integer_preserves_sqrt1.mpr this
-  have : Sqrt1 (-1 : ℚ) := sqrt1_subst neg_compat_from_integer this
+instance sqrt1_neg_one : Sqrt1 (-1:ℚ) := by
+  have : Integer.Sqrt1 (-1:ℤ) := Integer.sqrt1_neg_one
+  have : Sqrt1 ((-1:ℤ):ℚ)     := from_integer_preserves_sqrt1.mpr this
+  have : Sqrt1 (-((1:ℤ):ℚ))   := by prw [neg_compat_from_integer] this
+  have : Sqrt1 (-1:ℚ)         := this
   exact this
 
 /--
@@ -408,11 +409,10 @@ For intuition, see the identical proof for integers, `Integer.sub_neg_flip`.
 -/
 theorem neg_sub {p q : ℚ} : -(p - q) ≃ q - p := calc
   -(p - q)             ≃ _ := eqv_symm mul_neg_one
-  (-1) * (p - q)       ≃ _ := mul_substR sub_add_neg
+  (-1) * (p - q)       ≃ _ := by srw [sub_add_neg]
   (-1) * (p + -q)      ≃ _ := mul_distribL
-  (-1) * p + (-1) * -q ≃ _ := add_substL mul_neg_one
-  (-p) + (-1) * -q     ≃ _ := add_substR mul_neg_one
-  (-p) + -(-q)         ≃ _ := add_substR neg_involutive
+  (-1) * p + (-1) * -q ≃ _ := by srw [mul_neg_one, mul_neg_one]
+  (-p) + -(-q)         ≃ _ := by srw [neg_involutive]
   (-p) + q             ≃ _ := add_comm
   q + -p               ≃ _ := eqv_symm sub_add_neg
   q - p                ≃ _ := eqv_refl
@@ -429,9 +429,9 @@ common term and its additive inverse sum to zero.
 theorem sub_cancelL_add {p q r : ℚ} : (r + p) - (r + q) ≃ p - q := calc
   _ ≃ (r + p) - (r + q)   := eqv_refl
   _ ≃ (r + p) + -(r + q)  := sub_add_neg
-  _ ≃ (r + p) + (-r + -q) := add_substR neg_compat_add
+  _ ≃ (r + p) + (-r + -q) := by srw [neg_compat_add]
   _ ≃ (r + -r) + (p + -q) := AA.expr_xxfxxff_lr_swap_rl
-  _ ≃ 0 + (p + -q)        := add_substL add_inverseR
+  _ ≃ 0 + (p + -q)        := by srw [add_inverseR]
   _ ≃ p + -q              := add_identL
   _ ≃ p - q               := eqv_symm sub_add_neg
 
@@ -446,8 +446,7 @@ commutative.
 -/
 theorem sub_cancelR_add {p q r : ℚ} : (p + r) - (q + r) ≃ p - q := calc
   _ ≃ (p + r) - (q + r) := eqv_refl
-  _ ≃ (r + p) - (q + r) := sub_substL add_comm
-  _ ≃ (r + p) - (r + q) := sub_substR add_comm
+  _ ≃ (r + p) - (r + q) := by srw [add_comm, add_comm]
   _ ≃ p - q             := sub_cancelL_add
 
 /--
@@ -457,9 +456,9 @@ Multiplication on the left distributes over subtraction.
 distributes over addition.
 -/
 theorem mul_distribL_sub {p q r : ℚ} : r * (p - q) ≃ r * p - r * q := calc
-   r * (p - q)      ≃ _ := mul_substR sub_add_neg
+   r * (p - q)      ≃ _ := by srw [sub_add_neg]
    r * (p + -q)     ≃ _ := mul_distribL
-   r * p + r * -q   ≃ _ := add_substR (eqv_symm neg_scompatR_mul)
+   r * p + r * -q   ≃ _ := by srw [←neg_scompatR_mul]
    r * p + -(r * q) ≃ _ := eqv_symm sub_add_neg
    r * p - r * q    ≃ _ := eqv_refl
 
@@ -472,8 +471,7 @@ distributes over addition.
 theorem mul_distribR_sub {p q r : ℚ} : (p - q) * r ≃ p * r - q * r := calc
    (p - q) * r   ≃ _ := mul_comm
    r * (p - q)   ≃ _ := mul_distribL_sub
-   r * p - r * q ≃ _ := sub_substL mul_comm
-   p * r - r * q ≃ _ := sub_substR mul_comm
+   r * p - r * q ≃ _ := by srw [mul_comm, mul_comm]
    p * r - q * r ≃ _ := eqv_refl
 
 end Lean4Axiomatic.Rational

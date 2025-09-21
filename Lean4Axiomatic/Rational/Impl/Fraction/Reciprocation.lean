@@ -39,25 +39,35 @@ on fractions.
 equivalences involving only integers are reached. Combine these with algebra to
 finish the proof.
 -/
+@[gcongr]
 theorem recip_subst
     {p₁ p₂ : Fraction ℤ} [AP (p₁ ≄ 0)] [AP (p₂ ≄ 0)] : p₁ ≃ p₂ → p₁⁻¹ ≃ p₂⁻¹
     := by
-  revert p₁; intro (a//b); revert p₂; intro (c//d)
-  intro _ _ (_ : a//b ≃ c//d)
-  show (a//b)⁻¹ ≃ (c//d)⁻¹
-  have : Integer.Nonzero a := nonzero_numerator (a//b)
-  have : Integer.Nonzero c := nonzero_numerator (c//d)
-  show (b * sgn a)//(a * sgn a) ≃ (d * sgn c)//(c * sgn c)
-  show (b * sgn a) * (c * sgn c) ≃ (d * sgn c) * (a * sgn a)
+  revert p₁; intro (a//b); let p₁ := a//b
+  revert p₂; intro (c//d); let p₂ := c//d
+  intro _ _ (_ : p₁ ≃ p₂)
+  show p₁⁻¹ ≃ p₂⁻¹
+
+  have : a//b ≃ c//d := ‹p₁ ≃ p₂›
   have : a * d ≃ c * b := ‹a//b ≃ c//d›
+  have : (b * sgn a) * (c * sgn c) ≃ (d * sgn c) * (a * sgn a) := calc
+    _ = (b * sgn a) * (c * sgn c) := rfl
+    _ ≃ (b * c) * (sgn a * sgn c) := AA.expr_xxfxxff_lr_swap_rl
+    _ ≃ (c * b) * (sgn a * sgn c) := by srw [AA.comm]
+    _ ≃ (a * d) * (sgn a * sgn c) := by srw [←‹a * d ≃ c * b›]
+    _ ≃ (d * a) * (sgn a * sgn c) := by srw [AA.comm]
+    _ ≃ (d * a) * (sgn c * sgn a) := by srw [AA.comm]
+    _ ≃ (d * sgn c) * (a * sgn a) := AA.expr_xxfxxff_lr_swap_rl
+
+  have : Integer.Nonzero a := nonzero_numerator p₁
+  have : Integer.Nonzero c := nonzero_numerator p₂
   calc
-    (b * sgn a) * (c * sgn c) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
-    (b * c) * (sgn a * sgn c) ≃ _ := AA.substL AA.comm
-    (c * b) * (sgn a * sgn c) ≃ _ := AA.substL (Rel.symm ‹a * d ≃ c * b›)
-    (a * d) * (sgn a * sgn c) ≃ _ := AA.substL AA.comm
-    (d * a) * (sgn a * sgn c) ≃ _ := AA.substR AA.comm
-    (d * a) * (sgn c * sgn a) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
-    (d * sgn c) * (a * sgn a) ≃ _ := Rel.refl
+    _ = p₁⁻¹                     := rfl
+    _ = (a//b)⁻¹                 := rfl
+    _ = (b * sgn a)//(a * sgn a) := rfl
+    _ ≃ (d * sgn c)//(c * sgn c) := ‹(b*sgn a)*(c*sgn c) ≃ (d*sgn c)*(a*sgn a)›
+    _ = (c//d)⁻¹                 := rfl
+    _ = p₂⁻¹                     := rfl
 
 /--
 The reciprocal of a nonzero fraction is its left multiplicative inverse.
@@ -67,24 +77,22 @@ the same factors in the numerator and denominator. They all cancel, giving the
 result `1`.
 -/
 theorem mul_inverseL {p : Fraction ℤ} [AP (p ≄ 0)] : p⁻¹ * p ≃ 1 := by
-  revert p; intro (pn//pd) (_ : AP (pn//pd ≄ 0))
-  show (pn//pd)⁻¹ * pn//pd ≃ 1
-  have : Integer.Nonzero pn := nonzero_numerator (pn//pd)
+  revert p; intro (pn//pd); let p := pn//pd; intro (_ : AP (p ≄ 0))
+  show p⁻¹ * p ≃ 1
+
+  have : Integer.Nonzero pn := nonzero_numerator p
+  have num_denom_same {a : ℤ} [AP (Positive a)] : a//a ≃ 1 :=
+    eqv_one_iff_numer_eqv_denom.mpr Rel.refl
+
   calc
-    (pn//pd)⁻¹ * pn//pd
-      ≃ _ := eqv_refl
-    (pd * sgn pn)//(pn * sgn pn) * pn//pd
-      ≃ _ := eqv_refl
-    ((pd * sgn pn) * pn)//((pn * sgn pn) * pd)
-      ≃ _ := substN AA.assoc
-    (pd * (sgn pn * pn))//((pn * sgn pn) * pd)
-      ≃ _ := substN (AA.substR AA.comm)
-    (pd * (pn * sgn pn))//((pn * sgn pn) * pd)
-      ≃ _ := substN AA.comm
-    ((pn * sgn pn) * pd)//((pn * sgn pn) * pd)
-      ≃ _ := eqv_one_iff_numer_eqv_denom.mpr Rel.refl
-    1
-      ≃ _ := eqv_refl
+    _ = p⁻¹ * p                                    := rfl
+    _ = (pn//pd)⁻¹ * pn//pd                        := rfl
+    _ = (pd * sgn pn)//(pn * sgn pn) * pn//pd      := rfl
+    _ = ((pd * sgn pn) * pn)//((pn * sgn pn) * pd) := rfl
+    _ ≃ (pd * (sgn pn * pn))//((pn * sgn pn) * pd) := by srw [AA.assoc]
+    _ ≃ (pd * (pn * sgn pn))//((pn * sgn pn) * pd) := by srw [AA.comm]
+    _ ≃ ((pn * sgn pn) * pd)//((pn * sgn pn) * pd) := by srw [AA.comm]
+    _ ≃ 1                                          := num_denom_same
 
 /--
 The reciprocal of a nonzero fraction is its right multiplicative inverse.
@@ -145,15 +153,13 @@ theorem recip_positive
     {a b : ℤ} [AP (Positive a)] [AP (Positive b)] : (a//b)⁻¹ ≃ b//a
     := by
   have : sgn a ≃ 1 := Integer.sgn_positive.mp ‹AP (Positive a)›.ev
-  have x_sgn_a {x : ℤ} : x * sgn a ≃ x := calc
-    x * sgn a ≃ _ := AA.substR ‹sgn a ≃ 1›
-    x * 1     ≃ _ := AA.identR
-    x         ≃ _ := Rel.refl
   calc
-    (a//b)⁻¹                 ≃ _ := eqv_refl
-    (b * sgn a)//(a * sgn a) ≃ _ := substN x_sgn_a
-    b//(a * sgn a)           ≃ _ := substD x_sgn_a
-    b//a                     ≃ _ := eqv_refl
+    _ = (a//b)⁻¹                 := rfl
+    _ = (b * sgn a)//(a * sgn a) := rfl
+    _ ≃ (b * 1)//(a * sgn a)     := by srw [‹sgn a ≃ 1›]
+    _ ≃ (b * 1)//(a * 1)         := by srw [‹sgn a ≃ 1›]
+    _ ≃ b//(a * 1)               := by srw [Integer.mul_identR]
+    _ ≃ b//a                     := by srw [Integer.mul_identR]
 
 /--
 Division of fractions.

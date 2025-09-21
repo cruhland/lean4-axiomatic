@@ -125,11 +125,12 @@ structure.
 **Proof intuition**: Expand the definition of equivalence; use substitution of
 integer multiplication.
 -/
+@[gcongr]
 theorem substN {a₁ a₂ b : ℤ} [AP (Positive b)] : a₁ ≃ a₂ → a₁//b ≃ a₂//b := by
   intro (_ : a₁ ≃ a₂)
   show a₁//b ≃ a₂//b
   show a₁ * b ≃ a₂ * b
-  exact AA.substL ‹a₁ ≃ a₂›
+  srw [‹a₁ ≃ a₂›]
 
 /--
 Replacing the denominator of a fraction with an equivalent value gives an
@@ -141,6 +142,7 @@ structure.
 **Proof intuition**: Expand the definition of equivalence; use substitution of
 integer multiplication.
 -/
+@[gcongr]
 theorem substD
     {a b₁ b₂ : ℤ} [pb₁ : AP (Positive b₁)] [pb₂ : AP (Positive b₂)]
     : b₁ ≃ b₂ → a//b₁ ≃ a//b₂
@@ -148,7 +150,7 @@ theorem substD
   intro (_ : b₁ ≃ b₂)
   show a//b₁ ≃ a//b₂
   show a * b₂ ≃ a * b₁
-  exact AA.substR (Rel.symm ‹b₁ ≃ b₂›)
+  srw [←‹b₁ ≃ b₂›]
 
 /--
 Every integer can be represented as a fraction.
@@ -172,13 +174,17 @@ superset of the integers.
 **Proof intuition**: The denominators are identical, so the result follows from
 the equivalence of the numerators.
 -/
+@[gcongr]
 theorem from_integer_subst
     {a₁ a₂ : ℤ} : a₁ ≃ a₂ → from_integer a₁ ≃ from_integer a₂
     := by
   intro (_ : a₁ ≃ a₂)
   show from_integer a₁ ≃ from_integer a₂
-  show a₁//1 ≃ a₂//1
-  exact substN ‹a₁ ≃ a₂›
+  calc
+    _ = from_integer a₁ := rfl
+    _ = a₁//1           := rfl
+    _ ≃ a₂//1           := by srw [‹a₁ ≃ a₂›]
+    _ = from_integer a₂ := rfl
 
 /--
 Equivalent converted fractions came from the same integer.
@@ -281,26 +287,14 @@ into equivalence between integers. The goals follow easily from integer facts.
 theorem eqv_one_iff_numer_eqv_denom
     {p : Fraction ℤ} : p ≃ 1 ↔ p.numerator ≃ p.denominator
     := by
-  revert p; intro (pn//pd)
-  apply Iff.intro
-  case mp =>
-    intro (_ : pn//pd ≃ 1)
-    show pn ≃ pd
-    have : pn//pd ≃ 1//1 := ‹pn//pd ≃ 1//1›
-    have : pn * 1 ≃ 1 * pd := ‹pn//pd ≃ 1//1›
-    calc
-      pn     ≃ _ := Rel.symm AA.identR
-      pn * 1 ≃ _ := ‹pn * 1 ≃ 1 * pd›
-      1 * pd ≃ _ := AA.identL
-      pd     ≃ _ := Rel.refl
-  case mpr =>
-    intro (_ : pn ≃ pd)
-    show pn//pd ≃ 1
-    show pn//pd ≃ 1//1
-    show pn * 1 ≃ 1 * pd
-    calc
-      pn * 1 ≃ _ := AA.substL ‹pn ≃ pd›
-      pd * 1 ≃ _ := AA.comm
-      1 * pd ≃ _ := Rel.refl
+  revert p; intro (pn//pd); let p := pn//pd
+  show p ≃ 1 ↔ p.numerator ≃ p.denominator
+  calc
+    _ ↔ p ≃ 1                       := Iff.rfl
+    _ ↔ pn//pd ≃ 1//1               := Iff.rfl
+    _ ↔ pn * 1 ≃ 1 * pd             := Iff.rfl
+    _ ↔ pn ≃ 1 * pd                 := by srw [Integer.mul_identR]
+    _ ↔ pn ≃ pd                     := by srw [Integer.mul_identL]
+    _ ↔ p.numerator ≃ p.denominator := Iff.rfl
 
 end Lean4Axiomatic.Rational.Impl.Fraction

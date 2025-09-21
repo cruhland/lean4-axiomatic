@@ -49,6 +49,8 @@ export Addition.Props (
   add_substR
 )
 
+attribute [gcongr] add_substL add_substR
+
 /-- All axioms of addition for rational numbers. -/
 class Addition
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
@@ -89,7 +91,7 @@ theorem add_one_one : (1:ℚ) + 1 ≃ 2 := calc
   _ ≃ (1:ℚ) + 1             := eqv_refl
   _ ≃ ((1:ℤ):ℚ) + ((1:ℤ):ℚ) := eqv_refl
   _ ≃ ((1 + 1 : ℤ):ℚ)       := eqv_symm add_compat_from_integer
-  _ ≃ ((2:ℤ):ℚ)             := from_integer_subst Integer.add_one_one
+  _ ≃ ((2:ℤ):ℚ)             := by srw [Integer.add_one_one]
   _ ≃ 2                     := eqv_refl
 
 end Lean4Axiomatic.Rational

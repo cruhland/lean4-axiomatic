@@ -39,6 +39,9 @@ class Props (α : Type) [EqvOp α] [Ops α] where
   identR {x : α} : x * ident ≃ x
 export Props (substL substR assoc identL identR)
 
+attribute [gcongr] substL substR
+
+set_option linter.dupNamespace false in
 /-- All axioms for generic types to form a Monoid. -/
 class Monoid (α : Type) [EqvOp α] where
   toOps : Monoid.Ops α

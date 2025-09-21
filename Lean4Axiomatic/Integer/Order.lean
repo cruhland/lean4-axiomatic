@@ -60,7 +60,7 @@ theorem from_natural_respects_le {n m : ℕ} : n ≤ m ↔ (n:ℤ) ≤ (m:ℤ) :
     have (Exists.intro (k : ℕ) (_ : n + k ≃ m)) := Natural.le_defn.mp ‹n ≤ m›
     have : (m:ℤ) ≃ (n:ℤ) + k := calc
       _ = (m:ℤ)           := rfl
-      _ ≃ ((n + k : ℕ):ℤ) := AA.subst₁ (Rel.symm ‹n + k ≃ m›)
+      _ ≃ ((n + k : ℕ):ℤ) := by srw [←‹n + k ≃ m›]
       _ ≃ (n:ℤ) + k       := AA.compat₂
     have : ∃ (k : ℕ), (m:ℤ) ≃ (n:ℤ) + k := Exists.intro k ‹(m:ℤ) ≃ (n:ℤ) + k›
     have : (n:ℤ) ≤ (m:ℤ) := le_iff_add_nat.mpr ‹∃ (k : ℕ), (m:ℤ) ≃ (n:ℤ) + k›
@@ -78,6 +78,11 @@ theorem from_natural_respects_le {n m : ℕ} : n ≤ m ↔ (n:ℤ) ≤ (m:ℤ) :
     have : n ≤ m := Natural.le_defn.mpr (Exists.intro k ‹n + k ≃ m›)
     exact this
 
+/-- Immediate corollary for use with `gcongr`. -/
+@[gcongr]
+theorem from_natural_respects_le_mp {n m : ℕ} : n ≤ m → (n:ℤ) ≤ (m:ℤ) :=
+  from_natural_respects_le.mp
+
 /--
 Natural numbers maintain their _less than_ relationship when converted to
 integers.
@@ -92,8 +97,15 @@ theorem from_natural_respects_lt {n m : ℕ} : n < m ↔ (n:ℤ) < (m:ℤ) := by
     _ ↔ (n:ℤ) ≤ m ∧ (n:ℤ) ≄ m := iff_subst_covar and_mapR ‹n ≄ m ↔ (n:ℤ) ≄ m›
     _ ↔ (n:ℤ) < (m:ℤ)         := lt_iff_le_neqv.symm
 
+/-- Immediate corollary for use with `gcongr`. -/
+@[gcongr]
+theorem from_natural_respects_lt_mp {n m : ℕ} : n < m → (n:ℤ) < (m:ℤ) :=
+  from_natural_respects_lt.mp
+
 /-- The integer two is greater than one. -/
-theorem two_gt_one : (2:ℤ) > 1 := from_natural_respects_lt.mp Natural.two_gt_one
+theorem two_gt_one : (2:ℤ) > 1 := by
+  have : ((1:ℕ):ℤ) < ((2:ℕ):ℤ) := by srw [Natural.two_gt_one]
+  exact this
 
 /--
 Equivalent integers can be substituted on the left of the `· ≤ ·` relation.
@@ -104,14 +116,17 @@ relation.
 **Proof intuition**: The result follows from transitivity and substitution on
 the underlying definition of `· ≤ ·`.
 -/
+@[gcongr]
 theorem le_substL_eqv {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → a₁ ≤ b → a₂ ≤ b := by
   intro (_ : a₁ ≃ a₂) (_ : a₁ ≤ b)
   show a₂ ≤ b
-  have (Exists.intro (k : ℕ) (_ : b ≃ a₁ + coe k)) :=
-    le_iff_add_nat.mp ‹a₁ ≤ b›
+  have (Exists.intro (k : ℕ) (_ : b ≃ a₁ + k)) := le_iff_add_nat.mp ‹a₁ ≤ b›
   apply le_iff_add_nat.mpr
-  show ∃ (k : ℕ), b ≃ a₂ + coe k
-  have : b ≃ a₂ + coe k := Rel.trans ‹b ≃ a₁ + coe k› (AA.substL ‹a₁ ≃ a₂›)
+  show ∃ (k : ℕ), b ≃ a₂ + k
+  have : b ≃ a₂ + k := calc
+    _ = b      := rfl
+    _ ≃ a₁ + k := ‹b ≃ a₁ + k›
+    _ ≃ a₂ + k := by srw [‹a₁ ≃ a₂›]
   exact Exists.intro k ‹b ≃ a₂ + coe k›
 
 /--
@@ -123,6 +138,7 @@ relation.
 **Proof intuition**: The result follows from transitivity and substitution on
 the underlying definition of `· ≤ ·`.
 -/
+@[gcongr]
 theorem le_substR_eqv {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → b ≤ a₁ → b ≤ a₂ := by
   intro (_ : a₁ ≃ a₂) (_ : b ≤ a₁)
   show b ≤ a₂
@@ -149,14 +165,15 @@ relation.
 **Proof intuition**: The result follows from substitution on the underlying
 definition of `· < ·`.
 -/
+@[gcongr]
 theorem lt_substL_eqv {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → a₁ < b → a₂ < b := by
   intro (_ : a₁ ≃ a₂) (_ : a₁ < b)
   show a₂ < b
   have (And.intro (_ : a₁ ≤ b) (_ : a₁ ≄ b)) := lt_iff_le_neqv.mp ‹a₁ < b›
   apply lt_iff_le_neqv.mpr
   show a₂ ≤ b ∧ a₂ ≄ b
-  have : a₂ ≤ b := AA.substLFn ‹a₁ ≃ a₂› ‹a₁ ≤ b›
-  have : a₂ ≄ b := AA.neqv_substL ‹a₁ ≃ a₂› ‹a₁ ≄ b›
+  have : a₂ ≤ b := by prw [‹a₁ ≃ a₂›] ‹a₁ ≤ b›
+  have : a₂ ≄ b := by prw [‹a₁ ≃ a₂›] ‹a₁ ≄ b›
   exact And.intro ‹a₂ ≤ b› ‹a₂ ≄ b›
 
 /--
@@ -168,14 +185,15 @@ relation.
 **Proof intuition**: The result follows from substitution on the underlying
 definition of `· < ·`.
 -/
+@[gcongr]
 theorem lt_substR_eqv {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → b < a₁ → b < a₂ := by
   intro (_ : a₁ ≃ a₂) (_ : b < a₁)
   show b < a₂
   have (And.intro (_ : b ≤ a₁) (_ : b ≄ a₁)) := lt_iff_le_neqv.mp ‹b < a₁›
   apply lt_iff_le_neqv.mpr
   show b ≤ a₂ ∧ b ≄ a₂
-  have : b ≤ a₂ := AA.substRFn ‹a₁ ≃ a₂› ‹b ≤ a₁›
-  have : b ≄ a₂ := AA.neqv_substR ‹a₁ ≃ a₂› ‹b ≄ a₁›
+  have : b ≤ a₂ := by prw [‹a₁ ≃ a₂›] ‹b ≤ a₁›
+  have : b ≄ a₂ := by prw [‹a₁ ≃ a₂›] ‹b ≄ a₁›
   exact And.intro ‹b ≤ a₂› ‹b ≄ a₂›
 
 instance lt_substitutive_eqv
@@ -211,7 +229,7 @@ equivalence on _less than_.
 theorem trans_eqv_lt_lt {a b c : ℤ} : a ≃ b → b < c → a < c := by
   intro (_ : a ≃ b) (_ : b < c)
   show a < c
-  exact lt_substL_eqv (Rel.symm ‹a ≃ b›) ‹b < c›
+  prw [←‹a ≃ b›] ‹b < c›
 
 /-- Enable `trans_eqv_lt_lt` use by `calc` tactics. -/
 instance trans_eqv_lt_lt_inst : Trans (α := ℤ) (· ≃ ·) (· < ·) (· < ·) := {
@@ -227,7 +245,7 @@ equivalence on _less than_.
 theorem trans_lt_eqv_lt {a b c : ℤ} : a < b → b ≃ c → a < c := by
   intro (_ : a < b) (_ : b ≃ c)
   show a < c
-  exact lt_substR_eqv ‹b ≃ c› ‹a < b›
+  prw [‹b ≃ c›] ‹a < b›
 
 /-- Enable `trans_lt_eqv_lt` use by `calc` tactics. -/
 instance trans_lt_eqv_lt_inst : Trans (α := ℤ) (· < ·) (· ≃ ·) (· < ·) := {
@@ -243,7 +261,7 @@ equivalence.
 theorem trans_eqv_gt_gt {a b c : ℤ} : a ≃ b → b > c → a > c := by
   intro (_ : a ≃ b) (_ : b > c)
   show a > c
-  have : c < a := trans_lt_eqv_lt ‹c < b› (Rel.symm ‹a ≃ b›)
+  have : c < a := by prw [←‹a ≃ b›] ‹c < b›
   exact this
 
 /-- Enable `trans_eqv_gt_gt` use by `calc` tactics. -/
@@ -260,7 +278,7 @@ equivalence.
 theorem trans_gt_eqv_gt {a b c : ℤ} : a > b → b ≃ c → a > c := by
   intro (_ : a > b) (_ : b ≃ c)
   show a > c
-  have : c < a := trans_eqv_lt_lt (Rel.symm ‹b ≃ c›) ‹b < a›
+  have : c < a := by prw [‹b ≃ c›] ‹b < a›
   exact this
 
 /-- Enable `trans_gt_eqv_gt` use by `calc` tactics. -/
@@ -292,7 +310,7 @@ theorem gt_iff_pos_diff {a b : ℤ} : a > b ↔ Positive (a - b) := by
       le_iff_add_nat.mp ‹b ≤ a›
     have : a - b ≃ coe k := subR_moveR_addL.mpr ‹a ≃ b + coe k›
     have : a - b ≄ 0 := mt zero_diff_iff_eqv.mp (Rel.symm ‹b ≄ a›)
-    have : (k:ℤ) ≄ 0 := AA.neqv_substL ‹a - b ≃ coe k› ‹a - b ≄ 0›
+    have : (k:ℤ) ≄ 0 := by prw [‹a - b ≃ coe k›] ‹a - b ≄ 0›
     have : k ≄ 0 := AA.inject ‹coe k ≄ coe (0 : ℕ)›
     have : Positive k := Signed.positive_defn.mpr ‹k ≄ 0›
     have : Positive (a - b) := positive_intro_nat ‹Positive k› ‹a - b ≃ coe k›
@@ -308,9 +326,8 @@ theorem gt_iff_pos_diff {a b : ℤ} : a > b ↔ Positive (a - b) := by
     have : a ≃ b + coe k := subR_moveR_addL.mp ‹a - b ≃ coe k›
     have : b ≤ a := le_iff_add_nat.mpr (Exists.intro k ‹a ≃ b + coe k›)
     have : k ≄ 0 := Signed.positive_defn.mp ‹Positive k›
-    have : (k:ℤ) ≄ ((0:ℕ):ℤ) := AA.subst₁ ‹k ≄ 0›
-    have : a - b ≄ 0 :=
-      AA.neqv_substL (Rel.symm ‹a - b ≃ coe k›) ‹(coe k : ℤ) ≄ 0›
+    have : (k:ℤ) ≄ ((0:ℕ):ℤ) := AA.subst_neqv ‹k ≄ 0›
+    have : a - b ≄ 0 := by prw [←‹a - b ≃ coe k›] ‹(coe k : ℤ) ≄ 0›
     have : b ≄ a := Rel.symm (mt zero_diff_iff_eqv.mpr ‹a - b ≄ 0›)
     exact And.intro ‹b ≤ a› ‹b ≄ a›
 
@@ -322,7 +339,7 @@ Integers greater than zero are positive.
 theorem gt_zero_iff_pos {a : ℤ} : a > 0 ↔ Positive a := calc
   _ ↔ a > 0            := Iff.rfl
   _ ↔ Positive (a - 0) := gt_iff_pos_diff
-  _ ↔ Positive a       := Rel.iff_subst_eqv AA.substFn sub_identR
+  _ ↔ Positive a       := Rel.iff_subst_eqv positive_subst sub_identR
 
 /--
 Equivalence between the _less than_ relation on integers and their
@@ -343,16 +360,14 @@ theorem lt_iff_neg_diff {a b : ℤ} : a < b ↔ Negative (a - b) := by
     intro (_ : a < b)
     show Negative (a - b)
     have : Positive (b - a) := gt_iff_pos_diff.mp ‹a < b›
-    have : Positive (-(a - b)) :=
-      AA.substFn (Rel.symm sub_neg_flip) ‹Positive (b - a)›
+    have : Positive (-(a - b)) := by prw [←sub_neg_flip] ‹Positive (b - a)›
     have : Negative (a - b) :=
       negative_iff_negated_positive.mpr ‹Positive (-(a - b))›
     exact this
   case mpr =>
     intro (_ : Negative (a - b))
     show a < b
-    have : Negative (-(b - a)) :=
-      AA.substFn (Rel.symm sub_neg_flip) ‹Negative (a - b)›
+    have : Negative (-(b - a)) := by prw [←sub_neg_flip] ‹Negative (a - b)›
     have : Positive (b - a) :=
       positive_iff_negated_negative.mpr ‹Negative (-(b - a))›
     have : a < b := gt_iff_pos_diff.mpr ‹Positive (b - a)›
@@ -368,6 +383,7 @@ ordering won't be affected.
 **Proof intuition**: Convert the `· < ·` relation into subtraction; then the
 common value gets canceled out.
 -/
+@[gcongr]
 theorem add_substL_lt {a b c : ℤ} : a < b → a + c < b + c := by
   intro (_ : a < b)
   show a + c < b + c
@@ -375,21 +391,33 @@ theorem add_substL_lt {a b c : ℤ} : a < b → a + c < b + c := by
   apply gt_iff_pos_diff.mpr
   show Positive (b + c - (a + c))
   have : b - a ≃ b + c - (a + c) := Rel.symm sub_sums_sameR
-  exact AA.substFn ‹b - a ≃ b + c - (a + c)› ‹Positive (b - a)›
+  prw [‹b - a ≃ b + c - (a + c)›] ‹Positive (b - a)›
 
-def add_substitutiveL_lt
-    : AA.SubstitutiveOn Hand.L (α := ℤ) (· + ·) AA.tc (· < ·) (· < ·)
-    := {
-  subst₂ := λ (_ : True) => add_substL_lt
-}
+/--
+The `· < ·` relation is preserved when the same value is added on the left to
+both sides.
+
+**Property intuition**: Both values are changed by the same amount, so their
+ordering won't be affected.
+
+**Proof intuition**: Use substitution on the other side and commutativity of
+addition.
+-/
+@[gcongr]
+theorem add_substR_lt {a b c : ℤ} : a < b → c + a < c + b := by
+  intro (_ : a < b)
+  show c + a < c + b
+  calc
+    _ = c + a := rfl
+    _ ≃ a + c := AA.comm
+    _ < b + c := by srw [‹a < b›]
+    _ ≃ c + b := AA.comm
 
 instance add_substitutive_lt
     : AA.Substitutive₂ (α := ℤ) (· + ·) AA.tc (· < ·) (· < ·)
     := {
-  substitutiveL :=
-    add_substitutiveL_lt
-  substitutiveR :=
-    AA.substR_from_substL_swap (rS := (· ≃ ·)) add_substitutiveL_lt
+  substitutiveL := { subst₂ := λ (_ : True) => add_substL_lt }
+  substitutiveR := { subst₂ := λ (_ : True) => add_substR_lt }
 }
 
 /--
@@ -409,12 +437,11 @@ theorem add_cancelL_lt {a b c : ℤ} : c + a < c + b → a < b := by
   apply gt_iff_pos_diff.mpr
   show Positive (b - a)
   have : c + b - (c + a) ≃ b - a := calc
-    c + b - (c + a) ≃ _ := AA.substL AA.comm
-    b + c - (c + a) ≃ _ := AA.substR AA.comm
+    c + b - (c + a) ≃ _ := by srw [AA.comm]
+    b + c - (c + a) ≃ _ := by srw [AA.comm]
     b + c - (a + c) ≃ _ := sub_sums_sameR
-    b - a ≃ _ := Rel.refl
-  apply AA.substFn ‹c + b - (c + a) ≃ b - a›
-  exact ‹Positive (c + b - (c + a))›
+    b - a           ≃ _ := Rel.refl
+  prw [‹c + b - (c + a) ≃ b - a›] ‹Positive (c + b - (c + a))›
 
 def add_cancellativeL_lt
     : AA.CancellativeOn Hand.L (α := ℤ) (· + ·) AA.tc (· < ·) (· < ·)
@@ -442,29 +469,41 @@ positive and negative values become more negative.
 result follows by showing that the two factors being positive means that their
 product is positive.
 -/
+@[gcongr]
 theorem mul_substL_lt {a b c : ℤ} : Positive c → a < b → a * c < b * c := by
   intro (_ : Positive c) (_ : a < b)
   show a * c < b * c
-  have : Positive (b - a) := gt_iff_pos_diff.mp ‹a < b›
-  apply gt_iff_pos_diff.mpr
-  show Positive (b * c - a * c)
-  apply AA.substFn AA.distribR
-  show Positive ((b - a) * c)
-  exact mul_preserves_positive ‹Positive (b - a)› ‹Positive c›
+  have : Positive (b - a)         := gt_iff_pos_diff.mp ‹a < b›
+  have : Positive ((b - a) * c)   := mul_preserves_positive this ‹Positive c›
+  have : Positive (b * c - a * c) := by prw [mul_distribR_sub] this
+  have : a * c < b * c            := gt_iff_pos_diff.mpr this
+  exact this
 
-def mul_substitutiveL_lt
-    : AA.SubstitutiveOn Hand.L (α := ℤ) (· * ·) Positive (· < ·) (· < ·)
-    := {
-  subst₂ := mul_substL_lt
-}
+/--
+The `· < ·` relation is preserved when both sides are multiplied on the left
+by the same positive value.
+
+**Property intuition**: Both values are scaled away from zero by the same
+factor, so their ordering won't be affected; positive values become more
+positive and negative values become more negative.
+
+**Proof intuition**: Use commutativity and substitute on the other side.
+-/
+@[gcongr]
+theorem mul_substR_lt {a b c : ℤ} : Positive c → a < b → c * a < c * b := by
+  intro (_ : Positive c) (_ : a < b)
+  show c * a < c * b
+  calc
+    _ = c * a := rfl
+    _ ≃ a * c := AA.comm
+    _ < b * c := by srw [‹a < b›]
+    _ ≃ c * b := AA.comm
 
 instance mul_substitutive_lt
     : AA.Substitutive₂ (α := ℤ) (· * ·) Positive (· < ·) (· < ·)
     := {
-  substitutiveL :=
-    mul_substitutiveL_lt
-  substitutiveR :=
-    AA.substR_from_substL_swap (rS := (· ≃ ·)) mul_substitutiveL_lt
+  substitutiveL := { subst₂ := mul_substL_lt }
+  substitutiveR := { subst₂ := mul_substR_lt }
 }
 
 /--
@@ -487,7 +526,7 @@ theorem mul_cancelL_lt {a b c : ℤ} : Positive c → c * a < c * b → a < b :=
   apply gt_iff_pos_diff.mpr
   show Positive (b - a)
   have : Positive (c * (b - a)) :=
-    AA.substFn (Rel.symm AA.distribL) ‹Positive (c * b - c * a)›
+    by prw [←mul_distribL_sub] ‹Positive (c * b - c * a)›
   have : SameSign c (b - a) :=
     positive_mul_iff_same_sign.mp ‹Positive (c * (b - a))›
   have : Positive (b - a) :=
@@ -522,7 +561,7 @@ are the same.
 theorem lt_neg_flip {a b : ℤ} : a < b ↔ -b < -a := by
   have : -a - -b ≃ b - a := calc
     (-a) - -b    ≃ _ := sub_defn
-    (-a) + -(-b) ≃ _ := AA.substR neg_involutive
+    (-a) + -(-b) ≃ _ := by srw [neg_involutive]
     (-a) + b     ≃ _ := AA.comm
     b + -a       ≃ _ := Rel.symm sub_defn
     b - a        ≃ _ := Rel.refl
@@ -533,14 +572,14 @@ theorem lt_neg_flip {a b : ℤ} : a < b ↔ -b < -a := by
     have : Positive (b - a) := gt_iff_pos_diff.mp ‹a < b›
     apply gt_iff_pos_diff.mpr
     show Positive (-a - -b)
-    exact AA.substFn (Rel.symm ‹-a - -b ≃ b - a›) ‹Positive (b - a)›
+    prw [←‹-a - -b ≃ b - a›] ‹Positive (b - a)›
   case mpr =>
     intro (_ : -b < -a)
     show a < b
     have : Positive (-a - -b) := gt_iff_pos_diff.mp ‹-b < -a›
     apply gt_iff_pos_diff.mpr
     show Positive (b - a)
-    exact AA.substFn ‹-a - -b ≃ b - a› ‹Positive (-a - -b)›
+    prw [‹-a - -b ≃ b - a›] ‹Positive (-a - -b)›
 
 instance lt_substitutive_neg
     : AA.Substitutive₁ (α := ℤ) (-·) (· < ·) (· > ·)
@@ -582,7 +621,7 @@ theorem le_split {a b : ℤ} : a ≤ b ↔ a < b ∨ a ≃ b := by
       ‹a ≤ b›
     | Or.inr (_ : a ≃ b) =>
       have : a ≤ a := le_refl
-      have : a ≤ b := AA.substRFn ‹a ≃ b› ‹a ≤ a›
+      have : a ≤ b := by prw [‹a ≃ b›] ‹a ≤ a›
       ‹a ≤ b›
     exact this
 
@@ -629,7 +668,7 @@ Integers are less than zero iff they have sign `-1`.
 theorem lt_zero_sgn {a : ℤ} : a < 0 ↔ sgn a ≃ -1 := calc
   _ ↔ a < 0            := Iff.rfl
   _ ↔ sgn (a - 0) ≃ -1 := lt_sgn
-  _ ↔ sgn a ≃ -1       := AA.eqv_substL_iff (sgn_subst sub_identR)
+  _ ↔ sgn a ≃ -1       := by srw [sub_identR]
 
 /--
 Convert the _greater than_ relation to and from its representation as the sign
@@ -663,7 +702,7 @@ Integers are greater than zero iff they have sign `1`.
 theorem gt_zero_sgn {a : ℤ} : a > 0 ↔ sgn a ≃ 1 := calc
   _ ↔ a > 0           := Iff.rfl
   _ ↔ sgn (a - 0) ≃ 1 := gt_sgn
-  _ ↔ sgn a ≃ 1       := AA.eqv_substL_iff (sgn_subst sub_identR)
+  _ ↔ sgn a ≃ 1       := by srw [sub_identR]
 
 /--
 Converts the _greater than or equivalent to_ relation on integers to and from
@@ -724,9 +763,8 @@ value from a smaller one will never be positive.
 theorem le_sgn {a b : ℤ} : a ≤ b ↔ sgn (a - b) ≄ 1 := by
   have reduce_neg : -sgn (b - a) ≃ -(-1) ↔ sgn (a - b) ≃ 1 := calc
     _ ↔ -sgn (b - a) ≃ -(-1)   := Iff.rfl
-    _ ↔ sgn (-(b - a)) ≃ -(-1) := AA.eqv_substL_iff (Rel.symm sgn_compat_neg)
-    _ ↔ sgn (a - b) ≃ -(-1)    := AA.eqv_substL_iff (sgn_subst sub_neg_flip)
-    _ ↔ sgn (a - b) ≃ 1        := AA.eqv_substR_iff neg_involutive
+    _ ↔ sgn (a - b) ≃ -(-1)    := by srw [←sgn_compat_neg, sub_neg_flip]
+    _ ↔ sgn (a - b) ≃ 1        := by srw [neg_involutive]
   calc
     _ ↔ a ≤ b                  := Iff.rfl
     _ ↔ sgn (b - a) ≄ -1       := ge_sgn
@@ -738,13 +776,10 @@ Integers are greater than or equivalent to zero iff they don't have sign `-1`.
 
 **Proof intuition**: Follows directly from `ge_sgn`.
 -/
-theorem ge_zero_sgn {a : ℤ} : a ≥ 0 ↔ sgn a ≄ -1 := by
-  have : sgn (a - 0) ≃ sgn a := sgn_subst sub_identR
-  have : sgn (a - 0) ≃ -1 ↔ sgn a ≃ -1 := AA.eqv_substL_iff this
-  calc
-    _ ↔ a ≥ 0            := Iff.rfl
-    _ ↔ sgn (a - 0) ≄ -1 := ge_sgn
-    _ ↔ sgn a ≄ -1       := iff_subst_contra mt ‹sgn (a - 0) ≃ -1 ↔ sgn a ≃ -1›
+theorem ge_zero_sgn {a : ℤ} : a ≥ 0 ↔ sgn a ≄ -1 := calc
+  _ ↔ a ≥ 0            := Iff.rfl
+  _ ↔ sgn (a - 0) ≄ -1 := ge_sgn
+  _ ↔ sgn a ≄ -1       := iff_subst_contra mt (by srw [sub_identR])
 
 /--
 The only sign value greater than zero, is one.
@@ -757,7 +792,7 @@ the sign of a sign leaves it unchanged.
 theorem sgn_gt_zero_iff_pos {a : ℤ} : sgn a > 0 ↔ sgn a ≃ 1 := calc
   _ ↔ sgn a > 0       := Iff.rfl
   _ ↔ sgn (sgn a) ≃ 1 := gt_zero_sgn
-  _ ↔ sgn a ≃ 1       := AA.eqv_substL_iff sgn_idemp
+  _ ↔ sgn a ≃ 1       := by srw [sgn_idemp]
 
 /--
 Negative one is the only sign value that's not greater than or equivalent to
@@ -771,7 +806,7 @@ is not `-1`; taking the sign of a sign leaves it unchanged.
 theorem sgn_ge_zero_iff_nonneg {a : ℤ} : sgn a ≥ 0 ↔ sgn a ≄ -1 := calc
   _ ↔ sgn a ≥ 0        := Iff.rfl
   _ ↔ sgn (sgn a) ≄ -1 := ge_zero_sgn
-  _ ↔ sgn a ≄ -1       := iff_subst_contra mt (AA.eqv_substL_iff sgn_idemp)
+  _ ↔ sgn a ≄ -1       := iff_subst_contra mt (by srw [sgn_idemp])
 
 /--
 An integer is greater than zero iff its sign is greater than zero.
@@ -843,7 +878,7 @@ theorem trans_lt_lt_lt {a b c : ℤ} : a < b → b < c → a < c := by
     add_preserves_positive ‹Positive (c - b)› ‹Positive (b - a)›
   have : (c - b) + (b - a) ≃ c - a := add_sub_telescope
   have : Positive (c - a) :=
-    AA.substFn ‹(c - b) + (b - a) ≃ c - a› ‹Positive ((c - b) + (b - a))›
+    by prw [‹(c - b) + (b - a) ≃ c - a›] ‹Positive ((c - b) + (b - a))›
   exact this
 
 /-- Enable `trans_lt_lt_lt` use by `calc` tactics. -/
@@ -1106,6 +1141,10 @@ theorem ge_addR {a₁ a₂ b : ℤ} : a₁ ≥ a₂ ↔ a₁ + b ≥ a₂ + b :=
     _ ↔ (a₁ + b) - (a₂ + b) ≥ 0 := Rel.iff_subst_eqv le_substR_eqv expand_sub
     _ ↔ a₁ + b ≥ a₂ + b         := ge_iff_diff_nonneg.symm
 
+/-- Immediate corollary of `ge_addR`, just to help `gcongr`. -/
+@[gcongr]
+theorem ge_addR_mp {a₁ a₂ b : ℤ} : a₁ ≥ a₂ → a₁ + b ≥ a₂ + b := ge_addR.mp
+
 /--
 A common term can be added to or removed from the left-hand side of both
 operands of _greater than or equivalent to_.
@@ -1121,6 +1160,10 @@ theorem ge_addL {a₁ a₂ b : ℤ} : a₁ ≥ a₂ ↔ b + a₁ ≥ b + a₂ :=
   _ ↔ a₁ + b ≥ a₂ + b := ge_addR
   _ ↔ b + a₁ ≥ a₂ + b := Rel.iff_subst_eqv le_substR_eqv AA.comm
   _ ↔ b + a₁ ≥ b + a₂ := Rel.iff_subst_eqv le_substL_eqv AA.comm
+
+/-- Immediate corollary of `ge_addL`, just to help `gcongr`. -/
+@[gcongr]
+theorem ge_addL_mp {a₁ a₂ b : ℤ} : a₁ ≥ a₂ → b + a₁ ≥ b + a₂ := ge_addL.mp
 
 /--
 Any pair of integers can only be in one of three relations: _less than_,
@@ -1209,7 +1252,7 @@ theorem le_neg_flip {a b : ℤ} : a ≤ b ↔ -b ≤ -a := by
       have : -b ≤ -a := le_split.mpr (Or.inl this)
       exact this
     | Or.inr (_ : a ≃ b) =>
-      have : -b ≃ -a := AA.subst₁ (Rel.symm ‹a ≃ b›)
+      have : -b ≃ -a := by srw [←‹a ≃ b›]
       have : -b ≤ -a := le_split.mpr (Or.inr this)
       exact this
   case mpr =>
@@ -1268,34 +1311,30 @@ theorem lt_inc {a : ℤ} : a < a + 1 := by
   show Negative (a - (a + 1))
   have : a - (a + 1) ≃ -1 := calc
     a - (a + 1)   ≃ _ := sub_defn
-    a + -(a + 1)  ≃ _ := AA.substR neg_compat_add
+    a + -(a + 1)  ≃ _ := by srw [neg_compat_add]
     a + (-a + -1) ≃ _ := Rel.symm AA.assoc
-    (a + -a) + -1 ≃ _ := AA.substL AA.inverseR
+    (a + -a) + -1 ≃ _ := by srw [neg_invR]
     (0 : ℤ) + -1  ≃ _ := AA.identL
     (-1)          ≃ _ := Rel.refl
-  apply AA.substFn (Rel.symm ‹a - (a + 1) ≃ -1›)
-  show Negative (-1)
-  exact neg_one_negative
+  prw [←‹a - (a + 1) ≃ -1›] neg_one_negative
 
 /--
 Zero is less than one (in the integers).
 
 **Property and proof definition**: A direct consequence of `lt_inc`.
 -/
-theorem zero_lt_one : (0 : ℤ) < 1 := by
-  have : (0 : ℤ) < 0 + 1 := lt_inc
-  have : (0 : ℤ) < 1 := lt_substR_eqv AA.identL this
-  exact this
+theorem zero_lt_one : (0:ℤ) < 1 := by
+  have : (0:ℤ) < 0 + 1 := lt_inc
+  prw [add_identL] ‹(0:ℤ) < 0 + 1›
 
 /--
 Negative one is less than zero (in the integers).
 
 **Property and proof definition**: A direct consequence of `lt_inc`.
 -/
-theorem neg_one_lt_zero : (-1 : ℤ) < 0 := by
-  have : (-1 : ℤ) < -1 + 1 := lt_inc
-  have : (-1 : ℤ) < 0 := lt_substR_eqv AA.inverseL this
-  exact this
+theorem neg_one_lt_zero : (-1:ℤ) < 0 := by
+  have : (-1:ℤ) < -1 + 1 := lt_inc
+  prw [neg_invL] ‹(-1:ℤ) < -1 + 1›
 
 /--
 Convert between _less than_ and _less than or equivalent to_ by incrementing or
@@ -1314,19 +1353,18 @@ theorem lt_iff_le_incL {a b : ℤ} : a < b ↔ a + 1 ≤ b := by
       have : a ≃ b := Rel.symm $ calc
         _ = b         := rfl
         _ ≃ a + n     := ‹b ≃ a + n›
-        _ ≃ a + (0:ℕ) := AA.substR (AA.subst₁ ‹n ≃ 0›)
+        _ ≃ a + (0:ℕ) := by srw [‹n ≃ 0›]
         _ ≃ a         := AA.identR
       exact absurd ‹a ≃ b› ‹a ≄ b›
     | Or.inr (Exists.intro (m : ℕ) (_ : n ≃ step m)) =>
       have : step m ≃ m + 1 := Rel.symm Natural.add_one_step
       have : b ≃ (a + 1) + m := calc
-        _ = b                   := rfl
-        _ ≃ a + n               := ‹b ≃ a + n›
-        _ ≃ a + step m          := AA.substR (AA.subst₁ ‹n ≃ step m›)
-        _ ≃ a + ((m + 1 : ℕ):ℤ) := AA.substR (AA.subst₁ ‹step m ≃ m + 1›)
-        _ ≃ a + (m + 1)         := AA.substR AA.compat₂
-        _ ≃ a + (1 + m)         := AA.substR AA.comm
-        _ ≃ (a + 1) + m         := Rel.symm AA.assoc
+        _ = b               := rfl
+        _ ≃ a + n           := ‹b ≃ a + n›
+        _ ≃ a + (m + 1 : ℕ) := by srw [‹n ≃ step m›, ‹step m ≃ m + 1›]
+        _ ≃ a + (m + (1:ℕ)) := by srw [AA.compat₂]
+        _ ≃ a + ((1:ℕ) + m) := by srw [AA.comm]
+        _ ≃ (a + 1) + m     := Rel.symm AA.assoc
       have : ∃ (m : ℕ), b ≃ (a + 1) + m := Exists.intro m ‹b ≃ (a + 1) + m›
       have : a + 1 ≤ b := le_iff_add_nat.mpr ‹∃ (m : ℕ), b ≃ (a + 1) + m›
       exact this
@@ -1407,18 +1445,17 @@ theorem zero_sum_split
     calc
       _ ↔ k ≃ j         := Iff.rfl
       _ ↔ (k:ℤ) ≃ (j:ℤ) := from_natural_eqv
-      _ ↔ c ≃ (j:ℤ)     := (AA.eqv_substL_iff ‹c ≃ (k:ℤ)›).symm
+      _ ↔ c ≃ (j:ℤ)     := by srw [←‹c ≃ (k:ℤ)›]
   have : n ≃ 0 ↔ a ≃ 0 := nat_int_eqvL ‹a ≃ (n:ℤ)›
   have : m ≃ 0 ↔ b ≃ 0 := nat_int_eqvL ‹b ≃ (m:ℤ)›
   calc
-    _ ↔ a + b ≃ 0               := Iff.rfl
-    _ ↔ (n:ℤ) + b ≃ 0           := AA.eqv_substL_iff (AA.substL ‹a ≃ (n:ℤ)›)
-    _ ↔ (n:ℤ) + (m:ℤ) ≃ 0       := AA.eqv_substL_iff (AA.substR ‹b ≃ (m:ℤ)›)
-    _ ↔ ((n+m:ℕ):ℤ) ≃ ((0:ℕ):ℤ) := AA.eqv_substL_iff (Rel.symm AA.compat₂)
-    _ ↔ n + m ≃ 0               := from_natural_eqv.symm
-    _ ↔ n ≃ 0 ∧ m ≃ 0           := Natural.zero_sum_split
-    _ ↔ a ≃ 0 ∧ m ≃ 0           := iff_subst_covar and_mapL ‹n ≃ 0 ↔ a ≃ 0›
-    _ ↔ a ≃ 0 ∧ b ≃ 0           := iff_subst_covar and_mapR ‹m ≃ 0 ↔ b ≃ 0›
+    _ ↔ a + b ≃ 0                   := Iff.rfl
+    _ ↔ (n:ℤ) + (m:ℤ) ≃ 0           := by srw [‹a ≃ (n:ℤ)›, ‹b ≃ (m:ℤ)›]
+    _ ↔ ((n + m : ℕ):ℤ) ≃ ((0:ℕ):ℤ) := by srw [←AA.compat₂]
+    _ ↔ n + m ≃ 0                   := from_natural_eqv.symm
+    _ ↔ n ≃ 0 ∧ m ≃ 0               := Natural.zero_sum_split
+    _ ↔ a ≃ 0 ∧ m ≃ 0               := iff_subst_covar and_mapL ‹n ≃ 0 ↔ a ≃ 0›
+    _ ↔ a ≃ 0 ∧ b ≃ 0               := iff_subst_covar and_mapR ‹m ≃ 0 ↔ b ≃ 0›
 
 /--
 The product of two integers is positive iff their product is nonzero and they
@@ -1458,7 +1495,7 @@ theorem mul_gt_zero_iff_sgn_same
     have : sgn (a * b) ≥ 0 := calc
       _ = sgn (a * b)   := rfl
       _ ≃ sgn a * sgn b := sgn_compat_mul
-      _ ≃ sgn b * sgn b := AA.substL ‹sgn a ≃ sgn b›
+      _ ≃ sgn b * sgn b := by srw [‹sgn a ≃ sgn b›]
       _ ≥ 0             := ge_zero_sgn.mpr nonneg_square
     have : a * b ≥ 0 := sgn_preserves_ge_zero.mpr ‹sgn (a * b) ≥ 0›
     have : 0 ≄ a * b := Rel.symm ‹a * b ≄ 0›
@@ -1477,6 +1514,7 @@ equivalents. The goal becomes showing that `sgn (a₁ - a₂) * sgn b ≥ 0`. If
 is zero, this is trivially true; if `b` is positive then this follows by the
 `a₁ ≥ a₂` assumption.
 -/
+@[gcongr]
 theorem ge_mulR_nonneg {a₁ a₂ b : ℤ} : b ≥ 0 → a₁ ≥ a₂ → a₁ * b ≥ a₂ * b := by
   intro (_ : b ≥ 0) (_ : a₁ ≥ a₂)
   show a₁ * b ≥ a₂ * b
@@ -1485,18 +1523,18 @@ theorem ge_mulR_nonneg {a₁ a₂ b : ℤ} : b ≥ 0 → a₁ ≥ a₂ → a₁ 
   | Or.inl (_ : b > 0) =>
     calc
       _ = sgn (a₁ - a₂) * sgn b := rfl
-      _ ≃ sgn (a₁ - a₂) * 1     := AA.substR (gt_zero_sgn.mp ‹b > 0›)
+      _ ≃ sgn (a₁ - a₂) * 1     := by srw [gt_zero_sgn.mp ‹b > 0›]
       _ ≃ sgn (a₁ - a₂)         := AA.identR
       _ ≥ 0                     := sgn_diff_ge_zero.mp ‹a₁ ≥ a₂›
   | Or.inr (_ : b ≃ 0) =>
     calc
       _ = sgn (a₁ - a₂) * sgn b := rfl
-      _ ≃ sgn (a₁ - a₂) * 0     := AA.substR (sgn_zero.mp ‹b ≃ 0›)
+      _ ≃ sgn (a₁ - a₂) * 0     := by srw [sgn_zero.mp ‹b ≃ 0›]
       _ ≃ 0                     := AA.absorbR
       _ ≥ 0                     := le_refl
   have : sgn (a₁ * b - a₂ * b) ≥ 0 := calc
     _ = sgn (a₁ * b - a₂ * b) := rfl
-    _ ≃ sgn ((a₁ - a₂) * b)   := sgn_subst (Rel.symm AA.distribR)
+    _ ≃ sgn ((a₁ - a₂) * b)   := by srw [←mul_distribR_sub]
     _ ≃ sgn (a₁ - a₂) * sgn b := sgn_compat_mul
     _ ≥ 0                     := ‹sgn (a₁ - a₂) * sgn b ≥ 0›
   have : a₁ * b ≥ a₂ * b := sgn_diff_ge_zero.mpr ‹sgn (a₁ * b - a₂ * b) ≥ 0›
@@ -1515,7 +1553,7 @@ theorem mul_preserves_nonneg {a b : ℤ} : a ≥ 0 → b ≥ 0 → a * b ≥ 0 :
   show a * b ≥ 0
   calc
     _ = a * b := rfl
-    _ ≥ 0 * b := ge_mulR_nonneg ‹b ≥ 0› ‹a ≥ 0›
+    _ ≥ 0 * b := by srw [‹a ≥ 0›]
     _ ≃ 0     := AA.absorbL
 
 /-- Induction on integers greater than or equivalent to a starting value. -/
@@ -1541,20 +1579,19 @@ theorem ind_from
     intro (_ : motive' m)
     show motive' (step m)
     have : m + b ≥ b := calc
-      _ = m + b := rfl
-      _ ≥ 0 + b := ge_addR.mp (from_natural_respects_le.mp Natural.ge_zero)
-      _ ≃ b     := AA.identL
+      _ = m + b     := rfl
+      _ ≥ (0:ℕ) + b := by srw [Natural.ge_zero]
+      _ ≃ b         := AA.identL
     have : (m + b) + 1 ≃ step m + b := calc
-      _ = (m + b) + 1         := rfl
-      _ ≃ m + (b + 1)         := add_assoc
-      _ ≃ m + (1 + b)         := add_substR add_comm
-      _ ≃ (m + 1) + b         := Rel.symm add_assoc
-      _ ≃ ((m + 1 : ℕ):ℤ) + b := add_substL (Rel.symm AA.compat₂)
-      _ ≃ step m + b          := add_substL (AA.subst₁ Natural.add_one_step)
-    have : motive (m + b) := ‹motive' m›
-    have : motive ((m + b) + 1) := next ‹m + b ≥ b› ‹motive (m + b)›
-    have : motive (step m + b) := motive_subst ‹(m + b) + 1 ≃ step m + b› this
-    have : motive' (step m) := ‹motive (step m + b)›
+      _ = (m + b) + 1     := rfl
+      _ ≃ m + (b + 1)     := add_assoc
+      _ ≃ m + (1 + b)     := by srw [add_comm]
+      _ ≃ (m + (1:ℕ)) + b := Rel.symm add_assoc
+      _ ≃ step m + b      := by srw [←add_compat_nat, Natural.add_one_step]
+    have : motive (m + b)       := ‹motive' m›
+    have : motive ((m + b) + 1) := next ‹m + b ≥ b› this
+    have : motive (step m + b)  := motive_subst ‹(m + b) + 1 ≃ step m + b› this
+    have : motive' (step m)     := this
     exact this
 
   -- Perform the induction and convert the result into the expected form

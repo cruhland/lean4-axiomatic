@@ -31,13 +31,12 @@ algebra on the numerator and denominator.
 -/
 theorem mul_compat_from_integer
     {a b : ℤ} : from_integer (a * b) ≃ from_integer a * from_integer b
-    := by
-  show (a * b)//1 ≃ a//1 * b//1
-  have : a//1 * b//1 ≃ (a * b)//1 := calc
-    a//1 * b//1      ≃ _ := eqv_refl
-    (a * b)//(1 * 1) ≃ _ := substD AA.identL
-    (a * b)//1       ≃ _ := eqv_refl
-  exact eqv_symm this
+    := eqv_symm $ calc
+  _ = from_integer a * from_integer b := rfl
+  _ = a//1 * b//1                     := rfl
+  _ = (a * b)//(1 * 1)                := rfl
+  _ ≃ (a * b)//1                      := by srw [Integer.mul_identL]
+  _ = from_integer (a * b)            := rfl
 
 /--
 Multiplication of integer fractions is commutative.
@@ -49,14 +48,16 @@ fractions are scaled integers.
 algebra on the numerator and denominator.
 -/
 theorem mul_comm {p q : Fraction ℤ} : p * q ≃ q * p := by
-  revert p; intro (pn//pd); revert q; intro (qn//qd)
-  show pn//pd * qn//qd ≃ qn//qd * pn//pd
+  revert p; intro (pn//pd); let p := pn//pd
+  revert q; intro (qn//qd); let q := qn//qd
+  show p * q ≃ q * p
   calc
-    pn//pd * qn//qd      ≃ _ := eqv_refl
-    (pn * qn)//(pd * qd) ≃ _ := substN AA.comm
-    (qn * pn)//(pd * qd) ≃ _ := substD AA.comm
-    (qn * pn)//(qd * pd) ≃ _ := eqv_refl
-    qn//qd * pn//pd      ≃ _ := eqv_refl
+    _ = p * q                := rfl
+    _ = pn//pd * qn//qd      := rfl
+    _ = (pn * qn)//(pd * qd) := rfl
+    _ ≃ (qn * pn)//(qd * pd) := by srw [Integer.mul_comm, Integer.mul_comm]
+    _ = qn//qd * pn//pd      := rfl
+    _ = q * p                := rfl
 
 /--
 Replacing the left operand in a product of fractions with an equivalent value
@@ -69,19 +70,27 @@ a valid function.
 equivalences involving only integers are reached. Show the goal equivalence
 using algebra and the equivalence from the `p₁ ≃ p₂` hypothesis.
 -/
+@[gcongr]
 theorem mul_substL {p₁ p₂ q : Fraction ℤ} : p₁ ≃ p₂ → p₁ * q ≃ p₂ * q := by
-  revert p₁; intro (p₁n//p₁d); revert p₂; intro (p₂n//p₂d)
-  revert q; intro (qn//qd)
-  intro (_ : p₁n//p₁d ≃ p₂n//p₂d)
-  show p₁n//p₁d * qn//qd ≃ p₂n//p₂d * qn//qd
-  show (p₁n * qn)//(p₁d * qd) ≃ (p₂n * qn)//(p₂d * qd)
-  show (p₁n * qn) * (p₂d * qd) ≃ (p₂n * qn) * (p₁d * qd)
-  have : p₁n * p₂d ≃ p₂n * p₁d := ‹p₁n//p₁d ≃ p₂n//p₂d›
+  revert p₁; intro (n₁//m₁); let p₁ := n₁//m₁
+  revert p₂; intro (n₂//m₂); let p₂ := n₂//m₂
+  revert q; intro (k//j); let q := k//j
+  intro (_ : p₁ ≃ p₂)
+  show p₁ * q ≃ p₂ * q
+
+  have : n₁ * m₂ ≃ n₂ * m₁ := ‹n₁//m₁ ≃ n₂//m₂›
+  have : (n₁ * k) * (m₂ * j) ≃ (n₂ * k) * (m₁ * j) := calc
+    _ = (n₁ * k) * (m₂ * j) := rfl
+    _ ≃ (n₁ * m₂) * (k * j) := AA.expr_xxfxxff_lr_swap_rl
+    _ ≃ (n₂ * m₁) * (k * j) := by srw [‹n₁ * m₂ ≃ n₂ * m₁›]
+    _ ≃ (n₂ * k) * (m₁ * j) := AA.expr_xxfxxff_lr_swap_rl
   calc
-    (p₁n * qn) * (p₂d * qd) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
-    (p₁n * p₂d) * (qn * qd) ≃ _ := AA.substL ‹p₁n * p₂d ≃ p₂n * p₁d›
-    (p₂n * p₁d) * (qn * qd) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
-    (p₂n * qn) * (p₁d * qd) ≃ _ := Rel.refl
+    _ = p₁ * q             := rfl
+    _ = n₁//m₁ * k//j      := rfl
+    _ = (n₁ * k)//(m₁ * j) := rfl
+    _ ≃ (n₂ * k)//(m₂ * j) := ‹(n₁ * k) * (m₂ * j) ≃ (n₂ * k) * (m₁ * j)›
+    _ = n₂//m₂ * k//j      := rfl
+    _ = p₂ * q             := rfl
 
 /--
 Replacing the right operand in a product of fractions with an equivalent value
@@ -93,14 +102,15 @@ a valid function.
 **Proof intuition**: Flip the product around using commutativity, perform left
 substitution, then flip it back.
 -/
+@[gcongr]
 theorem mul_substR {p q₁ q₂ : Fraction ℤ} : q₁ ≃ q₂ → p * q₁ ≃ p * q₂ := by
   intro (_ : q₁ ≃ q₂)
   show p * q₁ ≃ p * q₂
   calc
-    p * q₁ ≃ _ := mul_comm
-    q₁ * p ≃ _ := mul_substL ‹q₁ ≃ q₂›
-    q₂ * p ≃ _ := mul_comm
-    p * q₂ ≃ _ := eqv_refl
+    _ = p * q₁ := rfl
+    _ ≃ q₁ * p := mul_comm
+    _ ≃ q₂ * p := by srw [‹q₁ ≃ q₂›]
+    _ ≃ p * q₂ := mul_comm
 
 /--
 Fraction multiplication is associative.
@@ -112,16 +122,20 @@ fractions are scaled integers.
 obtained. Associativity on its numerator and denominator gives the result.
 -/
 theorem mul_assoc {p q r : Fraction ℤ} : (p * q) * r ≃ p * (q * r) := by
-  revert p; intro (pn//pd); revert q; intro (qn//qd); revert r; intro (rn//rd)
-  show (pn//pd * qn//qd) * rn//rd ≃ pn//pd * (qn//qd * rn//rd)
+  revert p; intro (pn//pd); let p := pn//pd
+  revert q; intro (qn//qd); let q := qn//qd
+  revert r; intro (rn//rd); let r := rn//rd
+  show (p * q) * r ≃ p * (q * r)
   calc
-    (pn//pd * qn//qd) * rn//rd         ≃ _ := eqv_refl
-    (pn * qn)//(pd * qd) * rn//rd      ≃ _ := eqv_refl
-    ((pn * qn) * rn)//((pd * qd) * rd) ≃ _ := substN AA.assoc
-    (pn * (qn * rn))//((pd * qd) * rd) ≃ _ := substD AA.assoc
-    (pn * (qn * rn))//(pd * (qd * rd)) ≃ _ := eqv_refl
-    pn//pd * (qn * rn)//(qd * rd)      ≃ _ := eqv_refl
-    pn//pd * (qn//qd * rn//rd)         ≃ _ := eqv_refl
+    _ = (p * q) * r                        := rfl
+    _ = (pn//pd * qn//qd) * rn//rd         := rfl
+    _ = (pn * qn)//(pd * qd) * rn//rd      := rfl
+    _ = ((pn * qn) * rn)//((pd * qd) * rd) := rfl
+    _ ≃ (pn * (qn * rn))//((pd * qd) * rd) := by srw [Integer.mul_assoc]
+    _ ≃ (pn * (qn * rn))//(pd * (qd * rd)) := by srw [Integer.mul_assoc]
+    _ = pn//pd * (qn * rn)//(qd * rd)      := rfl
+    _ = pn//pd * (qn//qd * rn//rd)         := rfl
+    _ = p * (q * r)                        := rfl
 
 /--
 One is the left multiplicative identity for fractions.
@@ -133,14 +147,15 @@ fractions are scaled integers.
 Use the integer multiplicative identity on its numerator and denominator.
 -/
 theorem mul_identL {p : Fraction ℤ} : 1 * p ≃ p := by
-  revert p; intro (pn//pd)
-  show 1 * pn//pd ≃ pn//pd
+  revert p; intro (pn//pd); let p := pn//pd
+  show 1 * p ≃ p
   calc
-    1 * pn//pd         ≃ _ := eqv_refl
-    1//1 * pn//pd      ≃ _ := eqv_refl
-    (1 * pn)//(1 * pd) ≃ _ := substN AA.identL
-    pn//(1 * pd)       ≃ _ := substD AA.identL
-    pn//pd             ≃ _ := eqv_refl
+    _ = 1 * p              := rfl
+    _ = 1 * pn//pd         := rfl
+    _ = 1//1 * pn//pd      := rfl
+    _ = (1 * pn)//(1 * pd) := rfl
+    _ ≃ pn//pd             := by srw [Integer.mul_identL, Integer.mul_identL]
+    _ = p                  := rfl
 
 /--
 One is the right multiplicative identity for fractions.
@@ -165,10 +180,10 @@ the result.
 theorem cancelL
     {a b c : ℤ} [AP (Positive a)] [AP (Positive c)] : (a * b)//(a * c) ≃ b//c
     := calc
-  (a * b)//(a * c) ≃ _ := eqv_refl
-  a//a * b//c      ≃ _ := mul_substL (eqv_one_iff_numer_eqv_denom.mpr Rel.refl)
-  1 * b//c         ≃ _ := mul_identL
-  b//c             ≃ _ := eqv_refl
+  _ = (a * b)//(a * c) := rfl
+  _ = a//a * b//c      := rfl
+  _ ≃ 1 * b//c         := by srw [eqv_one_iff_numer_eqv_denom.mpr Rel.refl]
+  _ ≃ b//c             := mul_identL
 
 /--
 A common factor on the right of the numerator and denominator can be removed.
@@ -179,10 +194,9 @@ commutativity.
 theorem cancelR
     {a b c : ℤ} [AP (Positive a)] [AP (Positive c)] : (b * a)//(c * a) ≃ b//c
     := calc
-  (b * a)//(c * a) ≃ _ := substN AA.comm
-  (a * b)//(c * a) ≃ _ := substD AA.comm
-  (a * b)//(a * c) ≃ _ := cancelL
-  b//c             ≃ _ := eqv_refl
+  _ = (b * a)//(c * a) := rfl
+  _ ≃ (a * b)//(a * c) := by srw [Integer.mul_comm, Integer.mul_comm]
+  _ ≃ b//c             := cancelL
 
 /--
 Addition of fractions with the same denominator can be accomplished by adding
@@ -199,16 +213,11 @@ numerator and denominator, the fraction is the result of multiplication by
 theorem add_eqv_denominators
     {a b d : ℤ} [AP (Positive d)] : a//d + b//d ≃ (a + b)//d
     := calc
-  a//d + b//d
-    ≃ _ := eqv_refl
-  (a * d + d * b)//(d * d)
-    ≃ _ := substN (Integer.add_substR AA.comm)
-  (a * d + b * d)//(d * d)
-    ≃ _ := substN (Rel.symm AA.distribR)
-  ((a + b) * d)//(d * d)
-    ≃ _ := cancelR
-  (a + b)//d
-    ≃ _ := eqv_refl
+  _ = a//d + b//d              := rfl
+  _ = (a * d + d * b)//(d * d) := rfl
+  _ ≃ (a * d + b * d)//(d * d) := by srw [AA.comm]
+  _ ≃ ((a + b) * d)//(d * d)   := by srw [←Integer.mul_distribR]
+  _ ≃ (a + b)//d               := cancelR
 
 /--
 Fraction multiplication (on the left) distributes over fraction addition.
@@ -223,41 +232,35 @@ denominator. Cancel common factors and separate each term into a product of the
 input fractions.
 -/
 theorem mul_distribL {p q r : Fraction ℤ} : p * (q + r) ≃ p * q + p * r := by
-  revert p; intro (pn//pd); revert q; intro (qn//qd); revert r; intro (rn//rd)
-  show pn//pd * (qn//qd + rn//rd) ≃ pn//pd * qn//qd + pn//pd * rn//rd
-  -- For some unknown reason this is needed to prevent a compile error
-  have pos_mul_denom_prq : AP (Positive (pd * (rd * qd))) := inferInstance
+  revert p; intro (n//m); let p := n//m
+  revert q; intro (k//j); let q := k//j
+  revert r; intro (u//t); let r := u//t
+  show p * (q + r) ≃ p * q + p * r
+
+  /- Shorter aliases for theorems, to fit them in the below `calc` block. -/
+  have int_distribL {a b c : ℤ} : a*(b + c) ≃ a*b + a*c := Integer.mul_distribL
+  have add_same_denoms
+      {a b d : ℤ} [AP (Positive d)] : a//d + b//d ≃ (a + b)//d
+      :=
+    add_eqv_denominators
+
   calc
-    pn//pd * (qn//qd + rn//rd)
-      ≃ _ := eqv_refl
-    pn//pd * (qn * rd + qd * rn)//(qd * rd)
-      ≃ _ := eqv_refl
-    (pn * (qn * rd + qd * rn))//(pd * (qd * rd))
-      ≃ _ := substN AA.distribL
-    (pn * (qn * rd) + pn * (qd * rn))//(pd * (qd * rd))
-      ≃ _ := eqv_symm add_eqv_denominators
-    (pn * (qn * rd))//(pd * (qd * rd)) + (pn * (qd * rn))//(pd * (qd * rd))
-      ≃ _ := add_substL (substN (Rel.symm AA.assoc))
-    ((pn * qn) * rd)//(pd * (qd * rd)) + (pn * (qd * rn))//(pd * (qd * rd))
-      ≃ _ := add_substL (substD (Rel.symm AA.assoc))
-    ((pn * qn) * rd)//((pd * qd) * rd) + (pn * (qd * rn))//(pd * (qd * rd))
-      ≃ _ := add_substL cancelR
-    (pn * qn)//(pd * qd) + (pn * (qd * rn))//(pd * (qd * rd))
-      ≃ _ := add_substR (substN (AA.substR AA.comm))
-    (pn * qn)//(pd * qd) + (pn * (rn * qd))//(pd * (qd * rd))
-      ≃ _ := add_substR (substD (pb₂ := pos_mul_denom_prq) (AA.substR AA.comm))
-    (pn * qn)//(pd * qd) + (pn * (rn * qd))//(pd * (rd * qd))
-      ≃ _ := add_substR (substN (Rel.symm AA.assoc))
-    (pn * qn)//(pd * qd) + ((pn * rn) * qd)//(pd * (rd * qd))
-      ≃ _ := add_substR (substD (Rel.symm AA.assoc))
-    (pn * qn)//(pd * qd) + ((pn * rn) * qd)//((pd * rd) * qd)
-      ≃ _ := add_substR cancelR
-    (pn * qn)//(pd * qd) + (pn * rn)//(pd * rd)
-      ≃ _ := eqv_refl
-    pn//pd * qn//qd + (pn * rn)//(pd * rd)
-      ≃ _ := eqv_refl
-    pn//pd * qn//qd + pn//pd * rn//rd
-      ≃ _ := eqv_refl
+    _ = p * (q + r)                                 := rfl
+    _ = n//m * (k//j + u//t)                        := rfl
+    _ = n//m * (k*t + j*u)//(j*t)                   := rfl
+    _ = (n*(k*t + j*u))//(m*(j*t))                  := rfl
+    _ ≃ (n*(k*t) + n*(j*u))//(m*(j*t))              := by srw [int_distribL]
+    _ ≃ (n*(k*t))//(m*(j*t)) + (n*(j*u))//(m*(j*t)) := eqv_symm add_same_denoms
+    _ ≃ ((n*k)*t)//(m*(j*t)) + (n*(j*u))//(m*(j*t)) := by srw [←AA.assoc]
+    _ ≃ ((n*k)*t)//((m*j)*t) + (n*(j*u))//(m*(j*t)) := by srw [←AA.assoc]
+    _ ≃ (n*k)//(m*j) + (n*(j*u))//(m*(j*t))         := by srw [cancelR]
+    _ ≃ (n*k)//(m*j) + (n*(u*j))//(m*(j*t))         := by srw [AA.comm]
+    _ ≃ (n*k)//(m*j) + (n*(u*j))//(m*(t*j))         := by srw [AA.comm]
+    _ ≃ (n*k)//(m*j) + ((n*u)*j)//(m*(t*j))         := by srw [←AA.assoc]
+    _ ≃ (n*k)//(m*j) + ((n*u)*j)//((m*t)*j)         := by srw [←AA.assoc]
+    _ ≃ (n*k)//(m*j) + (n*u)//(m*t)                 := by srw [cancelR]
+    _ = n//m * k//j + n//m * u//t                   := rfl
+    _ = p * q + p * r                               := rfl
 
 /--
 Fraction multiplication (on the right) distributes over fraction addition.
@@ -269,11 +272,10 @@ fractions are scaled integers.
 addition and multiplication.
 -/
 theorem mul_distribR {p q r : Fraction ℤ} : (q + r) * p ≃ q * p + r * p := calc
-  (q + r) * p   ≃ _ := mul_comm
-  p * (q + r)   ≃ _ := mul_distribL
-  p * q + p * r ≃ _ := add_substL mul_comm
-  q * p + p * r ≃ _ := add_substR mul_comm
-  q * p + r * p ≃ _ := eqv_refl
+  _ = (q + r) * p   := rfl
+  _ ≃ p * (q + r)   := mul_comm
+  _ ≃ p * q + p * r := mul_distribL
+  _ ≃ q * p + r * p := by srw [mul_comm, mul_comm]
 
 instance multiplication_props : Multiplication.Props (Fraction ℤ) := {
   mul_substL := mul_substL
