@@ -121,9 +121,10 @@ private partial def simpleCongruence
       throwError "fn args on LHS and RHS are all the same; no work to do"
 
     /- Look up relevant `gcongr` definitions using goal data extracted above. -/
-    let key := { relName := goalRelName, head := lhsFnName, varyingArgs }
+    let key :=
+      { relName := goalRelName, head := lhsFnName, arity := lhsArgs.size }
     let gcongrLemmasMap := gcongrExt.getState (← Lean.MonadEnv.getEnv)
-    pure $ gcongrLemmasMap.getD key #[]
+    pure $ gcongrLemmasMap.getD key []
 
   /- Commit to the first candidate that closes the goal. -/
   let successfulLemmaDataOpt ← withReducibleAndInstances do
@@ -138,7 +139,7 @@ private partial def simpleCongruence
     return none
   let some (gcongrLemma, subgoals) := successfulLemmaDataOpt
     | throwError
-        "no applicable gcongr lemmas among {candidateLemmas.size} candidates"
+        "no applicable gcongr lemmas among {candidateLemmas.length} candidates"
 
   /-
   Recursively apply this tactic to the chosen lemma's hypotheses of the form

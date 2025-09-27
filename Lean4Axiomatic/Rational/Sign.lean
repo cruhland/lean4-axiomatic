@@ -560,11 +560,11 @@ fractions, so it makes sense that they can be done in any order.
 result that reciprocals are compatible with multiplication.
 -/
 theorem recip_compat_neg {p : ℚ} [AP (p ≄ 0)] : (-p)⁻¹ ≃ -p⁻¹ := calc
-  (-p)⁻¹       ≃ _ := by srw [←mul_neg_one]
-  (-1 * p)⁻¹   ≃ _ := recip_compat_mul
-  (-1)⁻¹ * p⁻¹ ≃ _ := by srw [recip_sqrt1]
-  (-1) * p⁻¹   ≃ _ := mul_neg_one
-  (-p⁻¹)       ≃ _ := eqv_refl
+  (-p)⁻¹         ≃ _ := by srw [←mul_neg_one]
+  (-1 * p)⁻¹     ≃ _ := recip_compat_mul
+  (-1:ℚ)⁻¹ * p⁻¹ ≃ _ := by srw [recip_sqrt1]
+  (-1) * p⁻¹     ≃ _ := mul_neg_one
+  (-p⁻¹)         ≃ _ := eqv_refl
 
 variable [Division ℚ]
 

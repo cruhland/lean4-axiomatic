@@ -347,10 +347,10 @@ Dividing a rational number by one gives that number back.
 reciprocal of one is one, which disappears, leaving the original number.
 -/
 theorem div_identR {p : ℚ} : p/1 ≃ p := calc
-  _ ≃ p/1     := eqv_refl
-  _ ≃ p * 1⁻¹ := div_mul_recip
-  _ ≃ p * 1   := by srw [recip_sqrt1]
-  _ ≃ p       := mul_identR
+  _ ≃ p/1         := eqv_refl
+  _ ≃ p * (1:ℚ)⁻¹ := div_mul_recip
+  _ ≃ p * 1       := by srw [recip_sqrt1]
+  _ ≃ p           := mul_identR
 
 /--
 Negation can be moved between the "outside" of a division operation and the

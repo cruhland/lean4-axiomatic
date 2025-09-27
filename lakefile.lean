@@ -1,10 +1,14 @@
 import Lake
 open Lake DSL
 
-require "leanprover-community" / "mathlib"
+require "leanprover-community" / "mathlib" @ git "v4.24.0-rc1"
 
 package «lean4-axiomatic» {
-  moreLeanArgs := #["-D warningAsError=true"]
+  leanOptions := #[
+    ⟨`warningAsError, true⟩,
+    -- This linter rule can make proof readability harder in some cases.
+    ⟨`weak.linter.tacticAnalysis.introMerge, false⟩,
+  ]
 }
 
 lean_lib Lean4Axiomatic {
