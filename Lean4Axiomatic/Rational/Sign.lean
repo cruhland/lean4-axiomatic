@@ -1016,7 +1016,7 @@ def as_half_pos_ratio (p : ℚ) : AsHalfPosRatio p :=
 
   -- Show the new ratio is equivalent to the input value
   have : AP (b' ≄ 0) := AP.mk (Integer.neqv_zero_from_gt_zero ‹b' > 0›)
-  have : AP (sgn b ≄ 0) := ‹AP (b ≄ 0)›.map (mt Integer.sgn_zero.mpr)
+  have : AP (sgn b ≄ 0) := ‹AP (b ≄ 0)›.map (mt Integer.sgn_zero.mp)
   have mul_compat {a b : ℤ} : (a:ℚ) * (b:ℚ) ≃ (a * b : ℤ) :=
     eqv_symm mul_compat_from_integer
   have : p ≃ a'/b' := calc

@@ -1848,8 +1848,6 @@ def pos_to_natural {a : ℤ} : a > 0 → { n : ℕ // a ≃ n ∧ n > 0 } := by
   have : n > 0 := from_natural_respects_lt.mpr ‹(n:ℤ) > 0›
   exact Subtype.mk n (And.intro ‹a ≃ n› ‹n > 0›)
 
-theorem not_ge_iff_lt {a b : ℤ} : ¬(a ≥ b) ↔ a < b := sorry
-
 theorem mul_sgn_self_gt_zero {a : ℤ} : a ≄ 0 → a * sgn a > 0 := sorry
 
 end Lean4Axiomatic.Integer
