@@ -397,7 +397,8 @@ local instance compare_inst : Compare Nat := {
 
 instance : Natural Nat := {
   toCore := core
-  toInduction := induction
+  toInduction₀ := induction
+  toInduction₁ := induction
   toAddition := addition
   toSign := sign
   toOrder := order

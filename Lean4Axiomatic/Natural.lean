@@ -19,7 +19,8 @@ required to construct an instance.
 -/
 class Natural (ℕ : semiOutParam Type) where
   toCore : Core ℕ
-  toInduction : Induction.{0} ℕ
+  toInduction₀ : Induction.{0} ℕ
+  toInduction₁ : Induction.{1} ℕ
   toAddition : Addition ℕ
   toSign : Sign ℕ
   toOrder : Order ℕ
@@ -33,7 +34,8 @@ attribute [instance] Natural.toCompare
 attribute [instance] Natural.toCore
 attribute [instance] Natural.toDivision
 attribute [instance] Natural.toExponentiation
-attribute [instance] Natural.toInduction
+attribute [instance] Natural.toInduction₀
+attribute [instance] Natural.toInduction₁
 attribute [instance] Natural.toMultiplication
 attribute [instance] Natural.toOrder
 attribute [instance] Natural.toSign

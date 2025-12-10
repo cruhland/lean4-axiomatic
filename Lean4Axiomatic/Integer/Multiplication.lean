@@ -151,4 +151,12 @@ Eventually, this should become the axiom and the typeclass should be derived.
 -/
 theorem mul_distribR {a b c : ℤ} : (b + c) * a ≃ b * a + c * a := AA.distribR
 
+/-- Doubling an integer can be written either as a sum or a product. -/
+theorem mul_two {a : ℤ} : 2 * a ≃ a + a := calc
+  _ = 2 * a         := rfl
+  _ ≃ (1 + 1) * a   := by srw [←add_one_one]
+  _ ≃ 1 * a + 1 * a := mul_distribR
+  _ ≃ a + 1 * a     := by srw [mul_identL]
+  _ ≃ a + a         := by srw [mul_identL]
+
 end Lean4Axiomatic.Integer

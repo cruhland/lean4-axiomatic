@@ -1,6 +1,4 @@
-import Lean4Axiomatic.Integer.Exponentiation
-import Lean4Axiomatic.Integer.Induction
-import Lean4Axiomatic.Integer.Metric
+import Lean4Axiomatic.Integer.Division
 
 /-!
 # Combined typeclass of all integer definitions and properties
@@ -9,7 +7,8 @@ import Lean4Axiomatic.Integer.Metric
 namespace Lean4Axiomatic
 
 open Integer (
-  Addition Core Induction Metric Multiplication Negation Order Sign Subtraction
+  Addition Core Division Induction Metric Multiplication Negation Order Sign
+  Subtraction
 )
 
 /--
@@ -42,12 +41,16 @@ class Integer {ℕ : outParam Type} [Natural ℕ] (ℤ : Type) where
   toSign : Sign ℤ
   toSubtraction : Subtraction ℤ
   toMetric : Metric ℤ
-  toInduction : Induction.{0} ℤ
+  toDivision : Division ℤ
+  toInduction₀ : Induction.{0} ℤ
+  toInduction₁ : Induction.{1} ℤ
 
 attribute [instance] Integer.toAddition
 attribute [instance] Integer.toCore
+attribute [instance] Integer.toDivision
 attribute [instance] Integer.toExponentiation
-attribute [instance] Integer.toInduction
+attribute [instance] Integer.toInduction₀
+attribute [instance] Integer.toInduction₁
 attribute [instance] Integer.toMetric
 attribute [instance] Integer.toMultiplication
 attribute [instance] Integer.toNegation

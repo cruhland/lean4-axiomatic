@@ -870,6 +870,13 @@ instance trans_le_lt_lt_inst : Trans (α := ℕ) (· ≤ ·) (· < ·) (· < ·)
   trans := trans_le_lt_lt
 }
 
+/-- Positive natural numbers are nonzero. -/
+theorem neqv_zero_from_gt_zero {n : ℕ} : n > 0 → n ≄ 0 := by
+  intro (_ : n > 0)
+  have : Positive n := Natural.lt_zero_pos.mpr ‹n > 0›
+  have : n ≄ 0 := Signed.positive_defn.mp ‹Positive n›
+  exact this
+
 /--
 Positive natural numbers are exactly those that are greater than or equivalent
 to one.
@@ -1126,8 +1133,8 @@ theorem add_preserves_compare
     exact this
 
 /--
-For two natural numbers obeying the _greater than or equivalent to_ relation,
-compute which more precise relation they obey: _greater than_ or
+For two natural numbers obeying the _less than or equivalent to_ relation,
+compute which more precise relation they obey: _less than_ or
 _equivalent to_.
 -/
 def le_split_either {n m : ℕ} : n ≤ m → Either (n < m) (n ≃ m) := by
@@ -1147,5 +1154,48 @@ def le_split_either {n m : ℕ} : n ≤ m → Either (n < m) (n ≃ m) := by
     have : compare n m = Ordering.gt := res
     have : n > m := compare_gt.mp ‹compare n m = Ordering.gt›
     exact show Either (n < m) (n ≃ m) from (le_gt_false ‹n ≤ m› ‹n > m›).elim
+
+variable [Induction.{1} ℕ]
+
+/--
+Compute the difference between natural numbers in a
+_less than or equivalent to_ relation.
+-/
+def le_diff {n m : ℕ} : n ≤ m → { d : ℕ // n + d ≃ m } := by
+  let motive (x : ℕ) : Type := n ≤ x → { d : ℕ // n + d ≃ x }
+  apply ind_on m
+  case zero =>
+    intro (_ : n ≤ 0)
+    show { d : ℕ // n + d ≃ 0 }
+
+    have : n + 0 ≃ 0 := calc
+      _ = n + 0 := rfl
+      _ ≃ n     := AA.identR
+      _ ≃ 0     := le_antisymm ‹n ≤ 0› ge_zero
+    have : { d : ℕ // n + d ≃ 0 } := Subtype.mk 0 ‹n + 0 ≃ 0›
+    exact this
+  case step =>
+    intro (m' : ℕ) (ih : n ≤ m' → { d : ℕ // n + d ≃ m' }) (_ : n ≤ step m')
+    show { d : ℕ // n + d ≃ step m' }
+
+    have : Either (n < step m') (n ≃ step m') := le_split_either ‹n ≤ step m'›
+    match this with
+    | .inl (_ : n < step m') =>
+      have : n ≤ m' := lt_stepR.mp ‹n < step m'›
+      have (Subtype.mk (d : ℕ) (_ : n + d ≃ m')) := ih ‹n ≤ m'›
+      have : n + step d ≃ step m' := calc
+        _ = n + step d   := rfl
+        _ ≃ step (n + d) := add_step
+        _ ≃ step m'      := by srw [‹n + d ≃ m'›]
+      have : { d : ℕ // n + d ≃ step m' } :=
+        Subtype.mk (step d) ‹n + step d ≃ step m'›
+      exact this
+    | .inr (_ : n ≃ step m') =>
+      have : n + 0 ≃ step m' := calc
+        _ = n + 0   := rfl
+        _ ≃ n       := AA.identR
+        _ ≃ step m' := ‹n ≃ step m'›
+      have : { d : ℕ // n + d ≃ step m' } := Subtype.mk 0 ‹n + 0 ≃ step m'›
+      exact this
 
 end Lean4Axiomatic.Natural

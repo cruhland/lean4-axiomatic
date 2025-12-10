@@ -10,7 +10,6 @@ derived properties.
 
 namespace Lean4Axiomatic.Rational
 
-open Lean4Axiomatic.Function (idx_fam_prop)
 open Lean4Axiomatic.Logic (AP iff_subst_covar or_identR or_mapR)
 open Lean4Axiomatic.Metric (abs)
 open Lean4Axiomatic.Natural (pow_step pow_zero step)
@@ -42,7 +41,7 @@ both sides reduce to `1` via `pow_zero`. The step case follows from `pow_step`
 and `mul_compat_from_integer`.
 -/
 theorem pow_scompatL_from_integer {a : ℤ} {n : ℕ} : ((a^n:ℤ):ℚ) ≃ (a:ℚ)^n := by
-  apply Natural.ind_on n
+  apply Natural.ind_on.{0} n
   case zero =>
     show ((a^0:ℤ):ℚ) ≃ (a:ℚ)^0
     calc
@@ -74,7 +73,7 @@ factor in the expression.
 **Proof intuition**: Induction and algebra.
 -/
 theorem pow_nat_scompatL_abs {p : ℚ} {n : ℕ} : abs (p^n) ≃ (abs p)^n := by
-  apply Natural.ind_on n
+  apply Natural.ind_on.{0} n
   case zero =>
     show abs (p^0) ≃ (abs p)^0
     have : sgn (1:ℚ) ≃ 1 := sgn_one
@@ -111,7 +110,7 @@ reciprocation.
 theorem pow_scompatL_recip
     {p : ℚ} {n : ℕ} [AP (p ≄ 0)] : (p^n)⁻¹ ≃ (p⁻¹)^n
     := by
-  apply Natural.ind_on n
+  apply Natural.ind_on.{0} n
   case zero =>
     show (p^(0:ℕ))⁻¹ ≃ (p⁻¹)^(0:ℕ)
     calc
@@ -530,8 +529,7 @@ theorem pow_substL
   intro (_ : p₁ ≃ p₂)
   show p₁^a ≃ p₂^a
 
-  have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : a ≃ n - m)) :=
-    Integer.as_diff a
+  have Subtype.mk (Prod.mk (n : ℕ) (m : ℕ)) (_ : a ≃ n - m) := Integer.as_diff a
   calc
     _ = p₁^a           := rfl
     _ ≃ p₁^((n:ℤ) - m) := by srw [‹a ≃ n - m›]
@@ -559,8 +557,7 @@ theorem pow_preserves_nonzero {p : ℚ} {a : ℤ} [AP (p ≄ 0)] : p^a ≄ 0 := 
   intro (_ : p^a ≃ 0)
   show False
 
-  have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : a ≃ n - m)) :=
-    Integer.as_diff a
+  have Subtype.mk (Prod.mk (n : ℕ) (m : ℕ)) (_ : a ≃ n - m) := Integer.as_diff a
   have : p^n / p^m ≃ 0 := calc
     _ = p^n / p^m     := rfl
     _ ≃ p^((n:ℤ) - m) := eqv_symm pow_diff
@@ -644,10 +641,8 @@ of this property.
 theorem pow_compatL_add
     {p : ℚ} [AP (p ≄ 0)] {a b : ℤ} : p^(a + b) ≃ p^a * p^b
     := by
-  have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : a ≃ n - m)) :=
-    Integer.as_diff a
-  have Exists.intro (k : ℕ) (Exists.intro (j : ℕ) (_ : b ≃ k - j)) :=
-    Integer.as_diff b
+  have Subtype.mk (Prod.mk (n : ℕ) (m : ℕ)) (_ : a ≃ n - m) := Integer.as_diff a
+  have Subtype.mk (Prod.mk (k : ℕ) (j : ℕ)) (_ : b ≃ k - j) := Integer.as_diff b
   have : a + b ≃ (n + k : ℕ) - (m + j : ℕ) := calc
     _ = a + b                     := rfl
     _ ≃ (n - m) + (k - j)         := by srw [‹a ≃ n - m›, ‹b ≃ k - j›]
@@ -691,9 +686,9 @@ expression has a single instance of the base raised to a single exponent.
 Simplify that exponent to obtain the result.
 -/
 theorem pow_flatten {p : ℚ} [AP (p ≄ 0)] {a b : ℤ} : (p^a)^b ≃ p^(a * b) := by
-  have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (a_eqv : a ≃ n - m)) :=
+  have Subtype.mk (Prod.mk (n : ℕ) (m : ℕ)) (a_eqv : a ≃ n - m) :=
     Integer.as_diff a
-  have Exists.intro (k : ℕ) (Exists.intro (j : ℕ) (b_eqv : b ≃ k - j)) :=
+  have Subtype.mk (Prod.mk (k : ℕ) (j : ℕ)) (b_eqv : b ≃ k - j) :=
     Integer.as_diff b
 
   let pn := p^n; let pm := p^m
@@ -770,7 +765,7 @@ convert back to integer exponents to obtain the goal.
 theorem pow_distribR_mul
     {p q : ℚ} [AP (p ≄ 0)] [AP (q ≄ 0)] {a : ℤ} : (p * q)^a ≃ p^a * q^a
     := by
-  have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (a_eqv : a ≃ n - m)) :=
+  have Subtype.mk (Prod.mk (n : ℕ) (m : ℕ)) (a_eqv : a ≃ n - m) :=
     Integer.as_diff a
 
   calc
@@ -796,8 +791,7 @@ numbers. Convert the expression to a ratio of natural number powers via
 number exponents.
 -/
 theorem one_pow {a : ℤ} : (1:ℚ)^a ≃ 1 := by
-  have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : a ≃ n - m)) :=
-    Integer.as_diff a
+  have Subtype.mk (Prod.mk (n : ℕ) (m : ℕ)) (_ : a ≃ n - m) := Integer.as_diff a
   calc
     _ = (1:ℚ)^a           := rfl
     _ ≃ (1:ℚ)^((n:ℤ) - m) := by srw [‹a ≃ n - m›]
@@ -816,8 +810,7 @@ integer power, and computing its absolute value.
 theorem pow_int_scompatL_abs
     {p : ℚ} [AP (p ≄ 0)] {a : ℤ} : abs (p^a) ≃ (abs p)^a
     := by
-  have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : a ≃ n - m)) :=
-    Integer.as_diff a
+  have Subtype.mk (Prod.mk (n : ℕ) (m : ℕ)) (_ : a ≃ n - m) := Integer.as_diff a
 
   calc
     _ = abs (p^a)             := rfl
@@ -841,8 +834,7 @@ integer power, and extracting its (rational-valued) sign.
 theorem sgn_pow_int
     {p : ℚ} [AP (p ≄ 0)] {a : ℤ} : (sgn (p^a):ℚ) ≃ (sgn p:ℚ)^a
     := by
-  have Exists.intro (n : ℕ) (Exists.intro (m : ℕ) (_ : a ≃ n - m)) :=
-    Integer.as_diff a
+  have Subtype.mk (Prod.mk (n : ℕ) (m : ℕ)) (_ : a ≃ n - m) := Integer.as_diff a
   calc
     _ = (sgn (p^a):ℚ)               := rfl
     _ ≃ (sgn (p^n/p^m):ℚ)           := by srw [‹a ≃ n - m›, pow_diff]
@@ -917,7 +909,7 @@ theorem sgn_diff_pow
       _ ≃ x^(0:ℤ) := by srw [‹a ≃ 0›]
       _ ≃ x^(0:ℕ) := pow_nonneg
       _ ≃ 1       := Natural.pow_zero
-    have : sgn a ≃ 0 := Integer.sgn_zero.mp ‹a ≃ 0›
+    have : sgn a ≃ 0 := Integer.sgn_zero.mpr ‹a ≃ 0›
     calc
       -- ↓ begin key steps ↓
       _ = sgn (p^a - q^a)     := rfl
@@ -1052,7 +1044,7 @@ theorem pow_bijectL
     sgn_diff_pow ‹p > 0› ‹q > 0›
   have a_neqv_0 : sgn a ≃ 0 ↔ False := calc
     _ ↔ sgn a ≃ 0 := Iff.rfl
-    _ ↔ a ≃ 0     := Integer.sgn_zero.symm
+    _ ↔ a ≃ 0     := Integer.sgn_zero
     _ ↔ False     := Iff.intro ‹a ≄ 0› False.elim
 
   calc

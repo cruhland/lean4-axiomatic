@@ -98,6 +98,25 @@ instance sub_substitutive
 }
 
 /--
+Integer subtraction (on the left) can be removed (or added) from both sides of
+an integer equivalence.
+-/
+theorem sub_injectL {a b₁ b₂ : ℤ} : a - b₁ ≃ a - b₂ ↔ b₁ ≃ b₂ := calc
+  _ ↔ a - b₁ ≃ a - b₂   := Iff.rfl
+  _ ↔ a + -b₁ ≃ a + -b₂ := by srw [sub_defn, sub_defn]
+  _ ↔ -b₁ ≃ -b₂         := add_injectL
+  _ ↔ b₁ ≃ b₂           := Iff.intro neg_inject neg_subst
+
+/--
+Integer subtraction (on the right) can be removed (or added) from both sides of
+an integer equivalence.
+-/
+theorem sub_injectR {a₁ a₂ b : ℤ} : a₁ - b ≃ a₂ - b ↔ a₁ ≃ a₂ := calc
+  _ ↔ a₁ - b ≃ a₂ - b   := Iff.rfl
+  _ ↔ a₁ + -b ≃ a₂ + -b := by srw [sub_defn, sub_defn]
+  _ ↔ a₁ ≃ a₂           := add_injectR
+
+/--
 Subtracting an integer from itself yields zero.
 
 **Property and proof intuition**: This is equivalent to the additive inverse
@@ -205,7 +224,7 @@ simplify.
 -/
 theorem subR_moveR_addR {a b c : ℤ} : a - b ≃ c ↔ a ≃ c + b := calc
   _ ↔       a - b ≃ c     := Iff.rfl
-  _ ↔ (a - b) + b ≃ c + b := add_bijectR
+  _ ↔ (a - b) + b ≃ c + b := add_injectR.symm
   _ ↔           a ≃ c + b := by srw [sub_assoc_addR, sub_same, add_identR]
 
 /--
@@ -461,7 +480,7 @@ This lemma can save some lines in proofs of sign or order trichotomy.
 theorem eqv_sgn {a b : ℤ} : a ≃ b ↔ sgn (a - b) ≃ 0 := calc
   _ ↔ a ≃ b           := Iff.rfl
   _ ↔ a - b ≃ 0       := zero_diff_iff_eqv.symm
-  _ ↔ sgn (a - b) ≃ 0 := sgn_zero
+  _ ↔ sgn (a - b) ≃ 0 := sgn_zero.symm
 
 /--
 Decidable equivalence for integers.
@@ -484,14 +503,14 @@ instance eqv? (a b : ℤ) : Decidable (a ≃ b) := by
   | AA.OneOfThree₁.second (_ : sgn (a-b) ≃ 1) =>
     have : (1:ℤ) ≄ 0 := one_neqv_zero
     have : sgn (a-b) ≄ 0 := by prw [←‹sgn (a-b) ≃ 1›] ‹(1:ℤ) ≄ 0›
-    have : a-b ≄ 0 := mt sgn_zero.mp this
+    have : a-b ≄ 0 := mt sgn_zero.mpr this
     have : a ≄ b := mt zero_diff_iff_eqv.mpr this
     have : Decidable (a ≃ b) := isFalse this
     exact this
   | AA.OneOfThree₁.third (_ : sgn (a-b) ≃ -1) =>
     have : (-1:ℤ) ≄ 0 := neg_one_neqv_zero
     have : sgn (a-b) ≄ 0 := by prw [←‹sgn (a-b) ≃ -1›] ‹(-1:ℤ) ≄ 0›
-    have : a-b ≄ 0 := mt sgn_zero.mp this
+    have : a-b ≄ 0 := mt sgn_zero.mpr this
     have : a ≄ b := mt zero_diff_iff_eqv.mpr this
     have : Decidable (a ≃ b) := isFalse this
     exact this

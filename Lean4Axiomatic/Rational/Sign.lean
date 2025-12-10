@@ -118,7 +118,7 @@ theorem sgn_zero {p : ℚ} : p ≃ 0 ↔ sgn p ≃ 0 := by
       _ ≃ sgn (0:ℚ)     := by srw [‹p ≃ 0›]
       _ = sgn ((0:ℤ):ℚ) := rfl
       _ ≃ sgn (0:ℤ)     := sgn_from_integer
-      _ ≃ 0             := Integer.sgn_zero.mp Rel.refl
+      _ ≃ 0             := Integer.sgn_zero.mpr Rel.refl
   case mpr =>
     exact Sign.Props.sgn_zero_only_for_zero
 

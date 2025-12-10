@@ -15,11 +15,11 @@ congruence lemmas. However, the code has been dramatically simplified to only
 support features needed by this project.
 -/
 
-open Lean (Expr MVarId Name Syntax getExprMVarAssignment?)
+open Lean (Expr MVarId Name Syntax getExprMVarAssignment? mkAppN)
 open Lean.Elab.Tactic (Tactic TacticM elabTerm getMainGoal)
 open Lean.Meta (
   MetaM isDefEq inferType isProof kabstract mkAppM mkConstWithFreshMVarLevels
-  mkFreshExprMVar saveState withReducible withReducibleAndInstances
+  mkFreshExprMVar saveState whnf withReducible withReducibleAndInstances
 )
 open Lean.MVarId (gcongrForward)
 open Lean.Parser.Tactic (rwRuleSeq)
@@ -41,22 +41,32 @@ private def mvarType (mvarId : MVarId) : MetaM Expr :=
 When the given expression is a named constant applied to any number of
 arguments (including zero), return the name and all arguments in order.
 
-Expands local `let` declarations for convenience.
+Expands local `let` declarations and evaluates lambda applications for
+convenience.
 -/
-private partial def parseFnAndArgs : Expr → MetaM (Option (Name × Array Expr))
-| .const n _ =>
-  return some (n, #[])
-| .fvar fvid => do
-  let some value ← fvid.getValue? | return none
-  parseFnAndArgs value
-| e =>
-  e.withApp λ fnExpr args => do
-    -- `e` wasn't a function application
-    if args.isEmpty then return none
+private partial def parseFnAndArgs
+    (e : Expr) : MetaM (String ⊕ (Name × Array Expr))
+    :=
+  aux e #[]
+where
+  aux : Expr → Array Expr → MetaM (String ⊕ (Name × Array Expr))
+  | .const n .., args =>
+    return .inr (n, args)
+  | .fvar fvid, args => do
+    let some value ← fvid.getValue? |
+      return .inl s!"local var [{fvid.name}] missing value"
+    aux value args
+  | e@(.lam ..), args => do
+    -- Only reduce lambda applications, else we might expand too many defs
+    let reducedExprAndArgs ← withReducible $ whnf (mkAppN e args)
+    parseFnAndArgs reducedExprAndArgs
+  | e, outerArgs =>
+    e.withApp λ fnExpr args => do
+      -- `e` wasn't a function application
+      if args.isEmpty then return .inl s!"expr [{fnExpr}] isn't a fn app"
 
-    -- `fnExpr` isn't an app, but it might expand to one
-    let some (f, preArgs) ← parseFnAndArgs fnExpr | return none
-    return some (f, preArgs ++ args)
+      -- Continue trying to extract args from `fnExpr`
+      aux fnExpr (args ++ outerArgs)
 
 /--
 Solve a goal via a congruence argument: show that the goal's type follows from
@@ -98,10 +108,14 @@ private partial def simpleCongruence
       | throwError "goal type [{goalType}] is not an applied binary relation"
 
     /- LHS and RHS must have the same form: `f x₁ ... xₙ ~ f y₁ ... yₙ`. -/
-    let some (lhsFnName, lhsArgs) ← parseFnAndArgs lhs.cleanupAnnotations
-      | throwError "LHS [{lhs}] does not resolve to a function application"
-    let some (rhsFnName, rhsArgs) ← parseFnAndArgs rhs.cleanupAnnotations
-      | throwError "RHS [{rhs}] does not resolve to a function application"
+    let lhsFnRes ← parseFnAndArgs lhs.cleanupAnnotations
+    let (lhsFnName, lhsArgs) ← match lhsFnRes with
+    | .inr (name, args) => pure (name, args)
+    | .inl errMsg => throwError "LHS [{lhs}] parse err: {errMsg}"
+    let rhsFnRes ← parseFnAndArgs rhs.cleanupAnnotations
+    let (rhsFnName, rhsArgs) ← match rhsFnRes with
+    | .inr (name, args) => pure (name, args)
+    | .inl errMsg => throwError "RHS [{rhs}] parse err: {errMsg}"
     unless lhsFnName == rhsFnName do
       throwError "LHS fn [{lhsFnName}] != RHS fn [{rhsFnName}]"
     unless lhsArgs.size == rhsArgs.size do

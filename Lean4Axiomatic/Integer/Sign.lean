@@ -513,7 +513,7 @@ class Sgn.Props
       [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Signed.Ops ℤ] [Ops ℤ]
     where
   /-- Zero is the only integer with sign value zero. -/
-  sgn_zero {a : ℤ} : a ≃ 0 ↔ sgn a ≃ (0:ℤ)
+  sgn_zero {a : ℤ} : sgn a ≃ (0:ℤ) ↔ a ≃ 0
 
   /-- Only positive integers have sign value one. -/
   sgn_positive {a : ℤ} : Positive a ↔ sgn a ≃ 1
@@ -1145,24 +1145,51 @@ instance zero_product_inst : AA.ZeroProduct (α := ℤ) (· * ·) := {
   zero_prod := mul_split_zero.mp
 }
 
-/--
-If a product of integers is nonzero, then both factors must be nonzero.
+/-- A product of integers is nonzero exactly when both factors are nonzero. -/
+theorem mul_split_neqv_zero {a b : ℤ} : a * b ≄ 0 ↔ a ≄ 0 ∧ b ≄ 0 := by
+  have msz {x y : ℤ} : x * y ≃ 0 ↔ x ≃ 0 ∨ y ≃ 0 := mul_split_zero
+  calc
+    _ ↔ a * b ≄ 0        := Iff.rfl
+    _ ↔ ¬(a ≃ 0 ∨ b ≃ 0) := Iff.intro (mt msz.mpr) (mt msz.mp)
+    _ ↔ a ≄ 0 ∧ b ≄ 0    := Logic.not_or_iff_and_not
 
-**Property and proof intuition**: This follows immediately from the
-contrapositive of the zero product property (`a ≃ 0 ∨ b ≃ 0 → a * b ≃ 0`).
--/
+/-- If a product of integers is nonzero, then both factors must be nonzero. -/
 theorem nonzero_factors_if_nonzero_product
     {a b : ℤ} : Nonzero (a * b) → Nonzero a ∧ Nonzero b
     := by
   intro (_ : Nonzero (a * b))
   show Nonzero a ∧ Nonzero b
   have : a * b ≄ 0 := nonzero_iff_neqv_zero.mp ‹Nonzero (a * b)›
-  have : ¬(a ≃ 0 ∨ b ≃ 0) := mt mul_split_zero.mpr ‹a * b ≄ 0›
-  have (And.intro (_ : a ≄ 0) (_ : b ≄ 0)) :=
-    Logic.not_or_iff_and_not.mp ‹¬(a ≃ 0 ∨ b ≃ 0)›
+  have (And.intro (_ : a ≄ 0) (_ : b ≄ 0)) := mul_split_neqv_zero.mp ‹a * b ≄ 0›
   have : Nonzero a := nonzero_iff_neqv_zero.mpr ‹a ≄ 0›
   have : Nonzero b := nonzero_iff_neqv_zero.mpr ‹b ≄ 0›
   exact And.intro ‹Nonzero a› ‹Nonzero b›
+
+/-- Zero is the only integer that is equivalent to its negation. -/
+theorem neg_zero {a : ℤ} : a ≃ 0 ↔ a ≃ -a := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : a ≃ 0)
+    show a ≃ -a
+
+    calc
+      _ = a      := rfl
+      _ ≃ 0      := ‹a ≃ 0›
+      _ ≃ -1 * 0 := Rel.symm AA.absorbR
+      _ ≃ -0     := mul_neg_one
+      _ ≃ -a     := by srw [←‹a ≃ 0›]
+  case mpr =>
+    intro (_ : a ≃ -a)
+    show a ≃ 0
+
+    have : 2 * a ≃ 0 := calc
+      _ = 2 * a  := rfl
+      _ ≃ a + a  := mul_two
+      _ ≃ a + -a := by srw [‹a ≃ -a›]
+      _ ≃ 0      := AA.inverseR
+    have : (2:ℤ) ≃ 0 ∨ a ≃ 0 := mul_split_zero.mp ‹2 * a ≃ 0›
+    have : a ≃ 0 := this.resolve_left two_neqv_zero
+    exact this
 
 /--
 If a product of integers is a square root of unity, then both factors must also
@@ -1538,8 +1565,8 @@ theorem sgn_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → sgn a₁ ≃ sgn a₂ :=
       _ ≃ a₁ := Rel.symm ‹a₁ ≃ a₂›
       _ ≃ 0  := ‹a₁ ≃ 0›
     calc
-      sgn a₁ ≃ _ := sgn_zero.mp ‹a₁ ≃ 0›
-      0      ≃ _ := Rel.symm (sgn_zero.mp ‹a₂ ≃ 0›)
+      sgn a₁ ≃ _ := sgn_zero.mpr ‹a₁ ≃ 0›
+      0      ≃ _ := Rel.symm (sgn_zero.mpr ‹a₂ ≃ 0›)
       sgn a₂ ≃ _ := Rel.refl
   | AA.OneOfThree.second (_ : Positive a₁) =>
     have : Positive a₂ := by prw [‹a₁ ≃ a₂›] ‹Positive a₁›
@@ -1589,7 +1616,7 @@ theorem sgn_fixed_points {a : ℤ} : sgn a ≃ a ↔ a ≃ 0 ∨ a ≃ 1 ∨ a �
     | Or.inl (_ : a ≃ 0) =>
       calc
         _ = sgn a := rfl
-        _ ≃ 0     := sgn_zero.mp ‹a ≃ 0›
+        _ ≃ 0     := sgn_zero.mpr ‹a ≃ 0›
         _ ≃ a     := Rel.symm ‹a ≃ 0›
     | Or.inr (Or.inl (_ : a ≃ 1)) =>
       have : Positive a := by prw [←‹a ≃ 1›] one_positive
@@ -1664,40 +1691,46 @@ theorem nonzeroWithSign_mul_from_sqrt1_sgn
     mul_preserves_nonzeroWithSign nws_a nws_b
   exact this
 
-/--
-The product of nonzero integers with the same sign is positive, and likewise
-the factors of a positive product must have the same sign.
-
-**Property intuition**: This is one of the essential properties of any signed
-number system; our intuition for it usually comes from having memorized it in
-school.
-
-**Proof intuition**: Follows directly from the property that the product of two
-square roots of unity is one iff they are the same.
--/
-theorem positive_mul_iff_sgn_eqv
-    {a b : ℤ} [Nonzero (a * b)] : Positive (a * b) ↔ sgn a ≃ sgn b
+/-- The factors of a positive product must have the same sign. -/
+theorem positive_mul_imp_sgn_eqv
+    {a b : ℤ} : Positive (a * b) → sgn a ≃ sgn b
     := by
+  intro (_ : Positive (a * b))
+  show sgn a ≃ sgn b
+
+  have : Nonzero (a * b) := nonzero_from_positive ‹Positive (a * b)›
   have (And.intro (_ : Sqrt1 (sgn a)) (_ : Sqrt1 (sgn b))) :=
     sqrt1_sgn_split_nonzero_mul ‹Nonzero (a * b)›
   have nws_ab_sgn : NonzeroWithSign (a * b) (sgn a * sgn b) :=
     nonzeroWithSign_mul_from_sqrt1_sgn
+  have nws_ab_one : NonzeroWithSign (a * b) 1 :=
+    positive_iff_sign_pos1.mp ‹Positive (a * b)›
+  have : sgn a * sgn b ≃ 1 :=
+    nonzeroWithSign_sign_inject nws_ab_sgn nws_ab_one
+  have (And.intro _ (_ : sgn a ≃ sgn b)) := mul_sqrt1_eqv.mp this
+  exact ‹sgn a ≃ sgn b›
+
+/--
+The product of nonzero integers with the same sign is positive, and likewise
+the factors of a positive product must have the same sign.
+-/
+theorem positive_mul_iff_sgn_eqv
+    {a b : ℤ} [Nonzero (a * b)] : Positive (a * b) ↔ sgn a ≃ sgn b
+    := by
   apply Iff.intro
   case mp =>
-    intro (_ : Positive (a * b))
-    show sgn a ≃ sgn b
-    have nws_ab_one : NonzeroWithSign (a * b) 1 :=
-      positive_iff_sign_pos1.mp ‹Positive (a * b)›
-    have : sgn a * sgn b ≃ 1 :=
-      nonzeroWithSign_sign_inject nws_ab_sgn nws_ab_one
-    have (And.intro _ (_ : sgn a ≃ sgn b)) := mul_sqrt1_eqv.mp this
-    exact ‹sgn a ≃ sgn b›
+    exact positive_mul_imp_sgn_eqv
   case mpr =>
     intro (_ : sgn a ≃ sgn b)
     show Positive (a * b)
+
+    have (And.intro (_ : Sqrt1 (sgn a)) (_ : Sqrt1 (sgn b))) :=
+      sqrt1_sgn_split_nonzero_mul ‹Nonzero (a * b)›
     have : Sqrt1 (sgn b) ∧ sgn a ≃ sgn b :=
       And.intro ‹Sqrt1 (sgn b)› ‹sgn a ≃ sgn b›
     have : sgn a * sgn b ≃ 1 := mul_sqrt1_eqv.mpr this
+    have nws_ab_sgn : NonzeroWithSign (a * b) (sgn a * sgn b) :=
+      nonzeroWithSign_mul_from_sqrt1_sgn
     have : NonzeroWithSign (a * b) 1 := by prw [‹sgn a * sgn b ≃ 1›] nws_ab_sgn
     have : Positive (a * b) := positive_iff_sign_pos1.mpr this
     exact this
@@ -1757,15 +1790,15 @@ theorem sgn_compat_mul {a b : ℤ} : sgn (a * b) ≃ sgn a * sgn b := by
     match this with
     | Or.inl (_ : a ≃ 0) =>
       calc
-        sgn (a * b)   ≃ _ := sgn_zero.mp ‹a * b ≃ 0›
+        sgn (a * b)   ≃ _ := sgn_zero.mpr ‹a * b ≃ 0›
         0             ≃ _ := Rel.symm AA.absorbL
-        0 * sgn b     ≃ _ := by srw [←sgn_zero.mp ‹a ≃ 0›]
+        0 * sgn b     ≃ _ := by srw [←sgn_zero.mpr ‹a ≃ 0›]
         sgn a * sgn b ≃ _ := Rel.refl
     | Or.inr (_ : b ≃ 0) =>
       calc
-        sgn (a * b)   ≃ _ := sgn_zero.mp ‹a * b ≃ 0›
+        sgn (a * b)   ≃ _ := sgn_zero.mpr ‹a * b ≃ 0›
         0             ≃ _ := Rel.symm AA.absorbR
-        sgn a * 0     ≃ _ := by srw [←sgn_zero.mp ‹b ≃ 0›]
+        sgn a * 0     ≃ _ := by srw [←sgn_zero.mpr ‹b ≃ 0›]
         sgn a * sgn b ≃ _ := Rel.refl
   | Or.inr (_ : Nonzero (a * b)) =>
     have (And.intro (_ : Sqrt1 (sgn a)) (_ : Sqrt1 (sgn b))) :=
@@ -1914,7 +1947,7 @@ theorem sgn_sum_zero_term
       _ ≃ sgn (0 + y)   := by srw [‹x ≃ 0›]
       _ ≃ sgn y         := by srw [add_identL]
       _ ≃ 0 + sgn y     := Rel.symm AA.identL
-      _ ≃ sgn x + sgn y := by srw [←sgn_zero.mp ‹x ≃ 0›]
+      _ ≃ sgn x + sgn y := by srw [←sgn_zero.mpr ‹x ≃ 0›]
 
   match ‹a ≃ 0 ∨ b ≃ 0› with
   | Or.inl (_ : a ≃ 0) =>
