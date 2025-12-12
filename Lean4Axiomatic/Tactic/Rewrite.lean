@@ -95,11 +95,7 @@ private partial def simpleCongruence
     (goal : MVarId) (rwRule : Expr) : TacticM Unit
     := goal.withContext do
   /- Base case: can we easily close the goal? -/
-  try
-    goal.gcongrForward #[rwRule]
-    return ()
-  catch _ =>
-    -- Assume the goal is non-trivial and continue
+  if ← goal.gcongrForward #[rwRule] then return ()
 
   /- Find the theorems with `gcongr` attribute that may apply to the goal. -/
   let candidateLemmas ← do

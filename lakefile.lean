@@ -1,7 +1,7 @@
 import Lake
 open Lake DSL
 
-require "leanprover-community" / "mathlib" @ git "v4.24.0-rc1"
+require "leanprover-community" / "mathlib" @ git "v4.25.2"
 
 package «lean4-axiomatic» {
   leanOptions := #[
