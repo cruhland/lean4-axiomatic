@@ -16,6 +16,7 @@ class FloorCeil.Ops (ℤ : outParam Type) (ℚ : Type) where
 
 export FloorCeil.Ops (ceil floor)
 
+/-- Defining properties of floor and ceiling functions on rational numbers. -/
 class FloorCeil.Props
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
     (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ]
@@ -40,10 +41,12 @@ class FloorCeil.Props
 
 export FloorCeil.Props (ceil_lb ceil_ub floor_lb floor_ub)
 
+/-- All floor and ceiling axioms for rational numbers. -/
 class FloorCeil
     {ℕ ℤ : outParam Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
-    (ℚ : Type) [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ]
-    [Sign ℚ] [Subtraction ℚ] [Order ℚ]
+    (ℚ : outParam Type)
+      [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ][Negation ℚ] [Sign ℚ]
+      [Subtraction ℚ] [Order ℚ]
     where
   toOps : FloorCeil.Ops (ℤ := ℤ) ℚ
   toProps : FloorCeil.Props ℚ
@@ -75,18 +78,17 @@ theorem floor_lb_mt {p : ℚ} {a : ℤ} : floor p < a → p < a := by
   have : p < a := not_ge_iff_lt.mp ‹¬(p ≥ a)›
   exact this
 
-/-- Every rational number is located between consecutive integers. -/
-theorem between_integers {p : ℚ} : ∃ (a : ℤ), a ≤ p ∧ p < a + 1 := by
+/--
+Every rational number is located between consecutive integers, with the smaller
+being that number's unique floor.
+-/
+theorem floor_bounds {p : ℚ} : floor p ≤ p ∧ p < floor p + 1 := by
   have : floor p ≤ p := floor_ub
   have : floor p < floor p + 1 := Integer.lt_inc
   have : p < floor p + 1 := calc
-    -- ↓ begin key steps ↓
     _ = p                 := rfl
     _ < (floor p + 1 : ℤ) := floor_lb_mt ‹floor p < floor p + 1›
-    -- ↑  end key steps  ↑
     _ ≃ floor p + 1       := add_compat_from_integer
-  have : ∃ (a : ℤ), a ≤ p ∧ p < a + 1 :=
-    Exists.intro (floor p) (And.intro ‹floor p ≤ p› ‹p < floor p + 1›)
-  exact this
+  exact And.intro ‹floor p ≤ p› ‹p < floor p + 1›
 
 end Lean4Axiomatic.Rational
