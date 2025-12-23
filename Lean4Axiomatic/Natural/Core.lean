@@ -146,8 +146,10 @@ class Induction (ℕ : outParam Type) [Core ℕ] where
   At higher universe levels, `motive` generates an indexed family of types, and
   this axiom can then be used to produce data recursively.
   -/
-  ind {motive : ℕ → Sort u}
-    : motive 0 → ((m : ℕ) → motive m → motive (step m)) → (n : ℕ) → motive n
+  ind
+    {motive : ℕ → Sort u}
+    (zero : motive 0) (step : (m : ℕ) → motive m → motive (step m))
+    : (n : ℕ) → motive n
 
   /-- The witness for `motive 0` comes from the base case argument. -/
   ind_zero

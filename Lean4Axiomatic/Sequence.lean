@@ -2,6 +2,9 @@ import Lean4Axiomatic.Natural
 
 namespace Lean4Axiomatic
 
+open Natural (step)
+open Relation.Equivalence (EqvOp)
+
 /-! # Sequences -/
 
 /-! ## Axioms / Definitions -/
@@ -23,10 +26,40 @@ def InfiniteDescent {α : Type u} [LT α] (s : Sequence (ℕ := ℕ) α) : Prop 
 
 /-! ## Derived properties -/
 
+-- TODO: move this into class, make it on the `at` operation, then gcongr
+-- will be usable
+theorem seq_subst
+    {α : Sort u} [EqvOp α] {s : Sequence α} {n₁ n₂ : ℕ}
+    : n₁ ≃ n₂ → s n₁ ≃ s n₂
+    := by
+  intro (_ : n₁ ≃ n₂)
+  show s n₁ ≃ s n₂
+  admit
+
+instance trans_gt_eqv_gt_inst : Trans (α := ℕ) (· > ·) (· ≃ ·) (· > ·) := sorry
+
 /-- No natural number sequence is in infinite descent. -/
 theorem inf_desc_impossible {s : Sequence ℕ} : ¬InfiniteDescent (ℕ := ℕ) s := by
   intro (_ : InfiniteDescent s)
+  have desc_at : (n : ℕ) → s n > s (n + 1) := ‹InfiniteDescent s›
   show False
-  admit
+
+  have larger_than : (k n : ℕ) → s n ≥ k := by
+    apply Natural.ind
+    case zero =>
+      intro (n : ℕ)
+      show s n ≥ 0
+      admit
+    case step =>
+      intro (m : ℕ) (ih : (n : ℕ) → s n ≥ m) (n : ℕ)
+      show s n ≥ step m
+      admit
+
+  have : s 0 > s 1 := calc
+    _ = s 0       := rfl
+    _ > s (0 + 1) := desc_at 0
+    _ ≃ s 1       := seq_subst Natural.zero_add
+  have : s 0 ≤ s 1 := larger_than (s 0) 1
+  exact Natural.le_gt_false ‹s 0 ≤ s 1› ‹s 0 > s 1›
 
 end Lean4Axiomatic
