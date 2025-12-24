@@ -38,6 +38,8 @@ theorem seq_subst
 
 instance trans_gt_eqv_gt_inst : Trans (α := ℕ) (· > ·) (· ≃ ·) (· > ·) := sorry
 
+instance trans_gt_ge_gt_inst : Trans (α := ℕ) (· > ·) (· ≥ ·) (· > ·) := sorry
+
 /-- No natural number sequence is in infinite descent. -/
 theorem inf_desc_impossible {s : Sequence ℕ} : ¬InfiniteDescent (ℕ := ℕ) s := by
   intro (_ : InfiniteDescent s)
@@ -49,11 +51,16 @@ theorem inf_desc_impossible {s : Sequence ℕ} : ¬InfiniteDescent (ℕ := ℕ) 
     case zero =>
       intro (n : ℕ)
       show s n ≥ 0
-      admit
+      exact Natural.ge_zero
     case step =>
       intro (m : ℕ) (ih : (n : ℕ) → s n ≥ m) (n : ℕ)
       show s n ≥ step m
-      admit
+      have : s n > m := calc
+        _ = s n       := rfl
+        _ > s (n + 1) := desc_at n
+        _ ≥ m         := ih (n + 1)
+      have : s n ≥ step m := Natural.lt_step_le.mp ‹s n > m›
+      exact this
 
   have : s 0 > s 1 := calc
     _ = s 0       := rfl
