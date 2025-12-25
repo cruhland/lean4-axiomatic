@@ -415,6 +415,20 @@ instance trans_eqv_lt_lt_inst : Trans (α := ℕ) (· ≃ ·) (· < ·) (· < ·
   trans := trans_eqv_lt_lt
 }
 
+/--
+Join a _greater than_ relation and a _equivalent to_ relation that share an
+operand into another _greater than_ relation.
+-/
+theorem trans_gt_eqv_gt {n m k : ℕ} : n > m → m ≃ k → n > k := by
+  intro (_ : n > m) (_ : m ≃ k)
+  show n > k
+  have : k < n := by prw [‹m ≃ k›] ‹m < n›
+  exact this
+
+instance trans_gt_eqv_gt_inst : Trans (α := ℕ) (· > ·) (· ≃ ·) (· > ·) := {
+  trans := trans_gt_eqv_gt
+}
+
 def lt_substL_eqv
     : AA.SubstitutiveOn Hand.L (α := ℕ) (· < ·) AA.tc (· ≃ ·) (· → ·)
     := {
@@ -868,6 +882,20 @@ theorem trans_le_lt_lt {n m k : ℕ} : n ≤ m → m < k → n < k := by
 
 instance trans_le_lt_lt_inst : Trans (α := ℕ) (· ≤ ·) (· < ·) (· < ·) := {
   trans := trans_le_lt_lt
+}
+
+/--
+Join a _greater than_ relation and a _greater than or equivalent to_ relation
+that share an operand into another _greater than_ relation.
+-/
+theorem trans_gt_ge_gt {n m k : ℕ} : n > m → m ≥ k → n > k := by
+  intro (_ : n > m) (_ : m ≥ k)
+  show n > k
+  have : k < n := trans ‹k ≤ m› ‹m < n›
+  exact ‹n > k›
+
+instance trans_gt_ge_gt_inst : Trans (α := ℕ) (· > ·) (· ≥ ·) (· > ·) := {
+  trans := trans_gt_ge_gt
 }
 
 /-- Positive natural numbers are nonzero. -/

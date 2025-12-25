@@ -36,37 +36,36 @@ theorem seq_subst
   show s n₁ ≃ s n₂
   admit
 
-instance trans_gt_eqv_gt_inst : Trans (α := ℕ) (· > ·) (· ≃ ·) (· > ·) := sorry
-
-instance trans_gt_ge_gt_inst : Trans (α := ℕ) (· > ·) (· ≥ ·) (· > ·) := sorry
-
 /-- No natural number sequence is in infinite descent. -/
 theorem inf_desc_impossible {s : Sequence ℕ} : ¬InfiniteDescent (ℕ := ℕ) s := by
   intro (_ : InfiniteDescent s)
   have desc_at : (n : ℕ) → s n > s (n + 1) := ‹InfiniteDescent s›
   show False
 
-  have larger_than : (k n : ℕ) → s n ≥ k := by
-    apply Natural.ind
-    case zero =>
-      intro (n : ℕ)
-      show s n ≥ 0
-      exact Natural.ge_zero
-    case step =>
-      intro (m : ℕ) (ih : (n : ℕ) → s n ≥ m) (n : ℕ)
-      show s n ≥ step m
-      have : s n > m := calc
-        _ = s n       := rfl
-        _ > s (n + 1) := desc_at n
-        _ ≥ m         := ih (n + 1)
-      have : s n ≥ step m := Natural.lt_step_le.mp ‹s n > m›
-      exact this
+  have : s 0 ≤ s 1 :=
+    have lower_bound_at_index : (k n : ℕ) → s n ≥ k := by
+      apply Natural.ind
+      case zero =>
+        intro (n : ℕ)
+        show s n ≥ 0
+        exact Natural.ge_zero
+      case step =>
+        intro (m : ℕ) (ih : (n : ℕ) → s n ≥ m) (n : ℕ)
+        show s n ≥ step m
+        have : s n > m := calc
+          _ = s n       := rfl
+          _ > s (n + 1) := desc_at n
+          _ ≥ m         := ih (n + 1)
+        have : s n ≥ step m := Natural.lt_step_le.mp ‹s n > m›
+        exact this
+    show s 0 ≤ s 1 from lower_bound_at_index (s 0) 1
 
   have : s 0 > s 1 := calc
     _ = s 0       := rfl
     _ > s (0 + 1) := desc_at 0
     _ ≃ s 1       := seq_subst Natural.zero_add
-  have : s 0 ≤ s 1 := larger_than (s 0) 1
-  exact Natural.le_gt_false ‹s 0 ≤ s 1› ‹s 0 > s 1›
+
+  have : False := Natural.le_gt_false ‹s 0 ≤ s 1› ‹s 0 > s 1›
+  exact this
 
 end Lean4Axiomatic
