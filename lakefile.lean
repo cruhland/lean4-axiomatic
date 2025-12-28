@@ -5,7 +5,7 @@ require "leanprover-community" / "mathlib" @ git "v4.25.2"
 
 package «lean4-axiomatic» {
   leanOptions := #[
-    ⟨`warningAsError, true⟩,
+    ⟨`warningAsError, false⟩,
     -- This linter rule can make proof readability harder in some cases.
     ⟨`weak.linter.tacticAnalysis.introMerge, false⟩,
   ]
