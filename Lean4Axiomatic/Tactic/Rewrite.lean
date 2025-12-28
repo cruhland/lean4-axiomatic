@@ -56,9 +56,9 @@ where
     let some value ← fvid.getValue? |
       return .inl s!"local var [{fvid.name}] missing value"
     aux value args
-  | e@(.lam ..), args => do
-    -- Only reduce lambda applications, else we might expand too many defs
-    let reducedExprAndArgs ← withReducible $ whnf (mkAppN e args)
+  | e@(.lam ..), args =>
+    -- Only beta-reduce lambda applications, else we might expand too many defs
+    let reducedExprAndArgs := e.beta args
     parseFnAndArgs reducedExprAndArgs
   | e, outerArgs =>
     e.withApp λ fnExpr args => do
