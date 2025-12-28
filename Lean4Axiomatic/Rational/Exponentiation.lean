@@ -441,6 +441,17 @@ theorem pow_preserves_ge_nonneg
     have : p^n ≥ q^n := ge_cases.mpr (Or.inr ‹p^n ≃ q^n›)
     exact this
 
+/-- There's no rational number whose square is two. -/
+theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
+  intro (_ : p^2 ≃ 2)
+  show False
+
+  have (AsHalfPosRatio.mk (a:ℤ) (b:ℤ) (_ : b > 0) p_eqv) := as_half_pos_ratio p
+  have : AP (b ≄ 0) := sorry
+  have : p ≃ a/b := p_eqv
+  have : a^2 ≃ 2 * b^2 := sorry
+  admit
+
 end pow_nat
 
 /-! ## Axioms for exponentiation to an integer -/
