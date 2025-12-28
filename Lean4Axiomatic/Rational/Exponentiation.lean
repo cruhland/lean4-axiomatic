@@ -1,4 +1,5 @@
 import Lean4Axiomatic.Rational.Metric
+import Lean4Axiomatic.Sequence
 
 /-!
 # Rational numbers: exponentiation to natural numbers
@@ -13,6 +14,7 @@ namespace Lean4Axiomatic.Rational
 open Lean4Axiomatic.Logic (AP iff_subst_covar or_identR or_mapR)
 open Lean4Axiomatic.Metric (abs)
 open Lean4Axiomatic.Natural (pow_step pow_zero step)
+open Lean4Axiomatic.Sequence (InfiniteDescent)
 open Lean4Axiomatic.Signed (Positive sgn)
 
 /-! ## Derived properties for exponentiation to a natural number -/
@@ -450,7 +452,33 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
   have : AP (b ≄ 0) := sorry
   have : p ≃ a/b := p_eqv
   have : a^2 ≃ 2 * b^2 := sorry
-  admit
+
+  /-
+  If we can have a Sequence.iterate constructor, that could give us a way to
+  derive a property.
+
+  Need to have solns[x]^2 = 2 * solns[x + 1]^2
+  Can we solve for solns[x + 1]?
+  solns[x + 1]^2 = solns[x]^2 / 2
+  so solns[x + 1]^2 < solns[x]^2
+  since they are both positive, solns[x + 1] < solns[x]
+  -/
+  -- init can just be a^2 (well, the nat equivalent)
+  -- next can show how b^2 is defined in terms of a^2
+  -- keep everything squared, the infinite descent property works the same
+  let init : ℕ := sorry
+  let next : ℕ → ℕ := sorry
+  let nextProp (x : ℕ) : x > next x := sorry
+  let seqWithProp := Sequence.iterateProp init next nextProp
+  let solns := seqWithProp.val
+  have : InfiniteDescent solns :=
+    have desc {ℕ' : Type} [Natural ℕ'] (x : ℕ') : solns[x] > solns[x + 1] :=
+      seqWithProp.property x
+    show InfiniteDescent solns from desc
+
+  have : ¬InfiniteDescent solns := Sequence.inf_desc_impossible
+  have : False := absurd ‹InfiniteDescent solns› ‹¬InfiniteDescent solns›
+  exact this
 
 end pow_nat
 

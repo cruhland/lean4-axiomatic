@@ -57,6 +57,28 @@ def InfiniteDescent {α : Type u} [LT α] (s : Sequence α) : Prop :=
 
 /-! ## Derived properties -/
 
+def iterate {α : Sort u} (init : α) (next : α → α) : Sequence α :=
+  let nth {ℕ : Type} [Natural ℕ] (n : ℕ) : α := sorry
+
+  have subst_index
+      {ℕ : Type} [Natural ℕ] [EqvOp α] {n₁ n₂ : ℕ} : n₁ ≃ n₂ → nth n₁ ≃ nth n₂
+      := by
+    intro (_ : n₁ ≃ n₂)
+    show nth n₁ ≃ nth n₂
+    admit
+
+  show Sequence α from {
+    _at := nth
+    subst_index := subst_index
+  }
+
+def iterateProp
+    {α : Type u} {P : α → α → Prop} (init : α) (next : α → α)
+    : ((x : α) → P x (next x)) →
+      { s : Sequence α // {ℕ : Type} → [Natural ℕ] → (n : ℕ) → P s[n] s[n + 1] }
+    :=
+  sorry
+
 /-- No natural number sequence is in infinite descent. -/
 theorem inf_desc_impossible {s : Sequence ℕ} : ¬InfiniteDescent s := by
   intro (_ : InfiniteDescent s)
