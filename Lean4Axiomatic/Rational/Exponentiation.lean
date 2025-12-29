@@ -448,32 +448,46 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
   intro (_ : p^2 ≃ 2)
   show False
 
-  have (AsHalfPosRatio.mk (a:ℤ) (b:ℤ) (_ : b > 0) p_eqv) := as_half_pos_ratio p
-  have : AP (b ≄ 0) := sorry
+  have (AsRatio.mk (a:ℤ) (b:ℤ) (_ : AP (b ≄ 0)) p_eqv) := as_ratio p
   have : p ≃ a/b := p_eqv
   have : a^2 ≃ 2 * b^2 := sorry
 
-  /-
-  If we can have a Sequence.iterate constructor, that could give us a way to
-  derive a property.
+  let n : ℕ := sorry -- abs a
+  let m : ℕ := sorry -- abs b
+  have : n^2 ≃ 2 * m^2 := sorry
 
+  let P := λ (p : ℕ × ℕ) => p.1^2 ≃ 2 * p.2^2
+  let Elem := { p : ℕ × ℕ // P p }
+  let init : Elem := Subtype.mk (p := P) (n, m) ‹n^2 ≃ 2 * m^2›
+  let next : Elem → Elem := by
+    intro (Subtype.mk (x, y) (_ : x^2 ≃ 2 * y^2))
+    show { p : ℕ × ℕ // p.1^2 ≃ 2 * p.2^2 }
+
+    let (Subtype.mk (z : ℕ) (_ : x ≃ 2 * z)) := sorry
+    have : 2 * y^2 ≃ 2 * (2 * z^2) := calc
+      _ = 2 * y^2       := rfl
+      _ ≃ x^2           := Rel.symm ‹x^2 ≃ 2 * y^2›
+      _ ≃ (2 * z)^2     := by srw [‹x ≃ 2 * z›]
+      _ ≃ 2^2 * z^2     := Natural.pow_distribR_mul
+      _ ≃ (2 * 2) * z^2 := by srw [Natural.pow_two]
+      _ ≃ 2 * (2 * z^2) := AA.assoc
+    have : 2 ≄ 0 := Natural.two_neqv_zero
+    have : y^2 ≃ 2 * z^2 :=
+      AA.cancelLC (x := 2) ‹2 ≄ 0› ‹2 * y^2 ≃ 2 * (2 * z^2)›
+    exact Subtype.mk (y, z) ‹y^2 ≃ 2 * z^2›
+  let pairs := Sequence.iterate init next
+
+  /-
   Need to have solns[x]^2 = 2 * solns[x + 1]^2
   Can we solve for solns[x + 1]?
   solns[x + 1]^2 = solns[x]^2 / 2
   so solns[x + 1]^2 < solns[x]^2
   since they are both positive, solns[x + 1] < solns[x]
   -/
-  -- init can just be a^2 (well, the nat equivalent)
-  -- next can show how b^2 is defined in terms of a^2
-  -- keep everything squared, the infinite descent property works the same
-  let init : ℕ := sorry
-  let next : ℕ → ℕ := sorry
-  let nextProp (x : ℕ) : x > next x := sorry
-  let seqWithProp := Sequence.iterateProp init next nextProp
-  let solns := seqWithProp.val
+  let solns : Sequence ℕ := sorry
   have : InfiniteDescent solns :=
     have desc {ℕ' : Type} [Natural ℕ'] (x : ℕ') : solns[x] > solns[x + 1] :=
-      seqWithProp.property x
+      sorry
     show InfiniteDescent solns from desc
 
   have : ¬InfiniteDescent solns := Sequence.inf_desc_impossible

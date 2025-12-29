@@ -79,6 +79,14 @@ def iterateProp
     :=
   sorry
 
+theorem iterate_chain
+    {α : Type u} {P : α → α → Prop} {init : α} {next : α → α}
+    (P_link : (x : α) → P x (next x))
+    : let s := iterate init next
+      (n : ℕ) → P s[n] s[n + 1]
+    := by
+  admit
+
 /-- No natural number sequence is in infinite descent. -/
 theorem inf_desc_impossible {s : Sequence ℕ} : ¬InfiniteDescent s := by
   intro (_ : InfiniteDescent s)
