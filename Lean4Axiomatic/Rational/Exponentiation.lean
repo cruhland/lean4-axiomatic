@@ -496,6 +496,14 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     intro (Subtype.mk (x, y) eqv); let e := Subtype.mk (x, y) eqv
     show proj_gt e (next e)
 
+    /-
+    Need to have solns[x]^2 = 2 * solns[x + 1]^2
+    Can we solve for solns[x + 1]?
+    solns[x + 1]^2 = solns[x]^2 / 2
+    so solns[x + 1]^2 < solns[x]^2
+    since they are both positive, solns[x + 1] < solns[x]
+    -/
+
     have (Subtype.mk (y', z) eqv_next) := next e
     have : x > y' := sorry
     have : (x, y).1 > (y', z).1 := this
@@ -506,19 +514,12 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
   have : (n : ℕ) → proj_gt pairs[n] pairs[step n] :=
     Sequence.iterate_chain proj_gt_link
 
-  -- TODO: need a Sequence.map operation to get the result sequence
-  -- Also need to preserve the ordering property between elements
-  /-
-  Need to have solns[x]^2 = 2 * solns[x + 1]^2
-  Can we solve for solns[x + 1]?
-  solns[x + 1]^2 = solns[x]^2 / 2
-  so solns[x + 1]^2 < solns[x]^2
-  since they are both positive, solns[x + 1] < solns[x]
-  -/
-  let solns : Sequence ℕ := sorry
+  let proj (e : Elem) : ℕ := e.val.1
+  let solns := pairs.map proj
   have : InfiniteDescent solns :=
-    have desc {ℕ' : Type} [Natural ℕ'] (x : ℕ') : solns[x] > solns[step x] :=
-      sorry
+    have chain : (x : ℕ) → proj pairs[x] > proj pairs[step x] := sorry
+    have desc : (x : ℕ) → solns[x] > solns[step x] :=
+      Sequence.map_chain chain
     show InfiniteDescent solns from desc
 
   have : ¬InfiniteDescent solns := Sequence.inf_desc_impossible

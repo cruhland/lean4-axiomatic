@@ -51,11 +51,17 @@ theorem at_substR
   show s[n₁] ≃ s[n₂]
   exact s.subst_index ‹n₁ ≃ n₂›
 
+def linked {α : Type u} (P : α → α → Prop) (s : Sequence α) (n : ℕ) : Prop :=
+  P s[n] s[step n]
+
 /-- When each value in a sequence is less than the one preceding it. -/
 def InfiniteDescent {α : Type u} [LT α] (s : Sequence α) : Prop :=
-  {ℕ : Type} → [Natural ℕ] → (n : ℕ) → s[n] > s[step n]
+  (n : ℕ) → s.linked (· > ·) n
 
 /-! ## Derived properties -/
+
+def map {α : Sort u} {β : Sort v} (f : α → β) (s : Sequence α) : Sequence β :=
+  sorry
 
 def iterate {α : Sort u} (init : α) (next : α → α) : Sequence α :=
   let nth {ℕ : Type} [Natural ℕ] (n : ℕ) : α := sorry
@@ -74,9 +80,7 @@ def iterate {α : Sort u} (init : α) (next : α → α) : Sequence α :=
 
 def iterateProp
     {α : Type u} {P : α → α → Prop} (init : α) (next : α → α)
-    : ((x : α) → P x (next x)) →
-      { s : Sequence α //
-        {ℕ : Type} → [Natural ℕ] → (n : ℕ) → P s[n] s[step n] }
+    : ((x : α) → P x (next x)) → { s : Sequence α // (n : ℕ) → s.linked P n }
     :=
   sorry
 
@@ -95,13 +99,13 @@ theorem iterate_chain
     {P : α → α → Prop} [AA.Substitutive₂ P AA.tc (· ≃ ·) (· → ·)]
     {init : α} {next : α → α} [AA.Substitutive₁ next (· ≃ ·) (· ≃ ·)]
     (P_link : (x : α) → P x (next x))
-    : let s := iterate init next
-      (n : ℕ) → P s[n] s[step n]
+    : (n : ℕ) → (iterate init next).linked P n
     := by
-  intro (s : Sequence α)
-  apply Natural.ind
+  intro (n : ℕ)
+  let s := iterate init next
+  apply Natural.cases_on
   case zero =>
-    show P s[0] s[step 0]
+    show s.linked P 0
     have : P init (next init) := P_link init
     have : P (iterate init next)[0] (next init) :=
       AA.substLFn (Rel.symm iterate_at_zero) ‹P init (next init)›
@@ -111,32 +115,30 @@ theorem iterate_chain
     have : P s[0] (iterate init next)[step 0] :=
       AA.substRFn (Rel.symm iterate_at_step) this
     have : P s[0] s[step 0] := this
+    have : s.linked P 0 := this
     exact this
   case step =>
-    intro (m : ℕ) (ih : P s[m] s[step m])
-    show P s[step m] s[step (step m)]
+    intro (m : ℕ)
+    show s.linked P (step m)
     have : P s[step m] (next s[step m]) := P_link s[step m]
     have : P s[step m] (next (iterate init next)[step m]) := this
     have : P s[step m] (iterate init next)[step (step m)] :=
       AA.substRFn (Rel.symm iterate_at_step) this
     have : P s[step m] s[step (step m)] := this
+    have : s.linked P (step m) := this
     exact this
 
-/-
-Sequence Elem map (f : Elem → ℕ) → Sequence ℕ
-P := λ e ne => e.val.1 > ne.val.1
-P' := λ x nx => x > nx
-f := λ e => e.val.1
-
-let s := iterate init next
-let P' := λ x nx => P (f x) (f nx)
-(n : ℕ) → P' s[n] s[n + 1]
-let s' := map f s
-(n : ℕ) → P s'[n] s'[n + 1]
--/
+theorem map_chain
+    {α : Type u} {β : Type v} {P : β → β → Prop} {s : Sequence α} {f : α → β}
+    (orig_chain : (n : ℕ) → P (f s[n]) (f s[step n]))
+    : (n : ℕ) → (s.map f).linked P n
+    :=
+  sorry
 
 /-- No natural number sequence is in infinite descent. -/
-theorem inf_desc_impossible {s : Sequence ℕ} : ¬InfiniteDescent s := by
+theorem inf_desc_impossible
+    {s : Sequence ℕ} : ¬(InfiniteDescent (ℕ := ℕ) s)
+    := by
   intro (_ : InfiniteDescent s)
   have desc_at (n : ℕ) : s[n] > s[step n] := ‹InfiniteDescent s› n
   show False
