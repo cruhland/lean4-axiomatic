@@ -14,6 +14,7 @@ namespace Lean4Axiomatic.Rational
 open Lean4Axiomatic.Logic (AP iff_subst_covar or_identR or_mapR)
 open Lean4Axiomatic.Metric (abs)
 open Lean4Axiomatic.Natural (pow_step pow_zero step)
+open Lean4Axiomatic.Relation.Equivalence (EqvOp)
 open Lean4Axiomatic.Sequence (InfiniteDescent)
 open Lean4Axiomatic.Signed (Positive sgn)
 
@@ -458,6 +459,7 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
 
   let P := λ (p : ℕ × ℕ) => p.1^2 ≃ 2 * p.2^2
   let Elem := { p : ℕ × ℕ // P p }
+  have : EqvOp Elem := sorry
   let init : Elem := Subtype.mk (p := P) (n, m) ‹n^2 ≃ 2 * m^2›
   let next : Elem → Elem := by
     intro (Subtype.mk (x, y) (_ : x^2 ≃ 2 * y^2))
@@ -476,7 +478,33 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     have : y^2 ≃ 2 * z^2 :=
       AA.cancelLC (x := 2) ‹2 ≄ 0› ‹2 * y^2 ≃ 2 * (2 * z^2)›
     exact Subtype.mk (y, z) ‹y^2 ≃ 2 * z^2›
+
+  have next_subst {e₁ e₂ : Elem} : e₁ ≃ e₂ → next e₁ ≃ next e₂ := by
+    revert e₁ e₂
+    intro (Subtype.mk (x₁, y₁) eqv₁); let e₁ := Subtype.mk (x₁, y₁) eqv₁
+    intro (Subtype.mk (x₂, y₂) eqv₂); let e₂ := Subtype.mk (x₂, y₂) eqv₂
+    intro (_ : e₁ ≃ e₂)
+    show next e₁ ≃ next e₂
+    admit
+  have : AA.Substitutive₁ next (· ≃ ·) (· ≃ ·) := sorry
+
   let pairs := Sequence.iterate init next
+  let proj_gt (e₁ e₂ : Elem) : Prop := e₁.val.1 > e₂.val.1
+  have : AA.Substitutive₂ proj_gt AA.tc (· ≃ ·) (· → ·) := sorry
+  have proj_gt_link (e : Elem) : proj_gt e (next e) := by
+    revert e
+    intro (Subtype.mk (x, y) eqv); let e := Subtype.mk (x, y) eqv
+    show proj_gt e (next e)
+
+    have (Subtype.mk (y', z) eqv_next) := next e
+    have : x > y' := sorry
+    have : (x, y).1 > (y', z).1 := this
+    have : e.val.1 > (next e).val.1 := sorry
+    have : proj_gt e (next e) := this
+    admit -- exact this
+
+  have : (n : ℕ) → proj_gt pairs[n] pairs[step n] :=
+    Sequence.iterate_chain proj_gt_link
 
   -- TODO: need a Sequence.map operation to get the result sequence
   -- Also need to preserve the ordering property between elements
