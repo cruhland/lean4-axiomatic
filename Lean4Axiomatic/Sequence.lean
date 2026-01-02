@@ -53,7 +53,7 @@ theorem at_substR
 
 /-- When each value in a sequence is less than the one preceding it. -/
 def InfiniteDescent {α : Type u} [LT α] (s : Sequence α) : Prop :=
-  {ℕ : Type} → [Natural ℕ] → (n : ℕ) → s[n] > s[n + 1]
+  {ℕ : Type} → [Natural ℕ] → (n : ℕ) → s[n] > s[step n]
 
 /-! ## Derived properties -/
 
@@ -75,28 +75,76 @@ def iterate {α : Sort u} (init : α) (next : α → α) : Sequence α :=
 def iterateProp
     {α : Type u} {P : α → α → Prop} (init : α) (next : α → α)
     : ((x : α) → P x (next x)) →
-      { s : Sequence α // {ℕ : Type} → [Natural ℕ] → (n : ℕ) → P s[n] s[n + 1] }
+      { s : Sequence α //
+        {ℕ : Type} → [Natural ℕ] → (n : ℕ) → P s[n] s[step n] }
     :=
   sorry
 
+theorem iterate_at_zero
+    {α : Type u} [EqvOp α] {init : α} {next : α → α}
+    : (iterate init next)[0] ≃ init
+    := sorry
+
+theorem iterate_at_step
+    {α : Type u} [EqvOp α] {init : α} {next : α → α} {n : ℕ}
+    : (iterate init next)[step n] ≃ next (iterate init next)[n]
+    := sorry
+
 theorem iterate_chain
-    {α : Type u} {P : α → α → Prop} {init : α} {next : α → α}
+    {α : Type u} [EqvOp α]
+    {P : α → α → Prop} [AA.Substitutive₂ P AA.tc (· ≃ ·) (· → ·)]
+    {init : α} {next : α → α} [AA.Substitutive₁ next (· ≃ ·) (· ≃ ·)]
     (P_link : (x : α) → P x (next x))
     : let s := iterate init next
-      (n : ℕ) → P s[n] s[n + 1]
+      (n : ℕ) → P s[n] s[step n]
     := by
-  admit
+  intro (s : Sequence α)
+  apply Natural.ind
+  case zero =>
+    show P s[0] s[step 0]
+    have : P init (next init) := P_link init
+    have : P (iterate init next)[0] (next init) :=
+      AA.substLFn (Rel.symm iterate_at_zero) ‹P init (next init)›
+    have : P s[0] (next init) := this
+    have : P s[0] (next (iterate init next)[0]) :=
+      AA.substRFn (AA.subst₁ (Rel.symm iterate_at_zero)) ‹P s[0] (next init)›
+    have : P s[0] (iterate init next)[step 0] :=
+      AA.substRFn (Rel.symm iterate_at_step) this
+    have : P s[0] s[step 0] := this
+    exact this
+  case step =>
+    intro (m : ℕ) (ih : P s[m] s[step m])
+    show P s[step m] s[step (step m)]
+    have : P s[step m] (next s[step m]) := P_link s[step m]
+    have : P s[step m] (next (iterate init next)[step m]) := this
+    have : P s[step m] (iterate init next)[step (step m)] :=
+      AA.substRFn (Rel.symm iterate_at_step) this
+    have : P s[step m] s[step (step m)] := this
+    exact this
+
+/-
+Sequence Elem map (f : Elem → ℕ) → Sequence ℕ
+P := λ e ne => e.val.1 > ne.val.1
+P' := λ x nx => x > nx
+f := λ e => e.val.1
+
+let s := iterate init next
+let P' := λ x nx => P (f x) (f nx)
+(n : ℕ) → P' s[n] s[n + 1]
+let s' := map f s
+(n : ℕ) → P s'[n] s'[n + 1]
+-/
 
 /-- No natural number sequence is in infinite descent. -/
 theorem inf_desc_impossible {s : Sequence ℕ} : ¬InfiniteDescent s := by
   intro (_ : InfiniteDescent s)
-  have desc_at (n : ℕ) : s[n] > s[n + 1] := ‹InfiniteDescent s› n
+  have desc_at (n : ℕ) : s[n] > s[step n] := ‹InfiniteDescent s› n
   show False
 
   have : s[0] > s[1] := calc
-    _ = s[0]     := rfl
-    _ > s[0 + 1] := desc_at 0
-    _ ≃ s[1]     := by srw [Natural.zero_add]
+    _ = s[0]      := rfl
+    _ > s[step 0] := desc_at 0
+    _ ≃ s[1]      := by srw [←Natural.literal_step]
 
   have : s[0] ≤ s[1] :=
     have lower_bound_at_index : (k n : ℕ) → s[n] ≥ k := by
@@ -109,9 +157,9 @@ theorem inf_desc_impossible {s : Sequence ℕ} : ¬InfiniteDescent s := by
         intro (m : ℕ) (ih : (n : ℕ) → s[n] ≥ m) (n : ℕ)
         show s[n] ≥ step m
         have : s[n] > m := calc
-          _ = s[n]     := rfl
-          _ > s[n + 1] := desc_at n
-          _ ≥ m        := ih (n + 1)
+          _ = s[n]      := rfl
+          _ > s[step n] := desc_at n
+          _ ≥ m         := ih (step n)
         have : s[n] ≥ step m := Natural.lt_step_le.mp ‹s[n] > m›
         exact this
     show s[0] ≤ s[1] from lower_bound_at_index s[0] 1

@@ -463,6 +463,7 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     intro (Subtype.mk (x, y) (_ : x^2 ≃ 2 * y^2))
     show { p : ℕ × ℕ // p.1^2 ≃ 2 * p.2^2 }
 
+    -- TODO: make some parity lemmas and use them here
     let (Subtype.mk (z : ℕ) (_ : x ≃ 2 * z)) := sorry
     have : 2 * y^2 ≃ 2 * (2 * z^2) := calc
       _ = 2 * y^2       := rfl
@@ -477,6 +478,8 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     exact Subtype.mk (y, z) ‹y^2 ≃ 2 * z^2›
   let pairs := Sequence.iterate init next
 
+  -- TODO: need a Sequence.map operation to get the result sequence
+  -- Also need to preserve the ordering property between elements
   /-
   Need to have solns[x]^2 = 2 * solns[x + 1]^2
   Can we solve for solns[x + 1]?
@@ -486,7 +489,7 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
   -/
   let solns : Sequence ℕ := sorry
   have : InfiniteDescent solns :=
-    have desc {ℕ' : Type} [Natural ℕ'] (x : ℕ') : solns[x] > solns[x + 1] :=
+    have desc {ℕ' : Type} [Natural ℕ'] (x : ℕ') : solns[x] > solns[step x] :=
       sorry
     show InfiniteDescent solns from desc
 
