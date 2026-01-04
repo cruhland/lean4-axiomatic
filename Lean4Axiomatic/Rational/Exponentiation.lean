@@ -444,6 +444,11 @@ theorem pow_preserves_ge_nonneg
     have : p^n ≥ q^n := ge_cases.mpr (Or.inr ‹p^n ≃ q^n›)
     exact this
 
+def parity
+    (n : ℕ)
+    : AA.ExactlyOneOfTwo₁ { m : ℕ // n ≃ 2 * m } { m : ℕ // n ≃ 2 * m + 1 }
+    := sorry
+
 /-- There's no rational number whose square is two. -/
 theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
   intro (_ : p^2 ≃ 2)
@@ -465,8 +470,30 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     intro (Subtype.mk (x, y) (_ : x^2 ≃ 2 * y^2))
     show { p : ℕ × ℕ // p.1^2 ≃ 2 * p.2^2 }
 
-    -- TODO: make some parity lemmas and use them here
-    let (Subtype.mk (z : ℕ) (_ : x ≃ 2 * z)) := sorry
+    have (Prod.mk even_or_odd _) := parity x
+
+    have (Subtype.mk (z : ℕ) (_ : x ≃ 2 * z)) := match even_or_odd with
+    | .inl even => even
+    | .inr (Subtype.mk (z : ℕ) (_ : x ≃ 2 * z + 1)) =>
+      have : x^2 ≃ 2 * (2 * z^2 + 2 * z) + 1 := calc
+        _ = x^2                           := rfl
+        _ ≃ (2*z + 1)^2                   := by srw [‹x ≃ 2 * z + 1›]
+        _ ≃ (2*z)^2 + 2 * (2*z) * 1 + 1^2 := Natural.binom_sqr
+        _ ≃ (2*z)^2 + 2 * (2*z) + 1^2     := by srw [Natural.mul_identR]
+        _ ≃ (2*z)^2 + 2 * (2*z) + 1       := by srw [Natural.pow_absorbL]
+        _ ≃ 2^2 * z^2 + 2 * (2*z) + 1     := by srw [Natural.pow_distribR_mul]
+        _ ≃ 2 * 2*z^2 + 2 * (2*z) + 1     := by srw [Natural.pow_two]
+        _ ≃ 2 * (2*z^2) + 2 * (2*z) + 1   := by srw [AA.assoc]
+        _ ≃ 2 * (2*z^2 + 2*z) + 1         := by srw [←Natural.mul_distribL_add]
+      have odd : { w : ℕ // x^2 ≃ 2 * w + 1 } :=
+        Subtype.mk (2 * z^2 + 2 * z) ‹x^2 ≃ 2 * (2 * z^2 + 2 * z) + 1›
+      have even : { w : ℕ // x^2 ≃ 2 * w } := Subtype.mk (y^2) ‹x^2 ≃ 2 * y^2›
+      have even_and_odd := Prod.mk even odd
+
+      have (Prod.mk _ empty_from_even_and_odd) := parity (x^2)
+      have : Empty := empty_from_even_and_odd even_and_odd
+      show { z : ℕ // x ≃ 2 * z } from Empty.elim ‹Empty›
+
     have : 2 * y^2 ≃ 2 * (2 * z^2) := calc
       _ = 2 * y^2       := rfl
       _ ≃ x^2           := Rel.symm ‹x^2 ≃ 2 * y^2›
@@ -486,38 +513,42 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     intro (_ : e₁ ≃ e₂)
     show next e₁ ≃ next e₂
     admit
-  have : AA.Substitutive₁ next (· ≃ ·) (· ≃ ·) := sorry
+  have : AA.Substitutive₁ next (· ≃ ·) (· ≃ ·) := {
+    subst₁ := next_subst
+  }
 
   let pairs := Sequence.iterate init next
   let proj_gt (e₁ e₂ : Elem) : Prop := e₁.val.1 > e₂.val.1
-  have : AA.Substitutive₂ proj_gt AA.tc (· ≃ ·) (· → ·) := sorry
+  have : AA.Substitutive₂ proj_gt AA.tc (· ≃ ·) (· → ·) := {
+    substitutiveL := sorry
+    substitutiveR := sorry
+  }
   have proj_gt_link (e : Elem) : proj_gt e (next e) := by
     revert e
     intro (Subtype.mk (x, y) eqv); let e := Subtype.mk (x, y) eqv
     show proj_gt e (next e)
 
-    /-
-    Need to have solns[x]^2 = 2 * solns[x + 1]^2
-    Can we solve for solns[x + 1]?
-    solns[x + 1]^2 = solns[x]^2 / 2
-    so solns[x + 1]^2 < solns[x]^2
-    since they are both positive, solns[x + 1] < solns[x]
-    -/
-
-    have (Subtype.mk (y', z) eqv_next) := next e
+    let next_e := next e
+    let y' := next_e.val.1
+    let z := next_e.val.2
+    have : y'^2 ≃ 2 * z^2 := next_e.property
+    -- x^2 ≃ 2 * y^2
+    -- x^2 = y^2 + y^2
+    -- and y^2 > 0
+    -- thus x^2 > y^2
+    -- and because x, y > 0
+    -- x > y
     have : x > y' := sorry
     have : (x, y).1 > (y', z).1 := this
-    have : e.val.1 > (next e).val.1 := sorry
+    have : e.val.1 > (next e).val.1 := this
     have : proj_gt e (next e) := this
-    admit -- exact this
-
-  have : (n : ℕ) → proj_gt pairs[n] pairs[step n] :=
-    Sequence.iterate_chain proj_gt_link
+    exact this
 
   let proj (e : Elem) : ℕ := e.val.1
   let solns := pairs.map proj
   have : InfiniteDescent solns :=
-    have chain : (x : ℕ) → proj pairs[x] > proj pairs[step x] := sorry
+    have chain : (x : ℕ) → proj pairs[x] > proj pairs[step x] :=
+      Sequence.iterate_chain proj_gt_link
     have desc : (x : ℕ) → solns[x] > solns[step x] :=
       Sequence.map_chain chain
     show InfiniteDescent solns from desc

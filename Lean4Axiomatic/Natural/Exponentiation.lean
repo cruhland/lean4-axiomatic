@@ -433,4 +433,20 @@ theorem pow_flatten
 
 end general
 
+variable [Addition ℕ] [Multiplication ℕ] [Exponentiation ℕ ℕ]
+
+theorem binom_sqr {a b : ℕ} : (a + b)^2 ≃ a^2 + 2 * a * b + b^2 := calc
+  _ = (a + b)^2                         := rfl
+  _ ≃ (a + b) * (a + b)                 := pow_two
+  _ ≃ a * (a + b) + b * (a + b)         := AA.distribR
+  _ ≃ (a * a + a * b) + b * (a + b)     := by srw [Natural.mul_distribL_add]
+  _ ≃ (a * a + a * b) + (b * a + b * b) := by srw [Natural.mul_distribL_add]
+  _ ≃ (a * a + a * b) + (a * b + b * b) := by srw [AA.comm]
+  _ ≃ ((a * a + a * b) + a * b) + b * b := Rel.symm AA.assoc
+  _ ≃ a * a + (a * b + a * b) + b * b   := by srw [AA.assoc]
+  _ ≃ a * a + 2 * (a * b) + b * b       := by srw [←two_mul]
+  _ ≃ a * a + 2 * a * b + b * b         := by srw [←AA.assoc]
+  _ ≃ a^2 + 2 * a * b + b * b           := by srw [←pow_two]
+  _ ≃ a^2 + 2 * a * b + b^2             := by srw [←pow_two]
+
 end Lean4Axiomatic.Natural

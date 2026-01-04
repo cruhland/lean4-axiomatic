@@ -104,6 +104,8 @@ theorem mul_step {n m : ℕ} : n * step m ≃ n * m + n := by
       step (step n * m + n)  ≃ _ := Rel.symm add_step
       step n * m + step n    ≃ _ := Rel.refl
 
+theorem two_mul {n : ℕ} : 2 * n ≃ n + n := sorry
+
 /--
 The order of the factors in a product doesn't matter.
 

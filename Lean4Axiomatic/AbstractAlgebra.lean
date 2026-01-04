@@ -597,6 +597,8 @@ def distributiveR_from_distributiveL
 /-- Expresses that one of two propositions is true, but not both. -/
 def ExactlyOneOfTwo (α β : Prop) : Prop := (α ∨ β) ∧ ¬ (α ∧ β)
 
+def ExactlyOneOfTwo₁ (α β : Type) : Type := (α ⊕ β) × (α × β → Empty)
+
 /--
 Inhabited when at least one of its three propositions is true; a three-way
 logical OR.
