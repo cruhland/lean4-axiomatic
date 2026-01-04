@@ -461,14 +461,16 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
   let n : ℕ := sorry -- abs a
   let m : ℕ := sorry -- abs b
   have : n^2 ≃ 2 * m^2 := sorry
+  have : m > 0 := sorry
 
-  let P := λ (p : ℕ × ℕ) => p.1^2 ≃ 2 * p.2^2
+  let P := λ (p : ℕ × ℕ) => p.1^2 ≃ 2 * p.2^2 ∧ p.2 > 0
   let Elem := { p : ℕ × ℕ // P p }
   have : EqvOp Elem := sorry
-  let init : Elem := Subtype.mk (p := P) (n, m) ‹n^2 ≃ 2 * m^2›
+  let init : Elem :=
+    Subtype.mk (p := P) (n, m) (And.intro ‹n^2 ≃ 2 * m^2› ‹m > 0›)
   let next : Elem → Elem := by
-    intro (Subtype.mk (x, y) (_ : x^2 ≃ 2 * y^2))
-    show { p : ℕ × ℕ // p.1^2 ≃ 2 * p.2^2 }
+    intro (Subtype.mk (x, y) (And.intro (_ : x^2 ≃ 2 * y^2) (_ : y > 0)))
+    show { p : ℕ × ℕ // p.1^2 ≃ 2 * p.2^2 ∧ p.2 > 0 }
 
     have (Prod.mk even_or_odd _) := parity x
 
@@ -494,6 +496,7 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
       have : Empty := empty_from_even_and_odd even_and_odd
       show { z : ℕ // x ≃ 2 * z } from Empty.elim ‹Empty›
 
+    have : z > 0 := sorry
     have : 2 * y^2 ≃ 2 * (2 * z^2) := calc
       _ = 2 * y^2       := rfl
       _ ≃ x^2           := Rel.symm ‹x^2 ≃ 2 * y^2›
@@ -504,7 +507,7 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     have : 2 ≄ 0 := Natural.two_neqv_zero
     have : y^2 ≃ 2 * z^2 :=
       AA.cancelLC (x := 2) ‹2 ≄ 0› ‹2 * y^2 ≃ 2 * (2 * z^2)›
-    exact Subtype.mk (y, z) ‹y^2 ≃ 2 * z^2›
+    exact Subtype.mk (y, z) (And.intro ‹y^2 ≃ 2 * z^2› ‹z > 0›)
 
   have next_subst {e₁ e₂ : Elem} : e₁ ≃ e₂ → next e₁ ≃ next e₂ := by
     revert e₁ e₂
@@ -528,17 +531,46 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     intro (Subtype.mk (x, y) eqv); let e := Subtype.mk (x, y) eqv
     show proj_gt e (next e)
 
+    have (And.intro (_ : x^2 ≃ 2 * y^2) (_ : y > 0)) := eqv
     let next_e := next e
     let y' := next_e.val.1
     let z := next_e.val.2
-    have : y'^2 ≃ 2 * z^2 := next_e.property
-    -- x^2 ≃ 2 * y^2
-    -- x^2 = y^2 + y^2
-    -- and y^2 > 0
-    -- thus x^2 > y^2
-    -- and because x, y > 0
-    -- x > y
-    have : x > y' := sorry
+    have (And.intro (_ : y'^2 ≃ 2 * z^2) (_ : z > 0)) := next_e.property
+    have : y ≃ y' := sorry
+    have : Positive y := Natural.lt_zero_pos.mpr ‹y > 0›
+    have : y^2 > 0 := calc
+      _ = y^2 := rfl
+      _ ≃ y * y := Natural.pow_two
+      _ > 0 * y := by srw [‹y > 0›]
+      _ ≃ 0 := AA.absorbL
+    have : Positive (y^2) := Natural.lt_zero_pos.mpr ‹y^2 > 0›
+    have : x^2 ≃ y^2 + y^2 := calc
+      _ = x^2       := rfl
+      _ ≃ 2 * y^2   := ‹x^2 ≃ 2 * y^2›
+      _ ≃ y^2 + y^2 := Natural.two_mul
+    have : ∃ (k : ℕ), Positive k ∧ x^2 ≃ y^2 + k :=
+      Exists.intro (y^2) (And.intro ‹Positive (y^2)› ‹x^2 ≃ y^2 + y^2›)
+    have : x^2 > y^2 := Natural.lt_defn_add.mpr this
+    have : (x:ℤ)^2 > (y:ℤ)^2 := calc
+      _ = (x:ℤ)^2     := rfl
+      _ ≃ ((x^2:ℕ):ℤ) := Rel.symm Integer.pow_compat_nat
+      _ > ((y^2:ℕ):ℤ) := Integer.from_natural_respects_lt.mp ‹x^2 > y^2›
+      _ ≃ (y:ℤ)^2     := Integer.pow_compat_nat
+    have : sgn ((x:ℤ)^2 - (y:ℤ)^2) ≃ 1 := Integer.gt_sgn.mp ‹(x:ℤ)^2 > (y:ℤ)^2›
+    have : (x:ℤ) ≥ 0 := Integer.from_natural_respects_le.mp Natural.ge_zero
+    have : (y:ℤ) ≥ 0 := Integer.from_natural_respects_le.mp Natural.ge_zero
+    have : (2:ℕ) ≥ 1 := Natural.le_split.mpr (Or.inl Natural.two_gt_one)
+    have : sgn ((x:ℤ) - y) ≃ sgn ((x:ℤ)^2 - y^2) :=
+      Rel.symm $ Integer.sgn_diff_pow_pos ‹(x:ℤ) ≥ 0› ‹(y:ℤ) ≥ 0› ‹2 ≥ 1›
+    have : sgn ((x:ℤ) - y) ≃ 1 := calc
+      _ = sgn ((x:ℤ) - y)     := rfl
+      _ ≃ sgn ((x:ℤ)^2 - y^2) := ‹sgn ((x:ℤ) - y) ≃ sgn ((x:ℤ)^2 - y^2)›
+      _ ≃ 1                   := ‹sgn ((x:ℤ)^2 - (y:ℤ)^2) ≃ 1›
+    have : (x:ℤ) > y := Integer.gt_sgn.mpr ‹sgn ((x:ℤ) - y) ≃ 1›
+    have : x > y' := calc
+      _ = x  := rfl
+      _ > y  := Integer.from_natural_respects_lt.mpr ‹(x:ℤ) > y›
+      _ ≃ y' := ‹y ≃ y'›
     have : (x, y).1 > (y', z).1 := this
     have : e.val.1 > (next e).val.1 := this
     have : proj_gt e (next e) := this

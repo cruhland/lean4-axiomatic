@@ -20,6 +20,8 @@ variable
   {ℕ ℤ : Type} [Natural ℕ] [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ]
   [Natural.Exponentiation ℕ ℤ]
 
+theorem pow_compat_nat {n m : ℕ} : ((m^n:ℕ):ℤ) ≃ (m:ℤ)^n := sorry
+
 /--
 Raising an integer to _any_ positive natural number power has no effect if
 just squaring the integer has no effect.

@@ -429,6 +429,10 @@ instance trans_gt_eqv_gt_inst : Trans (α := ℕ) (· > ·) (· ≃ ·) (· > ·
   trans := trans_gt_eqv_gt
 }
 
+instance trans_eqv_gt_gt_inst : Trans (α := ℕ) (· ≃ ·) (· > ·) (· > ·) := {
+  trans := sorry
+}
+
 def lt_substL_eqv
     : AA.SubstitutiveOn Hand.L (α := ℕ) (· < ·) AA.tc (· ≃ ·) (· → ·)
     := {
