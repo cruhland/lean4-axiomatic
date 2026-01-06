@@ -449,6 +449,22 @@ def parity
     : AA.ExactlyOneOfTwo₁ { m : ℕ // n ≃ 2 * m } { m : ℕ // n ≃ 2 * m + 1 }
     := sorry
 
+instance subtype_eqvop_inst
+    {α : Type} [EqvOp α] {P : α → Prop} : EqvOp (Subtype P)
+    := {
+  tildeDash := sorry
+  refl := sorry
+  symm := sorry
+  trans := sorry
+}
+
+instance subtype_subst_inst
+    {α : Type} [EqvOp α] {P : α → Prop}
+    : AA.Substitutive₁ (α := Subtype P) (·.val) (· ≃ ·) (· ≃ ·)
+    := {
+  subst₁ := sorry
+}
+
 /-- There's no rational number whose square is two. -/
 theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
   intro (_ : p^2 ≃ 2)
@@ -468,13 +484,16 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
   have : EqvOp Elem := sorry
   let init : Elem :=
     Subtype.mk (p := P) (n, m) (And.intro ‹n^2 ≃ 2 * m^2› ‹m > 0›)
-  let next : Elem → Elem := by
-    intro (Subtype.mk (x, y) (And.intro (_ : x^2 ≃ 2 * y^2) (_ : y > 0)))
+  let next (e : Elem) : Elem := by
     show { p : ℕ × ℕ // p.1^2 ≃ 2 * p.2^2 ∧ p.2 > 0 }
 
-    have (Prod.mk even_or_odd _) := parity x
+    let x := e.val.1; let y := e.val.2
+    have : x^2 ≃ 2 * y^2 := e.property.1
+    have : y > 0 := e.property.2
 
-    have (Subtype.mk (z : ℕ) (_ : x ≃ 2 * z)) := match even_or_odd with
+    have even_or_odd := (parity x).1
+
+    have x_even := match even_or_odd with
     | .inl even => even
     | .inr (Subtype.mk (z : ℕ) (_ : x ≃ 2 * z + 1)) =>
       have : x^2 ≃ 2 * (2 * z^2 + 2 * z) + 1 := calc
@@ -496,6 +515,8 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
       have : Empty := empty_from_even_and_odd even_and_odd
       show { z : ℕ // x ≃ 2 * z } from Empty.elim ‹Empty›
 
+    let z := x_even.val
+    have : x ≃ 2 * z := x_even.property
     have : z > 0 := sorry
     have : 2 * y^2 ≃ 2 * (2 * z^2) := calc
       _ = 2 * y^2       := rfl
@@ -522,10 +543,21 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
 
   let pairs := Sequence.iterate init next
   let proj_gt (e₁ e₂ : Elem) : Prop := e₁.val.1 > e₂.val.1
-  have : AA.Substitutive₂ proj_gt AA.tc (· ≃ ·) (· → ·) := {
-    substitutiveL := sorry
-    substitutiveR := sorry
-  }
+  have : AA.Substitutive₂ proj_gt AA.tc (· ≃ ·) (· → ·) :=
+    have substL {x₁ x₂ y : Elem} : x₁ ≃ x₂ → proj_gt x₁ y → proj_gt x₂ y := by
+      intro (_ : x₁ ≃ x₂) (_ : proj_gt x₁ y)
+      show proj_gt x₂ y
+
+      have : x₂.val.1 > y.val.1 := calc
+        _ = x₂.val.1 := rfl
+        _ ≃ x₁.val.1 := sorry -- TODO: import Prod EqvOp? can it use srw?
+        _ > y.val.1  := ‹proj_gt x₁ y›
+      have : proj_gt x₂ y := ‹x₂.val.1 > y.val.1›
+      exact this
+    {
+      substitutiveL := sorry
+      substitutiveR := sorry
+    }
   have proj_gt_link (e : Elem) : proj_gt e (next e) := by
     revert e
     intro (Subtype.mk (x, y) eqv); let e := Subtype.mk (x, y) eqv
@@ -536,7 +568,13 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     let y' := next_e.val.1
     let z := next_e.val.2
     have (And.intro (_ : y'^2 ≃ 2 * z^2) (_ : z > 0)) := next_e.property
-    have : y ≃ y' := sorry
+    have : y' = y := calc
+      _ = y' := rfl
+      _ = next_e.val.1 := rfl
+      _ = (next e).val.1 := rfl
+      _ = (next (Subtype.mk (x, y) eqv)).val.1 := rfl
+      _ = e.val.2 := rfl
+      _ = y := rfl
     have : Positive y := Natural.lt_zero_pos.mpr ‹y > 0›
     have : y^2 > 0 := calc
       _ = y^2 := rfl
@@ -570,7 +608,7 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     have : x > y' := calc
       _ = x  := rfl
       _ > y  := Integer.from_natural_respects_lt.mpr ‹(x:ℤ) > y›
-      _ ≃ y' := ‹y ≃ y'›
+      _ = y' := ‹y' = y›.symm
     have : (x, y).1 > (y', z).1 := this
     have : e.val.1 > (next e).val.1 := this
     have : proj_gt e (next e) := this
