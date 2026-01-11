@@ -560,9 +560,20 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
         _ > y.val.1  := ‹proj_gt x₁ y›
       have : proj_gt x₂ y := ‹x₂.val.1 > y.val.1›
       exact this
+
+    have substR {x₁ x₂ y : Elem} : x₁ ≃ x₂ → proj_gt y x₁ → proj_gt y x₂ := by
+      intro (_ : x₁ ≃ x₂) (_ : proj_gt y x₁)
+      show proj_gt y x₂
+
+      have : y.val.1 > x₂.val.1 := calc
+        _ = y.val.1  := rfl
+        _ > x₁.val.1 := ‹proj_gt y x₁›
+        _ ≃ x₂.val.1 := by srw [‹x₁ ≃ x₂›]
+      have : proj_gt y x₂ := ‹y.val.1 > x₂.val.1›
+      exact this
     {
-      substitutiveL := sorry
-      substitutiveR := sorry
+      substitutiveL := { subst₂ := λ _ => substL }
+      substitutiveR := { subst₂ := λ _ => substR }
     }
   have proj_gt_link (e : Elem) : proj_gt e (next e) := by
     revert e
