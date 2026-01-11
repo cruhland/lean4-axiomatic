@@ -793,6 +793,9 @@ instance substitutive
   substitutiveR := substitutiveR
 }
 
+@[gcongr]
+theorem fst_subst {p₁ p₂ : α × β} : p₁ ≃ p₂ → p₁.fst ≃ p₂.fst := sorry
+
 end Prod
 
 /-!

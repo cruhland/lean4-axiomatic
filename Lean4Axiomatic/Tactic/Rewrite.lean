@@ -23,7 +23,7 @@ open Lean.Meta (
 )
 open Lean.MVarId (gcongrForward)
 open Lean.Parser.Tactic (rwRuleSeq)
-open Mathlib.Tactic.GCongr (gcongrExt gcongrForwardDischarger)
+open Mathlib.Tactic.GCongr (gcongrExt gcongrForwardDischarger GCongrKey)
 open Mathlib.Tactic.GCongr renaming getRel → parseGCongrRel
 
 /--
@@ -67,6 +67,13 @@ where
 
       -- Continue trying to extract args from `fnExpr`
       aux fnExpr (args ++ outerArgs)
+
+private def gcongrKeyToString (key : GCongrKey) : String :=
+  s!"\{relName={key.relName}, head={key.head}, arity={key.arity}}"
+
+instance gcongr_key_to_string_inst : ToString GCongrKey := {
+  toString := gcongrKeyToString
+}
 
 /--
 Solve a goal via a congruence argument: show that the goal's type follows from
@@ -134,7 +141,9 @@ private partial def simpleCongruence
     let key :=
       { relName := goalRelName, head := lhsFnName, arity := lhsArgs.size }
     let gcongrLemmasMap := gcongrExt.getState (← Lean.MonadEnv.getEnv)
-    pure $ gcongrLemmasMap.getD key []
+    let lemmas := gcongrLemmasMap.getD key []
+    if lemmas.isEmpty then throwError "no lemmas for key: {key}"
+    pure lemmas
 
   /- Commit to the first candidate that closes the goal. -/
   let successfulLemmaDataOpt ← withReducibleAndInstances do

@@ -458,6 +458,13 @@ instance subtype_eqvop_inst
   trans := sorry
 }
 
+@[gcongr]
+theorem subtype_val_subst
+    {α : Type} [EqvOp α] {P : α → Prop} {s₁ s₂ : Subtype P}
+    : s₁ ≃ s₂ → s₁.val ≃ s₂.val
+    :=
+  sorry
+
 instance subtype_subst_inst
     {α : Type} [EqvOp α] {P : α → Prop}
     : AA.Substitutive₁ (α := Subtype P) (·.val) (· ≃ ·) (· ≃ ·)
@@ -481,7 +488,6 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
 
   let P := λ (p : ℕ × ℕ) => p.1^2 ≃ 2 * p.2^2 ∧ p.2 > 0
   let Elem := { p : ℕ × ℕ // P p }
-  have : EqvOp Elem := sorry
   let init : Elem :=
     Subtype.mk (p := P) (n, m) (And.intro ‹n^2 ≃ 2 * m^2› ‹m > 0›)
   let next (e : Elem) : Elem := by
@@ -550,7 +556,7 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
 
       have : x₂.val.1 > y.val.1 := calc
         _ = x₂.val.1 := rfl
-        _ ≃ x₁.val.1 := sorry -- TODO: import Prod EqvOp? can it use srw?
+        _ ≃ x₁.val.1 := by srw [←‹x₁ ≃ x₂›]
         _ > y.val.1  := ‹proj_gt x₁ y›
       have : proj_gt x₂ y := ‹x₂.val.1 > y.val.1›
       exact this
