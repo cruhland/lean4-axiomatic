@@ -444,18 +444,13 @@ theorem pow_preserves_ge_nonneg
     have : p^n ≥ q^n := ge_cases.mpr (Or.inr ‹p^n ≃ q^n›)
     exact this
 
-def parity
-    (n : ℕ)
-    : AA.ExactlyOneOfTwo₁ { m : ℕ // n ≃ 2 * m } { m : ℕ // n ≃ 2 * m + 1 }
-    := sorry
-
 instance subtype_eqvop_inst
     {α : Type} [EqvOp α] {P : α → Prop} : EqvOp (Subtype P)
     := {
-  tildeDash := sorry
-  refl := sorry
-  symm := sorry
-  trans := sorry
+  tildeDash := λ s₁ s₂ => s₁.val ≃ s₂.val
+  refl := Rel.refl
+  symm := Rel.symm
+  trans := Rel.trans
 }
 
 @[gcongr]
@@ -463,14 +458,58 @@ theorem subtype_val_subst
     {α : Type} [EqvOp α] {P : α → Prop} {s₁ s₂ : Subtype P}
     : s₁ ≃ s₂ → s₁.val ≃ s₂.val
     :=
-  sorry
+  id
 
 instance subtype_subst_inst
     {α : Type} [EqvOp α] {P : α → Prop}
     : AA.Substitutive₁ (α := Subtype P) (·.val) (· ≃ ·) (· ≃ ·)
     := {
-  subst₁ := sorry
+  subst₁ := subtype_val_subst
 }
+
+@[reducible]
+def Even (n : ℕ) : Type := { m : ℕ // n ≃ 2 * m }
+
+@[reducible]
+def Odd (n : ℕ) : Type := { m : ℕ // n ≃ 2 * m + 1 }
+
+@[gcongr]
+def even_subst {n₁ n₂ : ℕ} : n₁ ≃ n₂ → Even n₁ → Even n₂ := sorry
+
+theorem even_val_subst
+    {n₁ n₂ : ℕ} {e₁ : Even n₁} {e₂ : Even n₂} : n₁ ≃ n₂ → e₁.val ≃ e₂.val
+    := sorry
+
+def parity (n : ℕ) : AA.ExactlyOneOfTwo₁ (Even n) (Odd n) := sorry
+
+def even_from_sqr_even {n : ℕ} : Even (n^2) → Even n := by
+  intro (sqr_even : Even (n^2))
+  show Even n
+
+  have even_or_odd := (parity n).1
+
+  match even_or_odd with
+  | .inl even =>
+    exact even
+  | .inr (Subtype.mk (z : ℕ) (_ : n ≃ 2 * z + 1)) =>
+    have : n^2 ≃ 2 * (2 * z^2 + 2 * z) + 1 := calc
+      _ = n^2                           := rfl
+      _ ≃ (2*z + 1)^2                   := by srw [‹n ≃ 2 * z + 1›]
+      _ ≃ (2*z)^2 + 2 * (2*z) * 1 + 1^2 := Natural.binom_sqr
+      _ ≃ (2*z)^2 + 2 * (2*z) + 1^2     := by srw [Natural.mul_identR]
+      _ ≃ (2*z)^2 + 2 * (2*z) + 1       := by srw [Natural.pow_absorbL]
+      _ ≃ 2^2 * z^2 + 2 * (2*z) + 1     := by srw [Natural.pow_distribR_mul]
+      _ ≃ 2 * 2*z^2 + 2 * (2*z) + 1     := by srw [Natural.pow_two]
+      _ ≃ 2 * (2*z^2) + 2 * (2*z) + 1   := by srw [AA.assoc]
+      _ ≃ 2 * (2*z^2 + 2*z) + 1         := by srw [←Natural.mul_distribL_add]
+    have sqr_odd : Odd (n^2) :=
+      Subtype.mk (2 * z^2 + 2 * z) ‹n^2 ≃ 2 * (2 * z^2 + 2 * z) + 1›
+    have even_and_odd := Prod.mk sqr_even sqr_odd
+
+    have (Prod.mk _ empty_from_even_and_odd) := parity (n^2)
+    have : Empty := empty_from_even_and_odd even_and_odd
+    have : Even n := Empty.elim ‹Empty›
+    exact this
 
 /-- There's no rational number whose square is two. -/
 theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
@@ -497,32 +536,11 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     have : x^2 ≃ 2 * y^2 := e.property.1
     have : y > 0 := e.property.2
 
-    have even_or_odd := (parity x).1
+    have : Even (x^2) := Subtype.mk (y^2) ‹x^2 ≃ 2 * y^2›
+    have : Even x := even_from_sqr_even ‹Even (x^2)›
 
-    have x_even := match even_or_odd with
-    | .inl even => even
-    | .inr (Subtype.mk (z : ℕ) (_ : x ≃ 2 * z + 1)) =>
-      have : x^2 ≃ 2 * (2 * z^2 + 2 * z) + 1 := calc
-        _ = x^2                           := rfl
-        _ ≃ (2*z + 1)^2                   := by srw [‹x ≃ 2 * z + 1›]
-        _ ≃ (2*z)^2 + 2 * (2*z) * 1 + 1^2 := Natural.binom_sqr
-        _ ≃ (2*z)^2 + 2 * (2*z) + 1^2     := by srw [Natural.mul_identR]
-        _ ≃ (2*z)^2 + 2 * (2*z) + 1       := by srw [Natural.pow_absorbL]
-        _ ≃ 2^2 * z^2 + 2 * (2*z) + 1     := by srw [Natural.pow_distribR_mul]
-        _ ≃ 2 * 2*z^2 + 2 * (2*z) + 1     := by srw [Natural.pow_two]
-        _ ≃ 2 * (2*z^2) + 2 * (2*z) + 1   := by srw [AA.assoc]
-        _ ≃ 2 * (2*z^2 + 2*z) + 1         := by srw [←Natural.mul_distribL_add]
-      have odd : { w : ℕ // x^2 ≃ 2 * w + 1 } :=
-        Subtype.mk (2 * z^2 + 2 * z) ‹x^2 ≃ 2 * (2 * z^2 + 2 * z) + 1›
-      have even : { w : ℕ // x^2 ≃ 2 * w } := Subtype.mk (y^2) ‹x^2 ≃ 2 * y^2›
-      have even_and_odd := Prod.mk even odd
-
-      have (Prod.mk _ empty_from_even_and_odd) := parity (x^2)
-      have : Empty := empty_from_even_and_odd even_and_odd
-      show { z : ℕ // x ≃ 2 * z } from Empty.elim ‹Empty›
-
-    let z := x_even.val
-    have : x ≃ 2 * z := x_even.property
+    let z := ‹Even x›.val
+    have : x ≃ 2 * z := ‹Even x›.property
     have : z > 0 := sorry
     have : 2 * y^2 ≃ 2 * (2 * z^2) := calc
       _ = 2 * y^2       := rfl
@@ -542,7 +560,25 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     intro (Subtype.mk (x₂, y₂) eqv₂); let e₂ := Subtype.mk (x₂, y₂) eqv₂
     intro (_ : e₁ ≃ e₂)
     show next e₁ ≃ next e₂
-    admit
+
+    have : (x₁, y₁) ≃ (x₂, y₂) := ‹e₁ ≃ e₂›
+    have (And.intro (_ : x₁ ≃ x₂) (_ : y₁ ≃ y₂)) :=
+      Relation.Equivalence.Impl.Prod.eqv_defn.mp ‹(x₁, y₁) ≃ (x₂, y₂)›
+    let x₁_sqr_even : Even (x₁^2) := Subtype.mk (y₁^2) eqv₁.1
+    let x₂_sqr_even : Even (x₂^2) := Subtype.mk (y₂^2) eqv₂.1
+    let ex₁ : Even x₁ := even_from_sqr_even ‹Even (x₁^2)›
+    let ex₂ : Even x₂ := even_from_sqr_even ‹Even (x₂^2)›
+    have : ex₁.val ≃ ex₂.val := even_val_subst ‹x₁ ≃ x₂›
+    have : (next e₁).val ≃ (next e₂).val := calc
+      _ = (next e₁).val                         := rfl
+      _ = (next (Subtype.mk (x₁, y₁) eqv₁)).val := rfl
+      _ = (y₁, ex₁.val)                         := rfl
+      _ ≃ (y₂, ex₁.val)                         := by srw [‹y₁ ≃ y₂›]
+      _ ≃ (y₂, ex₂.val)                         := by srw [‹ex₁.val ≃ ex₂.val›]
+      _ = (next (Subtype.mk (x₂, y₂) eqv₂)).val := rfl
+      _ = (next e₂).val                         := rfl
+    have : next e₁ ≃ next e₂ := ‹(next e₁).val ≃ (next e₂).val›
+    exact this
   have : AA.Substitutive₁ next (· ≃ ·) (· ≃ ·) := {
     subst₁ := next_subst
   }
