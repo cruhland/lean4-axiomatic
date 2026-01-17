@@ -449,4 +449,11 @@ theorem binom_sqr {a b : ℕ} : (a + b)^2 ≃ a^2 + 2 * a * b + b^2 := calc
   _ ≃ a^2 + 2 * a * b + b * b           := by srw [←pow_two]
   _ ≃ a^2 + 2 * a * b + b^2             := by srw [←pow_two]
 
+variable [Order ℕ]
+
+-- Don't prove these until you're sure you can't get by working with ints
+theorem pow_preserves_gt {n m k : ℕ} : k ≥ 1 → n > m → n^k > m^k := sorry
+
+theorem pow_cancel_gt {n m k : ℕ} : k ≥ 1 → n^k > m^k → n > m := sorry
+
 end Lean4Axiomatic.Natural

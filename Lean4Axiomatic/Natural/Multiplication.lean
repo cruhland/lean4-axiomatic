@@ -547,6 +547,13 @@ theorem sqrt1 {n : ℕ} : n * n ≃ 1 ↔ n ≃ 1 := by
     have : n * n ≃ 1 := factors_eqv_1.mpr (And.intro ‹n ≃ 1› ‹n ≃ 1›)
     exact this
 
+@[gcongr]
+theorem mul_substR_gt {n₁ n₂ m : ℕ} : m ≄ 0 → n₁ > n₂ → m * n₁ > m * n₂ := by
+  admit
+
+theorem mul_cancelL_gt {n₁ n₂ m : ℕ} : m ≄ 0 → m * n₁ > m * n₂ → n₁ > n₂ := by
+  admit
+
 local instance mul_monoid_ops :  CA.Monoid.Ops ℕ := {
   binop := (· * ·)
   ident := 1

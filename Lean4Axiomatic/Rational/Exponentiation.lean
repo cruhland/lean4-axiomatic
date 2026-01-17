@@ -520,6 +520,8 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
   have : p ≃ a/b := p_eqv
   have : a^2 ≃ 2 * b^2 := sorry
 
+  -- TODO: would it be easier to use non-negative integers instead of natural
+  -- numbers? Need InfiniteDescent of integers ≥ a specific integer
   let n : ℕ := sorry -- abs a
   let m : ℕ := sorry -- abs b
   have : n^2 ≃ 2 * m^2 := sorry
@@ -535,13 +537,31 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     let x := e.val.1; let y := e.val.2
     have : x^2 ≃ 2 * y^2 := e.property.1
     have : y > 0 := e.property.2
+    have : (2:ℕ) ≄ 0 := Natural.two_neqv_zero
+    have : (2:ℕ) ≥ 1 := Natural.le_split.mpr (Or.inl Natural.two_gt_one)
+    have : y^2 > 0^2 := Natural.pow_preserves_gt ‹(2:ℕ) ≥ 1› ‹y > 0›
+    have : x^2 > 0^2 := calc
+      _ = x^2         := rfl
+      _ ≃ 2 * y^2     := ‹x^2 ≃ 2 * y^2›
+      _ > 2 * 0^2     := by srw [‹y^2 > 0^2›]
+      _ ≃ 2 * (0 * 0) := by srw [Natural.pow_two]
+      _ ≃ (2 * 0) * 0 := Rel.symm AA.assoc
+      _ ≃ 0 * 0       := by srw [Natural.mul_zero]
+      _ ≃ 0^2         := Rel.symm Natural.pow_two
+    have : x > 0 := Natural.pow_cancel_gt ‹(2:ℕ) ≥ 1› ‹x^2 > 0^2›
 
     have : Even (x^2) := Subtype.mk (y^2) ‹x^2 ≃ 2 * y^2›
     have : Even x := even_from_sqr_even ‹Even (x^2)›
 
     let z := ‹Even x›.val
     have : x ≃ 2 * z := ‹Even x›.property
-    have : z > 0 := sorry
+    have : 2 * z > 2 * 0 := calc
+      _ = 2 * z := rfl
+      _ ≃ x     := Rel.symm ‹x ≃ 2 * z›
+      _ > 0     := ‹x > 0›
+      _ ≃ 2 * 0 := Rel.symm AA.absorbR
+    have : z > 0 :=
+      Natural.mul_cancelL_gt Natural.two_neqv_zero ‹2 * z > 2 * 0›
     have : 2 * y^2 ≃ 2 * (2 * z^2) := calc
       _ = 2 * y^2       := rfl
       _ ≃ x^2           := Rel.symm ‹x^2 ≃ 2 * y^2›
