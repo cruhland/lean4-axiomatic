@@ -63,6 +63,12 @@ def InfiniteDescent {α : Type u} [LT α] (s : Sequence α) : Prop :=
 def map {α : Sort u} {β : Sort v} (f : α → β) (s : Sequence α) : Sequence β :=
   sorry
 
+theorem map_index
+    {α : Type u} {β : Type v} [EqvOp β] {f : α → β} {s : Sequence α} {n : ℕ}
+    : (s.map f)[n] ≃ f s[n]
+    := by
+  admit
+
 def iterate {α : Sort u} (init : α) (next : α → α) : Sequence α :=
   let nth {ℕ : Type} [Natural ℕ] (n : ℕ) : α := sorry
 

@@ -512,7 +512,7 @@ def even_from_sqr_even {a : ℤ} : Even (a^2) → Even a := by
     exact this
 
 theorem bounded_inf_desc_impossible
-    {s : Sequence ℤ} {b : ℤ} (bounded : (n : ℕ) → s[n] ≥ b)
+    {s : Sequence ℤ} {b : ℤ} (bounded : (n : ℕ) → s[n] > b)
     : ¬(InfiniteDescent (ℕ := ℕ) s)
     := by
   admit
@@ -677,7 +677,18 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     have desc : (x : ℕ) → solns[x] > solns[step x] :=
       Sequence.map_chain chain
     show InfiniteDescent solns from desc
-  have solns_bounded (n : ℕ) : solns[n] ≥ 0 := sorry
+  have solns_bounded (n : ℕ) : solns[n] > 0 :=
+    let p₁ := pairs[n].val.1
+    have : solns[n] ≃ p₁ := calc
+      _ = solns[n]            := rfl
+      _ = (pairs.map proj)[n] := rfl
+      _ ≃ proj pairs[n]       := Sequence.map_index
+      _ = pairs[n].val.1      := rfl
+      _ = p₁                  := rfl
+    have : p₁ > 0 := pairs[n].property.2.2
+    -- TODO: adjust rewrite to expand reducible fns like GT.gt
+    have : 0 < solns[n] := by prw [←‹solns[n] ≃ p₁›] ‹0 < p₁›
+    show solns[n] > 0 from this
 
   have : ¬InfiniteDescent solns := bounded_inf_desc_impossible solns_bounded
   have : False := absurd ‹InfiniteDescent solns› ‹¬InfiniteDescent solns›
