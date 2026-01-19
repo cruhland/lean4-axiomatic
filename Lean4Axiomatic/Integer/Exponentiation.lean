@@ -72,6 +72,20 @@ theorem cube_splitL {a : ℤ} : a^3 ≃ a * a^2 := calc
   _ ≃ a^2 * a    := Natural.pow_step
   _ ≃ a * a^2    := AA.comm
 
+theorem binom_sqr {a b : ℤ} : (a + b)^2 ≃ a^2 + 2 * a * b + b^2 := calc
+  _ = (a + b)^2                         := rfl
+  _ ≃ (a + b) * (a + b)                 := Natural.pow_two
+  _ ≃ a * (a + b) + b * (a + b)         := AA.distribR
+  _ ≃ (a * a + a * b) + b * (a + b)     := by srw [mul_distribL]
+  _ ≃ (a * a + a * b) + (b * a + b * b) := by srw [mul_distribL]
+  _ ≃ (a * a + a * b) + (a * b + b * b) := by srw [AA.comm]
+  _ ≃ ((a * a + a * b) + a * b) + b * b := Rel.symm AA.assoc
+  _ ≃ a * a + (a * b + a * b) + b * b   := by srw [AA.assoc]
+  _ ≃ a * a + 2 * (a * b) + b * b       := by srw [←mul_two]
+  _ ≃ a * a + 2 * a * b + b * b         := by srw [←AA.assoc]
+  _ ≃ a^2 + 2 * a * b + b * b           := by srw [←Natural.pow_two]
+  _ ≃ a^2 + 2 * a * b + b^2             := by srw [←Natural.pow_two]
+
 variable [Negation ℤ]
 
 section sub_only
