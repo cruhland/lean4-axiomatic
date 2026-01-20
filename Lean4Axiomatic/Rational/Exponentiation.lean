@@ -517,16 +517,69 @@ theorem bounded_inf_desc_impossible
     := by
   admit
 
+-- TODO: see if this is still needed after cleanup
+set_option maxHeartbeats 250000 in
+omit [Subtraction ℚ] [Order ℚ] in
 /-- There's no rational number whose square is two. -/
 theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
   intro (_ : p^2 ≃ 2)
   show False
 
-  have (AsRatio.mk (a:ℤ) (b:ℤ) (_ : AP (b ≄ 0)) p_eqv) := as_ratio p
-  have : p ≃ a/b := p_eqv
-  have : a^2 ≃ 2 * b^2 := sorry
-  have : a > 0 := sorry
-  have : b > 0 := sorry
+  have (AsRatio.mk (a':ℤ) (b':ℤ) (_ : AP (b' ≄ 0)) p_eqv) := as_ratio p
+  have : p ≃ a'/b' := p_eqv
+
+  let a := abs a'; let b := abs b'
+  have : b > 0 :=
+    have : b ≥ 0 := Integer.abs_nonneg
+    have : b ≄ 0 := mt Integer.abs_zero.mp ‹AP (b' ≄ 0)›.ev
+    Integer.lt_iff_le_neqv.mpr (And.intro ‹b ≥ 0› (Rel.symm ‹b ≄ 0›))
+  let a'q : ℚ := a'; let b'q : ℚ := b'; let aq : ℚ := a; let bq : ℚ := b
+  have : (sgn (b'^2))^2 ≃ 1 := calc
+    _ = (sgn (b'^2))^2 := rfl
+    _ ≃ ((sgn b')^2)^2 := by srw [Integer.sgn_pow]
+    _ ≃ 1^2            := by srw [Integer.sgn_sqr_nonzero.mpr ‹AP (b' ≄ 0)›.ev]
+    _ ≃ 1              := Natural.pow_absorbL
+  have : b'^2 ≄ 0 := Integer.sgn_sqr_nonzero.mp ‹(sgn (b'^2))^2 ≃ 1›
+  have : AP (b'^2 ≄ 0) := AP.mk this
+  have : ((a'^2:ℤ):ℚ) ≃ ((2 * b'^2 : ℤ):ℚ) := calc
+    _ = ((a'^2:ℤ):ℚ)                := rfl
+    _ ≃ (a':ℚ)^2                    := pow_scompatL_from_integer
+    _ = a'q^2                       := rfl
+    _ ≃ a'q^2 * 1                   := by srw [←mul_identR]
+    _ ≃ a'q^2 * ((b'q^2)⁻¹ * b'q^2) := by srw [←mul_inverseL]
+    _ ≃ a'q^2 * (b'q^2)⁻¹ * b'q^2   := eqv_symm mul_assoc
+    _ ≃ a'q^2/b'q^2 * b'q^2         := by srw [←div_mul_recip]
+    _ ≃ (a'q/b'q)^2 * b'q^2         := by srw [←pow_distribR_div]
+    _ = ((a':ℚ)/b')^2 * b'q^2       := rfl
+    _ ≃ p^2 * b'q^2                 := by srw [←‹p ≃ a'/b'›]
+    _ ≃ 2 * b'q^2                   := by srw [‹p^2 ≃ 2›]
+    _ = 2 * (b':ℚ)^2                := rfl
+    _ ≃ (2:ℚ) * ((b'^2:ℤ):ℚ)        := by srw [←pow_scompatL_from_integer]
+    _ ≃ ((2 * b'^2 : ℤ):ℚ)          := eqv_symm mul_compat_from_integer
+  have : a'^2 ≃ 2 * b'^2 :=
+    from_integer_inject ‹((a'^2:ℤ):ℚ) ≃ ((2 * b'^2 : ℤ):ℚ)›
+  have : sgn a ≃ 1 := calc
+    _ = sgn a                  := rfl
+    _ = sgn (abs a')           := rfl
+    _ ≃ (sgn a')^2             := Integer.sgn_abs
+    _ ≃ sgn (a'^2)             := Rel.symm Integer.sgn_pow
+    _ ≃ sgn (2 * b'^2)         := by srw [‹a'^2 ≃ 2 * b'^2›]
+    _ ≃ sgn (2:ℤ) * sgn (b'^2) := Integer.sgn_compat_mul
+    _ ≃ 1 * sgn (b'^2)         := by srw [Integer.sgn_two_eqv_one]
+    _ ≃ sgn (b'^2)             := AA.identL
+    _ ≃ (sgn b')^2             := Integer.sgn_pow
+    _ ≃ sgn (abs b')           := Rel.symm Integer.sgn_abs
+    _ = sgn b                  := rfl
+    _ ≃ 1                      := Integer.gt_zero_sgn.mp ‹b > 0›
+  have : a > 0 := Integer.gt_zero_sgn.mpr ‹sgn a ≃ 1›
+  have : ((a^2:ℤ):ℚ) ≃ ((2 * b^2 : ℤ):ℚ) := calc
+    _ = ((a^2:ℤ):ℚ)                 := rfl
+    _ = (((abs a')^2:ℤ):ℚ)          := rfl
+    _ ≃ ((a'^2:ℤ):ℚ)                := by srw [Integer.abs_sqr]
+    _ ≃ ((2 * b'^2 : ℤ):ℚ)          := ‹((a'^2:ℤ):ℚ) ≃ ((2 * b'^2 : ℤ):ℚ)›
+    _ ≃ ((2 * (abs b')^2 : ℤ):ℚ)    := by srw [←Integer.abs_sqr]
+    _ = ((2 * b^2 : ℤ):ℚ)           := rfl
+  have : a^2 ≃ 2 * b^2 := from_integer_inject ‹((a^2:ℤ):ℚ) ≃ ((2 * b^2 : ℤ):ℚ)›
 
   -- TODO: create a structure for this
   let P := λ (p : ℤ × ℤ) => p.1^2 ≃ 2 * p.2^2 ∧ p.2 > 0 ∧ p.1 > 0
