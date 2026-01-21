@@ -1,5 +1,4 @@
 import Lean4Axiomatic.Rational.Metric
-import Lean4Axiomatic.Sequence
 
 /-!
 # Rational numbers: exponentiation to natural numbers
@@ -511,12 +510,6 @@ def even_from_sqr_even {a : ℤ} : Even (a^2) → Even a := by
     have : Even a := Empty.elim ‹Empty›
     exact this
 
-theorem bounded_inf_desc_impossible
-    {s : Sequence ℤ} {b : ℤ} (bounded : (n : ℕ) → s[n] > b)
-    : ¬(InfiniteDescent (ℕ := ℕ) s)
-    := by
-  admit
-
 -- TODO: see if this is still needed after cleanup
 set_option maxHeartbeats 250000 in
 omit [Subtraction ℚ] [Order ℚ] in
@@ -743,7 +736,8 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     have : 0 < solns[n] := by prw [←‹solns[n] ≃ p₁›] ‹0 < p₁›
     show solns[n] > 0 from this
 
-  have : ¬InfiniteDescent solns := bounded_inf_desc_impossible solns_bounded
+  have : ¬InfiniteDescent solns :=
+    Integer.bounded_inf_desc_impossible solns_bounded
   have : False := absurd ‹InfiniteDescent solns› ‹¬InfiniteDescent solns›
   exact this
 

@@ -1,4 +1,5 @@
 import Lean4Axiomatic.Integer.Induction
+import Lean4Axiomatic.Sequence
 
 /-! # Integer order -/
 
@@ -10,6 +11,7 @@ open Logic (
   AP and_mapL and_mapR Either iff_subst_contra iff_subst_covar or_mapL or_mapR
 )
 open Natural (step)
+open Sequence (InfiniteDescent)
 open Signed (Negative Positive)
 
 /-! ## Axioms -/
@@ -1681,6 +1683,18 @@ theorem ind_from
   have : motive (n + b) := ‹motive' n›
   have : motive a := motive_subst ‹n + b ≃ a› ‹motive (n + b)›
   exact this
+
+/--
+An integer sequence cannot decrease forever while staying above a fixed value.
+-/
+theorem bounded_inf_desc_impossible
+    {s : Sequence ℤ} {b : ℤ} (bounded : (n : ℕ) → s[n] > b)
+    : ¬(InfiniteDescent (ℕ := ℕ) s)
+    := by
+  intro (_ : InfiniteDescent (ℕ := ℕ) s)
+  show False
+  -- Use `ind_from` (above) to prove
+  admit
 
 /--
 Compute whether two integers are in a _greater than or equivalent to_ relation.
