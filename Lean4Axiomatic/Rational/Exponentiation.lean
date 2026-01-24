@@ -10,6 +10,7 @@ derived properties.
 
 namespace Lean4Axiomatic.Rational
 
+open Lean4Axiomatic.Integer (Even Odd)
 open Lean4Axiomatic.Logic (AP iff_subst_covar or_identR or_mapR)
 open Lean4Axiomatic.Metric (abs)
 open Lean4Axiomatic.Natural (pow_step pow_zero step)
@@ -466,50 +467,6 @@ instance subtype_subst_inst
   subst₁ := subtype_val_subst
 }
 
-@[reducible]
-def Even (a : ℤ) : Type := { b : ℤ // a ≃ 2 * b }
-
-@[reducible]
-def Odd (a : ℤ) : Type := { b : ℤ // a ≃ 2 * b + 1 }
-
-@[gcongr]
-def even_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → Even a₁ → Even a₂ := sorry
-
-theorem even_val_subst
-    {a₁ a₂ : ℤ} {e₁ : Even a₁} {e₂ : Even a₂} : a₁ ≃ a₂ → e₁.val ≃ e₂.val
-    := sorry
-
-def parity (a : ℤ) : AA.ExactlyOneOfTwo₁ (Even a) (Odd a) := sorry
-
-def even_from_sqr_even {a : ℤ} : Even (a^2) → Even a := by
-  intro (sqr_even : Even (a^2))
-  show Even a
-
-  have even_or_odd := (parity a).1
-
-  match even_or_odd with
-  | .inl even =>
-    exact even
-  | .inr (Subtype.mk (b : ℤ) (_ : a ≃ 2 * b + 1)) =>
-    have : a^2 ≃ 2 * (2 * b^2 + 2 * b) + 1 := calc
-      _ = a^2                           := rfl
-      _ ≃ (2*b + 1)^2                   := by srw [‹a ≃ 2 * b + 1›]
-      _ ≃ (2*b)^2 + 2 * (2*b) * 1 + 1^2 := Integer.binom_sqr
-      _ ≃ (2*b)^2 + 2 * (2*b) + 1^2     := by srw [Integer.mul_identR]
-      _ ≃ (2*b)^2 + 2 * (2*b) + 1       := by srw [Natural.pow_absorbL]
-      _ ≃ 2^2 * b^2 + 2 * (2*b) + 1     := by srw [Natural.pow_distribR_mul]
-      _ ≃ 2 * 2*b^2 + 2 * (2*b) + 1     := by srw [Natural.pow_two]
-      _ ≃ 2 * (2*b^2) + 2 * (2*b) + 1   := by srw [AA.assoc]
-      _ ≃ 2 * (2*b^2 + 2*b) + 1         := by srw [←Integer.mul_distribL]
-    have sqr_odd : Odd (a^2) :=
-      Subtype.mk (2 * b^2 + 2 * b) ‹a^2 ≃ 2 * (2 * b^2 + 2 * b) + 1›
-    have even_and_odd := Prod.mk sqr_even sqr_odd
-
-    have (Prod.mk _ empty_from_even_and_odd) := parity (a^2)
-    have : Empty := empty_from_even_and_odd even_and_odd
-    have : Even a := Empty.elim ‹Empty›
-    exact this
-
 -- TODO: see if this is still needed after cleanup
 set_option maxHeartbeats 250000 in
 omit [Subtraction ℚ] [Order ℚ] in
@@ -587,7 +544,7 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     have : x > 0 := e.property.2.2
 
     have : Even (x^2) := Subtype.mk (y^2) ‹x^2 ≃ 2 * y^2›
-    have : Even x := even_from_sqr_even ‹Even (x^2)›
+    have : Even x := Integer.even_from_sqr_even ‹Even (x^2)›
 
     let z := ‹Even x›.val
     have : x ≃ 2 * z := ‹Even x›.property
@@ -623,9 +580,9 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
       Relation.Equivalence.Impl.Prod.eqv_defn.mp ‹(x₁, y₁) ≃ (x₂, y₂)›
     let x₁_sqr_even : Even (x₁^2) := Subtype.mk (y₁^2) eqv₁.1
     let x₂_sqr_even : Even (x₂^2) := Subtype.mk (y₂^2) eqv₂.1
-    let ex₁ : Even x₁ := even_from_sqr_even ‹Even (x₁^2)›
-    let ex₂ : Even x₂ := even_from_sqr_even ‹Even (x₂^2)›
-    have : ex₁.val ≃ ex₂.val := even_val_subst ‹x₁ ≃ x₂›
+    let ex₁ : Even x₁ := Integer.even_from_sqr_even ‹Even (x₁^2)›
+    let ex₂ : Even x₂ := Integer.even_from_sqr_even ‹Even (x₂^2)›
+    have : ex₁.val ≃ ex₂.val := Integer.even_val_subst ‹x₁ ≃ x₂›
     have : (next e₁).val ≃ (next e₂).val := calc
       _ = (next e₁).val                         := rfl
       _ = (next (Subtype.mk (x₁, y₁) eqv₁)).val := rfl

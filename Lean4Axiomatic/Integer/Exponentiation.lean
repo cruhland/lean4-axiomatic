@@ -86,6 +86,58 @@ theorem binom_sqr {a b : ℤ} : (a + b)^2 ≃ a^2 + 2 * a * b + b^2 := calc
   _ ≃ a^2 + 2 * a * b + b * b           := by srw [←Natural.pow_two]
   _ ≃ a^2 + 2 * a * b + b^2             := by srw [←Natural.pow_two]
 
+@[reducible]
+def Even (a : ℤ) : Type := { b : ℤ // a ≃ 2 * b }
+
+@[reducible]
+def Odd (a : ℤ) : Type := { b : ℤ // a ≃ 2 * b + 1 }
+
+@[gcongr]
+def even_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → Even a₁ → Even a₂ := sorry
+
+theorem even_val_subst
+    {a₁ a₂ : ℤ} {e₁ : Even a₁} {e₂ : Even a₂} : a₁ ≃ a₂ → e₁.val ≃ e₂.val
+    := sorry
+
+def parity (a : ℤ) : AA.ExactlyOneOfTwo₁ (Even a) (Odd a) := sorry
+
+/-- Only even integers have even squares. -/
+def even_from_sqr_even {a : ℤ} : Even (a^2) → Even a := by
+  intro (_ : Even (a^2))
+  show Even a
+
+  let even_xor_odd : AA.ExactlyOneOfTwo₁ (Even a) (Odd a) := parity a
+  match even_xor_odd.atLeastOne with
+  | .inl (_ : Even a) =>
+    exact ‹Even a›
+  | .inr (_ : Odd a) =>
+    have : Odd (a^2) :=
+      have a_odd : { b : ℤ // a ≃ 2 * b + 1 } := ‹Odd a›
+      let b := a_odd.val
+      have : a ≃ 2 * b + 1 := a_odd.property
+
+      let b' := 2 * b^2 + 2 * b
+      have : a^2 ≃ 2 * b' + 1 := calc
+        _ = a^2                           := rfl
+        _ ≃ (2*b + 1)^2                   := by srw [‹a ≃ 2 * b + 1›]
+        _ ≃ (2*b)^2 + 2 * (2*b) * 1 + 1^2 := binom_sqr
+        _ ≃ (2*b)^2 + 2 * (2*b) + 1^2     := by srw [mul_identR]
+        _ ≃ (2*b)^2 + 2 * (2*b) + 1       := by srw [Natural.pow_absorbL]
+        _ ≃ 2^2 * b^2 + 2 * (2*b) + 1     := by srw [Natural.pow_distribR_mul]
+        _ ≃ 2 * 2*b^2 + 2 * (2*b) + 1     := by srw [Natural.pow_two]
+        _ ≃ 2 * (2*b^2) + 2 * (2*b) + 1   := by srw [AA.assoc]
+        _ ≃ 2 * (2*b^2 + 2*b) + 1         := by srw [←mul_distribL]
+        _ = 2 * b' + 1                    := rfl
+      show Odd (a^2) from Subtype.mk b' ‹a^2 ≃ 2 * b' + 1›
+
+    have : Even a :=
+      have : Even (a^2) × Odd (a^2) := Prod.mk ‹Even (a^2)› ‹Odd (a^2)›
+      let even_xor_odd_sqr : AA.ExactlyOneOfTwo₁ (Even (a^2)) (Odd (a^2)) :=
+        parity (a^2)
+      have : Empty := even_xor_odd_sqr.atMostOne ‹Even (a^2) × Odd (a^2)›
+      show Even a from ‹Empty›.elim
+    exact ‹Even a›
+
 variable [Negation ℤ]
 
 section sub_only

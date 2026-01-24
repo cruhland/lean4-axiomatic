@@ -597,7 +597,16 @@ def distributiveR_from_distributiveL
 /-- Expresses that one of two propositions is true, but not both. -/
 def ExactlyOneOfTwo (α β : Prop) : Prop := (α ∨ β) ∧ ¬ (α ∧ β)
 
-def ExactlyOneOfTwo₁ (α β : Type) : Type := (α ⊕ β) × (α × β → Empty)
+/--
+Provides a value of one of the two given types, and a proof that the other type
+cannot be inhabited.
+-/
+structure ExactlyOneOfTwo₁ (α β : Type) : Type where
+  /-- A value of one of the two types. -/
+  atLeastOne : α ⊕ β
+
+  /-- Both types cannot be inhabited. -/
+  atMostOne : α × β → Empty
 
 /--
 Inhabited when at least one of its three propositions is true; a three-way
