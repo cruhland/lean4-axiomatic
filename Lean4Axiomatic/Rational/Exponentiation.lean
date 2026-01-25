@@ -18,6 +18,8 @@ open Lean4Axiomatic.Relation.Equivalence (EqvOp)
 open Lean4Axiomatic.Sequence (InfiniteDescent)
 open Lean4Axiomatic.Signed (Positive sgn)
 
+open scoped Lean4Axiomatic.Relation.Equivalence.Impl.Subtype
+
 /-! ## Derived properties for exponentiation to a natural number -/
 
 section pow_nat
@@ -443,29 +445,6 @@ theorem pow_preserves_ge_nonneg
       _ ≃ q^n := by srw [←‹n ≃ 0›]
     have : p^n ≥ q^n := ge_cases.mpr (Or.inr ‹p^n ≃ q^n›)
     exact this
-
-instance subtype_eqvop_inst
-    {α : Type} [EqvOp α] {P : α → Prop} : EqvOp (Subtype P)
-    := {
-  tildeDash := λ s₁ s₂ => s₁.val ≃ s₂.val
-  refl := Rel.refl
-  symm := Rel.symm
-  trans := Rel.trans
-}
-
-@[gcongr]
-theorem subtype_val_subst
-    {α : Type} [EqvOp α] {P : α → Prop} {s₁ s₂ : Subtype P}
-    : s₁ ≃ s₂ → s₁.val ≃ s₂.val
-    :=
-  id
-
-instance subtype_subst_inst
-    {α : Type} [EqvOp α] {P : α → Prop}
-    : AA.Substitutive₁ (α := Subtype P) (·.val) (· ≃ ·) (· ≃ ·)
-    := {
-  subst₁ := subtype_val_subst
-}
 
 -- TODO: see if this is still needed after cleanup
 set_option maxHeartbeats 250000 in

@@ -1,6 +1,7 @@
 import Lean4Axiomatic.Hand
 import Lean4Axiomatic.Operators
 import Lean4Axiomatic.Relation.Equivalence.Core
+import Mathlib.Tactic.GCongr
 
 namespace Lean4Axiomatic.Relation.Equivalence.Impl
 
@@ -275,5 +276,25 @@ theorem eqv_defn
     case R => exact ‹b₁ ≃ b₂›
 
 end Prod
+
+namespace Subtype
+
+scoped instance subtype_eqvop_inst
+    {α : Type} [EqvOp α] {P : α → Prop} : EqvOp (Subtype P)
+    := {
+  tildeDash := λ s₁ s₂ => s₁.val ≃ s₂.val
+  refl := Rel.refl
+  symm := Rel.symm
+  trans := Rel.trans
+}
+
+@[gcongr]
+theorem subtype_val_subst
+    {α : Type} [EqvOp α] {P : α → Prop} {s₁ s₂ : Subtype P}
+    : s₁ ≃ s₂ → s₁.val ≃ s₂.val
+    :=
+  id
+
+end Subtype
 
 end Lean4Axiomatic.Relation.Equivalence.Impl
