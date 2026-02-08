@@ -10,7 +10,7 @@ derived properties.
 
 namespace Lean4Axiomatic.Rational
 
-open Lean4Axiomatic.Integer (Even Odd)
+open Lean4Axiomatic.Integer (Even Odd half)
 open Lean4Axiomatic.Logic (AP iff_subst_covar or_identR or_mapR)
 open Lean4Axiomatic.Metric (abs)
 open Lean4Axiomatic.Natural (pow_step pow_zero step)
@@ -522,11 +522,11 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     have : y > 0 := e.property.2.1
     have : x > 0 := e.property.2.2
 
-    have : Even (x^2) := Subtype.mk (y^2) ‹x^2 ≃ 2 * y^2›
+    have : Even (x^2) := Integer.even_from_witness ‹x^2 ≃ 2 * y^2›
     have : Even x := Integer.even_from_sqr_even ‹Even (x^2)›
 
-    let z := ‹Even x›.val
-    have : x ≃ 2 * z := ‹Even x›.property
+    let z := half ‹Even x›
+    have : x ≃ 2 * z := Integer.even_eqv ‹Even x›
     have : Positive (2:ℤ) := Integer.sgn_positive.mpr Integer.sgn_two_eqv_one
     have : 2 * z > 2 * 0 := calc
       _ = 2 * z := rfl
@@ -557,17 +557,16 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     have : (x₁, y₁) ≃ (x₂, y₂) := ‹e₁ ≃ e₂›
     have (And.intro (_ : x₁ ≃ x₂) (_ : y₁ ≃ y₂)) :=
       Relation.Equivalence.Impl.Prod.eqv_defn.mp ‹(x₁, y₁) ≃ (x₂, y₂)›
-    let x₁_sqr_even : Even (x₁^2) := Subtype.mk (y₁^2) eqv₁.1
-    let x₂_sqr_even : Even (x₂^2) := Subtype.mk (y₂^2) eqv₂.1
-    let ex₁ : Even x₁ := Integer.even_from_sqr_even ‹Even (x₁^2)›
-    let ex₂ : Even x₂ := Integer.even_from_sqr_even ‹Even (x₂^2)›
-    have : ex₁.val ≃ ex₂.val := Integer.even_val_subst ‹x₁ ≃ x₂›
+    have : Even (x₁^2) := Integer.even_from_witness eqv₁.1
+    have : Even (x₂^2) := Integer.even_from_witness eqv₂.1
+    have : Even x₁ := Integer.even_from_sqr_even ‹Even (x₁^2)›
+    have : Even x₂ := Integer.even_from_sqr_even ‹Even (x₂^2)›
     have : (next e₁).val ≃ (next e₂).val := calc
       _ = (next e₁).val                         := rfl
       _ = (next (Subtype.mk (x₁, y₁) eqv₁)).val := rfl
-      _ = (y₁, ex₁.val)                         := rfl
-      _ ≃ (y₂, ex₁.val)                         := by srw [‹y₁ ≃ y₂›]
-      _ ≃ (y₂, ex₂.val)                         := by srw [‹ex₁.val ≃ ex₂.val›]
+      _ = (y₁, half ‹Even x₁›)                  := rfl
+      _ ≃ (y₂, half ‹Even x₁›)                  := by srw [‹y₁ ≃ y₂›]
+      _ ≃ (y₂, half ‹Even x₂›)                  := by srw [‹x₁ ≃ x₂›]
       _ = (next (Subtype.mk (x₂, y₂) eqv₂)).val := rfl
       _ = (next e₂).val                         := rfl
     have : next e₁ ≃ next e₂ := ‹(next e₁).val ≃ (next e₂).val›

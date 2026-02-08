@@ -1,7 +1,9 @@
 import Lean4Axiomatic.AbstractAlgebra.Substitutive
+import Lean4Axiomatic.Logic
 
 namespace Lean4Axiomatic.AA
 
+open Logic (Either)
 open Relation.Equivalence (EqvOp)
 
 /--
@@ -598,15 +600,15 @@ def distributiveR_from_distributiveL
 def ExactlyOneOfTwo (α β : Prop) : Prop := (α ∨ β) ∧ ¬ (α ∧ β)
 
 /--
-Provides a value of one of the two given types, and a proof that the other type
+Provides a value of one of the two given props, and a proof that the other prop
 cannot be inhabited.
 -/
-structure ExactlyOneOfTwo₁ (α β : Type) : Type where
-  /-- A value of one of the two types. -/
-  atLeastOne : α ⊕ β
+structure ExactlyOneOfTwo₁ (α β : Prop) : Type where
+  /-- A value of one of the two props. -/
+  atLeastOne : Either α β
 
-  /-- Both types cannot be inhabited. -/
-  atMostOne : α × β → Empty
+  /-- Both props cannot be inhabited. -/
+  atMostOne : ¬(α ∧ β)
 
 /--
 Inhabited when at least one of its three propositions is true; a three-way
