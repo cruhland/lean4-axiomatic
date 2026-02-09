@@ -48,12 +48,12 @@ variable
 def even_to_witness {a : ℤ} : Even a → { b : ℤ // a ≃ 2 * b } := sorry
 def half {a : ℤ} : Even a → ℤ := sorry
 theorem even_eqv {a : ℤ} (e : Even a) : a ≃ 2 * half e := sorry
-def even_from_witness {a b : ℤ} : a ≃ 2 * b → Even a := sorry
+def even_from_eqv {a b : ℤ} : a ≃ 2 * b → Even a := sorry
 
 def odd_to_witness {a : ℤ} : Odd a → { b : ℤ // a ≃ 2 * b + 1 } := sorry
 def half_floored {a : ℤ} : Odd a → ℤ := sorry
 theorem odd_eqv {a : ℤ} (odd : Odd a) : a ≃ 2 * half_floored odd + 1 := sorry
-def odd_from_witness {a b : ℤ} : a ≃ 2 * b + 1 → Odd a := sorry
+def odd_from_eqv {a b : ℤ} : a ≃ 2 * b + 1 → Odd a := sorry
 
 @[gcongr]
 theorem half_subst
@@ -116,14 +116,14 @@ def parity (a : ℤ) : AA.ExactlyOneOfTwo₁ (Even a) (Odd a) :=
         _ ≃ 2 * q + r := d.div_eqv
         _ ≃ 2 * q + 0 := by srw [‹r ≃ 0›]
         _ ≃ 2 * q     := AA.identR
-      have : Even a := even_from_witness ‹a ≃ 2 * q›
+      have : Even a := even_from_eqv ‹a ≃ 2 * q›
       show Either (Even a) (Odd a) from .inl ‹Even a›
     | .inr (_ : r ≃ 1) =>
       have : a ≃ 2 * q + 1 := calc
         _ = a         := rfl
         _ ≃ 2 * q + r := d.div_eqv
         _ ≃ 2 * q + 1 := by srw [‹r ≃ 1›]
-      have : Odd a := odd_from_witness ‹a ≃ 2 * q + 1›
+      have : Odd a := odd_from_eqv ‹a ≃ 2 * q + 1›
       show Either (Even a) (Odd a) from .inr ‹Odd a›
 
   have : ¬(Even a ∧ Odd a) := λ (And.intro (_ : Even a) (_ : Odd a)) =>
@@ -190,9 +190,8 @@ def even_from_sqr_even {a : ℤ} : Even (a^2) → Even a := by
     exact ‹Even a›
   | .inr (_ : Odd a) =>
     have : Odd (a^2) :=
-      have a_odd : { b : ℤ // a ≃ 2 * b + 1 } := odd_to_witness ‹Odd a›
-      let b := a_odd.val
-      have : a ≃ 2 * b + 1 := a_odd.property
+      let b := half_floored ‹Odd a›
+      have : a ≃ 2 * b + 1 := odd_eqv ‹Odd a›
 
       let b' := 2 * b^2 + 2 * b
       have : a^2 ≃ 2 * b' + 1 := calc
@@ -206,7 +205,7 @@ def even_from_sqr_even {a : ℤ} : Even (a^2) → Even a := by
         _ ≃ 2 * (2*b^2) + 2 * (2*b) + 1   := by srw [AA.assoc]
         _ ≃ 2 * (2*b^2 + 2*b) + 1         := by srw [←mul_distribL]
         _ = 2 * b' + 1                    := rfl
-      show Odd (a^2) from odd_from_witness ‹a^2 ≃ 2 * b' + 1›
+      show Odd (a^2) from odd_from_eqv ‹a^2 ≃ 2 * b' + 1›
 
     have : Even a :=
       have : Even (a^2) ∧ Odd (a^2) := And.intro ‹Even (a^2)› ‹Odd (a^2)›

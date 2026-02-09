@@ -522,7 +522,7 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     have : y > 0 := e.property.2.1
     have : x > 0 := e.property.2.2
 
-    have : Even (x^2) := Integer.even_from_witness ‹x^2 ≃ 2 * y^2›
+    have : Even (x^2) := Integer.even_from_eqv ‹x^2 ≃ 2 * y^2›
     have : Even x := Integer.even_from_sqr_even ‹Even (x^2)›
 
     let z := half ‹Even x›
@@ -557,8 +557,8 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     have : (x₁, y₁) ≃ (x₂, y₂) := ‹e₁ ≃ e₂›
     have (And.intro (_ : x₁ ≃ x₂) (_ : y₁ ≃ y₂)) :=
       Relation.Equivalence.Impl.Prod.eqv_defn.mp ‹(x₁, y₁) ≃ (x₂, y₂)›
-    have : Even (x₁^2) := Integer.even_from_witness eqv₁.1
-    have : Even (x₂^2) := Integer.even_from_witness eqv₂.1
+    have : Even (x₁^2) := Integer.even_from_eqv eqv₁.1
+    have : Even (x₂^2) := Integer.even_from_eqv eqv₂.1
     have : Even x₁ := Integer.even_from_sqr_even ‹Even (x₁^2)›
     have : Even x₂ := Integer.even_from_sqr_even ‹Even (x₂^2)›
     have : (next e₁).val ≃ (next e₂).val := calc
