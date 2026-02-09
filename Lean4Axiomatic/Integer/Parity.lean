@@ -25,6 +25,8 @@ class Parity.Props
   even_rem {a : ℤ} : Even a ↔ (div_floored a 2).remainder ≃ 0
   odd_rem {a : ℤ} : Odd a ↔ (div_floored a 2).remainder ≃ 1
 
+export Parity.Props (even_rem odd_rem)
+
 class Parity
     {ℕ : Type} [Natural ℕ]
     (ℤ : Type)
@@ -55,6 +57,7 @@ def half_floored {a : ℤ} : Odd a → ℤ := sorry
 theorem odd_eqv {a : ℤ} (odd : Odd a) : a ≃ 2 * half_floored odd + 1 := sorry
 def odd_from_eqv {a b : ℤ} : a ≃ 2 * b + 1 → Odd a := sorry
 
+/-- Equivalent even integers have equivalent halves. -/
 @[gcongr]
 theorem half_subst
     {a₁ a₂ : ℤ} {e₁ : Even a₁} {e₂ : Even a₂} : a₁ ≃ a₂ → half e₁ ≃ half e₂
@@ -76,11 +79,9 @@ def parity (a : ℤ) : AA.ExactlyOneOfTwo₁ (Even a) (Odd a) :=
   have : (1:ℤ) > 0 := zero_lt_one
   have : (2:ℤ) > 0 := Trans.trans two_gt_one ‹(1:ℤ) > 0›
   have : (2:ℤ) ≥ 0 := ge_split.mpr (.inl ‹(2:ℤ) > 0›)
+  let d := div_floored a 2; let q := d.quotient; let r := d.remainder
 
   have : Either (Even a) (Odd a) :=
-    let d := div_floored a 2
-    let q := d.quotient; let r := d.remainder
-
     have : Either (r ≃ 0) (r ≃ 1) :=
       have : r * 2 ≥ 0 * 2 := calc
         _ = r * 2 := rfl
@@ -111,67 +112,17 @@ def parity (a : ℤ) : AA.ExactlyOneOfTwo₁ (Even a) (Odd a) :=
 
     match ‹Either (r ≃ 0) (r ≃ 1)› with
     | .inl (_ : r ≃ 0) =>
-      have : a ≃ 2 * q := calc
-        _ = a         := rfl
-        _ ≃ 2 * q + r := d.div_eqv
-        _ ≃ 2 * q + 0 := by srw [‹r ≃ 0›]
-        _ ≃ 2 * q     := AA.identR
-      have : Even a := even_from_eqv ‹a ≃ 2 * q›
+      have : Even a := even_rem.mpr ‹r ≃ 0›
       show Either (Even a) (Odd a) from .inl ‹Even a›
     | .inr (_ : r ≃ 1) =>
-      have : a ≃ 2 * q + 1 := calc
-        _ = a         := rfl
-        _ ≃ 2 * q + r := d.div_eqv
-        _ ≃ 2 * q + 1 := by srw [‹r ≃ 1›]
-      have : Odd a := odd_from_eqv ‹a ≃ 2 * q + 1›
+      have : Odd a := odd_rem.mpr ‹r ≃ 1›
       show Either (Even a) (Odd a) from .inr ‹Odd a›
 
   have : ¬(Even a ∧ Odd a) := λ (And.intro (_ : Even a) (_ : Odd a)) =>
-    let even_div : FlooredDivision a 2 :=
-      let b := half ‹Even a›
-      have : a ≃ 2 * b + 0 := calc
-        _ = a         := rfl
-        _ ≃ 2 * b     := even_eqv ‹Even a›
-        _ ≃ 2 * b + 0 := Rel.symm AA.identR
-      have : abs (0:ℤ) < abs 2 := calc
-        _ = abs (0:ℤ) := rfl
-        _ ≃ 0         := abs_ident le_refl
-        _ < 2         := ‹(2:ℤ) > 0›
-        _ ≃ abs 2     := Rel.symm (abs_ident ‹(2:ℤ) ≥ 0›)
-      have : (0:ℤ) * 2 ≥ 0 := calc
-        _ = (0:ℤ) * 2 := rfl
-        _ ≃ 0         := AA.absorbL
-        _ ≥ 0         := le_refl
-      show FlooredDivision a 2 from {
-        quotient := b
-        remainder := 0
-        div_eqv := ‹a ≃ 2 * b + 0›
-        rem_mag := ‹abs (0:ℤ) < abs 2›
-        rem_sgn := ‹(0:ℤ) * 2 ≥ 0›
-      }
-
-    let odd_div : FlooredDivision a 2 :=
-      let c := half_floored ‹Odd a›
-      have : a ≃ 2 * c + 1 := odd_eqv ‹Odd a›
-      have : (1:ℤ) ≥ 0 := ge_split.mpr (.inl zero_lt_one)
-      have : abs (1:ℤ) < abs 2 := calc
-        _ = abs (1:ℤ) := rfl
-        _ ≃ 1         := abs_ident ‹(1:ℤ) ≥ 0›
-        _ < 2         := two_gt_one
-        _ ≃ abs 2     := Rel.symm (abs_ident ‹(2:ℤ) ≥ 0›)
-      have : (1:ℤ) * 2 ≥ 0 := calc
-        _ = (1:ℤ) * 2 := rfl
-        _ ≃ 2         := AA.identL
-        _ ≥ 0         := ‹(2:ℤ) ≥ 0›
-      show FlooredDivision a 2 from {
-        quotient := c
-        remainder := 1
-        div_eqv := ‹a ≃ 2 * c + 1›
-        rem_mag := ‹abs (1:ℤ) < abs 2›
-        rem_sgn := ‹(1:ℤ) * 2 ≥ 0›
-      }
-
-    have (And.intro _ (_ : (1:ℤ) ≃ 0)) := flooredDiv_unique odd_div even_div
+    have : (1:ℤ) ≃ 0 := calc
+      _ = (1:ℤ) := rfl
+      _ ≃ r     := Rel.symm (odd_rem.mp ‹Odd a›)
+      _ ≃ 0     := even_rem.mp ‹Even a›
     show False from absurd ‹(1:ℤ) ≃ 0› one_neqv_zero
 
   show AA.ExactlyOneOfTwo₁ (Even a) (Odd a) from {
