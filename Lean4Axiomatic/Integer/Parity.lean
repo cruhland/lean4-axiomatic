@@ -55,7 +55,34 @@ def even_from_eqv {a b : ℤ} : a ≃ 2 * b → Even a := sorry
 def odd_to_witness {a : ℤ} : Odd a → { b : ℤ // a ≃ 2 * b + 1 } := sorry
 def half_floored {a : ℤ} : Odd a → ℤ := sorry
 theorem odd_eqv {a : ℤ} (odd : Odd a) : a ≃ 2 * half_floored odd + 1 := sorry
-def odd_from_eqv {a b : ℤ} : a ≃ 2 * b + 1 → Odd a := sorry
+
+/-- Any integer of the form `2 * b + 1` is odd. -/
+def odd_from_eqv {a b : ℤ} : a ≃ 2 * b + 1 → Odd a := by
+  intro (_ : a ≃ 2 * b + 1)
+  show Odd a
+
+  let d₁ := div_floored a 2; let q := d₁.quotient; let r := d₁.remainder
+  let d₂ : FlooredDivision a 2 :=
+    -- Could use a numeric tactic for these
+    have : abs (1:ℤ) < abs 2 := calc
+      _ = abs (1:ℤ) := rfl
+      _ ≃ 1         := abs_ident one_ge_zero
+      _ < 2         := two_gt_one
+      _ ≃ abs (2:ℤ) := Rel.symm $ abs_ident two_ge_zero
+    have : (1:ℤ) * 2 ≥ 0 := calc
+      _ = (1:ℤ) * 2 := rfl
+      _ ≃ 2         := AA.identL
+      _ ≥ 0         := two_ge_zero
+    show FlooredDivision a 2 from {
+      quotient := b
+      remainder := 1
+      div_eqv := ‹a ≃ 2 * b + 1›
+      rem_mag := ‹abs (1:ℤ) < abs 2›
+      rem_sgn := ‹(1:ℤ) * 2 ≥ 0›
+    }
+  have (And.intro _ (_ : r ≃ 1)) := flooredDiv_unique d₁ d₂
+  have : Odd a := odd_rem.mpr ‹r ≃ 1›
+  exact this
 
 /-- Equivalent even integers have equivalent halves. -/
 @[gcongr]
@@ -76,9 +103,6 @@ theorem half_subst
 
 /-- Every integer is either even or odd, but not both. -/
 def parity (a : ℤ) : AA.ExactlyOneOfTwo₁ (Even a) (Odd a) :=
-  have : (1:ℤ) > 0 := zero_lt_one
-  have : (2:ℤ) > 0 := Trans.trans two_gt_one ‹(1:ℤ) > 0›
-  have : (2:ℤ) ≥ 0 := ge_split.mpr (.inl ‹(2:ℤ) > 0›)
   let d := div_floored a 2; let q := d.quotient; let r := d.remainder
 
   have : Either (Even a) (Odd a) :=
@@ -87,7 +111,7 @@ def parity (a : ℤ) : AA.ExactlyOneOfTwo₁ (Even a) (Odd a) :=
         _ = r * 2 := rfl
         _ ≥ 0     := d.rem_sgn
         _ ≃ 0 * 2 := Rel.symm AA.absorbL
-      have : r ≥ 0 := mul_cancelR_le ‹(2:ℤ) > 0› ‹r * 2 ≥ 0 * 2›
+      have : r ≥ 0 := mul_cancelR_le two_gt_zero ‹r * 2 ≥ 0 * 2›
       have : Either (r ≃ 0) (r > 0) := (ge_split_either ‹r ≥ 0›).swap
       match ‹Either (r ≃ 0) (r > 0)› with
       | .inl (_ : r ≃ 0) =>
@@ -107,7 +131,7 @@ def parity (a : ℤ) : AA.ExactlyOneOfTwo₁ (Even a) (Odd a) :=
             _ = r     := rfl
             _ ≃ abs r := Rel.symm (abs_ident ‹r ≥ 0›)
             _ < abs 2 := d.rem_mag
-            _ ≃ 2     := abs_ident ‹(2:ℤ) ≥ 0›
+            _ ≃ 2     := abs_ident two_ge_zero
           show Either (r ≃ 0) (r ≃ 1) from (lt_ge_false ‹r < 2› ‹r ≥ 2›).elim
 
     match ‹Either (r ≃ 0) (r ≃ 1)› with

@@ -1398,6 +1398,9 @@ theorem zero_lt_one : (0:ℤ) < 1 := by
   have : (0:ℤ) < 0 + 1 := lt_inc
   prw [add_identL] ‹(0:ℤ) < 0 + 1›
 
+/-- The integer one is greater than or equivalent to zero. -/
+theorem one_ge_zero : (1:ℤ) ≥ 0 := ge_split.mpr (.inl zero_lt_one)
+
 /--
 Negative one is less than zero (in the integers).
 
@@ -1406,6 +1409,14 @@ Negative one is less than zero (in the integers).
 theorem neg_one_lt_zero : (-1:ℤ) < 0 := by
   have : (-1:ℤ) < -1 + 1 := lt_inc
   prw [neg_invL] ‹(-1:ℤ) < -1 + 1›
+
+/-- The integer two is greater than zero. -/
+theorem two_gt_zero : (2:ℤ) > 0 :=
+  have : (1:ℤ) > 0 := zero_lt_one
+  show (2:ℤ) > 0 from Trans.trans two_gt_one ‹(1:ℤ) > 0›
+
+/-- The integer two is greater than or equivalent to zero. -/
+theorem two_ge_zero : (2:ℤ) ≥ 0 := ge_split.mpr (.inl two_gt_zero)
 
 /--
 Convert between _less than_ and _less than or equivalent to_ by incrementing or
