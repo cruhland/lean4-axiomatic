@@ -65,14 +65,24 @@ theorem half_floored_subst
 
 variable [Parity ℤ]
 
+omit [Subtraction ℤ] [Natural.Exponentiation ℕ ℤ] in
+theorem odd_eqv {a : ℤ} : Odd a → a ≃ 2 * half_floored a + 1 := by
+  intro (_ : Odd a)
+  show a ≃ 2 * half_floored a + 1
+
+  let d := div_floored a 2; let q := d.quotient; let r := d.remainder
+  calc
+    _ = a                      := rfl
+    _ ≃ 2 * q + r              := d.div_eqv
+    _ = 2 * half_floored a + r := rfl
+    _ ≃ 2 * half_floored a + 1 := by srw [odd_rem.mp ‹Odd a›]
+
 -- These are maybe not needed?
 def even_to_witness {a : ℤ} : Even a → { b : ℤ // a ≃ 2 * b } := sorry
 def odd_to_witness {a : ℤ} : Odd a → { b : ℤ // a ≃ 2 * b + 1 } := sorry
 
 theorem even_eqv {a : ℤ} : Even a → a ≃ 2 * half_floored a := sorry
 def even_from_eqv {a b : ℤ} : a ≃ 2 * b → Even a := sorry
-
-theorem odd_eqv {a : ℤ} : Odd a → a ≃ 2 * half_floored a + 1 := sorry
 
 /-- Any integer of the form `2 * b + 1` is odd. -/
 def odd_from_eqv {a b : ℤ} : a ≃ 2 * b + 1 → Odd a := by
