@@ -45,16 +45,34 @@ variable
   {ℤ : Type}
     [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ] [Order ℤ] [Negation ℤ]
     [Sign ℤ] [Metric ℤ] [Division ℤ] [Subtraction ℤ]
-    [Natural.Exponentiation ℕ ℤ] [Parity ℤ]
+    [Natural.Exponentiation ℕ ℤ]
 
+def half_floored (a : ℤ) : ℤ := (div_floored a 2).quotient
+
+/-- Equivalent integers have equivalent floored halves. -/
+@[gcongr]
+theorem half_floored_subst
+    {a₁ a₂ : ℤ} : a₁ ≃ a₂ → half_floored a₁ ≃ half_floored a₂
+    := by
+  intro (_ : a₁ ≃ a₂)
+  show half_floored a₁ ≃ half_floored a₂
+
+  let d₁ := div_floored a₁ 2; let q₁ := d₁.quotient
+  let d₂ := div_floored a₂ 2; let q₂ := d₂.quotient
+  have : q₁ ≃ q₂ := div_floored_substL_quot ‹a₁ ≃ a₂›
+  have : half_floored a₁ ≃ half_floored a₂ := ‹q₁ ≃ q₂›
+  exact this
+
+variable [Parity ℤ]
+
+-- These are maybe not needed?
 def even_to_witness {a : ℤ} : Even a → { b : ℤ // a ≃ 2 * b } := sorry
-def half {a : ℤ} : Even a → ℤ := sorry
-theorem even_eqv {a : ℤ} (e : Even a) : a ≃ 2 * half e := sorry
+def odd_to_witness {a : ℤ} : Odd a → { b : ℤ // a ≃ 2 * b + 1 } := sorry
+
+theorem even_eqv {a : ℤ} : Even a → a ≃ 2 * half_floored a := sorry
 def even_from_eqv {a b : ℤ} : a ≃ 2 * b → Even a := sorry
 
-def odd_to_witness {a : ℤ} : Odd a → { b : ℤ // a ≃ 2 * b + 1 } := sorry
-def half_floored {a : ℤ} : Odd a → ℤ := sorry
-theorem odd_eqv {a : ℤ} (odd : Odd a) : a ≃ 2 * half_floored odd + 1 := sorry
+theorem odd_eqv {a : ℤ} : Odd a → a ≃ 2 * half_floored a + 1 := sorry
 
 /-- Any integer of the form `2 * b + 1` is odd. -/
 def odd_from_eqv {a b : ℤ} : a ≃ 2 * b + 1 → Odd a := by
@@ -82,23 +100,6 @@ def odd_from_eqv {a b : ℤ} : a ≃ 2 * b + 1 → Odd a := by
     }
   have (And.intro _ (_ : r ≃ 1)) := flooredDiv_unique d₁ d₂
   have : Odd a := odd_rem.mpr ‹r ≃ 1›
-  exact this
-
-/-- Equivalent even integers have equivalent halves. -/
-@[gcongr]
-theorem half_subst
-    {a₁ a₂ : ℤ} {e₁ : Even a₁} {e₂ : Even a₂} : a₁ ≃ a₂ → half e₁ ≃ half e₂
-    := by
-  intro (_ : a₁ ≃ a₂)
-  show half e₁ ≃ half e₂
-
-  have : 2 * half e₁ ≃ 2 * half e₂ := calc
-    _ = 2 * half e₁ := rfl
-    _ ≃ a₁          := Rel.symm (even_eqv e₁)
-    _ ≃ a₂          := ‹a₁ ≃ a₂›
-    _ ≃ 2 * half e₂ := even_eqv e₂
-  have : half e₁ ≃ half e₂ :=
-    mul_cancelL two_neqv_zero ‹2 * half e₁ ≃ 2 * half e₂›
   exact this
 
 /-- Every integer is either even or odd, but not both. -/
@@ -165,7 +166,7 @@ def even_from_sqr_even {a : ℤ} : Even (a^2) → Even a := by
     exact ‹Even a›
   | .inr (_ : Odd a) =>
     have : Odd (a^2) :=
-      let b := half_floored ‹Odd a›
+      let b := half_floored a
       have : a ≃ 2 * b + 1 := odd_eqv ‹Odd a›
 
       let b' := 2 * b^2 + 2 * b

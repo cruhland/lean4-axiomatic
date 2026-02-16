@@ -10,7 +10,7 @@ derived properties.
 
 namespace Lean4Axiomatic.Rational
 
-open Lean4Axiomatic.Integer (Even Odd half)
+open Lean4Axiomatic.Integer (Even Odd half_floored)
 open Lean4Axiomatic.Logic (AP iff_subst_covar or_identR or_mapR)
 open Lean4Axiomatic.Metric (abs)
 open Lean4Axiomatic.Natural (pow_step pow_zero step)
@@ -525,7 +525,7 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     have : Even (x^2) := Integer.even_from_eqv ‹x^2 ≃ 2 * y^2›
     have : Even x := Integer.even_from_sqr_even ‹Even (x^2)›
 
-    let z := half ‹Even x›
+    let z := half_floored x
     have : x ≃ 2 * z := Integer.even_eqv ‹Even x›
     have : Positive (2:ℤ) := Integer.sgn_positive.mpr Integer.sgn_two_eqv_one
     have : 2 * z > 2 * 0 := calc
@@ -564,9 +564,9 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     have : (next e₁).val ≃ (next e₂).val := calc
       _ = (next e₁).val                         := rfl
       _ = (next (Subtype.mk (x₁, y₁) eqv₁)).val := rfl
-      _ = (y₁, half ‹Even x₁›)                  := rfl
-      _ ≃ (y₂, half ‹Even x₁›)                  := by srw [‹y₁ ≃ y₂›]
-      _ ≃ (y₂, half ‹Even x₂›)                  := by srw [‹x₁ ≃ x₂›]
+      _ = (y₁, half_floored x₁)                 := rfl
+      _ ≃ (y₂, half_floored x₁)                 := by srw [‹y₁ ≃ y₂›]
+      _ ≃ (y₂, half_floored x₂)                 := by srw [‹x₁ ≃ x₂›]
       _ = (next (Subtype.mk (x₂, y₂) eqv₂)).val := rfl
       _ = (next e₂).val                         := rfl
     have : next e₁ ≃ next e₂ := ‹(next e₁).val ≃ (next e₂).val›
