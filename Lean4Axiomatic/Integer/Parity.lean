@@ -10,11 +10,13 @@ open Lean4Axiomatic.Metric (abs)
 /-! ## Axioms -/
 
 class Parity.Ops (α : Type) where
-  Even (x : α) : Prop
+  Even : α → Prop
 
-  Odd (x : α) : Prop
+  Odd : α → Prop
 
-export Parity.Ops (Even Odd)
+  half_floored : α → α
+
+export Parity.Ops (Even Odd half_floored)
 
 class Parity.Props
     {ℕ : Type} [Natural ℕ]
@@ -24,8 +26,9 @@ class Parity.Props
     where
   even_rem {a : ℤ} : Even a ↔ (div_floored a 2).remainder ≃ 0
   odd_rem {a : ℤ} : Odd a ↔ (div_floored a 2).remainder ≃ 1
+  half_floored_eqv {a : ℤ} : half_floored a ≃ (div_floored a 2).quotient
 
-export Parity.Props (even_rem odd_rem)
+export Parity.Props (even_rem half_floored_eqv odd_rem)
 
 class Parity
     {ℕ : Type} [Natural ℕ]
@@ -44,10 +47,34 @@ variable
   {ℕ : Type} [Natural ℕ]
   {ℤ : Type}
     [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ] [Order ℤ] [Negation ℤ]
-    [Sign ℤ] [Metric ℤ] [Division ℤ] [Subtraction ℤ]
-    [Natural.Exponentiation ℕ ℤ]
+    [Sign ℤ] [Metric ℤ] [Division ℤ] [Parity ℤ]
 
-def half_floored (a : ℤ) : ℤ := (div_floored a 2).quotient
+/-- Even integers can be written in the form `2 * b`. -/
+theorem even_eqv {a : ℤ} : Even a → a ≃ 2 * half_floored a := by
+  intro (_ : Even a)
+  show a ≃ 2 * half_floored a
+
+  let d := div_floored a 2; let q := d.quotient; let r := d.remainder
+  calc
+    _ = a                      := rfl
+    _ ≃ 2 * q + r              := d.div_eqv
+    _ ≃ 2 * half_floored a + r := by srw [←half_floored_eqv]
+    _ ≃ 2 * half_floored a + 0 := by srw [even_rem.mp ‹Even a›]
+    _ ≃ 2 * half_floored a     := AA.identR
+
+/-- Odd integers can be written in the form `2 * b + 1`. -/
+theorem odd_eqv {a : ℤ} : Odd a → a ≃ 2 * half_floored a + 1 := by
+  intro (_ : Odd a)
+  show a ≃ 2 * half_floored a + 1
+
+  let d := div_floored a 2; let q := d.quotient; let r := d.remainder
+  calc
+    _ = a                      := rfl
+    _ ≃ 2 * q + r              := d.div_eqv
+    _ ≃ 2 * half_floored a + r := by srw [←half_floored_eqv]
+    _ ≃ 2 * half_floored a + 1 := by srw [odd_rem.mp ‹Odd a›]
+
+variable [Subtraction ℤ] [Natural.Exponentiation ℕ ℤ]
 
 /-- Equivalent integers have equivalent floored halves. -/
 @[gcongr]
@@ -59,37 +86,51 @@ theorem half_floored_subst
 
   let d₁ := div_floored a₁ 2; let q₁ := d₁.quotient
   let d₂ := div_floored a₂ 2; let q₂ := d₂.quotient
-  have : q₁ ≃ q₂ := div_floored_substL_quot ‹a₁ ≃ a₂›
-  have : half_floored a₁ ≃ half_floored a₂ := ‹q₁ ≃ q₂›
-  exact this
-
-variable [Parity ℤ]
-
-omit [Subtraction ℤ] [Natural.Exponentiation ℕ ℤ] in
-theorem odd_eqv {a : ℤ} : Odd a → a ≃ 2 * half_floored a + 1 := by
-  intro (_ : Odd a)
-  show a ≃ 2 * half_floored a + 1
-
-  let d := div_floored a 2; let q := d.quotient; let r := d.remainder
   calc
-    _ = a                      := rfl
-    _ ≃ 2 * q + r              := d.div_eqv
-    _ = 2 * half_floored a + r := rfl
-    _ ≃ 2 * half_floored a + 1 := by srw [odd_rem.mp ‹Odd a›]
+    _ = half_floored a₁ := rfl
+    _ ≃ q₁              := half_floored_eqv
+    _ ≃ q₂              := div_floored_substL_quot ‹a₁ ≃ a₂›
+    _ ≃ half_floored a₂ := Rel.symm half_floored_eqv
 
--- These are maybe not needed?
-def even_to_witness {a : ℤ} : Even a → { b : ℤ // a ≃ 2 * b } := sorry
-def odd_to_witness {a : ℤ} : Odd a → { b : ℤ // a ≃ 2 * b + 1 } := sorry
+/-- Any integer of the form `2 * b` is even. -/
+def even_from_eqv {a b : ℤ} : a ≃ 2 * b → Even a := by
+  intro (_ : a ≃ 2 * b)
+  show Even a
 
-theorem even_eqv {a : ℤ} : Even a → a ≃ 2 * half_floored a := sorry
-def even_from_eqv {a b : ℤ} : a ≃ 2 * b → Even a := sorry
+  let d₁ := div_floored a 2; let r := d₁.remainder
+  let d₂ : FlooredDivision a 2 :=
+    -- Could use a numeric tactic for these
+    have : a ≃ 2 * b + 0 := calc
+      _ = a         := rfl
+      _ ≃ 2 * b     := ‹a ≃ 2 * b›
+      _ ≃ 2 * b + 0 := Rel.symm AA.identR
+    have : abs (0:ℤ) < abs 2 := calc
+      _ = abs (0:ℤ) := rfl
+      _ ≃ 0         := abs_zero.mpr Rel.refl
+      _ < 2         := two_gt_zero
+      _ ≃ abs (2:ℤ) := Rel.symm $ abs_ident two_ge_zero
+    have : (0:ℤ) * 2 ≥ 0 := calc
+      _ = (0:ℤ) * 2 := rfl
+      _ ≃ 0         := AA.absorbL
+      _ ≥ 0         := le_refl
+    show FlooredDivision a 2 from {
+      quotient := b
+      remainder := 0
+      div_eqv := ‹a ≃ 2 * b + 0›
+      rem_mag := ‹abs (0:ℤ) < abs 2›
+      rem_sgn := ‹(0:ℤ) * 2 ≥ 0›
+    }
+
+  have (And.intro _ (_ : r ≃ 0)) := flooredDiv_unique d₁ d₂
+  have : Even a := even_rem.mpr ‹r ≃ 0›
+  exact this
 
 /-- Any integer of the form `2 * b + 1` is odd. -/
 def odd_from_eqv {a b : ℤ} : a ≃ 2 * b + 1 → Odd a := by
   intro (_ : a ≃ 2 * b + 1)
   show Odd a
 
-  let d₁ := div_floored a 2; let q := d₁.quotient; let r := d₁.remainder
+  let d₁ := div_floored a 2; let r := d₁.remainder
   let d₂ : FlooredDivision a 2 :=
     -- Could use a numeric tactic for these
     have : abs (1:ℤ) < abs 2 := calc

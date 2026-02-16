@@ -13,11 +13,13 @@ variable
 local instance parity_ops : Parity.Ops ℤ := {
   Even a := (div_floored a 2).remainder ≃ 0
   Odd a := (div_floored a 2).remainder ≃ 1
+  half_floored a := (div_floored a 2).quotient
 }
 
 def parity_props : Parity.Props ℤ := {
   even_rem := Iff.rfl
   odd_rem := Iff.rfl
+  half_floored_eqv := Rel.refl
 }
 
 def parity : Parity ℤ := {
