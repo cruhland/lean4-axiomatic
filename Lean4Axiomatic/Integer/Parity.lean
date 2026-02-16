@@ -9,27 +9,40 @@ open Lean4Axiomatic.Metric (abs)
 
 /-! ## Axioms -/
 
+/-- Predicates and functions relating to parity. -/
 class Parity.Ops (α : Type) where
+  /-- The value has **even** parity. -/
   Even : α → Prop
 
+  /-- The value has **odd** parity. -/
   Odd : α → Prop
 
+  /-- The greatest whole-number value no larger than half of the input. -/
   half_floored : α → α
 
 export Parity.Ops (Even Odd half_floored)
 
+/-- Defining properties of integer parity. -/
 class Parity.Props
     {ℕ : Type} [Natural ℕ]
     (ℤ : Type)
       [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ] [Order ℤ] [Negation ℤ]
       [Sign ℤ] [Metric ℤ] [Division ℤ] [Ops ℤ]
     where
+  /-- Even integers have remainder zero when divided by two. -/
   even_rem {a : ℤ} : Even a ↔ (div_floored a 2).remainder ≃ 0
+
+  /-- Odd integers have remainder one when divided by two. -/
   odd_rem {a : ℤ} : Odd a ↔ (div_floored a 2).remainder ≃ 1
+
+  /--
+  The quotient when an integer is divided by two is its half-floored value.
+  -/
   half_floored_eqv {a : ℤ} : half_floored a ≃ (div_floored a 2).quotient
 
 export Parity.Props (even_rem half_floored_eqv odd_rem)
 
+/-- All integer parity axioms. -/
 class Parity
     {ℕ : Type} [Natural ℕ]
     (ℤ : Type)
