@@ -1705,9 +1705,54 @@ theorem bounded_inf_desc_impossible
     : ¬(InfiniteDescent s)
     := by
   intro (_ : InfiniteDescent s)
+  have desc_at (n : ℕ) : s[n] > s[step n] := ‹InfiniteDescent s› n
   show False
-  -- Use `ind_from` (above) to prove. Adapt proof from Sequence
-  admit
+
+  have : s[0] > s[1] := calc
+    _ = s[0]      := rfl
+    _ > s[step 0] := desc_at 0
+    _ ≃ s[1]      := by srw [←Natural.literal_step]
+
+  have : s[0] ≤ s[1] :=
+    let motive x := (n : ℕ) → s[n] ≥ x
+
+    have motive_subst {x₁ x₂ : ℤ} : x₁ ≃ x₂ → motive x₁ → motive x₂ := by
+      intro (_ : x₁ ≃ x₂) (m₁ : (n : ℕ) → s[n] ≥ x₁) (n : ℕ)
+      show s[n] ≥ x₂
+
+      calc
+        _ = s[n] := rfl
+        _ ≥ x₁ := m₁ n
+        _ ≃ x₂ := ‹x₁ ≃ x₂›
+
+    have lower_bound_at_index (a : ℤ) : a ≥ b → (n : ℕ) → s[n] ≥ a := by
+      intro (_ : a ≥ b)
+      show motive a
+
+      apply ind_from motive_subst ‹a ≥ b›
+      case base =>
+        show motive b
+        intro (n : ℕ)
+        show s[n] ≥ b
+
+        have : s[n] > b := bounded n
+        have : s[n] ≥ b := ge_split.mpr (.inl ‹s[n] > b›)
+        exact this
+      case next =>
+        intro (c : ℤ) (_ : c ≥ b) (ih : (n : ℕ) → s[n] ≥ c) (n : ℕ)
+        show s[n] ≥ c + 1
+        have : s[n] > c := calc
+          _ = s[n]      := rfl
+          _ > s[step n] := desc_at n
+          _ ≥ c         := ih (step n)
+        have : s[n] ≥ c + 1 := lt_iff_le_incL.mp ‹s[n] > c›
+        exact this
+    have : s[0] > b := bounded 0
+    have : s[0] ≥ b := ge_split.mpr (.inl ‹s[0] > b›)
+    show s[0] ≤ s[1] from lower_bound_at_index s[0] ‹s[0] ≥ b› 1
+
+  have : False := le_gt_false ‹s[0] ≤ s[1]› ‹s[0] > s[1]›
+  exact this
 
 /--
 Compute whether two integers are in a _greater than or equivalent to_ relation.
