@@ -1702,11 +1702,11 @@ An integer sequence cannot decrease forever while staying above a fixed value.
 -/
 theorem bounded_inf_desc_impossible
     {s : Sequence ℤ} {b : ℤ} (bounded : (n : ℕ) → s[n] > b)
-    : ¬(InfiniteDescent (ℕ := ℕ) s)
+    : ¬(InfiniteDescent s)
     := by
-  intro (_ : InfiniteDescent (ℕ := ℕ) s)
+  intro (_ : InfiniteDescent s)
   show False
-  -- Use `ind_from` (above) to prove
+  -- Use `ind_from` (above) to prove. Adapt proof from Sequence
   admit
 
 /--

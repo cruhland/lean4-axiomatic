@@ -653,9 +653,10 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
   let proj (e : Elem) : ℤ := e.val.1
   let solns := pairs.map proj
   have : InfiniteDescent solns :=
-    have chain : (x : ℕ) → proj pairs[x] > proj pairs[step x] :=
+    have chain
+        {ℕ : Type} [Natural ℕ] : (x : ℕ) → proj pairs[x] > proj pairs[step x] :=
       Sequence.iterate_chain proj_gt_link
-    have desc : (x : ℕ) → solns[x] > solns[step x] :=
+    have desc : {ℕ : Type} → [Natural ℕ] → (x : ℕ) → solns[x] > solns[step x] :=
       Sequence.map_chain chain
     show InfiniteDescent solns from desc
   have solns_bounded (n : ℕ) : solns[n] > 0 :=

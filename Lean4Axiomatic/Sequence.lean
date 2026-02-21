@@ -51,12 +51,12 @@ theorem at_substR
   show s[n₁] ≃ s[n₂]
   exact s.subst_index ‹n₁ ≃ n₂›
 
-def linked {α : Type u} (P : α → α → Prop) (s : Sequence α) (n : ℕ) : Prop :=
-  P s[n] s[step n]
+def linked {α : Type u} (P : α → α → Prop) (s : Sequence α) : Prop :=
+  {ℕ : Type} → [Natural ℕ] → (n : ℕ) → P s[n] s[step n]
 
 /-- When each value in a sequence is less than the one preceding it. -/
 def InfiniteDescent {α : Type u} [LT α] (s : Sequence α) : Prop :=
-  (n : ℕ) → s.linked (· > ·) n
+  s.linked (· > ·)
 
 /-! ## Derived properties -/
 
@@ -86,7 +86,7 @@ def iterate {α : Sort u} (init : α) (next : α → α) : Sequence α :=
 
 def iterateProp
     {α : Type u} {P : α → α → Prop} (init : α) (next : α → α)
-    : ((x : α) → P x (next x)) → { s : Sequence α // (n : ℕ) → s.linked P n }
+    : ((x : α) → P x (next x)) → { s : Sequence α // s.linked P }
     :=
   sorry
 
@@ -105,13 +105,16 @@ theorem iterate_chain
     {P : α → α → Prop} [AA.Substitutive₂ P AA.tc (· ≃ ·) (· → ·)]
     {init : α} {next : α → α} [AA.Substitutive₁ next (· ≃ ·) (· ≃ ·)]
     (P_link : (x : α) → P x (next x))
-    : (n : ℕ) → (iterate init next).linked P n
+    : (iterate init next).linked P
     := by
-  intro (n : ℕ)
+  intro (ℕ : Type) (_ : Natural ℕ) (n : ℕ)
   let s := iterate init next
+  let motive x := P s[x] s[step x]
+  show motive n
+
   apply Natural.cases_on
   case zero =>
-    show s.linked P 0
+    show motive 0
     have : P init (next init) := P_link init
     have : P (iterate init next)[0] (next init) :=
       AA.substLFn (Rel.symm iterate_at_zero) ‹P init (next init)›
@@ -121,29 +124,29 @@ theorem iterate_chain
     have : P s[0] (iterate init next)[step 0] :=
       AA.substRFn (Rel.symm iterate_at_step) this
     have : P s[0] s[step 0] := this
-    have : s.linked P 0 := this
+    have : motive 0 := this
     exact this
   case step =>
     intro (m : ℕ)
-    show s.linked P (step m)
+    show motive (step m)
     have : P s[step m] (next s[step m]) := P_link s[step m]
     have : P s[step m] (next (iterate init next)[step m]) := this
     have : P s[step m] (iterate init next)[step (step m)] :=
       AA.substRFn (Rel.symm iterate_at_step) this
     have : P s[step m] s[step (step m)] := this
-    have : s.linked P (step m) := this
+    have : motive (step m) := this
     exact this
 
 theorem map_chain
     {α : Type u} {β : Type v} {P : β → β → Prop} {s : Sequence α} {f : α → β}
-    (orig_chain : (n : ℕ) → P (f s[n]) (f s[step n]))
-    : (n : ℕ) → (s.map f).linked P n
+    (orig_chain : {ℕ : Type} → [Natural ℕ] → (n : ℕ) → P (f s[n]) (f s[step n]))
+    : (s.map f).linked P
     :=
   sorry
 
 /-- No natural number sequence is in infinite descent. -/
 theorem inf_desc_impossible
-    {s : Sequence ℕ} : ¬(InfiniteDescent (ℕ := ℕ) s)
+    {s : Sequence ℕ} : ¬(InfiniteDescent s)
     := by
   intro (_ : InfiniteDescent s)
   have desc_at (n : ℕ) : s[n] > s[step n] := ‹InfiniteDescent s› n
