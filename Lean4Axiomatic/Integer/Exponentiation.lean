@@ -441,6 +441,39 @@ theorem sgn_sqr_nonneg {a : ℤ} : (sgn a)^2 ≃ sgn a ↔ a ≥ 0 := calc
   _ ↔ a ≥ 0                 := ge_split.symm
 
 /--
+Squaring the sign of an integer difference leaves it unchanged exactly when the
+first operand of the difference is _greater than or equivalent to_ the second.
+-/
+theorem sgn_diff_sqr_ge {a b : ℤ} : (sgn (a - b))^2 ≃ sgn (a - b) ↔ a ≥ b :=
+  calc
+    _ ↔ (sgn (a - b))^2 ≃ sgn (a - b) := Iff.rfl
+    _ ↔ a - b ≥ 0                     := sgn_sqr_nonneg
+    _ ↔ a ≥ b                         := ge_iff_diff_nonneg.symm
+
+/--
+A positive right factor can be removed from both sides of a _less than or
+equivalent to_ relation on integers.
+-/
+theorem mul_cancelR_le {a b c : ℤ} : c > 0 → a * c ≤ b * c → a ≤ b := by
+  intro (_ : c > 0) (_ : a * c ≤ b * c)
+  show a ≤ b
+
+  have : sgn (b * c - a * c) ≃ sgn (b - a) := calc
+    _ = sgn (b * c - a * c) := rfl
+    _ ≃ sgn ((b - a) * c)   := by srw [←mul_distribR_sub]
+    _ ≃ sgn (b - a) * sgn c := sgn_compat_mul
+    _ ≃ sgn (b - a) * 1     := by srw [gt_zero_sgn.mp ‹c > 0›]
+    _ ≃ sgn (b - a)         := AA.identR
+  have : (sgn (b - a))^2 ≃ sgn (b - a) := calc
+    _ = (sgn (b - a))^2         := rfl
+    _ ≃ (sgn (b * c - a * c))^2 := by srw [←‹sgn (b * c - a * c) ≃ sgn (b - a)›]
+    _ ≃ sgn (b * c - a * c)     := sgn_diff_sqr_ge.mpr ‹b * c ≥ a * c›
+    _ ≃ sgn (b - a)             := ‹sgn (b * c - a * c) ≃ sgn (b - a)›
+
+  have : a ≤ b := sgn_diff_sqr_ge.mp ‹(sgn (b - a))^2 ≃ sgn (b - a)›
+  exact this
+
+/--
 Squaring preserves the relative ordering of nonnegative integers.
 
 **Property intuition**: Multiplication by a constant already has this property;
@@ -699,8 +732,7 @@ theorem le_cube_subst {s t : ℤ} : 0 < s → s ≤ t → s^3 - s ≤ t^3 - t :=
         _ ≃ (t-s) * (t^2 + t * s + s^2 - 1)          := by srw [←sub_defn]
 
     have ts_diff_drop_sqr : (sgn (t - s))^2 ≃ sgn (t - s) :=
-      have : t - s ≥ 0 := ge_iff_diff_nonneg.mp ‹t ≥ s›
-      sgn_sqr_nonneg.mpr ‹t - s ≥ 0›
+      sgn_diff_sqr_ge.mpr ‹t ≥ s›
 
     let ts_quad := t^2 + t * s + s^2 - 1
     have ts_quad_drop_sqr : (sgn ts_quad)^2 ≃ sgn ts_quad :=
@@ -741,9 +773,8 @@ theorem le_cube_subst {s t : ℤ} : 0 < s → s ≤ t → s^3 - s ≤ t^3 - t :=
             _ ≥ 1 * s := by srw [pos_gt_iff_ge.mp ‹t > 0›] -- uses s ≥ 0
             _ ≃ s     := AA.identL
             _ ≥ 1     := pos_gt_iff_ge.mp ‹s > 0›
-          have : ts1 ≥ 0 := ge_iff_diff_nonneg.mp ‹t * s ≥ 1›
           have ts_sub_1_drop_sqr : (sgn ts1)^2 ≃ sgn ts1 :=
-            sgn_sqr_nonneg.mpr ‹ts1 ≥ 0›
+            sgn_diff_sqr_ge.mpr ‹t * s ≥ 1›
           have ts_terms_drop_sqr
               : (sgn (ts1 * (t^2 + s^2)))^2 ≃ sgn (ts1 * (t^2 + s^2))
               := calc
@@ -792,9 +823,8 @@ theorem le_cube_subst {s t : ℤ} : 0 < s → s ≤ t → s^3 - s ≤ t^3 - t :=
       _ ≃ sgn (t - s) * sgn ts_quad         := by srw [ts_quad_drop_sqr]
       _ ≃ sgn ((t - s) * ts_quad)           := by srw [←sgn_compat_mul]
       _ ≃ sgn (t^3 - t - (s^3 - s))         := by srw [←factor]
-  have : t^3 - t - (s^3 - s) ≥ 0 :=
-    sgn_sqr_nonneg.mp ‹(sgn (t^3-t - (s^3-s)))^2 ≃ sgn (t^3-t - (s^3-s))›
-  have : t^3 - t ≥ s^3 - s := ge_iff_diff_nonneg.mpr ‹t^3 - t - (s^3 - s) ≥ 0›
+  have : t^3 - t ≥ s^3 - s :=
+    sgn_diff_sqr_ge.mp ‹(sgn (t^3-t - (s^3-s)))^2 ≃ sgn (t^3-t - (s^3-s))›
   exact this
 
 /-- All natural numbers with at least one `step` have a positive sign. -/

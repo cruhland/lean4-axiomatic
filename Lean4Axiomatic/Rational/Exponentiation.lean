@@ -557,10 +557,6 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     have : (x₁, y₁) ≃ (x₂, y₂) := ‹e₁ ≃ e₂›
     have (And.intro (_ : x₁ ≃ x₂) (_ : y₁ ≃ y₂)) :=
       Relation.Equivalence.Impl.Prod.eqv_defn.mp ‹(x₁, y₁) ≃ (x₂, y₂)›
-    have : Even (x₁^2) := Integer.even_from_eqv eqv₁.1
-    have : Even (x₂^2) := Integer.even_from_eqv eqv₂.1
-    have : Even x₁ := Integer.even_from_sqr_even ‹Even (x₁^2)›
-    have : Even x₂ := Integer.even_from_sqr_even ‹Even (x₂^2)›
     have : (next e₁).val ≃ (next e₂).val := calc
       _ = (next e₁).val                         := rfl
       _ = (next (Subtype.mk (x₁, y₁) eqv₁)).val := rfl

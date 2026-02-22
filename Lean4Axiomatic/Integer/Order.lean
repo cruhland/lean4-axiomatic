@@ -586,8 +586,6 @@ instance mul_cancellative_lt
   cancellativeR := AA.cancelR_from_cancelL mul_cancellativeL_lt
 }
 
-theorem mul_cancelR_le {a b c : ℤ} : c > 0 → a * c ≤ b * c → a ≤ b := sorry
-
 /--
 Negation reverses order.
 
