@@ -83,12 +83,13 @@ def map
     subst_at := map_subst_at
   }
 
+/-- How to compute the element of a mapped sequence at an index. -/
 theorem map_index
     {α : Type u} {β : Type v} [EqvOp α] [EqvOp β]
     {f : α → β} [AA.Substitutive₁ f (· ≃ ·) (· ≃ ·)] {s : Sequence α} {n : ℕ}
     : (s.map f)[n] ≃ f s[n]
-    := by
-  admit
+    :=
+  Rel.refl
 
 def iterate {α : Sort u} [EqvOp α] (init : α) (next : α → α) : Sequence α :=
   let nth {ℕ : Type} [Natural ℕ] (n : ℕ) : α := sorry
@@ -104,12 +105,6 @@ def iterate {α : Sort u} [EqvOp α] (init : α) (next : α → α) : Sequence �
     _at := nth
     subst_at := subst_at
   }
-
-def iterateProp
-    {α : Type u} [EqvOp α] {P : α → α → Prop} (init : α) (next : α → α)
-    : ((x : α) → P x (next x)) → { s : Sequence α // s.linked P }
-    :=
-  sorry
 
 theorem iterate_at_zero
     {α : Type u} [EqvOp α] {init : α} {next : α → α}
