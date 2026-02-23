@@ -10,7 +10,7 @@ open Relation.Equivalence (EqvOp)
 /-! ## Axioms / Definitions -/
 
 /-- An infinite, ordered collection of the provided `Sort`'s values. -/
-structure Sequence (α : Sort u) where
+structure Sequence (α : Sort u) [EqvOp α] where
   /--
   The element identified by the provided index value.
 
@@ -21,8 +21,7 @@ structure Sequence (α : Sort u) where
   _at {ℕ : Type} [Natural ℕ] (index : ℕ) : α
 
   /-- Equivalent index values produce equivalent elements. -/
-  subst_index
-    {ℕ : Type} [Natural ℕ] [EqvOp α] {n₁ n₂ : ℕ} : n₁ ≃ n₂ → _at n₁ ≃ _at n₂
+  subst_at {ℕ : Type} [Natural ℕ] {n₁ n₂ : ℕ} : n₁ ≃ n₂ → _at n₁ ≃ _at n₂
 
 namespace Sequence
 
@@ -30,7 +29,7 @@ variable {ℕ : Type} [Natural ℕ]
 
 /-- Enable indexing notation for sequences. -/
 instance seq_getElem_inst
-    {α : Type u}
+    {α : Type u} [EqvOp α]
     : GetElem
         (coll := Sequence α) (idx := ℕ) (elem := α) (valid := λ _ _ => True)
     := {
@@ -40,7 +39,7 @@ instance seq_getElem_inst
 /--
 Equivalent index values produce equivalent elements.
 
-Corollary of `subst_index` that uses indexing syntax, for use with `gcongr`.
+Corollary of `subst_at` that uses indexing syntax, for use with `gcongr`.
 -/
 @[gcongr]
 theorem at_substR
@@ -49,30 +48,52 @@ theorem at_substR
     := by
   intro (_ : n₁ ≃ n₂)
   show s[n₁] ≃ s[n₂]
-  exact s.subst_index ‹n₁ ≃ n₂›
+  exact s.subst_at ‹n₁ ≃ n₂›
 
-def linked {α : Type u} (P : α → α → Prop) (s : Sequence α) : Prop :=
+def linked {α : Type u} [EqvOp α] (P : α → α → Prop) (s : Sequence α) : Prop :=
   {ℕ : Type} → [Natural ℕ] → (n : ℕ) → P s[n] s[step n]
 
 /-- When each value in a sequence is less than the one preceding it. -/
-def InfiniteDescent {α : Type u} [LT α] (s : Sequence α) : Prop :=
+def InfiniteDescent {α : Type u} [EqvOp α] [LT α] (s : Sequence α) : Prop :=
   s.linked (· > ·)
 
 /-! ## Derived properties -/
 
-def map {α : Sort u} {β : Sort v} (f : α → β) (s : Sequence α) : Sequence β :=
-  sorry
+/-- Apply a function to every element of a sequence. -/
+def map
+    {α : Type u} {β : Type v} [EqvOp α] [EqvOp β]
+    (f : α → β) [AA.Substitutive₁ f (· ≃ ·) (· ≃ ·)]
+    (s : Sequence α) : Sequence β
+    :=
+  let map_at {ℕ : Type} [Natural ℕ] (n : ℕ) := f s[n]
+  have map_subst_at
+      {ℕ : Type} [Natural ℕ] {n₁ n₂ : ℕ} : n₁ ≃ n₂ → map_at n₁ ≃ map_at n₂
+      := by
+    intro (_ : n₁ ≃ n₂)
+    show map_at n₁ ≃ map_at n₂
+
+    calc
+      _ = map_at n₁ := rfl
+      _ = f s[n₁]   := rfl
+      _ ≃ f s[n₂]   := AA.subst₁ (by srw [‹n₁ ≃ n₂›])
+      _ = map_at n₂ := rfl
+
+  show Sequence β from {
+    _at := map_at
+    subst_at := map_subst_at
+  }
 
 theorem map_index
-    {α : Type u} {β : Type v} [EqvOp β] {f : α → β} {s : Sequence α} {n : ℕ}
+    {α : Type u} {β : Type v} [EqvOp α] [EqvOp β]
+    {f : α → β} [AA.Substitutive₁ f (· ≃ ·) (· ≃ ·)] {s : Sequence α} {n : ℕ}
     : (s.map f)[n] ≃ f s[n]
     := by
   admit
 
-def iterate {α : Sort u} (init : α) (next : α → α) : Sequence α :=
+def iterate {α : Sort u} [EqvOp α] (init : α) (next : α → α) : Sequence α :=
   let nth {ℕ : Type} [Natural ℕ] (n : ℕ) : α := sorry
 
-  have subst_index
+  have subst_at
       {ℕ : Type} [Natural ℕ] [EqvOp α] {n₁ n₂ : ℕ} : n₁ ≃ n₂ → nth n₁ ≃ nth n₂
       := by
     intro (_ : n₁ ≃ n₂)
@@ -81,11 +102,11 @@ def iterate {α : Sort u} (init : α) (next : α → α) : Sequence α :=
 
   show Sequence α from {
     _at := nth
-    subst_index := subst_index
+    subst_at := subst_at
   }
 
 def iterateProp
-    {α : Type u} {P : α → α → Prop} (init : α) (next : α → α)
+    {α : Type u} [EqvOp α] {P : α → α → Prop} (init : α) (next : α → α)
     : ((x : α) → P x (next x)) → { s : Sequence α // s.linked P }
     :=
   sorry
@@ -138,7 +159,8 @@ theorem iterate_chain
     exact this
 
 theorem map_chain
-    {α : Type u} {β : Type v} {P : β → β → Prop} {s : Sequence α} {f : α → β}
+    {α : Type u} {β : Type v} [EqvOp α] [EqvOp β] {s : Sequence α}
+    {P : β → β → Prop} {f : α → β} [AA.Substitutive₁ f (· ≃ ·) (· ≃ ·)]
     (orig_chain : {ℕ : Type} → [Natural ℕ] → (n : ℕ) → P (f s[n]) (f s[step n]))
     : (s.map f).linked P
     :=

@@ -647,6 +647,17 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
     exact this
 
   let proj (e : Elem) : ℤ := e.val.1
+  have proj_subst {e₁ e₂ : Elem} : e₁ ≃ e₂ → proj e₁ ≃ proj e₂ := by
+    intro (_ : e₁ ≃ e₂)
+    show proj e₁ ≃ proj e₂
+
+    calc
+      _ = proj e₁  := rfl
+      _ = e₁.val.1 := rfl
+      _ ≃ e₂.val.1 := by srw [‹e₁ ≃ e₂›]
+      _ = proj e₂  := rfl
+  have : AA.Substitutive₁ proj (· ≃ ·) (· ≃ ·) := { subst₁ := proj_subst }
+
   let solns := pairs.map proj
   have : InfiniteDescent solns :=
     have chain
