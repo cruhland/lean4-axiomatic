@@ -21,7 +21,7 @@ structure Sequence (α : Sort u) [EqvOp α] where
   _at {ℕ : Type} [Natural ℕ] (index : ℕ) : α
 
   /-- Equivalent index values produce equivalent elements. -/
-  subst_at {ℕ : Type} [Natural ℕ] {n₁ n₂ : ℕ} : n₁ ≃ n₂ → _at n₁ ≃ _at n₂
+  subst {ℕ : Type} [Natural ℕ] {n₁ n₂ : ℕ} : n₁ ≃ n₂ → _at n₁ ≃ _at n₂
 
 namespace Sequence
 
@@ -48,7 +48,7 @@ theorem at_substR
     := by
   intro (_ : n₁ ≃ n₂)
   show s[n₁] ≃ s[n₂]
-  exact s.subst_at ‹n₁ ≃ n₂›
+  exact s.subst ‹n₁ ≃ n₂›
 
 def linked {α : Type u} [EqvOp α] (P : α → α → Prop) (s : Sequence α) : Prop :=
   {ℕ : Type} → [Natural ℕ] → (n : ℕ) → P s[n] s[step n]
@@ -66,7 +66,7 @@ def map
     (s : Sequence α) : Sequence β
     :=
   let map_at {ℕ : Type} [Natural ℕ] (n : ℕ) := f s[n]
-  have map_subst_at
+  have map_at_subst
       {ℕ : Type} [Natural ℕ] {n₁ n₂ : ℕ} : n₁ ≃ n₂ → map_at n₁ ≃ map_at n₂
       := by
     intro (_ : n₁ ≃ n₂)
@@ -80,7 +80,7 @@ def map
 
   show Sequence β from {
     _at := map_at
-    subst_at := map_subst_at
+    subst := map_at_subst
   }
 
 /-- How to compute the element of a mapped sequence at an index. -/
@@ -91,33 +91,38 @@ theorem map_index
     :=
   Rel.refl
 
-def iterate {α : Sort u} [EqvOp α] (init : α) (next : α → α) : Sequence α :=
-  let nth {ℕ : Type} [Natural ℕ] (n : ℕ) : α := sorry
+/-- Build a sequence by repeatedly applying a function to a starting value. -/
+def iterate {α : Type} [EqvOp α] (init : α) (next : α → α) : Sequence α :=
+  let nth {ℕ : Type} [Natural ℕ] (n : ℕ) : α := Natural.rec_on n init next
 
-  have subst_at
+  have nth_subst
       {ℕ : Type} [Natural ℕ] [EqvOp α] {n₁ n₂ : ℕ} : n₁ ≃ n₂ → nth n₁ ≃ nth n₂
       := by
     intro (_ : n₁ ≃ n₂)
     show nth n₁ ≃ nth n₂
-    admit
+    calc
+      _ = nth n₁                      := rfl
+      _ = Natural.rec_on n₁ init next := rfl
+      _ ≃ Natural.rec_on n₂ init next := by srw [‹n₁ ≃ n₂›]
+      _ = nth n₂                      := rfl
 
   show Sequence α from {
     _at := nth
-    subst_at := subst_at
+    subst := nth_subst
   }
 
 theorem iterate_at_zero
-    {α : Type u} [EqvOp α] {init : α} {next : α → α}
+    {α : Type} [EqvOp α] {init : α} {next : α → α}
     : (iterate init next)[0] ≃ init
     := sorry
 
 theorem iterate_at_step
-    {α : Type u} [EqvOp α] {init : α} {next : α → α} {n : ℕ}
+    {α : Type} [EqvOp α] {init : α} {next : α → α} {n : ℕ}
     : (iterate init next)[step n] ≃ next (iterate init next)[n]
     := sorry
 
 theorem iterate_chain
-    {α : Type u} [EqvOp α]
+    {α : Type} [EqvOp α]
     {P : α → α → Prop} [AA.Substitutive₂ P AA.tc (· ≃ ·) (· → ·)]
     {init : α} {next : α → α} [AA.Substitutive₁ next (· ≃ ·) (· ≃ ·)]
     (P_link : (x : α) → P x (next x))

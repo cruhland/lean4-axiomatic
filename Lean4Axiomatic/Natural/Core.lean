@@ -264,6 +264,15 @@ theorem rec_on_step
   _ = s (ind_on n z (λ _ => s))         := rfl
   _ = s (rec_on n z s)                  := rfl
 
+@[gcongr]
+theorem rec_on_subst
+    {α : Sort u} [EqvOp α] {n₁ n₂ : ℕ} {z : α} {s : α → α}
+    : n₁ ≃ n₂ → rec_on n₁ z s ≃ rec_on n₂ z s
+    := by
+  intro (_ : n₁ ≃ n₂)
+  show rec_on n₁ z s ≃ rec_on n₂ z s
+  admit
+
 end universe_polymorphic_induction
 
 /--
