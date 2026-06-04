@@ -37,9 +37,9 @@ Anything to the zero power is one.
 recursive definition of `_pow`.
 -/
 theorem pow_zero {x : α} : x ^ (0:ℕ) ≃ 1 := calc
-  _ ≃ x ^ (0:ℕ)         := Rel.refl
+  _ = x^(0:ℕ)            := rfl
   _ = rec_on 0 1 (· * x) := rfl
-  _ = 1                  := rec_on_zero
+  _ ≃ 1                  := rec_on_zero
 
 /--
 Adding one to the exponent multiplies the result by the base.
@@ -47,11 +47,11 @@ Adding one to the exponent multiplies the result by the base.
 **Property and proof intuition**: This corresponds to the recursive case in the
 definition of `_pow`.
 -/
-theorem pow_step {x : α} {n : ℕ} : x ^ step n ≃ x ^ n * x := calc
-  _ ≃ x ^ step n                := Rel.refl
+theorem pow_step {x : α} {n : ℕ} : x^(step n) ≃ x^n * x := calc
+  _ = x^(step n)                := rfl
   _ = rec_on (step n) 1 (· * x) := rfl
-  _ = (rec_on n 1 (· * x)) * x  := rec_on_step
-  _ = x ^ n * x                 := rfl
+  _ ≃ (rec_on n 1 (· * x)) * x  := rec_on_step
+  _ = x^n * x                   := rfl
 
 def exponentiation_props : Exponentiation.Props (α := α) := {
   pow_zero := pow_zero

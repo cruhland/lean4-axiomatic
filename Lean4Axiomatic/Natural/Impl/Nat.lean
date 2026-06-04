@@ -53,26 +53,10 @@ local instance constructor_props : Constructor.Props Nat := {
 
 local instance core : Core Nat := {}
 
-/--
-Implementation of induction as a recursive function using pattern matching.
-
-It should be possible to use `Nat.rec` directly instead, but Lean gives an
-error in that case (see comment mentioning `Nat.rec` below).
--/
-def ind
-    {motive : Nat → Sort u}
-    (mz : motive 0) (ms : {n : Nat} → motive n → motive (Nat.succ n))
-    : (n : Nat) → motive n
-| Nat.zero => mz
-| Nat.succ n => ms (ind mz ms n)
-
 local instance induction : Induction Nat := {
-  -- 2022-01-11: Using `Nat.rec` directly here, gives the following error:
-  -- code generator does not support recursor 'Nat.rec' yet, consider using
-  -- 'match ... with' and/or structural recursion
-  ind := ind
-  ind_zero := rfl
-  ind_step := rfl
+  ind := Nat.rec
+  ind_zero := Rel.refl
+  ind_step := Rel.refl
 }
 
 local instance addition : Addition Nat := {

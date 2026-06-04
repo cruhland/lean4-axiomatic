@@ -1,4 +1,5 @@
 import Lean4Axiomatic.Integer.Induction
+import Lean4Axiomatic.Sequence
 
 /-! # Integer order -/
 
@@ -10,6 +11,7 @@ open Logic (
   AP and_mapL and_mapR Either iff_subst_contra iff_subst_covar or_mapL or_mapR
 )
 open Natural (step)
+open Sequence (InfiniteDescent)
 open Signed (Negative Positive)
 
 /-! ## Axioms -/
@@ -232,6 +234,13 @@ instance lt_substitutive_eqv
     := {
   substitutiveL := { subst₂ := λ (_ : True) => lt_substL_eqv }
   substitutiveR := { subst₂ := λ (_ : True) => lt_substR_eqv }
+}
+
+instance gt_substitutive_eqv
+    : AA.Substitutive₂ (α := ℤ) (· > ·) AA.tc (· ≃ ·) (· → ·)
+    := {
+  substitutiveL := { subst₂ := λ (_ : True) => lt_substR_eqv }
+  substitutiveR := { subst₂ := λ (_ : True) => lt_substL_eqv }
 }
 
 /--
@@ -1394,6 +1403,9 @@ theorem zero_lt_one : (0:ℤ) < 1 := by
   have : (0:ℤ) < 0 + 1 := lt_inc
   prw [add_identL] ‹(0:ℤ) < 0 + 1›
 
+/-- The integer one is greater than or equivalent to zero. -/
+theorem one_ge_zero : (1:ℤ) ≥ 0 := ge_split.mpr (.inl zero_lt_one)
+
 /--
 Negative one is less than zero (in the integers).
 
@@ -1402,6 +1414,14 @@ Negative one is less than zero (in the integers).
 theorem neg_one_lt_zero : (-1:ℤ) < 0 := by
   have : (-1:ℤ) < -1 + 1 := lt_inc
   prw [neg_invL] ‹(-1:ℤ) < -1 + 1›
+
+/-- The integer two is greater than zero. -/
+theorem two_gt_zero : (2:ℤ) > 0 :=
+  have : (1:ℤ) > 0 := zero_lt_one
+  show (2:ℤ) > 0 from Trans.trans two_gt_one ‹(1:ℤ) > 0›
+
+/-- The integer two is greater than or equivalent to zero. -/
+theorem two_ge_zero : (2:ℤ) ≥ 0 := ge_split.mpr (.inl two_gt_zero)
 
 /--
 Convert between _less than_ and _less than or equivalent to_ by incrementing or
@@ -1680,6 +1700,63 @@ theorem ind_from
   have : motive' n := Natural.ind zero_case step_case n
   have : motive (n + b) := ‹motive' n›
   have : motive a := motive_subst ‹n + b ≃ a› ‹motive (n + b)›
+  exact this
+
+/--
+An integer sequence cannot decrease forever while staying above a fixed value.
+-/
+theorem bounded_inf_desc_impossible
+    {s : Sequence ℤ} {b : ℤ} (bounded : (n : ℕ) → s[n] > b)
+    : ¬(InfiniteDescent s)
+    := by
+  intro (_ : InfiniteDescent s)
+  have desc_at (n : ℕ) : s[n] > s[step n] := ‹InfiniteDescent s› n
+  show False
+
+  have : s[0] > s[1] := calc
+    _ = s[0]      := rfl
+    _ > s[step 0] := desc_at 0
+    _ ≃ s[1]      := by srw [←Natural.literal_step]
+
+  have : s[0] ≤ s[1] :=
+    let motive x := (n : ℕ) → s[n] ≥ x
+
+    have motive_subst {x₁ x₂ : ℤ} : x₁ ≃ x₂ → motive x₁ → motive x₂ := by
+      intro (_ : x₁ ≃ x₂) (m₁ : (n : ℕ) → s[n] ≥ x₁) (n : ℕ)
+      show s[n] ≥ x₂
+
+      calc
+        _ = s[n] := rfl
+        _ ≥ x₁ := m₁ n
+        _ ≃ x₂ := ‹x₁ ≃ x₂›
+
+    have lower_bound_at_index (a : ℤ) : a ≥ b → (n : ℕ) → s[n] ≥ a := by
+      intro (_ : a ≥ b)
+      show motive a
+
+      apply ind_from motive_subst ‹a ≥ b›
+      case base =>
+        show motive b
+        intro (n : ℕ)
+        show s[n] ≥ b
+
+        have : s[n] > b := bounded n
+        have : s[n] ≥ b := ge_split.mpr (.inl ‹s[n] > b›)
+        exact this
+      case next =>
+        intro (c : ℤ) (_ : c ≥ b) (ih : (n : ℕ) → s[n] ≥ c) (n : ℕ)
+        show s[n] ≥ c + 1
+        have : s[n] > c := calc
+          _ = s[n]      := rfl
+          _ > s[step n] := desc_at n
+          _ ≥ c         := ih (step n)
+        have : s[n] ≥ c + 1 := lt_iff_le_incL.mp ‹s[n] > c›
+        exact this
+    have : s[0] > b := bounded 0
+    have : s[0] ≥ b := ge_split.mpr (.inl ‹s[0] > b›)
+    show s[0] ≤ s[1] from lower_bound_at_index s[0] ‹s[0] ≥ b› 1
+
+  have : False := le_gt_false ‹s[0] ≤ s[1]› ‹s[0] > s[1]›
   exact this
 
 /--

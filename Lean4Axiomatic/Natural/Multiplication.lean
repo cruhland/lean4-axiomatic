@@ -318,6 +318,15 @@ instance mul_identity : AA.Identity (α := ℕ) 1 (· * ·) := {
 }
 
 /--
+Convert multiplication of a natural number by two into addition.
+-/
+theorem two_mul {n : ℕ} : 2 * n ≃ n + n := calc
+  _ = 2 * n      := rfl
+  _ ≃ step 1 * n := by srw [Natural.literal_step]
+  _ ≃ 1 * n + n  := step_mul
+  _ ≃ n + n      := by srw [mul_identL]
+
+/--
 The grouping of the factors in a product doesn't matter.
 
 **Intuition**: Imagine a collection of identical objects arranged into a

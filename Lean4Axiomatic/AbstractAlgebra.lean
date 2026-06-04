@@ -1,7 +1,9 @@
 import Lean4Axiomatic.AbstractAlgebra.Substitutive
+import Lean4Axiomatic.Logic
 
 namespace Lean4Axiomatic.AA
 
+open Logic (Either)
 open Relation.Equivalence (EqvOp)
 
 /--
@@ -596,6 +598,17 @@ def distributiveR_from_distributiveL
 
 /-- Expresses that one of two propositions is true, but not both. -/
 def ExactlyOneOfTwo (α β : Prop) : Prop := (α ∨ β) ∧ ¬ (α ∧ β)
+
+/--
+Provides a value of one of the two given propositions, and a proof that the
+other proposition cannot be inhabited.
+-/
+structure ExactlyOneOfTwo₁ (α β : Prop) : Type where
+  /-- A value of one of the two propositions. -/
+  atLeastOne : Either α β
+
+  /-- Both propositions cannot be inhabited. -/
+  atMostOne : ¬(α ∧ β)
 
 /--
 Inhabited when at least one of its three propositions is true; a three-way

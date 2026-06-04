@@ -793,6 +793,40 @@ instance substitutive
   substitutiveR := substitutiveR
 }
 
+/-- Equivalent pairs have equivalent first projections. -/
+@[gcongr]
+theorem fst_subst {p₁ p₂ : α × β} : p₁ ≃ p₂ → p₁.fst ≃ p₂.fst := by
+  revert p₁; intro (x₁, y₁); let p₁ := (x₁, y₁)
+  revert p₂; intro (x₂, y₂); let p₂ := (x₂, y₂)
+  intro (_ : p₁ ≃ p₂)
+  show p₁.fst ≃ p₂.fst
+
+  have (And.intro (_ : x₁ ≃ x₂) _) := eqv_defn.mp ‹(x₁, y₁) ≃ (x₂, y₂)›
+  calc
+    _ = p₁.fst       := rfl
+    _ = (x₁, y₁).fst := rfl
+    _ = x₁           := rfl
+    _ ≃ x₂           := ‹x₁ ≃ x₂›
+    _ = (x₂, y₂).fst := rfl
+    _ = p₂.fst       := rfl
+
+/-- Equivalent pairs have equivalent second projections. -/
+@[gcongr]
+theorem snd_subst {p₁ p₂ : α × β} : p₁ ≃ p₂ → p₁.snd ≃ p₂.snd := by
+  revert p₁; intro (x₁, y₁); let p₁ := (x₁, y₁)
+  revert p₂; intro (x₂, y₂); let p₂ := (x₂, y₂)
+  intro (_ : p₁ ≃ p₂)
+  show p₁.snd ≃ p₂.snd
+
+  have (And.intro _ (_ : y₁ ≃ y₂)) := eqv_defn.mp ‹(x₁, y₁) ≃ (x₂, y₂)›
+  calc
+    _ = p₁.snd       := rfl
+    _ = (x₁, y₁).snd := rfl
+    _ = y₁           := rfl
+    _ ≃ y₂           := ‹y₁ ≃ y₂›
+    _ = (x₂, y₂).snd := rfl
+    _ = p₂.snd       := rfl
+
 end Prod
 
 /-!
