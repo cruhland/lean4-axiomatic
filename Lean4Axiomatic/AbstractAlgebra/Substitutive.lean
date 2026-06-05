@@ -542,6 +542,7 @@ both invocations of `f`.
     their swapped-argument versions due to how `rS` is used here and in
     `Fn.Swappable f rS`.
 -/
+@[implicit_reducible]
 def substR_from_substL_swap
     {α : Sort u} {β : Sort v}
     {f : α → α → β} {C : α → Prop} {rα : α → α → Prop} {rβ rS : β → β → Prop}
@@ -751,6 +752,7 @@ theorem substL {x₁ x₂ : α} {y : β} : x₁ ≃ x₂ → (x₁, y) ≃ (x₂
   show x₁ ≃ x₂ ∧ y ≃ y
   exact And.intro ‹x₁ ≃ x₂› Rel.refl
 
+@[implicit_reducible]
 def substitutiveL
     : SubstitutiveOn Hand.L (α := α) (β := β) (·,·) tc (· ≃ ·) (· ≃ ·)
     := {
@@ -780,6 +782,7 @@ theorem substR {x₁ x₂ : β} {y : α} : x₁ ≃ x₂ → (y, x₁) ≃ (y, x
   show y ≃ y ∧ x₁ ≃ x₂
   exact And.intro Rel.refl ‹x₁ ≃ x₂›
 
+@[implicit_reducible]
 def substitutiveR
     : SubstitutiveOn Hand.R (α := α) (β := β) (·,·) tc (· ≃ ·) (· ≃ ·)
     := {
@@ -979,6 +982,7 @@ arguments to `f` can be swapped so that left-handed cancellation can be used.
 - `Substitutive₂ rβ (· ≃ ·) (· → ·)`: needed to update the right-handed
   hypothesis involving `rβ` to a left-handed hypothesis.
 -/
+@[implicit_reducible]
 def cancelR_from_cancelL
     {α : Sort u} {β : Sort v}
     {f : α → α → β} {C : α → Prop} {rα : α → α → Prop} {rβ : β → β → Prop}

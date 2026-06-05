@@ -36,8 +36,8 @@ class Order
   /-- The intuitive meaning of _less than_ in terms of _less than or equal_. -/
   lt_iff_le_neqv {a b : ℤ} : a < b ↔ a ≤ b ∧ a ≄ b
 
-attribute [instance] Order.leOp
-attribute [instance] Order.ltOp
+attribute [implicit_reducible, instance] Order.leOp
+attribute [implicit_reducible, instance] Order.ltOp
 
 export Order (le_iff_add_nat leOp lt_iff_le_neqv ltOp)
 
@@ -490,6 +490,7 @@ theorem add_cancelL_lt {a b c : ℤ} : c + a < c + b → a < b := by
     b - a           ≃ _ := Rel.refl
   prw [‹c + b - (c + a) ≃ b - a›] ‹Positive (c + b - (c + a))›
 
+@[implicit_reducible]
 def add_cancellativeL_lt
     : AA.CancellativeOn Hand.L (α := ℤ) (· + ·) AA.tc (· < ·) (· < ·)
     := {
@@ -580,6 +581,7 @@ theorem mul_cancelL_lt {a b c : ℤ} : Positive c → c * a < c * b → a < b :=
     same_sign_positive ‹SameSign c (b - a)› ‹Positive c›
   exact this
 
+@[implicit_reducible]
 def mul_cancellativeL_lt
     : AA.CancellativeOn Hand.L (α := ℤ) (· * ·) Positive (· < ·) (· < ·)
     := {

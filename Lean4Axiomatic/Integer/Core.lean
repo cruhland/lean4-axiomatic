@@ -23,7 +23,7 @@ class Equivalence (ℤ : Type) where
   -/
   eqvOp : Relation.Equivalence.EqvOp ℤ
 
-attribute [instance] Equivalence.eqvOp
+attribute [implicit_reducible, instance] Equivalence.eqvOp
 
 export Equivalence (eqvOp)
 
@@ -52,7 +52,7 @@ class Conversion {ℕ : Type} [Natural ℕ] (ℤ : Type) [Equivalence ℤ] where
 export Conversion (from_natural_subst)
 
 attribute [gcongr] from_natural_subst
-attribute [instance] Conversion.from_natural
+attribute [implicit_reducible, instance] Conversion.from_natural
 attribute [instance] Conversion.from_natural_injective
 
 instance from_natural_substitutive

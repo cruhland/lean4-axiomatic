@@ -91,7 +91,7 @@ class Reciprocation
   toOps : Reciprocation.Ops ℚ
   toProps : Reciprocation.Props ℚ
 
-attribute [instance] Reciprocation.toOps
+attribute [implicit_reducible, instance] Reciprocation.toOps
 attribute [instance] Reciprocation.toProps
 
 /-- Operations pertaining to rational number division. -/
@@ -140,7 +140,7 @@ class Division
   toOps : Division.Ops ℚ
   toProps : Division.Props ℚ
 
-attribute [instance] Division.toOps
+attribute [implicit_reducible, instance] Division.toOps
 attribute [instance] Division.toProps
 
 /-! ## Derived properties -/

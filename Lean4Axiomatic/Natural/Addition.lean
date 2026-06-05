@@ -26,7 +26,7 @@ class Addition (ℕ : Type) [Core ℕ] where
   /-- Incrementing the left term in a sum increments the result. -/
   step_add {n m : ℕ} : step n + m ≃ step (n + m)
 
-attribute [instance] Addition.addOp
+attribute [implicit_reducible, instance] Addition.addOp
 
 export Addition (addOp step_add zero_add)
 
@@ -273,6 +273,7 @@ theorem cancel_add {n m k : ℕ} : n + m ≃ n + k → m ≃ k := by
       step n + k   ≃ _ := step_add
       step (n + k) ≃ _ := Rel.refl
 
+@[implicit_reducible]
 def add_cancelL
     : AA.CancellativeOn Hand.L (α := ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·) := {
   cancel := λ (_ : True) => cancel_add
@@ -336,6 +337,7 @@ local instance add_monoid_ops :  CA.Monoid.Ops ℕ := {
   ident := 0
 }
 
+@[implicit_reducible]
 def add_monoid_props : CA.Monoid.Props (α := ℕ) :=
   let subst_addL {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m := AA.substL;
   let subst_addR {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m + n₁ ≃ m + n₂ := AA.substR;

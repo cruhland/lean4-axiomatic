@@ -82,6 +82,7 @@ class Induction.Context
     : fsubst diff_eqv (on_diff n₁ m₁) ≃ on_diff n₂ m₂
 
 /-- Operations pertaining to eliminators on integers. -/
+@[univ_out_params]
 class Induction.Ops
     {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
@@ -163,14 +164,14 @@ class Induction.Props
     : fsubst ‹a₁ ≃ a₂› (ctx.ind_diff a₁) ≃ ctx.ind_diff a₂
 
 /-- All integer induction/eliminator axioms. -/
-class Induction
+class Induction.{u}
     {ℕ : outParam Type} [Natural ℕ]
     (ℤ : Type) [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Negation ℤ] [Subtraction ℤ]
     where
-  toOps : Induction.Ops ℤ
+  toOps : Induction.Ops.{u} ℤ
   toProps : Induction.Props ℤ
 
-attribute [instance] Induction.toOps
+attribute [implicit_reducible, instance] Induction.toOps
 attribute [instance] Induction.toProps
 
 /-! ## Derived properties -/
@@ -188,6 +189,7 @@ always holds because `motive (n₁ - m₁) : Prop` implies
 `on_diff n₁ m₁` and `on_diff n₂ m₂` both have type `motive (n₂ - m₂)` and
 therefore are equivalent by proof irrelevance of `Prop` elements.
 -/
+@[implicit_reducible]
 def ind_ctx_prop
     {motive : ℤ → Prop} [IndexedFamily motive]
     (on_diff : (n m : ℕ) → motive (n - m))
@@ -203,6 +205,7 @@ i.e. motives of the form `ℤ → X` where `X` is a single type.
 
 **Intuition**: This allows for the `on_diff` function to be inferred.
 -/
+@[implicit_reducible]
 def ind_ctx_const
     {X : Sort u} [EqvOp X] {on_diff : ℕ → ℕ → X}
     (on_diff_subst :

@@ -41,8 +41,8 @@ class Order (ℕ : Type) [Core ℕ] [Addition ℕ] where
   lt_defn {n m : ℕ} : n < m ↔ n ≤ m ∧ n ≄ m
 
 -- Higher priority than the stdlib definitions
-attribute [instance default+1] Order.leOp
-attribute [instance default+1] Order.ltOp
+attribute [implicit_reducible, instance default+1] Order.leOp
+attribute [implicit_reducible, instance default+1] Order.ltOp
 
 export Order (le_defn leOp lt_defn ltOp)
 
@@ -123,12 +123,6 @@ instance trans_le_eqv_le_inst : Trans (α := ℕ) (· ≤ ·) (· ≃ ·) (· �
   trans := trans_le_eqv_le
 }
 
-def le_substR_eqv
-    : AA.SubstitutiveOn Hand.R (α := ℕ) (· ≤ ·) AA.tc (· ≃ ·) (· → ·)
-    := {
-  subst₂ := λ (_ : True) => le_eqv_subst
-}
-
 /--
 Equivalent natural numbers can be substituted on the right side of _less than_.
 -/
@@ -187,17 +181,11 @@ instance trans_eqv_le_le_inst : Trans (α := ℕ) (· ≃ ·) (· ≤ ·) (· �
   trans := trans_eqv_le_le
 }
 
-def le_substL_eqv
-    : AA.SubstitutiveOn Hand.L (α := ℕ) (· ≤ ·) AA.tc (· ≃ ·) (· → ·)
-    := {
-  subst₂ := λ (_ : True) => le_subst_eqv
-}
-
 instance le_substitutive_eqv
     : AA.Substitutive₂ (α := ℕ) (· ≤ ·) AA.tc (· ≃ ·) (· → ·)
     := {
-  substitutiveL := le_substL_eqv
-  substitutiveR := le_substR_eqv
+  substitutiveL := { subst₂ := λ _ => le_subst_eqv }
+  substitutiveR := { subst₂ := λ _ => le_eqv_subst }
 }
 
 /-- All natural numbers are _less than or equal to_ themselves. -/
@@ -357,6 +345,7 @@ theorem le_cancel_add {n m₁ m₂ : ℕ} : n + m₁ ≤ n + m₂ → m₁ ≤ m
     n + m₂       ≃ _ := Rel.refl
   exact AA.cancelL ‹n + (m₁ + d) ≃ n + m₂›
 
+@[implicit_reducible]
 def le_cancelL_add
     : AA.CancellativeOn Hand.L (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·)
     := {
@@ -429,23 +418,11 @@ instance trans_gt_eqv_gt_inst : Trans (α := ℕ) (· > ·) (· ≃ ·) (· > ·
   trans := trans_gt_eqv_gt
 }
 
-def lt_substL_eqv
-    : AA.SubstitutiveOn Hand.L (α := ℕ) (· < ·) AA.tc (· ≃ ·) (· → ·)
-    := {
-  subst₂ := λ (_ : True) => lt_subst_eqv
-}
-
-def lt_substR_eqv
-    : AA.SubstitutiveOn Hand.R (α := ℕ) (· < ·) AA.tc (· ≃ ·) (· → ·)
-    := {
-  subst₂ := λ (_ : True) => lt_eqv_subst
-}
-
 instance lt_substitutive_eqv
     : AA.Substitutive₂ (α := ℕ) (· < ·) AA.tc (· ≃ ·) (· → ·)
     := {
-  substitutiveL := lt_substL_eqv
-  substitutiveR := lt_substR_eqv
+  substitutiveL := { subst₂ := λ _ => lt_subst_eqv }
+  substitutiveR := { subst₂ := λ _ => lt_eqv_subst }
 }
 
 /-- A natural number is always less than its successor. -/

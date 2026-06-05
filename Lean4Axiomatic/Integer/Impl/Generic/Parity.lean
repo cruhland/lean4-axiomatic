@@ -16,12 +16,14 @@ local instance parity_ops : Parity.Ops ℤ := {
   half_floored a := (div_floored a 2).quotient
 }
 
+@[implicit_reducible]
 def parity_props : Parity.Props ℤ := {
   even_rem := Iff.rfl
   odd_rem := Iff.rfl
   half_floored_eqv := Rel.refl
 }
 
+@[implicit_reducible]
 def parity : Parity ℤ := {
   toOps := parity_ops
   toProps := parity_props

@@ -92,7 +92,7 @@ class Sign
   toOps : Sign.Ops (ℤ := ℤ) ℚ
   toProps : Sign.Props ℚ
 
-attribute [instance] Sign.toOps
+attribute [implicit_reducible, instance] Sign.toOps
 attribute [instance] Sign.toProps
 
 /-! ## Derived properties -/

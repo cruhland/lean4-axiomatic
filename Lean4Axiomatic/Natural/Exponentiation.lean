@@ -63,7 +63,7 @@ class Exponentiation
   toOps : Exponentiation.Ops α ℕ
   toProps : Exponentiation.Props (α := α)
 
-attribute [instance] Exponentiation.toOps
+attribute [implicit_reducible, instance] Exponentiation.toOps
 attribute [instance] Exponentiation.toProps
 
 /-! ## Derived properties -/

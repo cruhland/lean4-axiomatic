@@ -33,7 +33,7 @@ class Multiplication (ℕ : Type) [Core ℕ] [Addition ℕ] where
   -/
   step_mul {n m : ℕ} : step n * m ≃ (n * m) + m
 
-attribute [instance] Multiplication.mulOp
+attribute [implicit_reducible, instance] Multiplication.mulOp
 
 export Multiplication (mulOp step_mul zero_mul)
 
@@ -459,6 +459,7 @@ then multiplying them both by a nonzero (i.e., positive) natural number will
 preserve their ordering (by `mul_substitutive_lt`), contradicting the hypothesis
 that the products are equal. Thus the right-hand factors must be equal.
 -/
+@[implicit_reducible]
 def mul_cancelL
     : AA.CancellativeOn Hand.L (α := ℕ) (· * ·) (· ≄ 0) (· ≃ ·) (· ≃ ·)
     := by
@@ -559,6 +560,7 @@ local instance mul_monoid_ops :  CA.Monoid.Ops ℕ := {
   ident := 1
 }
 
+@[implicit_reducible]
 def mul_monoid_props : CA.Monoid.Props (α := ℕ) := {
   substL  := AA.substL
   substR  := AA.substR

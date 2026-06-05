@@ -214,10 +214,11 @@ class AP (p : Prop) : Prop where
   ev : p
 
 /-- Apply `f`, a conversion from one proposition to another, inside `AP`. -/
+@[implicit_reducible]
 def AP.map {p q : Prop} (ap : AP p) (f : p → q) : AP q := AP.mk (f ap.ev)
 
 /-- Lift an implication into `AP`. -/
-@[gcongr]
+@[implicit_reducible, gcongr]
 def AP.subst {p q : Prop} : (p → q) → AP p → AP q := λ f ap => ap.map f
 
 end Lean4Axiomatic.Logic

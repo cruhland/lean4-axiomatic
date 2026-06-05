@@ -61,7 +61,7 @@ class Order
   toOps : Order.Ops ℚ
   toProps : Order.Props ℚ
 
-attribute [instance] Order.toOps
+attribute [implicit_reducible, instance] Order.toOps
 attribute [instance] Order.toProps
 
 /-! ## Derived properties -/

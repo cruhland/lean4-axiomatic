@@ -51,8 +51,8 @@ class Group (α : Type) [EqvOp α] :=
   toOps : Group.Ops α
   toProps : Group.Props α
 
-attribute [instance] Group.toOps
-attribute [instance] Group.toProps
+attribute [implicit_reducible, instance] Group.toOps
+attribute [implicit_reducible, instance] Group.toProps
 
 /-! ### Properties -/
 

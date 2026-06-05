@@ -238,6 +238,7 @@ class inductive Nonzero (a : ℤ) : Prop where
 Convenience constructor that infers early arguments of `Nonzero.intro` from the
 last, `NonzeroWithSign` argument.
 -/
+@[implicit_reducible]
 def Nonzero.mk {a s : ℤ} {sqrt1 : Sqrt1 s} : NonzeroWithSign a s → Nonzero a :=
   Nonzero.intro s sqrt1
 
@@ -541,10 +542,10 @@ class Sign
   toSgnOps : Sgn.Ops ℤ
   toSgnProps : Sgn.Props ℤ
 
-attribute [instance] Sign.toSignedOps
+attribute [implicit_reducible, instance] Sign.toSignedOps
 attribute [instance] Sign.toSignProps
-attribute [instance] Sign.toSgnOps
-attribute [instance] Sign.toSgnProps
+attribute [implicit_reducible, instance] Sign.toSgnOps
+attribute [implicit_reducible, instance] Sign.toSgnProps
 
 /-!
 ## Derived properties

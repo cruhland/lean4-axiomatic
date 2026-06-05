@@ -47,9 +47,8 @@ class Monoid (α : Type) [EqvOp α] where
   toOps : Monoid.Ops α
   toProps : Monoid.Props α
 
-attribute [instance] Monoid.toOps
+attribute [implicit_reducible, instance] Monoid.toOps
 attribute [instance] Monoid.toProps
-
 
 /-! ### Properties -/
 

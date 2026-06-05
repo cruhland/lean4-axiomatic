@@ -150,6 +150,7 @@ result as an instance, specific to a particular use case.
 **Class parameters**
 - `EqvOp β`: The equivalence relation on `β`.
 -/
+@[implicit_reducible]
 def eqvOp
     {α : Sort u} {β : Sort v} (f : α → β) [β_eqvOp : EqvOp β] : EqvOp α
     := {

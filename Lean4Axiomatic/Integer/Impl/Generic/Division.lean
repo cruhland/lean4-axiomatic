@@ -409,6 +409,7 @@ def div_floored (a b : ℤ) [AP (b ≄ 0)] : FlooredDivision a b :=
       rem_sgn := ‹r * b ≥ 0›
     }
 
+@[implicit_reducible]
 def division : Division ℤ := {
   div_euclidean := div_euclidean
   div_floored := div_floored

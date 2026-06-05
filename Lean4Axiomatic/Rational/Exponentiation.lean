@@ -851,7 +851,7 @@ class Exponentiation
   toOps : Exponentiation.Ops ℚ ℤ
   toProps : Exponentiation.Props ℚ
 
-attribute [instance] Exponentiation.toOps
+attribute [implicit_reducible, instance] Exponentiation.toOps
 attribute [instance] Exponentiation.toProps
 
 /-! ## Derived properties for exponentiation to an integer -/

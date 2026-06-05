@@ -46,19 +46,19 @@ class Integer {ℕ : outParam Type} [Natural ℕ] (ℤ : Type) where
   toInduction₀ : Induction.{0} ℤ
   toInduction₁ : Induction.{1} ℤ
 
-attribute [instance] Integer.toAddition
-attribute [instance] Integer.toCore
-attribute [instance] Integer.toDivision
-attribute [instance] Integer.toExponentiation
-attribute [instance] Integer.toInduction₀
-attribute [instance] Integer.toInduction₁
-attribute [instance] Integer.toMetric
-attribute [instance] Integer.toMultiplication
-attribute [instance] Integer.toNegation
-attribute [instance] Integer.toOrder
-attribute [instance] Integer.toParity
-attribute [instance] Integer.toSign
-attribute [instance] Integer.toSubtraction
+attribute [implicit_reducible, instance] Integer.toAddition
+attribute [implicit_reducible, instance] Integer.toCore
+attribute [implicit_reducible, instance] Integer.toDivision
+attribute [implicit_reducible, instance] Integer.toExponentiation
+attribute [implicit_reducible, instance] Integer.toInduction₀
+attribute [implicit_reducible, instance] Integer.toInduction₁
+attribute [implicit_reducible, instance] Integer.toMetric
+attribute [implicit_reducible, instance] Integer.toMultiplication
+attribute [implicit_reducible, instance] Integer.toNegation
+attribute [implicit_reducible, instance] Integer.toOrder
+attribute [implicit_reducible, instance] Integer.toParity
+attribute [implicit_reducible, instance] Integer.toSign
+attribute [implicit_reducible, instance] Integer.toSubtraction
 
 namespace Signed
 

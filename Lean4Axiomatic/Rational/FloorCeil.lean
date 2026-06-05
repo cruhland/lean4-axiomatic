@@ -51,7 +51,7 @@ class FloorCeil
   toOps : FloorCeil.Ops (ℤ := ℤ) ℚ
   toProps : FloorCeil.Props ℚ
 
-attribute [instance] FloorCeil.toOps
+attribute [implicit_reducible, instance] FloorCeil.toOps
 attribute [instance] FloorCeil.toProps
 
 /-! ## Derived properties -/

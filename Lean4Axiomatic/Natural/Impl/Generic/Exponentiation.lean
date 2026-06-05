@@ -53,11 +53,13 @@ theorem pow_step {x : α} {n : ℕ} : x^(step n) ≃ x^n * x := calc
   _ ≃ (rec_on n 1 (· * x)) * x  := rec_on_step
   _ = x^n * x                   := rfl
 
+@[implicit_reducible]
 def exponentiation_props : Exponentiation.Props (α := α) := {
   pow_zero := pow_zero
   pow_step := pow_step
 }
 
+@[implicit_reducible]
 def exponentiation : Exponentiation ℕ α := {
   toOps := exponentiation_ops
   toProps := exponentiation_props

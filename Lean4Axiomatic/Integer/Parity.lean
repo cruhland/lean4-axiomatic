@@ -51,7 +51,7 @@ class Parity
   toOps : Parity.Ops ℤ
   toProps : Parity.Props ℤ
 
-attribute [instance] Parity.toOps
+attribute [implicit_reducible, instance] Parity.toOps
 attribute [instance] Parity.toProps
 
 /-! ## Derived properties -/

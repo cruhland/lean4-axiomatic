@@ -56,7 +56,7 @@ class Multiplication
   mul_compatible_from_natural
     : AA.Compatible₂ (α := ℕ) (β := ℤ) (↑·) (· * ·) (· * ·)
 
-attribute [instance] Multiplication.mulOp
+attribute [implicit_reducible, instance] Multiplication.mulOp
 attribute [instance] Multiplication.mul_associative
 attribute [instance] Multiplication.mul_commutative
 attribute [instance] Multiplication.mul_compatible_from_natural
@@ -76,6 +76,7 @@ local instance mul_monoid_ops : CA.Monoid.Ops ℤ := {
   ident := 1
 }
 
+@[implicit_reducible]
 def mul_monoid_props : CA.Monoid.Props (α := ℤ) := {
   substL  := AA.substL
   substR  := AA.substR

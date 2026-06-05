@@ -44,7 +44,7 @@ class Equality (ℕ : Type) where
   /-- Natural numbers have a decidable equality relation. -/
   eqvOp? : Relation.Equivalence.EqvOp? ℕ
 
-attribute [instance] Equality.eqvOp?
+attribute [implicit_reducible, instance] Equality.eqvOp?
 
 export Equality (eqvOp?)
 
@@ -75,7 +75,7 @@ class Literals (ℕ : outParam Type) [Constructor.Ops ℕ] [Equality ℕ] where
   literal_step {n : Nat}
     : OfNat.ofNat (α := ℕ) (Nat.succ n) ≃ step (OfNat.ofNat n)
 
-attribute [instance] Literals.literal
+attribute [implicit_reducible, instance] Literals.literal
 
 /-
 Ensure that natural number literals without an inferred type default to this
@@ -131,6 +131,7 @@ The solution is to include only the level-`0` instance in `Natural` by default,
 since it's used very frequently. Code that needs the level-`1` instance for
 recursion must specificially request it.
 -/
+@[univ_out_params]
 class Induction (ℕ : outParam Type) [Core ℕ] where
   /--
   **Peano axiom 5**: the principle of mathematical induction.

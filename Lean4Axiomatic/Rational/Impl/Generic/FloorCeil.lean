@@ -222,6 +222,7 @@ theorem ceil_ub {p : ℚ} {a : ℤ} : p ≤ a → ceil p ≤ a := by
     _ ≤ -(-a)       := Integer.le_neg_flip.mp ‹-a ≤ floor (-p)›
     _ ≃ a           := Integer.neg_involutive
 
+@[implicit_reducible]
 def floor_ceil_props : FloorCeil.Props ℚ := {
   floor_ub := floor_ub
   floor_lb := floor_lb
@@ -229,6 +230,7 @@ def floor_ceil_props : FloorCeil.Props ℚ := {
   ceil_ub := ceil_ub
 }
 
+@[implicit_reducible]
 def floor_ceil : FloorCeil ℚ := {
   toOps := floor_ceil_ops
   toProps := floor_ceil_props

@@ -36,21 +36,21 @@ class Rational
   toMetric : Rational.Metric ℚ
   toFloorCeil : Rational.FloorCeil ℚ
 
-attribute [instance] Rational.toAddition
-attribute [instance] Rational.toCore
-attribute [instance] Rational.toDivision
-attribute [instance] Rational.toFloorCeil
-attribute [instance] Rational.toInduction₀
-attribute [instance] Rational.toInduction₁
-attribute [instance] Rational.toIntegerExponentiation
-attribute [instance] Rational.toMetric
-attribute [instance] Rational.toMinMax
-attribute [instance] Rational.toMultiplication
-attribute [instance] Rational.toNaturalExponentiation
-attribute [instance] Rational.toNegation
-attribute [instance] Rational.toOrder
-attribute [instance] Rational.toReciprocation
-attribute [instance] Rational.toSign
-attribute [instance] Rational.toSubtraction
+attribute [implicit_reducible, instance] Rational.toAddition
+attribute [implicit_reducible, instance] Rational.toCore
+attribute [implicit_reducible, instance] Rational.toDivision
+attribute [implicit_reducible, instance] Rational.toFloorCeil
+attribute [implicit_reducible, instance] Rational.toInduction₀
+attribute [implicit_reducible, instance] Rational.toInduction₁
+attribute [implicit_reducible, instance] Rational.toIntegerExponentiation
+attribute [implicit_reducible, instance] Rational.toMetric
+attribute [implicit_reducible, instance] Rational.toMinMax
+attribute [implicit_reducible, instance] Rational.toMultiplication
+attribute [implicit_reducible, instance] Rational.toNaturalExponentiation
+attribute [implicit_reducible, instance] Rational.toNegation
+attribute [implicit_reducible, instance] Rational.toOrder
+attribute [implicit_reducible, instance] Rational.toReciprocation
+attribute [implicit_reducible, instance] Rational.toSign
+attribute [implicit_reducible, instance] Rational.toSubtraction
 
 end Lean4Axiomatic

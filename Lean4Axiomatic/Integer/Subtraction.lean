@@ -38,7 +38,7 @@ class Subtraction
   toOps : Subtraction.Ops ℤ
   toProps : Subtraction.Props ℤ
 
-attribute [instance] Subtraction.toOps
+attribute [implicit_reducible, instance] Subtraction.toOps
 attribute [instance] Subtraction.toProps
 
 /-! ## Derived properties -/
@@ -62,12 +62,6 @@ theorem sub_substL {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → a₁ - b ≃ a₂ - b
     a₂ + (-b) ≃ _ := Rel.symm sub_defn
     a₂ - b    ≃ _ := Rel.refl
 
-def sub_substitutiveL
-    : AA.SubstitutiveOn Hand.L (α := ℤ) (· - ·) AA.tc (· ≃ ·) (· ≃ ·)
-    := {
-  subst₂ := λ (_ : True) => sub_substL
-}
-
 /--
 Subtraction is right-substitutive.
 
@@ -84,17 +78,11 @@ theorem sub_substR {a₁ a₂ b : ℤ} : a₁ ≃ a₂ → b - a₁ ≃ b - a₂
     b + (-a₂) ≃ _ := Rel.symm sub_defn
     b - a₂    ≃ _ := Rel.refl
 
-def sub_substitutiveR
-    : AA.SubstitutiveOn Hand.R (α := ℤ) (· - ·) AA.tc (· ≃ ·) (· ≃ ·)
-    := {
-  subst₂ := λ (_ : True) => sub_substR
-}
-
 instance sub_substitutive
     : AA.Substitutive₂ (α := ℤ) (· - ·) AA.tc (· ≃ ·) (· ≃ ·)
     := {
-  substitutiveL := sub_substitutiveL
-  substitutiveR := sub_substitutiveR
+  substitutiveL := { subst₂ := λ _ => sub_substL }
+  substitutiveR := { subst₂ := λ _ => sub_substR }
 }
 
 /--
@@ -448,6 +436,7 @@ theorem mul_cancelL {a b c : ℤ} : a ≄ 0 → a * b ≃ a * c → b ≃ c := b
     show b ≃ c
     exact zero_diff_iff_eqv.mp ‹b - c ≃ 0›
 
+@[implicit_reducible]
 def mul_cancellativeL
     : AA.CancellativeOn Hand.L (α := ℤ) (· * ·) (· ≄ 0) (· ≃ ·) (· ≃ ·)
     := {

@@ -29,15 +29,15 @@ class Natural (ℕ : semiOutParam Type) where
   toExponentiation : Exponentiation ℕ ℕ
   toDivision : Division ℕ
 
-attribute [instance] Natural.toAddition
-attribute [instance] Natural.toCompare
-attribute [instance] Natural.toCore
-attribute [instance] Natural.toDivision
-attribute [instance] Natural.toExponentiation
-attribute [instance] Natural.toInduction₀
-attribute [instance] Natural.toInduction₁
-attribute [instance] Natural.toMultiplication
-attribute [instance] Natural.toOrder
-attribute [instance] Natural.toSign
+attribute [implicit_reducible, instance] Natural.toAddition
+attribute [implicit_reducible, instance] Natural.toCompare
+attribute [implicit_reducible, instance] Natural.toCore
+attribute [implicit_reducible, instance] Natural.toDivision
+attribute [implicit_reducible, instance] Natural.toExponentiation
+attribute [implicit_reducible, instance] Natural.toInduction₀
+attribute [implicit_reducible, instance] Natural.toInduction₁
+attribute [implicit_reducible, instance] Natural.toMultiplication
+attribute [implicit_reducible, instance] Natural.toOrder
+attribute [implicit_reducible, instance] Natural.toSign
 
 end Lean4Axiomatic
