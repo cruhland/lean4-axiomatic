@@ -1,3 +1,4 @@
+import Lean4Axiomatic.Rational.FloorCeil
 import Lean4Axiomatic.Rational.Metric
 
 /-!
@@ -792,6 +793,114 @@ theorem pow_preserves_ge_nonneg
       _ ≃ q^n := by srw [←‹n ≃ 0›]
     have : p^n ≥ q^n := ge_cases.mpr (Or.inr ‹p^n ≃ q^n›)
     exact this
+
+/-- TODO -/
+structure Sqrt2Approx
+    (ℚ : Type)
+      [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ] [Sign ℚ]
+      [Subtraction ℚ] [Order ℚ] [Natural.Exponentiation ℕ ℚ]
+    where
+  /-- TODO -/
+  ε : ℚ
+
+  ε_pos : ε > 0
+
+  /-- TODO -/
+  val : ℚ
+
+  /-- TODO -/
+  lower : val^2 < 2
+
+  /-- TODO -/
+  upper : 2 < (val + ε)^2
+
+variable [FloorCeil ℚ]
+
+/-- TODO -/
+def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ℚ := by
+  intro (_ : ε > 0)
+  show Sqrt2Approx ℚ
+
+  have : AP (ε ≄ 0) := AP.mk (pos_nonzero ‹ε > 0›)
+  let max_int := ceil (2/ε)
+
+  -- TODO: Combine calcs using x ≤ -1 ∨ 0 ≤ x → sgn (ceil x) = sgn x
+  -- Maybe better? sgn (ceil x) = sgn x + [-1 < x ∧ x < 0]
+  have : sgn (2/ε) ≃ 1 := calc
+    _ = sgn (2/ε)         := rfl
+    _ ≃ sgn (2:ℚ) * sgn ε := sgn_div
+    _ ≃ 1 * sgn ε         := by srw [sgn_two]
+    _ ≃ sgn ε             := AA.identL
+    _ ≃ 1                 := gt_zero_sgn.mp ‹ε > 0›
+  have : 2/ε > 0 := gt_zero_sgn.mpr ‹sgn (2/ε) ≃ 1›
+  have : (max_int:ℚ) > 0 := calc
+    _ = (max_int:ℚ)      := rfl
+    _ = (ceil (2/ε) : ℚ) := rfl
+    _ ≥ 2/ε              := ceil_lb
+    _ > 0                := ‹2/ε > 0›
+  have : max_int > 0 := lt_respects_from_integer.mpr ‹(max_int:ℚ) > 0›
+
+  -- TODO: integer recursion so conversion to ℕ is not needed
+  let max_count := (Integer.pos_to_natural ‹max_int > 0›).val
+
+  let approx_step (acc : ℚ) := if (acc + ε)^2 < 2 then acc + ε else acc
+  let approx (max_εs : ℕ) := Natural.rec_on max_εs 0 approx_step
+
+  let lower_motive (max_εs : ℕ) := (approx max_εs)^2 < 2
+  have approx_lower (max_εs : ℕ) : lower_motive max_εs := by
+    apply Natural.ind_on (motive := lower_motive) max_εs
+    case zero =>
+      show lower_motive 0
+      have : (approx 0)^2 < 2 := calc
+        _ = (approx 0)^2                       := rfl
+        _ ≃ (Natural.rec_on 0 0 approx_step)^2 := sorry
+        _ ≃ 0^2                                := by srw [Natural.rec_on_zero]
+        _ ≃ 0                                  := sorry
+        _ < 2                                  := sorry
+      have : lower_motive 0 := ‹(approx 0)^2 < 2›
+      exact this
+    case step =>
+      intro (m : ℕ) (ih : lower_motive m)
+      show lower_motive (step m)
+
+      have : (approx m)^2 < 2 := ‹lower_motive m›
+      let am := approx m
+      have : am^2 < 2 := ‹(approx m)^2 < 2›
+
+      have : approx (step m) ≃ approx_step am := calc
+        _ = approx (step m)                              := rfl
+        _ ≃ Natural.rec_on (step m) 0 approx_step        := sorry
+        _ ≃ approx_step (Natural.rec_on m 0 approx_step) := Natural.rec_on_step
+        _ = approx_step (approx m)                       := rfl
+        _ = approx_step am                               := rfl
+      have : (approx_step am)^2 < 2 :=
+        have : Decidable ((am + ε)^2 < 2) := lt_decidable
+        match ‹Decidable ((am + ε)^2 < 2)› with
+        | .isTrue (_ : (am + ε)^2 < 2) =>
+          calc
+            _ = (approx_step am)^2 := rfl
+            _ ≃ (if (am + ε)^2 < 2 then am + ε else am)^2 := sorry
+            _ ≃ (if true then am + ε else am)^2 := sorry
+            _ ≃ (am + ε)^2 := sorry
+            _ < 2 := sorry
+        | .isFalse _ =>
+          calc
+            _ = (approx_step am)^2                        := rfl
+            _ ≃ (if (am + ε)^2 < 2 then am + ε else am)^2 := sorry
+            _ ≃ (if false then am + ε else am)^2          := sorry
+            _ ≃ am^2                                      := sorry
+            _ < 2                                         := ‹am^2 < 2›
+      have : (approx (step m))^2 < 2 := calc
+        _ = (approx (step m))^2 := rfl
+        _ ≃ (approx_step am)^2  := by srw [‹approx (step m) ≃ approx_step am›]
+        _ < 2                   := ‹(approx_step am)^2 < 2›
+      have : lower_motive (step m) := ‹(approx (step m))^2 < 2›
+      exact this
+
+  let val := approx max_count
+  have : val^2 < 2 := approx_lower max_count
+  have : 2 < (val + ε)^2 := sorry
+  exact Sqrt2Approx.mk ε ‹ε > 0› val ‹val^2 < 2› ‹2 < (val + ε)^2›
 
 end pow_nat
 
