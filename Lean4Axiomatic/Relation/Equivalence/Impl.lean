@@ -7,6 +7,97 @@ namespace Lean4Axiomatic.Relation.Equivalence.Impl
 
 /-! # Implementations of equivalence relations -/
 
+namespace Option
+
+variable {α : Type u} [EqvOp α]
+
+/-- TODO -/
+def eqv : Option α → Option α → Prop
+| some x₁, some x₂ => x₁ ≃ x₂
+| none, none => True
+| _, _ => False
+
+local instance eqv_tildeDash_inst : Operators.TildeDash (Option α) := {
+  tildeDash := eqv
+}
+
+/-- TODO -/
+theorem refl : {x : Option α} → x ≃ x
+| some x' =>
+  have : x' ≃ x' := Rel.refl
+  show some x' ≃ some x' from this
+| none =>
+  have : True := True.intro
+  show none ≃ none from this
+
+/-- TODO -/
+theorem symm : {x y : Option α} → x ≃ y → y ≃ x
+| some x', some y' => by
+  intro (_ : some x' ≃ some y')
+  show some y' ≃ some x'
+  have : x' ≃ y' := ‹some x' ≃ some y'›
+  have : y' ≃ x' := Rel.symm ‹x' ≃ y'›
+  have : some y' ≃ some x' := ‹y' ≃ x'›
+  exact this
+| none, none => by
+  intro (_ : none ≃ none)
+  show none ≃ none
+  exact ‹none ≃ none›
+| some x', none => by
+  intro (_ : some x' ≃ none)
+  show none ≃ some x'
+  have : False := ‹some x' ≃ none›
+  have : none ≃ some x' := ‹False›
+  exact this
+| none, some y' => by
+  intro (_ : none ≃ some y')
+  show some y' ≃ none
+  have : False := ‹none ≃ some y'›
+  have : some y' ≃ none := ‹False›
+  exact this
+
+/-- TODO -/
+theorem trans : {x y z : Option α} → x ≃ y → y ≃ z → x ≃ z
+| some x', some y', some z' => by
+  intro (_ : some x' ≃ some y') (_ : some y' ≃ some z')
+  show some x' ≃ some z'
+  have : x' ≃ y' := ‹some x' ≃ some y'›
+  have : y' ≃ z' := ‹some y' ≃ some z'›
+  have : x' ≃ z' := Rel.trans ‹x' ≃ y'› ‹y' ≃ z'›
+  have : some x' ≃ some z' := ‹x' ≃ z'›
+  exact this
+| some x', some y', none => by
+  intro _ (_ : some y' ≃ none)
+  show some x' ≃ none
+  have : False := ‹some y' ≃ none›
+  have : some x' ≃ none := ‹False›
+  exact this
+| some x', none, z => by
+  intro (_ : some x' ≃ none) _
+  show some x' ≃ z
+  have : False := ‹some x' ≃ none›
+  have : some x' ≃ z := ‹False›.elim
+  exact this
+| none, some y', z => by
+  intro (_ : none ≃ some y') _
+  show none ≃ z
+  have : False := ‹none ≃ some y'›
+  have : none ≃ z := ‹False›.elim
+  exact this
+| none, none, z => by
+  intro _ (_ : none ≃ z)
+  show none ≃ z
+  exact ‹none ≃ z›
+
+instance eqvOp_inst : EqvOp (Option α) := {
+  tildeDash := eqv
+  refl := refl
+  symm := symm
+  trans := trans
+}
+
+end Option
+
 namespace DepFn
 
 /-! ## For dependent functions -/

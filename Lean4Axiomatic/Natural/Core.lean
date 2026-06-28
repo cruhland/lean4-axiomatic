@@ -269,6 +269,8 @@ theorem rec_on_step
 
 end universe_polymorphic_induction
 
+variable [Induction.{0} ℕ]
+
 /--
 Recursion on equivalent natural numbers produces equivalent results, with
 identical arguments for the _zero_ and _step_ cases.
@@ -276,7 +278,7 @@ identical arguments for the _zero_ and _step_ cases.
 @[gcongr]
 theorem rec_on_subst
     {α : Sort u} [EqvOp α] {z : α} {s : α → α} {n₁ n₂ : ℕ}
-    [Induction.{0} ℕ] [Induction.{u} ℕ] [AA.Substitutive₁ s (· ≃ ·) (· ≃ ·)]
+    [Induction.{u} ℕ] [AA.Substitutive₁ s (· ≃ ·) (· ≃ ·)]
     : n₁ ≃ n₂ → rec_on n₁ z s ≃ rec_on n₂ z s
     := by
   revert n₂
@@ -328,8 +330,7 @@ natural numbers.
 
 **Proof intuition**: Follows directly from `cases_on`.
 -/
-theorem split_cases
-    [Induction.{0} ℕ] (n : ℕ) : n ≃ 0 ∨ ∃ (m : ℕ), n ≃ step m := by
+theorem split_cases (n : ℕ) : n ≃ 0 ∨ ∃ (m : ℕ), n ≃ step m := by
   apply cases_on n
   case zero =>
     show 0 ≃ 0 ∨ ∃ m, 0 ≃ step m
@@ -340,7 +341,7 @@ theorem split_cases
     exact Or.inr (Exists.intro k Rel.refl)
 
 /-- A natural number is never equal to its successor. -/
-theorem step_neqv [Induction.{0} ℕ] {n : ℕ} : step n ≄ n := by
+theorem step_neqv {n : ℕ} : step n ≄ n := by
   apply ind_on (motive := λ n => step n ≄ n) n
   case zero =>
     show step 0 ≄ 0
@@ -353,5 +354,64 @@ theorem step_neqv [Induction.{0} ℕ] {n : ℕ} : step n ≄ n := by
     apply ih
     show step n ≃ n
     exact AA.inject ‹step (step n) ≃ step n›
+
+variable [Induction.{1} ℕ]
+
+/-- TODO -/
+def find_first_up_to
+    (P : ℕ → Prop) [DecidablePred P] (limit : ℕ) : Option ℕ
+    := by
+  apply ind_on limit (motive := λ _ => Option ℕ)
+  case zero =>
+    exact if P 0 then some 0 else none
+  case step =>
+    intro (n : ℕ) (rOpt : Option ℕ)
+    show Option ℕ
+    exact if rOpt.isNone && P (step n) then some (step n) else rOpt
+
+/-- TODO -/
+theorem find_first_up_to_false
+    {m : ℕ} : let P := λ _ => False; find_first_up_to P m ≃ none
+    := by
+  intro (P : ℕ → Prop)
+  let z := if P 0 then some 0 else none
+  let s := λ (n : ℕ) (rOpt : Option ℕ) =>
+    if rOpt.isNone && P (step n) then some (step n) else rOpt
+
+  apply ind_on m (motive := λ x => find_first_up_to P x ≃ none)
+  case zero =>
+    show find_first_up_to P 0 ≃ none
+    calc
+      _ = find_first_up_to P 0           := rfl
+      _ = ind_on 0 z s                   := rfl
+      _ ≃ z                              := ind_zero
+      _ = if P 0 then some 0 else none   := rfl
+      _ = if False then some 0 else none := rfl
+      _ = none                           := rfl
+  case step =>
+    intro (k : ℕ) (ih : find_first_up_to P k ≃ none)
+    show find_first_up_to P (step k) ≃ none
+
+    let rOpt := ind_on k z s
+    let rin := rOpt.isNone
+    let ssk := some (step k)
+    calc
+      _ = find_first_up_to P (step k)             := rfl
+      _ = ind_on (step k) z s                     := rfl
+      _ ≃ s k (ind_on k z s)                      := ind_step
+      _ = s k rOpt                                := rfl
+      _ = if rin && P (step k) then ssk else rOpt := rfl
+      _ = if rin && False then ssk else rOpt      := rfl
+      _ = if rin && false then ssk else rOpt      := rfl
+      _ = if false then ssk else rOpt             := by rw [Bool.and_false]
+      _ = rOpt                                    := rfl
+      _ = ind_on k z s                            := rfl
+      _ = find_first_up_to P k                    := rfl
+      _ ≃ none                                    := ih
+
+-- prove:
+-- find_first_up_to (λ _ => True) m ≡ .some 0
+-- find_first_up_to (· ≃ m) m ≡ .some m
+-- find_first_up_to P m ≡ Option.when(k ≤ m)(k), where P has first at k
 
 end Lean4Axiomatic.Natural
