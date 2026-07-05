@@ -96,6 +96,39 @@ instance eqvOp_inst : EqvOp (Option α) := {
   trans := trans
 }
 
+/-- TODO -/
+@[gcongr]
+theorem isNone_subst
+    : {opt₁ opt₂ : Option α} → opt₁ ≃ opt₂ → opt₁.isNone ≃ opt₂.isNone
+| some x₁, some x₂ => by
+  intro (_ : some x₁ ≃ some x₂)
+  show (some x₁).isNone ≃ (some x₂).isNone
+
+  calc
+    _ = (some x₁).isNone := rfl
+    _ = false            := rfl
+    _ = (some x₂).isNone := rfl
+| some x₁, none => by
+  intro (_ : some x₁ ≃ none)
+  show (some x₁).isNone ≃ none.isNone
+
+  have : False → False := id
+  have : some x₁ ≃ none → False := this
+  have : some x₁ ≄ none := this
+  exact absurd ‹some x₁ ≃ none› ‹some x₁ ≄ none›
+| none, some x₂ => by
+  intro (_ : none ≃ some x₂)
+  show none.isNone ≃ (some x₂).isNone
+
+  have : False → False := id
+  have : none ≃ some x₂ → False := this
+  have : none ≄ some x₂ := this
+  exact absurd ‹none ≃ some x₂› ‹none ≄ some x₂›
+| none, none => by
+  intro _
+  show none.isNone ≃ none.isNone
+  exact Rel.refl
+
 end Option
 
 namespace DepFn

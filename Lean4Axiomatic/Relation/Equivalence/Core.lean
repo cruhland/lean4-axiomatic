@@ -1,5 +1,6 @@
 import Lean4Axiomatic.Function.Core
 import Lean4Axiomatic.Operators
+import Mathlib.Tactic.GCongr
 
 /-!
 # Equivalence relations
@@ -383,12 +384,96 @@ Extends `EqvOp` with `· ≃? ·`, a decision procedure for equivalence.
 class EqvOp? (α : Sort u)
     extends EqvOp α, Operators.TildeDashQuestion tildeDash
 
+-- TODO: can this be made generic? yeah but it should be a def
+instance bool_eqvOp_inst : EqvOp Bool := {
+  tildeDash := (· = ·)
+  refl := rfl
+  symm := Eq.symm
+  trans := Eq.trans
+}
+
+/-- TODO -/
+@[gcongr]
+theorem bool_and_substL {p₁ p₂ q : Bool} : p₁ ≃ p₂ → (p₁ && q) ≃ (p₂ && q) := by
+  intro (_ : p₁ ≃ p₂)
+  show (p₁ && q) ≃ (p₂ && q)
+
+  have : p₁ = p₂ := ‹p₁ ≃ p₂›
+  calc
+    _ = (p₁ && q) := rfl
+    _ = (p₂ && q) := by rw [‹p₁ = p₂›]
+    _ ≃ (p₂ && q) := refl
+
+/-- TODO -/
+theorem ite_subst_cond
+    {α : Type u} [EqvOp α] {x₁ x₂ : Bool} {y z : α}
+    : x₁ ≃ x₂ → (if x₁ then y else z) ≃ (if x₂ then y else z)
+    := by
+  intro (_ : x₁ ≃ x₂)
+  show (if x₁ then y else z) ≃ (if x₂ then y else z)
+  calc
+    _ = if x₁ then y else z := rfl
+    _ = if x₂ then y else z := by rw [‹x₁ = x₂›]
+    _ ≃ if x₂ then y else z := refl
+
+/-- TODO -/
+@[gcongr]
+theorem ite_subst_then
+    {α : Type u} [EqvOp α] {x : Bool} {y₁ y₂ z : α}
+    : y₁ ≃ y₂ → (if x then y₁ else z) ≃ (if x then y₂ else z)
+    := by
+  intro (_ : y₁ ≃ y₂)
+  show (if x then y₁ else z) ≃ (if x then y₂ else z)
+
+  have : x = true ∨ x = false := x.eq_false_or_eq_true
+  match ‹x = true ∨ x = false› with
+  | .inl (_ : x = true) => calc
+    _ = if x then y₁ else z    := rfl
+    _ = if true then y₁ else z := by rw [‹x = true›]
+    _ = y₁                     := rfl
+    _ ≃ y₂                     := ‹y₁ ≃ y₂›
+    _ = if true then y₂ else z := rfl
+    _ = if x then y₂ else z    := by rw [←‹x = true›]
+  | .inr (_ : x = false) => calc
+    _ = if x then y₁ else z     := rfl
+    _ = if false then y₁ else z := by rw [‹x = false›]
+    _ = z                       := rfl
+    _ ≃ z                       := refl
+    _ = if false then y₂ else z := rfl
+    _ = if x then y₂ else z     := by rw [←‹x = false›]
+
+/-- TODO -/
+@[gcongr]
+theorem ite_subst_else
+    {α : Type u} [EqvOp α] {x : Bool} {y z₁ z₂ : α}
+    : z₁ ≃ z₂ → (if x then y else z₁) ≃ (if x then y else z₂)
+    := by
+  intro (_ : z₁ ≃ z₂)
+  show (if x then y else z₁) ≃ (if x then y else z₂)
+
+  have : x = true ∨ x = false := x.eq_false_or_eq_true
+  match ‹x = true ∨ x = false› with
+  | .inl (_ : x = true) => calc
+    _ = if x then y else z₁    := rfl
+    _ = if true then y else z₁ := by rw [‹x = true›]
+    _ = y                      := rfl
+    _ ≃ y                      := refl
+    _ = if true then y else z₂ := rfl
+    _ = if x then y else z₂    := by rw [←‹x = true›]
+  | .inr (_ : x = false) => calc
+    _ = if x then y else z₁     := rfl
+    _ = if false then y else z₁ := by rw [‹x = false›]
+    _ = z₁                      := rfl
+    _ ≃ z₂                      := ‹z₁ ≃ z₂›
+    _ = if false then y else z₂ := rfl
+    _ = if x then y else z₂     := by rw [←‹x = false›]
+
 end Equivalence
 end Relation
 
 namespace Rel
 export Relation (refl symm trans trans_failL trans_failR)
-export Relation.Equivalence (iff_subst_eqv)
+export Relation.Equivalence (iff_subst_eqv ite_subst_cond)
 end Rel
 
 end Lean4Axiomatic

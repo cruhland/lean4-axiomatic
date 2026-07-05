@@ -8,7 +8,7 @@ Closely follows the [Peano axioms](https://en.wikipedia.org/wiki/Peano_axioms).
 
 namespace Lean4Axiomatic.Natural
 
-open Relation.Equivalence (EqvOp)
+open Relation.Equivalence (EqvOp ite_subst_cond)
 
 /-!
 ## Axioms
@@ -374,6 +374,8 @@ theorem find_first_up_to_false
     {m : ℕ} : let P := λ _ => False; find_first_up_to P m ≃ none
     := by
   intro (P : ℕ → Prop)
+  show find_first_up_to P m ≃ none
+
   let z := if P 0 then some 0 else none
   let s := λ (n : ℕ) (rOpt : Option ℕ) =>
     if rOpt.isNone && P (step n) then some (step n) else rOpt
@@ -409,8 +411,52 @@ theorem find_first_up_to_false
       _ = find_first_up_to P k                    := rfl
       _ ≃ none                                    := ih
 
+/-- TODO -/
+theorem find_first_up_to_true
+    {m : ℕ} : let P := λ _ => True; find_first_up_to P m ≃ some 0
+    := by
+  intro (P : ℕ → Prop)
+  show find_first_up_to P m ≃ some 0
+
+  let z := if P 0 then some 0 else none
+  let s := λ (n : ℕ) (rOpt : Option ℕ) =>
+    if rOpt.isNone && P (step n) then some (step n) else rOpt
+
+  apply ind_on m (motive := λ x => find_first_up_to P x ≃ some 0)
+  case zero =>
+    show find_first_up_to P 0 ≃ some 0
+    calc
+      _ = find_first_up_to P 0          := rfl
+      _ = ind_on 0 z s                  := rfl
+      _ ≃ z                             := ind_zero
+      _ = if P 0 then some 0 else none  := rfl
+      _ = if True then some 0 else none := rfl
+      _ = some 0                        := rfl
+  case step =>
+    intro (k : ℕ)
+    let rOpt := find_first_up_to P k
+    intro (ih : rOpt ≃ some 0)
+    show find_first_up_to P (step k) ≃ some 0
+
+    let psk := P (step k)
+    let ssk := some (step k)
+    have eh : (rOpt.isNone && psk) ≃ ((some 0).isNone && psk) := calc
+      _ ≃ (rOpt.isNone && psk) := Rel.refl
+      _ ≃ ((some 0).isNone && psk) := by srw [ih]
+    calc
+      _ = find_first_up_to P (step k)                  := rfl
+      _ = ind_on (step k) z s                          := rfl
+      _ ≃ s k (ind_on k z s)                           := ind_step
+      _ = s k (find_first_up_to P k)                   := rfl
+      _ = s k rOpt                                     := rfl
+      _ = if rOpt.isNone && psk then ssk else rOpt     := rfl
+      _ ≃ if (some 0).isNone && psk then ssk else rOpt := ite_subst_cond eh
+      _ = if false && psk then ssk else rOpt           := rfl
+      _ = if false then ssk else rOpt                  := rfl
+      _ = rOpt                                         := rfl
+      _ ≃ some 0                                       := ih
+
 -- prove:
--- find_first_up_to (λ _ => True) m ≡ .some 0
 -- find_first_up_to (· ≃ m) m ≡ .some m
 -- find_first_up_to P m ≡ Option.when(k ≤ m)(k), where P has first at k
 
