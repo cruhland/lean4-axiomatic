@@ -98,6 +98,10 @@ instance eqvOp_inst : EqvOp (Option α) := {
 
 /-- TODO -/
 @[gcongr]
+theorem some_subst {x₁ x₂ : α} : x₁ ≃ x₂ → some x₁ ≃ some x₂ := sorry
+
+/-- TODO -/
+@[gcongr]
 theorem isNone_subst
     : {opt₁ opt₂ : Option α} → opt₁ ≃ opt₂ → opt₁.isNone ≃ opt₂.isNone
 | some x₁, some x₂ => by

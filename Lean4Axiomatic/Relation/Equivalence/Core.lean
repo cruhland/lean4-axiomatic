@@ -417,30 +417,41 @@ theorem ite_subst_cond
     _ ≃ if x₂ then y else z := refl
 
 /-- TODO -/
+theorem ite_eval_true
+    {α : Type u} [EqvOp α] {y z : α} {P : Prop} [Decidable P] (p : P)
+    : (if P then y else z) ≃ (if True then y else z)
+    := by
+  admit
+
+/-- TODO -/
+theorem ite_eval_false
+    {α : Type u} [EqvOp α] {y z : α} {P : Prop} [Decidable P] (np : ¬P)
+    : (if P then y else z) ≃ (if False then y else z)
+    := by
+  admit
+
+/-- TODO - also update ite_subst_else to use prop. and _cond above -/
 @[gcongr]
 theorem ite_subst_then
-    {α : Type u} [EqvOp α] {x : Bool} {y₁ y₂ z : α}
-    : y₁ ≃ y₂ → (if x then y₁ else z) ≃ (if x then y₂ else z)
+    {α : Type u} [EqvOp α] {P : Prop} [Decidable P] {y₁ y₂ z : α}
+    : y₁ ≃ y₂ → (if P then y₁ else z) ≃ (if P then y₂ else z)
     := by
   intro (_ : y₁ ≃ y₂)
-  show (if x then y₁ else z) ≃ (if x then y₂ else z)
+  show (if P then y₁ else z) ≃ (if P then y₂ else z)
 
-  have : x = true ∨ x = false := x.eq_false_or_eq_true
-  match ‹x = true ∨ x = false› with
-  | .inl (_ : x = true) => calc
-    _ = if x then y₁ else z    := rfl
-    _ = if true then y₁ else z := by rw [‹x = true›]
+  if P then calc
+    _ = if P then y₁ else z    := rfl
+    _ ≃ if True then y₁ else z := ite_eval_true ‹P›
     _ = y₁                     := rfl
     _ ≃ y₂                     := ‹y₁ ≃ y₂›
-    _ = if true then y₂ else z := rfl
-    _ = if x then y₂ else z    := by rw [←‹x = true›]
-  | .inr (_ : x = false) => calc
-    _ = if x then y₁ else z     := rfl
-    _ = if false then y₁ else z := by rw [‹x = false›]
+    _ = if True then y₂ else z := rfl
+    _ ≃ if P then y₂ else z    := symm (ite_eval_true ‹P›)
+  else calc
+    _ = if P then y₁ else z     := rfl
+    _ ≃ if False then y₁ else z := ite_eval_false ‹¬P›
     _ = z                       := rfl
-    _ ≃ z                       := refl
-    _ = if false then y₂ else z := rfl
-    _ = if x then y₂ else z     := by rw [←‹x = false›]
+    _ = if False then y₂ else z := rfl
+    _ ≃ if P then y₂ else z     := symm (ite_eval_false ‹¬P›)
 
 /-- TODO -/
 @[gcongr]

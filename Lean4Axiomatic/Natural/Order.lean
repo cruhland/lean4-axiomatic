@@ -8,7 +8,7 @@ import Lean4Axiomatic.Natural.Sign
 namespace Lean4Axiomatic.Natural
 
 open Logic (Either iff_subst_covar or_mapL)
-open Relation.Equivalence (ite_subst_cond)
+open Relation.Equivalence (ite_eval_false ite_eval_true ite_subst_cond)
 open Signed (Positive)
 
 /-!
@@ -1008,6 +1008,9 @@ theorem le_gt_false {n m : ℕ} : n ≤ m → n > m → False := by
   have : ¬twoOfThree := (trichotomy n m).atMostOne
   exact absurd ‹twoOfThree› ‹¬twoOfThree›
 
+/-- TODO -/
+theorem le_false_gt {n m : ℕ} : (n ≤ m → False) → n > m := sorry
+
 /--
 Defines `compare`, a comparison function on natural numbers, that determines
 the ordering between any two of them: whether one is less than, equivalent to,
@@ -1289,9 +1292,7 @@ theorem find_first_up_to_true
 
     let psk := P (step k)
     let ssk := some (step k)
-    have eh : (rOpt.isNone && psk) ≃ ((some 0).isNone && psk) := calc
-      _ ≃ (rOpt.isNone && psk) := Rel.refl
-      _ ≃ ((some 0).isNone && psk) := by srw [ih]
+    have eh : (rOpt.isNone && psk) ≃ ((some 0).isNone && psk) := by srw [ih]
     calc
       _ = find_first_up_to P (step k)                  := rfl
       _ = ind_on (step k) z s                          := rfl
@@ -1306,7 +1307,14 @@ theorem find_first_up_to_true
       _ ≃ some 0                                       := ih
 
 /-- TODO -/
-def FirstTrueAt (P : ℕ → Prop) (n : ℕ) : Prop := P n ∧ ((m : ℕ) → m < n → ¬P m)
+def FirstTrueAt (P : ℕ → Prop) (n : ℕ) : Prop := P n ∧ ({m : ℕ} → m < n → ¬P m)
+
+/-- TODO -/
+@[gcongr]
+theorem FirstTrueAt_subst_arg
+    {P : ℕ → Prop} {n₁ n₂ : ℕ} : n₁ ≃ n₂ → FirstTrueAt P n₁ → FirstTrueAt P n₂
+    := by
+  admit
 
 /-- TODO -/
 theorem find_first_up_to_works
@@ -1322,29 +1330,32 @@ theorem find_first_up_to_works
     intro (n : ℕ) (_ : FirstTrueAt P n)
     show find_first_up_to P 0 ≃ if n ≤ 0 then some n else none
 
-    -- match decide n ≤ 0
-    -- n ≤ 0:
-    -- n ≃ 0
-    -- FirstTrueAt P n = FirstTrueAt P 0
-    -- P 0
-    -- find_first_up_to P 0
-    -- = if P 0 then some 0 else none
-    -- = if True then some 0 else none
-    -- = some 0
-    -- = some n
-    -- = if True then some n else none
-    -- = if n ≤ 0 then some n else none
-    -- ¬(n ≤ 0):
-    -- n > 0
-    -- FirstTrueAt P n = P n ∧ ((m : ℕ) → m < n → ¬P m)
-    -- 0 < n → ¬P 0
-    -- ¬P 0
-    -- find_first_up_to P 0
-    -- = if P 0 then some 0 else none
-    -- = if False then some 0 else none
-    -- = if ... then some 0 else none
-    -- = if n ≤ 0 then some 0 else none
-    admit
+    if h : n ≤ 0 then
+      have : n < 0 ∨ n ≃ 0 := le_split.mp h
+      match ‹n < 0 ∨ n ≃ 0› with
+      | .inl (_ : n < 0) =>
+        have : n ≮ 0 := lt_zero
+        exact absurd ‹n < 0› ‹n ≮ 0›
+      | .inr (_ : n ≃ 0) =>
+        have : FirstTrueAt P 0 := by prw [‹n ≃ 0›] ‹FirstTrueAt P n›
+        have (And.intro (_ : P 0) _) := ‹FirstTrueAt P 0›
+        calc
+          _ = find_first_up_to P 0           := rfl
+          _ ≃ if P 0 then some 0 else none   := ind_zero
+          _ ≃ if True then some 0 else none  := ite_eval_true ‹P 0›
+          _ ≃ if True then some n else none  := by srw [←‹n ≃ 0›]
+          _ ≃ if n ≤ 0 then some n else none := Rel.symm (ite_eval_true h)
+    else
+      have : n > 0 := le_false_gt ‹¬(n ≤ 0)›
+      have (And.intro _ (negP : {m : ℕ} → m < n → ¬P m)) := ‹FirstTrueAt P n›
+      have : ¬P 0 := negP ‹0 < n›
+      calc
+        _ = find_first_up_to P 0           := rfl
+        _ ≃ if P 0 then some 0 else none   := ind_zero
+        _ ≃ if False then some 0 else none := ite_eval_false ‹¬P 0›
+        _ = none                           := rfl
+        _ = if False then some n else none := rfl
+        _ ≃ if n ≤ 0 then some n else none := Rel.symm (ite_eval_false h)
   case step =>
     intro (m' : ℕ)
     intro (ih :
