@@ -419,9 +419,19 @@ theorem ite_subst_cond
 /-- TODO -/
 theorem ite_eval_true
     {α : Type u} [EqvOp α] {y z : α} {P : Prop} [Decidable P] (p : P)
-    : (if P then y else z) ≃ (if True then y else z)
+    : (if P then y else z) = (if True then y else z)
     := by
-  admit
+  match h : ‹Decidable P› with
+  | .isTrue _ =>
+    calc
+      _ = if P then y else z                          := rfl
+      _ = ‹Decidable P›.casesOn (λ _ => z) (λ _ => y) := rfl
+      _ = (isTrue p).casesOn (λ _ => z) (λ _ => y)    := by rw [h]
+      _ = (λ _ => y) p                                := rfl
+      _ = y                                           := rfl
+      _ = if True then y else z                       := rfl
+  | .isFalse (_ : ¬P) =>
+    exact absurd ‹P› ‹¬P›
 
 /-- TODO -/
 theorem ite_eval_false
@@ -441,11 +451,11 @@ theorem ite_subst_then
 
   if P then calc
     _ = if P then y₁ else z    := rfl
-    _ ≃ if True then y₁ else z := ite_eval_true ‹P›
+    _ = if True then y₁ else z := ite_eval_true ‹P›
     _ = y₁                     := rfl
     _ ≃ y₂                     := ‹y₁ ≃ y₂›
     _ = if True then y₂ else z := rfl
-    _ ≃ if P then y₂ else z    := symm (ite_eval_true ‹P›)
+    _ = if P then y₂ else z    := (ite_eval_true ‹P›).symm
   else calc
     _ = if P then y₁ else z     := rfl
     _ ≃ if False then y₁ else z := ite_eval_false ‹¬P›

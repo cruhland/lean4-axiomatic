@@ -1342,9 +1342,9 @@ theorem find_first_up_to_works
         calc
           _ = find_first_up_to P 0           := rfl
           _ ≃ if P 0 then some 0 else none   := ind_zero
-          _ ≃ if True then some 0 else none  := ite_eval_true ‹P 0›
+          _ = if True then some 0 else none  := ite_eval_true ‹P 0›
           _ ≃ if True then some n else none  := by srw [←‹n ≃ 0›]
-          _ ≃ if n ≤ 0 then some n else none := Rel.symm (ite_eval_true h)
+          _ = if n ≤ 0 then some n else none := (ite_eval_true h).symm
     else
       have : n > 0 := le_false_gt ‹¬(n ≤ 0)›
       have (And.intro _ (negP : {m : ℕ} → m < n → ¬P m)) := ‹FirstTrueAt P n›
