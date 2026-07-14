@@ -8,7 +8,7 @@ import Lean4Axiomatic.Natural.Sign
 namespace Lean4Axiomatic.Natural
 
 open Logic (Either iff_subst_covar or_mapL)
-open Relation.Equivalence (ite_eval_false ite_eval_true ite_subst_cond)
+open Relation.Equivalence (ite_subst_cond)
 open Signed (Positive)
 
 /-!
@@ -1330,8 +1330,8 @@ theorem find_first_up_to_works
     intro (n : ℕ) (_ : FirstTrueAt P n)
     show find_first_up_to P 0 ≃ if n ≤ 0 then some n else none
 
-    if h : n ≤ 0 then
-      have : n < 0 ∨ n ≃ 0 := le_split.mp h
+    if n ≤ 0 then
+      have : n < 0 ∨ n ≃ 0 := le_split.mp ‹n ≤ 0›
       match ‹n < 0 ∨ n ≃ 0› with
       | .inl (_ : n < 0) =>
         have : n ≮ 0 := lt_zero
@@ -1342,9 +1342,9 @@ theorem find_first_up_to_works
         calc
           _ = find_first_up_to P 0           := rfl
           _ ≃ if P 0 then some 0 else none   := ind_zero
-          _ = if True then some 0 else none  := ite_eval_true ‹P 0›
-          _ ≃ if True then some n else none  := by srw [←‹n ≃ 0›]
-          _ = if n ≤ 0 then some n else none := (ite_eval_true h).symm
+          _ = some 0                         := if_pos ‹P 0›
+          _ ≃ some n                         := by srw [←‹n ≃ 0›]
+          _ = if n ≤ 0 then some n else none := (if_pos ‹n ≤ 0›).symm
     else
       have : n > 0 := le_false_gt ‹¬(n ≤ 0)›
       have (And.intro _ (negP : {m : ℕ} → m < n → ¬P m)) := ‹FirstTrueAt P n›
@@ -1352,10 +1352,8 @@ theorem find_first_up_to_works
       calc
         _ = find_first_up_to P 0           := rfl
         _ ≃ if P 0 then some 0 else none   := ind_zero
-        _ ≃ if False then some 0 else none := ite_eval_false ‹¬P 0›
-        _ = none                           := rfl
-        _ = if False then some n else none := rfl
-        _ ≃ if n ≤ 0 then some n else none := Rel.symm (ite_eval_false h)
+        _ = none                           := if_neg ‹¬P 0›
+        _ = if n ≤ 0 then some n else none := (if_neg ‹¬(n ≤ 0)›).symm
   case step =>
     intro (m' : ℕ)
     intro (ih :

@@ -416,30 +416,6 @@ theorem ite_subst_cond
     _ = if x₂ then y else z := by rw [‹x₁ = x₂›]
     _ ≃ if x₂ then y else z := refl
 
-/-- TODO -/
-theorem ite_eval_true
-    {α : Type u} [EqvOp α] {y z : α} {P : Prop} [Decidable P] (p : P)
-    : (if P then y else z) = (if True then y else z)
-    := by
-  match h : ‹Decidable P› with
-  | .isTrue _ =>
-    calc
-      _ = if P then y else z                          := rfl
-      _ = ‹Decidable P›.casesOn (λ _ => z) (λ _ => y) := rfl
-      _ = (isTrue p).casesOn (λ _ => z) (λ _ => y)    := by rw [h]
-      _ = (λ _ => y) p                                := rfl
-      _ = y                                           := rfl
-      _ = if True then y else z                       := rfl
-  | .isFalse (_ : ¬P) =>
-    exact absurd ‹P› ‹¬P›
-
-/-- TODO -/
-theorem ite_eval_false
-    {α : Type u} [EqvOp α] {y z : α} {P : Prop} [Decidable P] (np : ¬P)
-    : (if P then y else z) ≃ (if False then y else z)
-    := by
-  admit
-
 /-- TODO - also update ite_subst_else to use prop. and _cond above -/
 @[gcongr]
 theorem ite_subst_then
@@ -451,17 +427,14 @@ theorem ite_subst_then
 
   if P then calc
     _ = if P then y₁ else z    := rfl
-    _ = if True then y₁ else z := ite_eval_true ‹P›
-    _ = y₁                     := rfl
+    _ = y₁                     := if_pos ‹P›
     _ ≃ y₂                     := ‹y₁ ≃ y₂›
-    _ = if True then y₂ else z := rfl
-    _ = if P then y₂ else z    := (ite_eval_true ‹P›).symm
+    _ = if P then y₂ else z    := (if_pos ‹P›).symm
   else calc
     _ = if P then y₁ else z     := rfl
-    _ ≃ if False then y₁ else z := ite_eval_false ‹¬P›
-    _ = z                       := rfl
-    _ = if False then y₂ else z := rfl
-    _ ≃ if P then y₂ else z     := symm (ite_eval_false ‹¬P›)
+    _ = z                       := if_neg ‹¬P›
+    _ ≃ z                       := refl
+    _ = if P then y₂ else z     := (if_neg ‹¬P›).symm
 
 /-- TODO -/
 @[gcongr]
