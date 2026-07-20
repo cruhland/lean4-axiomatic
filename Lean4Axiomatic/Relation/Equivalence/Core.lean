@@ -394,27 +394,27 @@ instance bool_eqvOp_inst : EqvOp Bool := {
 
 /-- TODO -/
 @[gcongr]
-theorem bool_and_substL {p₁ p₂ q : Bool} : p₁ ≃ p₂ → (p₁ && q) ≃ (p₂ && q) := by
-  intro (_ : p₁ ≃ p₂)
-  show (p₁ && q) ≃ (p₂ && q)
-
-  have : p₁ = p₂ := ‹p₁ ≃ p₂›
-  calc
-    _ = (p₁ && q) := rfl
-    _ = (p₂ && q) := by rw [‹p₁ = p₂›]
-    _ ≃ (p₂ && q) := refl
-
-/-- TODO -/
 theorem ite_subst_cond
-    {α : Type u} [EqvOp α] {x₁ x₂ : Bool} {y z : α}
-    : x₁ ≃ x₂ → (if x₁ then y else z) ≃ (if x₂ then y else z)
+    {α : Type u} [EqvOp α] {P₁ P₂ : Prop} [Decidable P₁] [Decidable P₂]
+    {y z : α} : (P₁ ↔ P₂) → (if P₁ then y else z) ≃ (if P₂ then y else z)
     := by
-  intro (_ : x₁ ≃ x₂)
-  show (if x₁ then y else z) ≃ (if x₂ then y else z)
-  calc
-    _ = if x₁ then y else z := rfl
-    _ = if x₂ then y else z := by rw [‹x₁ = x₂›]
-    _ ≃ if x₂ then y else z := refl
+  intro (_ : P₁ ↔ P₂)
+  show (if P₁ then y else z) ≃ (if P₂ then y else z)
+
+  if P₁ then
+    have : P₂ := ‹P₁ ↔ P₂›.mp ‹P₁›
+    calc
+      _ = if P₁ then y else z := rfl
+      _ = y                   := if_pos ‹P₁›
+      _ ≃ y                   := refl
+      _ = if P₂ then y else z := (if_pos ‹P₂›).symm
+  else
+    have : ¬P₂ := mt ‹P₁ ↔ P₂›.mpr ‹¬P₁›
+    calc
+      _ = if P₁ then y else z := rfl
+      _ = z                   := if_neg ‹¬P₁›
+      _ ≃ z                   := refl
+      _ = if P₂ then y else z := (if_neg ‹¬P₂›).symm
 
 /-- TODO - also update ite_subst_else to use prop. and _cond above -/
 @[gcongr]
