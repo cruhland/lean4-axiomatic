@@ -8,7 +8,7 @@ import Lean4Axiomatic.Natural.Sign
 namespace Lean4Axiomatic.Natural
 
 open Logic (Either iff_subst_covar or_mapL)
-open Relation.Equivalence (ite_subst_cond)
+open Relation.Equivalence (EqvOp ite_subst_cond)
 open Signed (Positive)
 
 /-!
@@ -1209,17 +1209,53 @@ def le_diff {n m : ℕ} : n ≤ m → { d : ℕ // n + d ≃ m } := by
 
 instance le_decidable_inst {n m : ℕ} : Decidable (n ≤ m) := sorry
 
+instance option_decidable_eqv_inst
+    {α : Type} [EqvOp α] [DecidableRel (α := α) (· ≃ ·)]
+    : DecidableRel (α := Option α) (· ≃ ·)
+    :=
+  sorry
+
 /-- TODO -/
 def find_first_up_to
     (P : ℕ → Prop) [DecidablePred P] (limit : ℕ) : Option ℕ
     := by
+  let update? (prev : Option ℕ) (x : ℕ) :=
+    if prev ≃ none ∧ P x then some x else prev
   apply ind_on limit (motive := λ _ => Option ℕ)
   case zero =>
-    exact if P 0 then some 0 else none
+    exact update? none 0
   case step =>
-    intro (n : ℕ) (rOpt : Option ℕ)
+    intro (n : ℕ) (ffut_n : Option ℕ)
     show Option ℕ
-    exact if rOpt.isNone && P (step n) then some (step n) else rOpt
+    exact update? ffut_n (step n)
+
+/-- TODO -/
+theorem find_first_up_to_zero
+    {P : ℕ → Prop} [DecidablePred P]
+    : find_first_up_to P 0 ≃ if P 0 then some 0 else none
+    := by
+  let update? (prev : Option ℕ) (x : ℕ) :=
+    if prev ≃ none ∧ P x then some x else prev
+  let z := update? none 0
+  let s := λ (n : ℕ) (ffut_n : Option ℕ) => update? ffut_n (step n)
+
+  calc
+    _ = find_first_up_to P 0                       := rfl
+    _ = ind_on 0 z s                               := rfl
+    _ ≃ z                                          := ind_zero
+    _ = update? none 0                             := rfl
+    _ = if none ≃ none ∧ P 0 then some 0 else none := rfl
+    _ = if True ∧ P 0 then some 0 else none        := sorry
+    _ = if P 0 then some 0 else none               := sorry
+
+/-- TODO -/
+theorem find_first_up_to_step
+    {P : ℕ → Prop} [DecidablePred P] {n : ℕ}
+    : find_first_up_to P (step n) ≃
+      if find_first_up_to P n ≃ none ∧ P (step n)
+      then some (step n) else find_first_up_to P n
+    := by
+  admit
 
 /-- TODO -/
 theorem find_first_up_to_false
@@ -1228,40 +1264,32 @@ theorem find_first_up_to_false
   intro (P : ℕ → Prop)
   show find_first_up_to P m ≃ none
 
-  let z := if P 0 then some 0 else none
-  let s := λ (n : ℕ) (rOpt : Option ℕ) =>
-    if rOpt.isNone && P (step n) then some (step n) else rOpt
-
   apply ind_on m (motive := λ x => find_first_up_to P x ≃ none)
   case zero =>
     show find_first_up_to P 0 ≃ none
     calc
       _ = find_first_up_to P 0           := rfl
-      _ = ind_on 0 z s                   := rfl
-      _ ≃ z                              := ind_zero
-      _ = if P 0 then some 0 else none   := rfl
+      _ ≃ if P 0 then some 0 else none   := find_first_up_to_zero
       _ = if False then some 0 else none := rfl
       _ = none                           := rfl
   case step =>
     intro (k : ℕ) (ih : find_first_up_to P k ≃ none)
     show find_first_up_to P (step k) ≃ none
 
-    let rOpt := ind_on k z s
-    let rin := rOpt.isNone
-    let ssk := some (step k)
+    let ffut := find_first_up_to
     calc
-      _ = find_first_up_to P (step k)             := rfl
-      _ = ind_on (step k) z s                     := rfl
-      _ ≃ s k (ind_on k z s)                      := ind_step
-      _ = s k rOpt                                := rfl
-      _ = if rin && P (step k) then ssk else rOpt := rfl
-      _ = if rin && False then ssk else rOpt      := rfl
-      _ = if rin && false then ssk else rOpt      := rfl
-      _ = if false then ssk else rOpt             := by rw [Bool.and_false]
-      _ = rOpt                                    := rfl
-      _ = ind_on k z s                            := rfl
-      _ = find_first_up_to P k                    := rfl
-      _ ≃ none                                    := ih
+      _ = find_first_up_to P (step k)       := rfl
+      _ = ffut P (step k)                   := rfl
+      _ ≃ if ffut P k ≃ none ∧ P (step k)
+          then some (step k) else ffut P k  := find_first_up_to_step
+      _ = if ffut P k ≃ none ∧ False
+          then some (step k) else ffut P k  := rfl
+      -- TODO: fix gcongr so that srw can be used?
+      _ = if False
+          then some (step k) else ffut P k  := ite_cond_congr (and_false (ffut P k ≃ none))
+      _ = ffut P k                          := rfl
+      _ = find_first_up_to P k              := rfl
+      _ ≃ none                              := ih
 
 /-- TODO -/
 theorem find_first_up_to_true
@@ -1271,40 +1299,37 @@ theorem find_first_up_to_true
   show find_first_up_to P m ≃ some 0
 
   let z := if P 0 then some 0 else none
-  let s := λ (n : ℕ) (rOpt : Option ℕ) =>
-    if rOpt.isNone && P (step n) then some (step n) else rOpt
+  let s := λ (n : ℕ) (ffut_n : Option ℕ) =>
+    if ffut_n ≃ none ∧ P (step n) then some (step n) else ffut_n
 
   apply ind_on m (motive := λ x => find_first_up_to P x ≃ some 0)
   case zero =>
     show find_first_up_to P 0 ≃ some 0
     calc
       _ = find_first_up_to P 0          := rfl
-      _ = ind_on 0 z s                  := rfl
-      _ ≃ z                             := ind_zero
-      _ = if P 0 then some 0 else none  := rfl
+      _ ≃ if P 0 then some 0 else none  := find_first_up_to_zero
       _ = if True then some 0 else none := rfl
       _ = some 0                        := rfl
   case step =>
     intro (k : ℕ)
     let rOpt := find_first_up_to P k
-    intro (ih : rOpt ≃ some 0)
+    intro (ih : find_first_up_to P k ≃ some 0)
     show find_first_up_to P (step k) ≃ some 0
 
-    let psk := P (step k)
-    let ssk := some (step k)
-    have eh : (rOpt.isNone && psk) ≃ ((some 0).isNone && psk) := by srw [ih]
+    let ffut := find_first_up_to
+    have : ffut P k ≄ none := sorry
     calc
-      _ = find_first_up_to P (step k)                  := rfl
-      _ = ind_on (step k) z s                          := rfl
-      _ ≃ s k (ind_on k z s)                           := ind_step
-      _ = s k (find_first_up_to P k)                   := rfl
-      _ = s k rOpt                                     := rfl
-      _ = if rOpt.isNone && psk then ssk else rOpt     := rfl
-      _ ≃ if (some 0).isNone && psk then ssk else rOpt := ite_subst_cond eh
-      _ = if false && psk then ssk else rOpt           := rfl
-      _ = if false then ssk else rOpt                  := rfl
-      _ = rOpt                                         := rfl
-      _ ≃ some 0                                       := ih
+      _ = find_first_up_to P (step k)      := rfl
+      _ = ffut P (step k)                  := rfl
+      _ ≃ if ffut P k ≃ none ∧ P (step k)
+          then some (step k) else ffut P k := find_first_up_to_step
+      -- TODO: do this without simp? need better ite_subst_cond?
+      _ = if False ∧ P (step k)
+          then some (step k) else ffut P k := by simp [‹ffut P k ≄ none›]
+      _ = if False
+          then some (step k) else ffut P k := rfl
+      _ = ffut P k                         := rfl
+      _ ≃ some 0                           := ih
 
 /-- TODO -/
 def FirstTrueAt (P : ℕ → Prop) (n : ℕ) : Prop := P n ∧ ({m : ℕ} → m < n → ¬P m)
@@ -1341,7 +1366,7 @@ theorem find_first_up_to_works
         have (And.intro (_ : P 0) _) := ‹FirstTrueAt P 0›
         calc
           _ = find_first_up_to P 0           := rfl
-          _ ≃ if P 0 then some 0 else none   := ind_zero
+          _ ≃ if P 0 then some 0 else none   := find_first_up_to_zero
           _ = some 0                         := if_pos ‹P 0›
           _ ≃ some n                         := by srw [←‹n ≃ 0›]
           _ = if n ≤ 0 then some n else none := (if_pos ‹n ≤ 0›).symm
@@ -1351,7 +1376,7 @@ theorem find_first_up_to_works
       have : ¬P 0 := negP ‹0 < n›
       calc
         _ = find_first_up_to P 0           := rfl
-        _ ≃ if P 0 then some 0 else none   := ind_zero
+        _ ≃ if P 0 then some 0 else none   := find_first_up_to_zero
         _ = none                           := if_neg ‹¬P 0›
         _ = if n ≤ 0 then some n else none := (if_neg ‹¬(n ≤ 0)›).symm
   case step =>
@@ -1364,7 +1389,10 @@ theorem find_first_up_to_works
     show find_first_up_to P (step m') ≃ if n ≤ step m' then some n else none
 
     -- ih (n':=n) (FTA P n) ≡ ffut P m' ≃ if n ≤ m' then some n else none
-    -- case n ≤ m':
+    if n ≤ m' then
+      calc
+        _ = find_first_up_to P (step m') := rfl
+        _ ≃ if n ≤ step m' then some n else none := sorry
     -- find_first_up_to P (step m')
     -- = if (ffut P m').isNone && P (step m') then some (step m') else (ffut P m')
     -- = if (if n ≤ m' ...).isNone && P (step m') then some (step m') else (ffut P m')
@@ -1376,10 +1404,12 @@ theorem find_first_up_to_works
     -- = if true then some n else none
     -- = if n ≤ m' then some n else none
     -- = if n ≤ step m' then some n else none
-    -- case ¬(n ≤ m'):
-    -- n > m'
-    -- n ≃ step m' ∨ n > step m'
-    -- case n ≃ step m':
+    else
+      have : n > m' := sorry
+      have : n ≃ step m' ∨ n > step m' := sorry
+      match ‹n ≃ step m' ∨ n > step m'› with
+      | .inl (_ : n ≃ step m') =>
+        admit
     -- FirstTrueAt P n ≡ FirstTrueAt P (step m') → P (step m')
     -- find_first_up_to P (step m')
     -- = if (ffut P m').isNone && P (step m') then some (step m') else (ffut P m')
@@ -1392,7 +1422,7 @@ theorem find_first_up_to_works
     -- = if true then some (step m') else none
     -- = if true then some n else none
     -- = if n ≤ step m' then some n else none
-    -- case n > step m':
+      | .inr (_ : n > step m') =>
     -- FirstTrueAt P n → ¬P (step m')
     -- find_first_up_to P (step m')
     -- = if (ffut P m').isNone && P (step m') then some (step m') else (ffut P m')
@@ -1405,6 +1435,6 @@ theorem find_first_up_to_works
     -- = none
     -- = if false then some n else none
     -- = if n ≤ step m' then some n else none
-    admit
+        admit
 
 end Lean4Axiomatic.Natural
