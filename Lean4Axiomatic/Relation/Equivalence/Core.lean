@@ -439,28 +439,22 @@ theorem ite_subst_then
 /-- TODO -/
 @[gcongr]
 theorem ite_subst_else
-    {α : Type u} [EqvOp α] {x : Bool} {y z₁ z₂ : α}
-    : z₁ ≃ z₂ → (if x then y else z₁) ≃ (if x then y else z₂)
+    {α : Type u} [EqvOp α] {P : Prop} [Decidable P] {y z₁ z₂ : α}
+    : z₁ ≃ z₂ → (if P then y else z₁) ≃ (if P then y else z₂)
     := by
   intro (_ : z₁ ≃ z₂)
-  show (if x then y else z₁) ≃ (if x then y else z₂)
+  show (if P then y else z₁) ≃ (if P then y else z₂)
 
-  have : x = true ∨ x = false := x.eq_false_or_eq_true
-  match ‹x = true ∨ x = false› with
-  | .inl (_ : x = true) => calc
-    _ = if x then y else z₁    := rfl
-    _ = if true then y else z₁ := by rw [‹x = true›]
-    _ = y                      := rfl
-    _ ≃ y                      := refl
-    _ = if true then y else z₂ := rfl
-    _ = if x then y else z₂    := by rw [←‹x = true›]
-  | .inr (_ : x = false) => calc
-    _ = if x then y else z₁     := rfl
-    _ = if false then y else z₁ := by rw [‹x = false›]
-    _ = z₁                      := rfl
-    _ ≃ z₂                      := ‹z₁ ≃ z₂›
-    _ = if false then y else z₂ := rfl
-    _ = if x then y else z₂     := by rw [←‹x = false›]
+  if P then calc
+    _ = if P then y else z₁ := rfl
+    _ = y                   := if_pos ‹P›
+    _ ≃ y                   := refl
+    _ = if P then y else z₂ := (if_pos ‹P›).symm
+  else calc
+    _ = if P then y else z₁ := rfl
+    _ = z₁                  := if_neg ‹¬P›
+    _ ≃ z₂                  := ‹z₁ ≃ z₂›
+    _ = if P then y else z₂ := (if_neg ‹¬P›).symm
 
 end Equivalence
 end Relation
