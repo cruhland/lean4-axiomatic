@@ -1239,14 +1239,17 @@ theorem find_first_up_to_zero
   let z := update? none 0
   let s := λ (n : ℕ) (ffut_n : Option ℕ) => update? ffut_n (step n)
 
+  have simp_to_P0 : ((none:Option ℕ) ≃ none ∧ P 0) = P 0 := calc
+    _ = ((none:Option ℕ) ≃ none ∧ P 0) := rfl
+    _ = (True ∧ P 0)                   := rfl
+    _ = P 0                            := true_and (P 0)
   calc
     _ = find_first_up_to P 0                       := rfl
     _ = ind_on 0 z s                               := rfl
     _ ≃ z                                          := ind_zero
     _ = update? none 0                             := rfl
     _ = if none ≃ none ∧ P 0 then some 0 else none := rfl
-    _ = if True ∧ P 0 then some 0 else none        := sorry
-    _ = if P 0 then some 0 else none               := sorry
+    _ = if P 0 then some 0 else none               := ite_cond_congr simp_to_P0
 
 /-- TODO -/
 theorem find_first_up_to_step

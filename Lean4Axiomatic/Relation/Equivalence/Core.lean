@@ -416,7 +416,7 @@ theorem ite_subst_cond
       _ ≃ z                   := refl
       _ = if P₂ then y else z := (if_neg ‹¬P₂›).symm
 
-/-- TODO - also update ite_subst_else to use prop. and _cond above -/
+/-- TODO -/
 @[gcongr]
 theorem ite_subst_then
     {α : Type u} [EqvOp α] {P : Prop} [Decidable P] {y₁ y₂ z : α}
