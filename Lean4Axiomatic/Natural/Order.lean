@@ -1258,7 +1258,19 @@ theorem find_first_up_to_step
       if find_first_up_to P n ≃ none ∧ P (step n)
       then some (step n) else find_first_up_to P n
     := by
-  admit
+  let update? (prev : Option ℕ) (x : ℕ) :=
+    if prev ≃ none ∧ P x then some x else prev
+  let z := update? none 0
+  let s := λ (n : ℕ) (ffut_n : Option ℕ) => update? ffut_n (step n)
+
+  calc
+    _ = find_first_up_to P (step n)                  := rfl
+    _ = ind_on (step n) z s                          := rfl
+    _ ≃ s n (ind_on n z s)                           := ind_step
+    _ = s n (find_first_up_to P n)                   := rfl
+    _ = update? (find_first_up_to P n) (step n)      := rfl
+    _ = if find_first_up_to P n ≃ none ∧ P (step n)
+        then some (step n) else find_first_up_to P n := rfl
 
 /-- TODO -/
 theorem find_first_up_to_false
