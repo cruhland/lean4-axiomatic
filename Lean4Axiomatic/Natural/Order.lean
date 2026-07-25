@@ -1332,7 +1332,16 @@ theorem find_first_up_to_true
     show find_first_up_to P (step k) ≃ some 0
 
     let ffut := find_first_up_to
-    have : ffut P k ≄ none := sorry
+    have : ffut P k ≄ none := by
+      intro (_ : ffut P k ≃ none)
+      show False
+
+      have : some 0 ≃ none := calc
+        _ = some 0   := rfl
+        _ ≃ ffut P k := Rel.symm ‹find_first_up_to P k ≃ some 0›
+        _ ≃ none     := ‹ffut P k ≃ none›
+      have : False := ‹some 0 ≃ none›
+      exact this
     calc
       _ = find_first_up_to P (step k)      := rfl
       _ = ffut P (step k)                  := rfl
