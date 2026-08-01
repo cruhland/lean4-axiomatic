@@ -267,6 +267,24 @@ theorem rec_on_step
   _ = s (ind_on n z (λ _ => s))         := rfl
   _ = s (rec_on n z s)                  := rfl
 
+/-- TODO -/
+def rec_idx_on {α : Sort u} (n : ℕ) (init : α) (at_idx : ℕ → α → α) : α :=
+  ind_on n init at_idx
+
+/-- TODO -/
+theorem rec_idx_on_zero
+    {α : Sort u} [EqvOp α] {init : α} {at_idx : ℕ → α → α}
+    : rec_idx_on 0 init at_idx ≃ init
+    := by
+  admit
+
+/-- TODO -/
+theorem rec_idx_on_step
+    {α : Sort u} [EqvOp α] {init : α} {at_idx : ℕ → α → α} {n : ℕ}
+    : rec_idx_on (step n) init at_idx ≃ at_idx n (rec_idx_on n init at_idx)
+    := by
+  admit
+
 end universe_polymorphic_induction
 
 variable [Induction.{0} ℕ]

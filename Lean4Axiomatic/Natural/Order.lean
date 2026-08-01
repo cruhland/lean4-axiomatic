@@ -1008,9 +1008,6 @@ theorem le_gt_false {n m : ℕ} : n ≤ m → n > m → False := by
   have : ¬twoOfThree := (trichotomy n m).atMostOne
   exact absurd ‹twoOfThree› ‹¬twoOfThree›
 
-/-- TODO -/
-theorem le_false_gt {n m : ℕ} : (n ≤ m → False) → n > m := sorry
-
 /--
 Defines `compare`, a comparison function on natural numbers, that determines
 the ordering between any two of them: whether one is less than, equivalent to,
@@ -1208,6 +1205,7 @@ def le_diff {n m : ℕ} : n ≤ m → { d : ℕ // n + d ≃ m } := by
       exact this
 
 instance le_decidable_inst {n m : ℕ} : Decidable (n ≤ m) := sorry
+instance lt_decidable_inst {n m : ℕ} : Decidable (n < m) := sorry
 
 instance option_decidable_eqv_inst
     {α : Type} [EqvOp α] [DecidableRel (α := α) (· ≃ ·)]
@@ -1216,144 +1214,115 @@ instance option_decidable_eqv_inst
   sorry
 
 /-- TODO -/
-def find_first_up_to
+def find_first_under
     (P : ℕ → Prop) [DecidablePred P] (limit : ℕ) : Option ℕ
-    := by
-  let update? (prev : Option ℕ) (x : ℕ) :=
-    if prev ≃ none ∧ P x then some x else prev
-  apply ind_on limit (motive := λ _ => Option ℕ)
-  case zero =>
-    exact update? none 0
-  case step =>
-    intro (n : ℕ) (ffut_n : Option ℕ)
-    show Option ℕ
-    exact update? ffut_n (step n)
+    :=
+  rec_idx_on limit none (λ n r => if r ≃ none ∧ P n then some n else r)
 
 /-- TODO -/
-theorem find_first_up_to_zero
-    {P : ℕ → Prop} [DecidablePred P]
-    : find_first_up_to P 0 ≃ if P 0 then some 0 else none
+theorem find_first_under_zero
+    {P : ℕ → Prop} [DecidablePred P] : find_first_under P 0 ≃ none
     := by
-  let update? (prev : Option ℕ) (x : ℕ) :=
-    if prev ≃ none ∧ P x then some x else prev
-  let z := update? none 0
-  let s := λ (n : ℕ) (ffut_n : Option ℕ) => update? ffut_n (step n)
-
-  have simp_to_P0 : ((none:Option ℕ) ≃ none ∧ P 0) = P 0 := calc
-    _ = ((none:Option ℕ) ≃ none ∧ P 0) := rfl
-    _ = (True ∧ P 0)                   := rfl
-    _ = P 0                            := true_and (P 0)
+  let at_idx := λ x r => if r ≃ none ∧ P x then some x else r
   calc
-    _ = find_first_up_to P 0                       := rfl
-    _ = ind_on 0 z s                               := rfl
-    _ ≃ z                                          := ind_zero
-    _ = update? none 0                             := rfl
-    _ = if none ≃ none ∧ P 0 then some 0 else none := rfl
-    _ = if P 0 then some 0 else none               := ite_cond_congr simp_to_P0
+    _ = find_first_under P 0     := rfl
+    _ = rec_idx_on 0 none at_idx := rfl
+    _ ≃ none                     := rec_idx_on_zero
 
 /-- TODO -/
-theorem find_first_up_to_step
+theorem find_first_under_step
     {P : ℕ → Prop} [DecidablePred P] {n : ℕ}
-    : find_first_up_to P (step n) ≃
-      if find_first_up_to P n ≃ none ∧ P (step n)
-      then some (step n) else find_first_up_to P n
+    : find_first_under P (step n) ≃
+      if find_first_under P n ≃ none ∧ P n then some n else find_first_under P n
     := by
-  let update? (prev : Option ℕ) (x : ℕ) :=
-    if prev ≃ none ∧ P x then some x else prev
-  let z := update? none 0
-  let s := λ (n : ℕ) (ffut_n : Option ℕ) => update? ffut_n (step n)
-
+  let at_idx := λ x r => if r ≃ none ∧ P x then some x else r
   calc
-    _ = find_first_up_to P (step n)                  := rfl
-    _ = ind_on (step n) z s                          := rfl
-    _ ≃ s n (ind_on n z s)                           := ind_step
-    _ = s n (find_first_up_to P n)                   := rfl
-    _ = update? (find_first_up_to P n) (step n)      := rfl
-    _ = if find_first_up_to P n ≃ none ∧ P (step n)
-        then some (step n) else find_first_up_to P n := rfl
+    _ = find_first_under P (step n)           := rfl
+    _ = rec_idx_on (step n) none at_idx       := rfl
+    _ ≃ at_idx n (rec_idx_on n none at_idx)   := rec_idx_on_step
+    _ = at_idx n (find_first_under P n)       := rfl
+    _ = if find_first_under P n ≃ none ∧ P n
+        then some n else find_first_under P n := rfl
 
 /-- TODO -/
-theorem find_first_up_to_false
-    {m : ℕ} : let P := λ _ => False; find_first_up_to P m ≃ none
+theorem find_first_under_false
+    {m : ℕ} : let P := λ _ => False; find_first_under P m ≃ none
     := by
   intro (P : ℕ → Prop)
-  show find_first_up_to P m ≃ none
+  show find_first_under P m ≃ none
 
-  apply ind_on m (motive := λ x => find_first_up_to P x ≃ none)
+  apply ind_on m (motive := λ x => find_first_under P x ≃ none)
   case zero =>
-    show find_first_up_to P 0 ≃ none
-    calc
-      _ = find_first_up_to P 0           := rfl
-      _ ≃ if P 0 then some 0 else none   := find_first_up_to_zero
-      _ = if False then some 0 else none := rfl
-      _ = none                           := rfl
+    show find_first_under P 0 ≃ none
+    exact find_first_under_zero
   case step =>
-    intro (k : ℕ) (ih : find_first_up_to P k ≃ none)
-    show find_first_up_to P (step k) ≃ none
+    intro (k : ℕ) (ih : find_first_under P k ≃ none)
+    show find_first_under P (step k) ≃ none
 
-    let ffut := find_first_up_to
+    let ffun := find_first_under
     calc
-      _ = find_first_up_to P (step k)       := rfl
-      _ = ffut P (step k)                   := rfl
-      _ ≃ if ffut P k ≃ none ∧ P (step k)
-          then some (step k) else ffut P k  := find_first_up_to_step
-      _ = if ffut P k ≃ none ∧ False
-          then some (step k) else ffut P k  := rfl
+      _ = find_first_under P (step k) := rfl
+      _ = ffun P (step k)             := rfl
+      _ ≃ if ffun P k ≃ none ∧ P k
+          then some k else ffun P k   := find_first_under_step
+      _ = if ffun P k ≃ none ∧ False
+          then some k else ffun P k   := rfl
       -- TODO: fix gcongr so that srw can be used?
       _ = if False
-          then some (step k) else ffut P k  := ite_cond_congr (and_false (ffut P k ≃ none))
-      _ = ffut P k                          := rfl
-      _ = find_first_up_to P k              := rfl
-      _ ≃ none                              := ih
+          then some k else ffun P k   := ite_cond_congr (and_false (ffun P k ≃ none))
+      _ = ffun P k                    := rfl
+      _ = find_first_under P k        := rfl
+      _ ≃ none                        := ih
 
 /-- TODO -/
-theorem find_first_up_to_true
-    {m : ℕ} : let P := λ _ => True; find_first_up_to P m ≃ some 0
+theorem find_first_under_true
+    {m : ℕ} : let P := λ _ => True; find_first_under P (step m) ≃ some 0
     := by
   intro (P : ℕ → Prop)
-  show find_first_up_to P m ≃ some 0
+  let ffun := find_first_under
+  show ffun P (step m) ≃ some 0
 
-  let z := if P 0 then some 0 else none
-  let s := λ (n : ℕ) (ffut_n : Option ℕ) =>
-    if ffut_n ≃ none ∧ P (step n) then some (step n) else ffut_n
-
-  apply ind_on m (motive := λ x => find_first_up_to P x ≃ some 0)
+  apply ind_on m (motive := λ x => ffun P (step x) ≃ some 0)
   case zero =>
-    show find_first_up_to P 0 ≃ some 0
+    show ffun P (step 0) ≃ some 0
+    have : (ffun P 0 ≃ none) = True := eq_true find_first_under_zero
+    have cond_simp : (ffun P 0 ≃ none ∧ P 0) = (True ∧ P 0) :=
+      and_congr_left_eq (λ _ => ‹(ffun P 0 ≃ none) = True›)
     calc
-      _ = find_first_up_to P 0          := rfl
-      _ ≃ if P 0 then some 0 else none  := find_first_up_to_zero
-      _ = if True then some 0 else none := rfl
-      _ = some 0                        := rfl
+      _ = ffun P (step 0)                         := rfl
+      _ ≃ if ffun P 0 ≃ none ∧ P 0
+          then some 0 else ffun P 0               := find_first_under_step
+      _ = if True ∧ P 0 then some 0 else ffun P 0 := ite_cond_congr cond_simp
+      _ = if P 0 then some 0 else ffun P 0        := rfl
+      _ = if True then some 0 else none           := rfl
+      _ = some 0                                  := rfl
   case step =>
     intro (k : ℕ)
-    let rOpt := find_first_up_to P k
-    intro (ih : find_first_up_to P k ≃ some 0)
-    show find_first_up_to P (step k) ≃ some 0
+    let sk := step k
+    intro (ih : ffun P sk ≃ some 0)
+    show ffun P (step sk) ≃ some 0
 
-    let ffut := find_first_up_to
-    have : ffut P k ≄ none := by
-      intro (_ : ffut P k ≃ none)
+    have : ffun P sk ≄ none := by
+      intro (_ : ffun P sk ≃ none)
       show False
 
       have : some 0 ≃ none := calc
-        _ = some 0   := rfl
-        _ ≃ ffut P k := Rel.symm ‹find_first_up_to P k ≃ some 0›
-        _ ≃ none     := ‹ffut P k ≃ none›
+        _ = some 0    := rfl
+        _ ≃ ffun P sk := Rel.symm ih
+        _ ≃ none      := ‹ffun P sk ≃ none›
       have : False := ‹some 0 ≃ none›
       exact this
     calc
-      _ = find_first_up_to P (step k)      := rfl
-      _ = ffut P (step k)                  := rfl
-      _ ≃ if ffut P k ≃ none ∧ P (step k)
-          then some (step k) else ffut P k := find_first_up_to_step
+      _ = ffun P (step sk)            := rfl
+      _ ≃ if ffun P sk ≃ none ∧ P sk
+          then some sk else ffun P sk := find_first_under_step
       -- TODO: do this without simp? need better ite_subst_cond?
-      _ = if False ∧ P (step k)
-          then some (step k) else ffut P k := by simp [‹ffut P k ≄ none›]
+      _ = if False ∧ P sk
+          then some sk else ffun P sk := by simp [‹ffun P sk ≄ none›]
       _ = if False
-          then some (step k) else ffut P k := rfl
-      _ = ffut P k                         := rfl
-      _ ≃ some 0                           := ih
+          then some sk else ffun P sk := rfl
+      _ = ffun P sk                   := rfl
+      _ ≃ some 0                      := ih
 
 /-- TODO -/
 def FirstTrueAt (P : ℕ → Prop) (n : ℕ) : Prop := P n ∧ ({m : ℕ} → m < n → ¬P m)
@@ -1366,57 +1335,41 @@ theorem FirstTrueAt_subst_arg
   admit
 
 /-- TODO -/
-theorem find_first_up_to_works
+theorem find_first_under_works
     {P : ℕ → Prop} [DecidablePred P] {m k : ℕ}
-    : FirstTrueAt P k → find_first_up_to P m ≃ if k ≤ m then some k else none
+    : FirstTrueAt P k → find_first_under P m ≃ if k < m then some k else none
     := by
   revert k
   let motive := λ x =>
     {n : ℕ} → FirstTrueAt P n →
-    find_first_up_to P x ≃ if n ≤ x then some n else none
+    find_first_under P x ≃ if n < x then some n else none
   apply ind_on m (motive := motive)
   case zero =>
     intro (n : ℕ) (_ : FirstTrueAt P n)
-    show find_first_up_to P 0 ≃ if n ≤ 0 then some n else none
+    show find_first_under P 0 ≃ if n < 0 then some n else none
 
-    if n ≤ 0 then
-      have : n < 0 ∨ n ≃ 0 := le_split.mp ‹n ≤ 0›
-      match ‹n < 0 ∨ n ≃ 0› with
-      | .inl (_ : n < 0) =>
-        have : n ≮ 0 := lt_zero
-        exact absurd ‹n < 0› ‹n ≮ 0›
-      | .inr (_ : n ≃ 0) =>
-        have : FirstTrueAt P 0 := by prw [‹n ≃ 0›] ‹FirstTrueAt P n›
-        have (And.intro (_ : P 0) _) := ‹FirstTrueAt P 0›
-        calc
-          _ = find_first_up_to P 0           := rfl
-          _ ≃ if P 0 then some 0 else none   := find_first_up_to_zero
-          _ = some 0                         := if_pos ‹P 0›
-          _ ≃ some n                         := by srw [←‹n ≃ 0›]
-          _ = if n ≤ 0 then some n else none := (if_pos ‹n ≤ 0›).symm
+    if n < 0 then
+      have : n ≮ 0 := lt_zero
+      exact absurd ‹n < 0› ‹n ≮ 0›
     else
-      have : n > 0 := le_false_gt ‹¬(n ≤ 0)›
-      have (And.intro _ (negP : {m : ℕ} → m < n → ¬P m)) := ‹FirstTrueAt P n›
-      have : ¬P 0 := negP ‹0 < n›
       calc
-        _ = find_first_up_to P 0           := rfl
-        _ ≃ if P 0 then some 0 else none   := find_first_up_to_zero
-        _ = none                           := if_neg ‹¬P 0›
-        _ = if n ≤ 0 then some n else none := (if_neg ‹¬(n ≤ 0)›).symm
+        _ = find_first_under P 0           := rfl
+        _ ≃ none                           := find_first_under_zero
+        _ = if n < 0 then some n else none := (if_neg ‹¬(n < 0)›).symm
   case step =>
     intro (m' : ℕ)
     intro (ih :
       {n' : ℕ} → FirstTrueAt P n' →
-      find_first_up_to P m' ≃ if n' ≤ m' then some n' else none
+      find_first_under P m' ≃ if n' < m' then some n' else none
     )
     intro (n : ℕ) (_ : FirstTrueAt P n)
-    show find_first_up_to P (step m') ≃ if n ≤ step m' then some n else none
+    show find_first_under P (step m') ≃ if n < step m' then some n else none
 
-    -- ih (n':=n) (FTA P n) ≡ ffut P m' ≃ if n ≤ m' then some n else none
-    if n ≤ m' then
+    -- ih (n':=n) (FTA P n) ≡ ffut P m' ≃ if n < m' then some n else none
+    if n < m' then
       calc
-        _ = find_first_up_to P (step m') := rfl
-        _ ≃ if n ≤ step m' then some n else none := sorry
+        _ = find_first_under P (step m') := rfl
+        _ ≃ if n < step m' then some n else none := sorry
     -- find_first_up_to P (step m')
     -- = if (ffut P m').isNone && P (step m') then some (step m') else (ffut P m')
     -- = if (if n ≤ m' ...).isNone && P (step m') then some (step m') else (ffut P m')
@@ -1429,7 +1382,8 @@ theorem find_first_up_to_works
     -- = if n ≤ m' then some n else none
     -- = if n ≤ step m' then some n else none
     else
-      have : n > m' := sorry
+      -- TODO: needs adjustment for n < m' change
+      have : n ≥ m' := sorry
       have : n ≃ step m' ∨ n > step m' := sorry
       match ‹n ≃ step m' ∨ n > step m'› with
       | .inl (_ : n ≃ step m') =>
