@@ -1358,61 +1358,70 @@ theorem find_first_under_works
         _ = if n < 0 then some n else none := (if_neg ‹¬(n < 0)›).symm
   case step =>
     intro (m' : ℕ)
+    let ffun := find_first_under
     intro (ih :
       {n' : ℕ} → FirstTrueAt P n' →
-      find_first_under P m' ≃ if n' < m' then some n' else none
+      ffun P m' ≃ if n' < m' then some n' else none
     )
     intro (n : ℕ) (_ : FirstTrueAt P n)
-    show find_first_under P (step m') ≃ if n < step m' then some n else none
+    show ffun P (step m') ≃ if n < step m' then some n else none
 
-    -- ih (n':=n) (FTA P n) ≡ ffut P m' ≃ if n < m' then some n else none
     if n < m' then
+      have : ffun P m' ≃ some n := calc
+        _ = ffun P m'                       := rfl
+        _ ≃ if n < m' then some n else none := ih ‹FirstTrueAt P n›
+        _ = some n                          := if_pos ‹n < m'›
+      have : ¬(ffun P m' ≃ none ∧ P m') :=
+        λ (And.intro (_ : ffun P m' ≃ none) _) => by
+          show False
+          have : none ≃ some n := calc
+            _ = none      := rfl
+            _ ≃ ffun P m' := Rel.symm ‹ffun P m' ≃ none›
+            _ ≃ some n    := ‹ffun P m' ≃ some n›
+          have : False := ‹none ≃ some n›
+          exact this
+      have : n < step m' := calc
+        _ = n       := rfl
+        _ < m'      := ‹n < m'›
+        _ < step m' := lt_step
       calc
-        _ = find_first_under P (step m') := rfl
-        _ ≃ if n < step m' then some n else none := sorry
-    -- find_first_up_to P (step m')
-    -- = if (ffut P m').isNone && P (step m') then some (step m') else (ffut P m')
-    -- = if (if n ≤ m' ...).isNone && P (step m') then some (step m') else (ffut P m')
-    -- = if (some n).isNone && P (step m') then some (step m') else (ffut P m')
-    -- = if false && P (step m') then some (step m') else (ffut P m')
-    -- = if false then some (step m') else ffut P m'
-    -- = ffut P m'
-    -- = some n
-    -- = if true then some n else none
-    -- = if n ≤ m' then some n else none
-    -- = if n ≤ step m' then some n else none
+        _ = ffun P (step m')            := rfl
+        _ ≃ if ffun P m' ≃ none ∧ P m'
+            then some m' else ffun P m' := find_first_under_step
+        _ = ffun P m'                   := if_neg ‹¬(ffun P m' ≃ none ∧ P m')›
+        _ ≃ some n                      := ‹ffun P m' ≃ some n›
+        _ = if n < step m'
+            then some n else none       := (if_pos ‹n < step m'›).symm
     else
-      -- TODO: needs adjustment for n < m' change
       have : n ≥ m' := sorry
-      have : n ≃ step m' ∨ n > step m' := sorry
-      match ‹n ≃ step m' ∨ n > step m'› with
-      | .inl (_ : n ≃ step m') =>
+      have : n ≃ m' ∨ n > m' := sorry
+      match ‹n ≃ m' ∨ n > m'› with
+      | .inl (_ : n ≃ m') =>
         admit
-    -- FirstTrueAt P n ≡ FirstTrueAt P (step m') → P (step m')
-    -- find_first_up_to P (step m')
-    -- = if (ffut P m').isNone && P (step m') then some (step m') else (ffut P m')
-    -- = if (if n ≤ m' ...).isNone && P (step m') then some (step m') else (ffut P m')
-    -- = if none.isNone && P (step m') then some (step m') else (ffut P m')
-    -- = if true && P (step m') then some (step m') else ffut P m'
-    -- = if P (step m') then some (step m') else ffut P m'
-    -- = if True then some (step m') else ffut P m'
-    -- = some (step m')
-    -- = if true then some (step m') else none
-    -- = if true then some n else none
-    -- = if n ≤ step m' then some n else none
-      | .inr (_ : n > step m') =>
-    -- FirstTrueAt P n → ¬P (step m')
-    -- find_first_up_to P (step m')
-    -- = if (ffut P m').isNone && P (step m') then some (step m') else (ffut P m')
-    -- = if (if n ≤ m' ...).isNone && P (step m') then some (step m') else (ffut P m')
-    -- = if none.isNone && P (step m') then some (step m') else (ffut P m')
-    -- = if true && P (step m') then some (step m') else ffut P m'
-    -- = if P (step m') then some (step m') else ffut P m'
-    -- = if False then some (step m') else ffut P m'
-    -- = ffut P m'
+    -- FirstTrueAt P n ≡ FirstTrueAt P m' → P m'
+    -- ffun P (step m')
+    -- = if ffun P m' ≃ none ∧ P m' then some m' else ffun P m'
+    -- = if (if n < m' ...) ≃ none ∧ P m' then some m' else ffun P m'
+    -- = if none ≃ none ∧ P m' then some m' else ffun P m'
+    -- = if True ∧ P m' then some m' else ffun P m'
+    -- = if P m' then some m' else ffun P m'
+    -- = if True then some m' else ffun P m'
+    -- = some m'
+    -- = if True then some m' else none
+    -- = if True then some n else none
+    -- = if n < step m' then some n else none
+      | .inr (_ : n > m') =>
+    -- FirstTrueAt P n → ¬P m'
+    -- find_first_under P (step m')
+    -- = if ffun P m' ≃ none ∧ P m' then some m' else ffun P m'
+    -- = if (if n < m' ...) ≃ none ∧ P m' then some m' else ffun P m'
+    -- = if none ≃ none ∧ P m' then some m' else ffut P m'
+    -- = if P m' then some m' else ffun P m'
+    -- = if False then some m' else ffun P m'
+    -- = ffun P m'
     -- = none
     -- = if false then some n else none
-    -- = if n ≤ step m' then some n else none
+    -- = if n < step m' then some n else none
         admit
 
 end Lean4Axiomatic.Natural
