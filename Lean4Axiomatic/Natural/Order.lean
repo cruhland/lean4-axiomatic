@@ -1008,6 +1008,9 @@ theorem le_gt_false {n m : ℕ} : n ≤ m → n > m → False := by
   have : ¬twoOfThree := (trichotomy n m).atMostOne
   exact absurd ‹twoOfThree› ‹¬twoOfThree›
 
+/-- TODO -/
+theorem ge_from_not_le {n m : ℕ} : ¬(n < m) → n ≥ m := sorry
+
 /--
 Defines `compare`, a comparison function on natural numbers, that determines
 the ordering between any two of them: whether one is less than, equivalent to,
@@ -1393,35 +1396,47 @@ theorem find_first_under_works
         _ = if n < step m'
             then some n else none       := (if_pos ‹n < step m'›).symm
     else
-      have : n ≥ m' := sorry
-      have : n ≃ m' ∨ n > m' := sorry
+      have : n ≥ m' := ge_from_not_le ‹¬(n < m')›
+      have : n ≃ m' ∨ n > m' := (ge_split ‹n ≥ m'›).symm
       match ‹n ≃ m' ∨ n > m'› with
       | .inl (_ : n ≃ m') =>
-        admit
-    -- FirstTrueAt P n ≡ FirstTrueAt P m' → P m'
-    -- ffun P (step m')
-    -- = if ffun P m' ≃ none ∧ P m' then some m' else ffun P m'
-    -- = if (if n < m' ...) ≃ none ∧ P m' then some m' else ffun P m'
-    -- = if none ≃ none ∧ P m' then some m' else ffun P m'
-    -- = if True ∧ P m' then some m' else ffun P m'
-    -- = if P m' then some m' else ffun P m'
-    -- = if True then some m' else ffun P m'
-    -- = some m'
-    -- = if True then some m' else none
-    -- = if True then some n else none
-    -- = if n < step m' then some n else none
+        have : ffun P m' ≃ none := calc
+          _ = ffun P m'                       := rfl
+          _ ≃ if n < m' then some n else none := ih ‹FirstTrueAt P n›
+          _ = none                            := if_neg ‹¬(n < m')›
+        have : FirstTrueAt P m' := by prw [‹n ≃ m'›] ‹FirstTrueAt P n›
+        have (And.intro (_ : P m') _) := ‹FirstTrueAt P m'›
+        have : ffun P m' ≃ none ∧ P m' := And.intro ‹ffun P m' ≃ none› ‹P m'›
+        have : n < step m' := calc
+          _ = n       := rfl
+          _ < step n  := lt_step
+          _ ≃ step m' := by srw [‹n ≃ m'›]
+        calc
+          _ = ffun P (step m')            := rfl
+          _ ≃ if ffun P m' ≃ none ∧ P m'
+              then some m' else ffun P m' := find_first_under_step
+          _ = some m'                     := if_pos ‹ffun P m' ≃ none ∧ P m'›
+          _ ≃ some n                      := by srw [←‹n ≃ m'›]
+          _ = if n < step m'
+              then some n else none       := (if_pos ‹n < step m'›).symm
       | .inr (_ : n > m') =>
-    -- FirstTrueAt P n → ¬P m'
-    -- find_first_under P (step m')
-    -- = if ffun P m' ≃ none ∧ P m' then some m' else ffun P m'
-    -- = if (if n < m' ...) ≃ none ∧ P m' then some m' else ffun P m'
-    -- = if none ≃ none ∧ P m' then some m' else ffut P m'
-    -- = if P m' then some m' else ffun P m'
-    -- = if False then some m' else ffun P m'
-    -- = ffun P m'
-    -- = none
-    -- = if false then some n else none
-    -- = if n < step m' then some n else none
-        admit
+        have : ¬(ffun P m' ≃ none ∧ P m') := λ (And.intro _ (_ : P m')) => by
+          show False
+          have (And.intro _ (notP : {x : ℕ} → x < n → ¬P x)) :=
+            ‹FirstTrueAt P n›
+          have : ¬P m' := notP ‹n > m'›
+          exact absurd ‹P m'› ‹¬P m'›
+        have : n ≥ step m' := lt_step_le.mp ‹n > m'›
+        have : ¬(n < step m') := le_gt_false ‹n ≥ step m'›
+        calc
+          _ = ffun P (step m')            := rfl
+          _ ≃ if ffun P m' ≃ none ∧ P m'
+              then some m' else ffun P m' := find_first_under_step
+          _ = ffun P m'                   := if_neg ‹¬(ffun P m' ≃ none ∧ P m')›
+          _ ≃ if n < m'
+              then some n else none       := ih ‹FirstTrueAt P n›
+          _ = none                        := if_neg ‹¬(n < m')›
+          _ = if n < step m'
+              then some n else none       := (if_neg ‹¬(n < step m')›).symm
 
 end Lean4Axiomatic.Natural
