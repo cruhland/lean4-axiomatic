@@ -1217,10 +1217,63 @@ instance option_decidable_eqv_inst
   sorry
 
 /-- TODO -/
+def FalseBelow (P : ℕ → Prop) (n : ℕ) : Prop := {m : ℕ} → m < n → ¬P m
+
+/-- TODO -/
+def FirstTrueAt (P : ℕ → Prop) (n : ℕ) : Prop := P n ∧ FalseBelow P n
+
+/-- TODO -/
 def find_first_under
     (P : ℕ → Prop) [DecidablePred P] (limit : ℕ) : Option ℕ
     :=
   rec_idx_on limit none (λ n r => if r ≃ none ∧ P n then some n else r)
+
+/-- TODO -/
+def find_first_under_certified
+    (P : ℕ → Prop) [DecidablePred P] [AA.Substitutive₁ P (· ≃ ·) (· → ·)]
+    (limit : ℕ) : { k : ℕ // k < limit ∧ FirstTrueAt P k } ⊕' FalseBelow P limit
+    := by
+  apply ind_on limit
+  case zero =>
+    show { k : ℕ // k < 0 ∧ FirstTrueAt P k } ⊕' FalseBelow P 0
+
+    have : FalseBelow P 0 := by
+      intro (m : ℕ) (_ : m < 0) (_ : P m)
+      show False
+      exact absurd ‹m < 0› lt_zero
+    exact .inr ‹FalseBelow P 0›
+  case step =>
+    intro (m : ℕ) (ih : { k : ℕ // k < m ∧ FirstTrueAt P k } ⊕' FalseBelow P m)
+    show { k : ℕ // k < step m ∧ FirstTrueAt P k } ⊕' FalseBelow P (step m)
+
+    match ih with
+    | .inl (Subtype.mk (k : ℕ) (And.intro (_ : k < m) (_ : FirstTrueAt P k))) =>
+      have : k < step m := calc
+        _ = k      := rfl
+        _ < m      := ‹k < m›
+        _ < step m := lt_step
+
+      exact .inl (Subtype.mk k (And.intro ‹k < step m› ‹FirstTrueAt P k›))
+    | .inr (_ : FalseBelow P m) =>
+      if P m then
+        have : m < step m := lt_step
+        have : FirstTrueAt P m := And.intro ‹P m› ‹FalseBelow P m›
+        exact .inl (Subtype.mk m (And.intro ‹m < step m› ‹FirstTrueAt P m›))
+      else
+        have : FalseBelow P (step m) := by
+          intro (n : ℕ) (_ : n < step m) (_ : P n)
+          show False
+
+          have : n < m ∨ n ≃ m := lt_split ‹n < step m›
+          match ‹n < m ∨ n ≃ m› with
+          | .inl (_ : n < m) =>
+            have : ¬P n := ‹FalseBelow P m› ‹n < m›
+            exact absurd ‹P n› ‹¬P n›
+          | .inr (_ : n ≃ m) =>
+            have : P m := AA.substFn ‹n ≃ m› ‹P n›
+            exact absurd ‹P m› ‹¬P m›
+
+        exact .inr ‹FalseBelow P (step m)›
 
 /-- TODO -/
 theorem find_first_under_zero
@@ -1326,9 +1379,6 @@ theorem find_first_under_true
           then some sk else ffun P sk := rfl
       _ = ffun P sk                   := rfl
       _ ≃ some 0                      := ih
-
-/-- TODO -/
-def FirstTrueAt (P : ℕ → Prop) (n : ℕ) : Prop := P n ∧ ({m : ℕ} → m < n → ¬P m)
 
 /-- TODO -/
 @[gcongr]
