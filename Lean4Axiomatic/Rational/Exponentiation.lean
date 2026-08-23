@@ -807,6 +807,47 @@ structure Sqrt2Approx (ε : ℚ) where
 
 variable [FloorCeil ℚ]
 
+def sqrt2_approx_new {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
+  intro (_ : ε > 0)
+  show Sqrt2Approx ε
+
+  -- a^2 < 2 < (a + ε)^2
+  -- (nε)^2 < 2 < (nε + ε)^2
+  -- n^2 * ε^2 < 2 < (n + 1)^2 * ε^2
+  -- n^2 < 2/ε^2 < (n+1)^2
+  -- target := 2/ε^2
+  -- P := λ n => target < (n^2:ℚ)
+  -- limit := 1 + ceil (2/ε)
+  -- target < (ceil (2/ε))^2 < limit^2
+  -- match find_first_under P limit
+  -- | .inl (Subtype.mk k (_ : k < limit) (_ : FirstTrueAt P k)) =>
+  -- P k ≡ target < k^2 ≡ 2/ε^2 < k^2 ≡ 2 < k^2 * ε^2
+  -- if k = 0: 2 < 0^2 * ε^2 ≡ 2 < 0 ≡ False
+  -- so k = a + 1
+  -- P k ≡ P (a + 1) ≡ 2 < (a + 1)^2 * ε^2
+  -- a < k, so by FirstTrueAt P k we have ¬P a
+  -- ¬P a ≡ ¬(target < a^2) ≡ a^2 ≤ 2/ε^2 ≡ a^2 * ε^2 ≤ 2 ≡ (a * ε)^2 ≤ 2
+  -- we know from prev thm that (a * ε)^2 = 2 is impossible
+  -- so ¬P a ≡ (a * ε)^2 < 2
+  -- approx := a * ε
+  -- approx^2 < 2
+  -- 2 < (a + 1)^2 * ε^2 = ((a + 1) * ε)^2 = (a * ε + ε)^2 = (approx + ε)^2
+  -- | .inr (_ : FalseBefore P limit) =>
+  -- have ¬P k for all k < limit
+  -- limit = 1 + ceil (2/ε)
+  -- so ¬P (ceil (2/ε)) ≡ ¬(target < (ceil (2/ε))^2) ≡ target ≥ (ceil (2/ε))^2
+  -- (ceil (2/ε))^2 ≤ 2/ε^2
+  -- (2/ε)^2 ≤ (ceil (2/ε))^2
+  -- 4/ε^2 ≤ (ceil (2/ε))^2 ≤ 2/ε^2
+  -- 4/ε^2 ≤ 2/ε^2
+  -- 4 ≤ 2
+  -- False
+
+  let approx : ℚ := sorry
+  have : approx^2 < 2 := sorry
+  have : 2 < (approx + ε)^2 := sorry
+  exact Sqrt2Approx.mk approx ‹approx^2 < 2› ‹2 < (approx + ε)^2›
+
 /-- TODO -/
 def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
   intro (_ : ε > 0)
