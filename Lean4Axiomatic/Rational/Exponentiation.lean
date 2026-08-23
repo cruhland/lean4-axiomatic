@@ -795,16 +795,7 @@ theorem pow_preserves_ge_nonneg
     exact this
 
 /-- TODO -/
-structure Sqrt2Approx
-    (ℚ : Type)
-      [Core (ℤ := ℤ) ℚ] [Addition ℚ] [Multiplication ℚ] [Negation ℚ] [Sign ℚ]
-      [Subtraction ℚ] [Order ℚ] [Natural.Exponentiation ℕ ℚ]
-    where
-  /-- TODO -/
-  ε : ℚ
-
-  ε_pos : ε > 0
-
+structure Sqrt2Approx (ε : ℚ) where
   /-- TODO -/
   val : ℚ
 
@@ -817,9 +808,9 @@ structure Sqrt2Approx
 variable [FloorCeil ℚ]
 
 /-- TODO -/
-def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ℚ := by
+def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
   intro (_ : ε > 0)
-  show Sqrt2Approx ℚ
+  show Sqrt2Approx ε
 
   have : AP (ε ≄ 0) := AP.mk (pos_nonzero ‹ε > 0›)
   let max_int := ceil (2/ε)
@@ -900,7 +891,7 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ℚ := by
   let val := approx max_count
   have : val^2 < 2 := approx_lower max_count
   have : 2 < (val + ε)^2 := sorry
-  exact Sqrt2Approx.mk ε ‹ε > 0› val ‹val^2 < 2› ‹2 < (val + ε)^2›
+  exact Sqrt2Approx.mk val ‹val^2 < 2› ‹2 < (val + ε)^2›
 
 end pow_nat
 
