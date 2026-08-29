@@ -7,7 +7,7 @@ import Lean4Axiomatic.Natural.Sign
 
 namespace Lean4Axiomatic.Natural
 
-open Logic (Either iff_subst_covar or_mapL)
+open Logic (Either FalseWithin FirstInRange iff_subst_covar or_mapL)
 open Relation.Equivalence (EqvOp ite_subst_cond)
 open Signed (Positive)
 
@@ -1217,12 +1217,6 @@ instance option_decidable_eqv_inst
   sorry
 
 /-- TODO -/
-def FalseBelow (P : ℕ → Prop) (n : ℕ) : Prop := {m : ℕ} → m < n → ¬P m
-
-/-- TODO -/
-def FirstTrueAt (P : ℕ → Prop) (n : ℕ) : Prop := P n ∧ FalseBelow P n
-
-/-- TODO -/
 def find_first_under
     (P : ℕ → Prop) [DecidablePred P] (limit : ℕ) : Option ℕ
     :=
@@ -1231,49 +1225,52 @@ def find_first_under
 /-- TODO -/
 def find_first_under_certified
     (P : ℕ → Prop) [DecidablePred P] [AA.Substitutive₁ P (· ≃ ·) (· → ·)]
-    (limit : ℕ) : { k : ℕ // k < limit ∧ FirstTrueAt P k } ⊕' FalseBelow P limit
+    (limit : ℕ) : FirstInRange P 0 limit ⊕' FalseWithin P 0 limit
     := by
   apply ind_on limit
   case zero =>
-    show { k : ℕ // k < 0 ∧ FirstTrueAt P k } ⊕' FalseBelow P 0
+    show FirstInRange P 0 0 ⊕' FalseWithin P 0 0
 
-    have : FalseBelow P 0 := by
-      intro (m : ℕ) (_ : m < 0) (_ : P m)
+    have : FalseWithin P 0 0 := by
+      intro (m : ℕ) (_ : 0 ≤ m) (_ : m < 0) (_ : P m)
       show False
       exact absurd ‹m < 0› lt_zero
-    exact .inr ‹FalseBelow P 0›
+    exact .inr ‹FalseWithin P 0 0›
   case step =>
-    intro (m : ℕ) (ih : { k : ℕ // k < m ∧ FirstTrueAt P k } ⊕' FalseBelow P m)
-    show { k : ℕ // k < step m ∧ FirstTrueAt P k } ⊕' FalseBelow P (step m)
+    intro (m : ℕ) (ih : FirstInRange P 0 m ⊕' FalseWithin P 0 m)
+    show FirstInRange P 0 (step m) ⊕' FalseWithin P 0 (step m)
 
     match ih with
-    | .inl (Subtype.mk (k : ℕ) (And.intro (_ : k < m) (_ : FirstTrueAt P k))) =>
+    | .inl (fir : FirstInRange P 0 m) =>
+      let k := fir.val
+
       have : k < step m := calc
         _ = k      := rfl
-        _ < m      := ‹k < m›
+        _ < m      := fir.upper
         _ < step m := lt_step
 
-      exact .inl (Subtype.mk k (And.intro ‹k < step m› ‹FirstTrueAt P k›))
-    | .inr (_ : FalseBelow P m) =>
+      let fir' := FirstInRange.mk k fir.lower ‹k < step m› fir.holds fir.fails
+      exact .inl fir'
+    | .inr (fw : FalseWithin P 0 m) =>
       if P m then
+        have : 0 ≤ m := ge_zero
         have : m < step m := lt_step
-        have : FirstTrueAt P m := And.intro ‹P m› ‹FalseBelow P m›
-        exact .inl (Subtype.mk m (And.intro ‹m < step m› ‹FirstTrueAt P m›))
+        exact .inl (FirstInRange.mk m ‹0 ≤ m› ‹m < step m› ‹P m› fw)
       else
-        have : FalseBelow P (step m) := by
-          intro (n : ℕ) (_ : n < step m) (_ : P n)
+        have : FalseWithin P 0 (step m) := by
+          intro (n : ℕ) (_ : 0 ≤ n) (_ : n < step m) (_ : P n)
           show False
 
           have : n < m ∨ n ≃ m := lt_split ‹n < step m›
           match ‹n < m ∨ n ≃ m› with
           | .inl (_ : n < m) =>
-            have : ¬P n := ‹FalseBelow P m› ‹n < m›
+            have : ¬P n := ‹FalseWithin P 0 m› ‹0 ≤ n› ‹n < m›
             exact absurd ‹P n› ‹¬P n›
           | .inr (_ : n ≃ m) =>
             have : P m := AA.substFn ‹n ≃ m› ‹P n›
             exact absurd ‹P m› ‹¬P m›
 
-        exact .inr ‹FalseBelow P (step m)›
+        exact .inr ‹FalseWithin P 0 (step m)›
 
 /-- TODO -/
 theorem find_first_under_zero
@@ -1379,7 +1376,7 @@ theorem find_first_under_true
           then some sk else ffun P sk := rfl
       _ = ffun P sk                   := rfl
       _ ≃ some 0                      := ih
-
+/-
 /-- TODO -/
 @[gcongr]
 theorem FirstTrueAt_subst_arg
@@ -1488,5 +1485,5 @@ theorem find_first_under_works
           _ = none                        := if_neg ‹¬(n < m')›
           _ = if n < step m'
               then some n else none       := (if_neg ‹¬(n < step m')›).symm
-
+-/
 end Lean4Axiomatic.Natural

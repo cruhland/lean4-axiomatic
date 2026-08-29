@@ -12,7 +12,9 @@ derived properties.
 namespace Lean4Axiomatic.Rational
 
 open Lean4Axiomatic.Integer (Even Odd half_floored)
-open Lean4Axiomatic.Logic (AP iff_subst_covar or_identR or_mapR)
+open Lean4Axiomatic.Logic (
+  AP FalseWithin FirstInRange iff_subst_covar or_identR or_mapR
+)
 open Lean4Axiomatic.Metric (abs)
 open Lean4Axiomatic.Natural (pow_step pow_zero step)
 open Lean4Axiomatic.Relation.Equivalence (EqvOp)
@@ -807,10 +809,18 @@ structure Sqrt2Approx (ε : ℚ) where
 
 variable [FloorCeil ℚ]
 
+/-- TODO -/
+def find_first_in_range
+    (P : ℤ → Prop) [DecidablePred P] [AA.Substitutive₁ P (· ≃ ·) (· → ·)]
+    (a b : ℤ) : FirstInRange P a b ⊕' FalseWithin P a b
+    := by
+  admit
+
 def sqrt2_approx_new {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
   intro (_ : ε > 0)
   show Sqrt2Approx ε
 
+  -- TODO: update to use find_first_in_range, work with integers
   -- a^2 < 2 < (a + ε)^2
   -- (nε)^2 < 2 < (nε + ε)^2
   -- n^2 * ε^2 < 2 < (n + 1)^2 * ε^2

@@ -192,6 +192,29 @@ def Either.swap {α β : Prop} : Either α β → Either β α
 | .inl (x : α) => .inr x
 | .inr (y : β) => .inl y
 
+/-- TODO -/
+def FalseWithin {α : Type} [LE α] [LT α] (P : α → Prop) (x y : α) : Prop :=
+  {z : α} → x ≤ z → z < y → ¬P z
+
+/-- TODO -/
+structure FirstInRange
+    {α : Type} [LE α] [LT α] (P : α → Prop) (lower_incl : α) (upper_excl : α)
+    : Type where
+  /-- TODO -/
+  val : α
+
+  /-- TODO -/
+  lower : lower_incl ≤ val
+
+  /-- TODO -/
+  upper : val < upper_excl
+
+  /-- TODO -/
+  holds : P val
+
+  /-- TODO -/
+  fails : FalseWithin P lower_incl val
+
 /--
 Class that enables arbitrary expressions in `Prop` to be used as instance
 arguments.
