@@ -830,56 +830,52 @@ def sqrt2_approx_new {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
   have : DecidablePred P := sorry
   have : AA.Substitutive₁ P (· ≃ ·) (· → ·) := sorry
 
-  -- a^2 < 2 < (a + ε)^2
-  -- (nε)^2 < 2 < (nε + ε)^2
-  -- n^2 * ε^2 < 2 < (n + 1)^2 * ε^2
-  -- n^2 < 2/ε^2 < (n+1)^2
-  -- target := 2/ε^2
-  -- P := λ n => target < (n^2:ℚ)
-  -- limit := 1 + ceil (2/ε)
-  -- target < (ceil (2/ε))^2 < limit^2
-
   let lower := 1
   let upper := ceil (2/ε) + 1
   match find_first_in_range P lower upper with
   | .inl (fir : FirstInRange P lower upper) =>
-    let a := fir.val
-    have : P a := fir.holds
-    have : 2/ε^2 < a^2 := ‹P a›
-    have : 2 < a^2 * ε^2 := calc
+    let a := fir.val - 1
+    have : fir.val ≃ a + 1 := calc
+      _ = fir.val := rfl
+      _ ≃ fir.val + 0 := Rel.symm AA.identR
+      _ ≃ fir.val + (-1 + 1) := sorry --by srw [←AA.inverseL]
+      _ ≃ (fir.val + (-1)) + 1 := sorry
+      _ ≃ fir.val - 1 + 1 := sorry
+      _ ≃ a + 1 := sorry
+    have : P (a + 1) := AA.substFn ‹fir.val ≃ a + 1› fir.holds
+    have : 2/ε^2 < (a + 1 : ℤ)^2 := ‹P (a + 1)›
+    have : 2 < (a * ε + ε)^2 := calc
       _ = (2:ℚ) := rfl
       _ ≃ 2 * 1 := sorry
       _ ≃ 2 * ((ε^2)⁻¹ * ε^2) := sorry
       _ ≃ (2 * (ε^2)⁻¹) * ε^2 := sorry
       _ ≃ (2/ε^2) * ε^2 := sorry
-      _ < a^2 * ε^2 := sorry --by srw [‹2/ε^2 < a^2›]
+      _ < (a + 1 : ℤ)^2 * ε^2 := sorry --by srw [‹2/ε^2 < (a + 1 : ℤ)^2›]
+      _ ≃ (a + 1)^2 * ε^2 := sorry
+      _ ≃ ((a + 1) * ε)^2 := sorry
+      _ ≃ (a * ε + 1 * ε)^2 := sorry
+      _ ≃ (a * ε + ε)^2 := sorry
 
-    if a ≃ 0 then
-      have : (2:ℚ) < 0 := calc
-        _ = (2:ℚ) := rfl
-        _ < a^2 * ε^2 := ‹2 < a^2 * ε^2›
-        _ ≃ 0^2 * ε^2 := sorry --by srw [‹a ≃ 0›]
-        _ ≃ 0 * ε^2 := sorry
-        _ ≃ 0 := sorry
-      have : (2:ℚ) ≥ 0 := sorry
-      have : False := le_gt_false ‹(0:ℚ) ≤ 2› ‹(0:ℚ) > 2›
-      exact this.elim
-    else
-      -- P k ≡ target < k^2 ≡ 2/ε^2 < k^2 ≡ 2 < k^2 * ε^2
-      -- if k = 0: 2 < 0^2 * ε^2 ≡ 2 < 0 ≡ False
-      -- so k = a + 1
-      -- P k ≡ P (a + 1) ≡ 2 < (a + 1)^2 * ε^2
-      -- a < k, so by FirstTrueAt P k we have ¬P a
-      -- ¬P a ≡ ¬(target < a^2) ≡ a^2 ≤ 2/ε^2 ≡ a^2 * ε^2 ≤ 2 ≡ (a * ε)^2 ≤ 2
-      -- we know from prev thm that (a * ε)^2 = 2 is impossible
-      -- so ¬P a ≡ (a * ε)^2 < 2
-      -- approx := a * ε
-      -- approx^2 < 2
-      -- 2 < (a + 1)^2 * ε^2 = ((a + 1) * ε)^2 = (a * ε + ε)^2 = (approx + ε)^2
-      let approx : ℚ := sorry
-      have : approx^2 < 2 := sorry
-      have : 2 < (approx + ε)^2 := sorry
-      exact Sqrt2Approx.mk approx ‹approx^2 < 2› ‹2 < (approx + ε)^2›
+    have : FalseWithin P lower fir.val := fir.fails
+    have : lower ≤ a := sorry
+    have : a < fir.val := sorry
+    have : ¬P a := ‹FalseWithin P lower fir.val› ‹lower ≤ a› ‹a < fir.val›
+    have : ¬(2/ε^2 < a^2) := ‹¬P a›
+    have : 2/ε^2 ≥ a^2 := sorry
+    have : (a * ε)^2 ≤ 2 := calc
+      _ = (a * ε)^2 := rfl
+      _ ≃ a^2 * ε^2 := Natural.pow_distribR_mul
+      _ ≤ 2/ε^2 * ε^2 := sorry --by srw [‹a^2 ≤ 2/ε^2›]
+      _ ≃ 2 := sorry
+
+    have : (a * ε)^2 < 2 ∨ (a * ε)^2 ≃ 2 := le_cases.mp ‹(a * ε)^2 ≤ 2›
+    have : (a * ε)^2 < 2 :=
+      ‹(a * ε)^2 < 2 ∨ (a * ε)^2 ≃ 2›.resolve_right sqrt2_irrational
+
+    let approx := a * ε
+    have : approx^2 < 2 := ‹(a * ε)^2 < 2›
+    have : 2 < (approx + ε)^2 := ‹2 < (a * ε + ε)^2›
+    exact Sqrt2Approx.mk approx ‹approx^2 < 2› ‹2 < (approx + ε)^2›
   | .inr (_ : FalseWithin P lower upper) =>
     -- have ¬P k for all k < limit
     -- limit = 1 + ceil (2/ε)
@@ -891,7 +887,7 @@ def sqrt2_approx_new {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
     -- 4 ≤ 2
     -- False
     admit
-
+/-
 /-- TODO -/
 def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
   intro (_ : ε > 0)
@@ -977,7 +973,7 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
   have : val^2 < 2 := approx_lower max_count
   have : 2 < (val + ε)^2 := sorry
   exact Sqrt2Approx.mk val ‹val^2 < 2› ‹2 < (val + ε)^2›
-
+-/
 end pow_nat
 
 /-! ## Axioms for exponentiation to an integer -/
