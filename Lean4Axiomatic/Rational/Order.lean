@@ -292,6 +292,9 @@ theorem not_ge_iff_lt {p q : ℚ} : ¬(p ≥ q) ↔ p < q := calc
   _ ↔ sgn (q - p) ≃ 1 := neg_le_sgn
   _ ↔ p < q           := gt_sgn.symm
 
+/-- TODO -/
+theorem not_gt_iff_le {p q : ℚ} : ¬(p > q) ↔ p ≤ q := sorry
+
 /--
 The _less than_ relation on rational numbers is irreflexive.
 

@@ -193,8 +193,8 @@ def Either.swap {α β : Prop} : Either α β → Either β α
 | .inr (y : β) => .inl y
 
 /-- TODO -/
-def FalseWithin {α : Type} [LE α] [LT α] (P : α → Prop) (x y : α) : Prop :=
-  {z : α} → x ≤ z → z < y → ¬P z
+def FalseWithin {α : Type} [LE α] [LT α] (P : α → Prop) (x z : α) : Prop :=
+  {y : α} → x ≤ y → y < z → ¬P y
 
 /-- TODO -/
 structure FirstInRange

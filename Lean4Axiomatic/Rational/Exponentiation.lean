@@ -831,7 +831,7 @@ def sqrt2_approx_new {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
   have : DecidablePred P := sorry
   have : AA.Substitutive₁ P (· ≃ ·) (· → ·) := sorry
 
-  let lower := 1
+  let lower : ℤ := 0
   let upper := ceil (2/ε) + 1
   match find_first_in_range P lower upper with
   | .inl (fir : FirstInRange P lower upper) =>
@@ -877,14 +877,33 @@ def sqrt2_approx_new {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
     have : approx^2 < 2 := ‹(a * ε)^2 < 2›
     have : 2 < (approx + ε)^2 := ‹2 < (a * ε + ε)^2›
     exact Sqrt2Approx.mk approx ‹approx^2 < 2› ‹2 < (approx + ε)^2›
-  | .inr (_ : FalseWithin P lower upper) =>
-    have : 2/ε ≥ 0 := sorry
-    have : 2/ε ≤ ceil (2/ε) := sorry
+  | .inr (fw : FalseWithin P lower upper) =>
+    have : (0:ℚ) ≤ 2 := le_cases.mpr (Or.inl two_pos)
+    have : 2/ε ≥ 0 := calc
+      _ = 2/ε     := rfl
+      _ ≥ 0/ε     := le_substN_div_gt_zero ‹ε > 0› ‹(0:ℚ) ≤ 2›
+      _ ≃ 0 * ε⁻¹ := div_mul_recip
+      _ ≃ 0       := mul_absorbL
+    have : 2/ε ≤ ceil (2/ε) := ceil_lb
     have : (2/ε)^2 ≤ (ceil (2/ε))^2 :=
       pow_preserves_ge_nonneg ‹2/ε ≤ ceil (2/ε)› ‹2/ε ≥ 0›
     have : (2/ε)^2 * ε^2 ≤ (ceil (2/ε))^2 * ε^2 :=
       le_substL_mul_pos ‹ε^2 > 0› ‹(2/ε)^2 ≤ (ceil (2/ε))^2›
-    have : (ceil (2/ε))^2 ≤ 2/ε^2 := sorry
+    have : (lower:ℚ) ≤ ceil (2/ε) := calc
+      _ = (lower:ℚ)  := rfl
+      _ = 0          := rfl
+      _ ≤ 2/ε        := ‹2/ε ≥ 0›
+      _ ≤ ceil (2/ε) := ‹2/ε ≤ ceil (2/ε)›
+    have : lower ≤ ceil (2/ε) :=
+      le_respects_from_integer.mpr ‹(lower:ℚ) ≤ ceil (2/ε)›
+    have : ceil (2/ε) < upper := calc
+      _ = ceil (2/ε)     := rfl
+      _ < ceil (2/ε) + 1 := Integer.lt_inc
+      _ = upper          := rfl
+    have : ¬P (ceil (2/ε)) := fw ‹lower ≤ ceil (2/ε)› ‹ceil (2/ε) < upper›
+    have : ¬(2/ε^2 < (ceil (2/ε))^2) := ‹¬P (ceil (2/ε))›
+    have : (ceil (2/ε))^2 ≤ 2/ε^2 :=
+      not_gt_iff_le.mp ‹¬(2/ε^2 < (ceil (2/ε))^2)›
     have : (ceil (2/ε))^2 * ε^2 ≤ 2/ε^2 * ε^2 :=
       le_substL_mul_pos ‹ε^2 > 0› ‹(ceil (2/ε))^2 ≤ 2/ε^2›
 
@@ -901,7 +920,11 @@ def sqrt2_approx_new {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
       _ ≃ 2 * ((ε^2)⁻¹ * ε^2)   := mul_assoc
       _ ≃ 2 * 1                 := by srw [mul_inverseL]
       _ ≃ 2                     := mul_identR
-    have : (2:ℚ)^2 > 2 := sorry
+    have : (2:ℚ)^2 > 2 := calc
+      _ = (2:ℚ)^2 := rfl
+      _ ≃ 2 * 2 := Natural.pow_two
+      _ > 1 * 2 := lt_substL_mul_pos two_pos two_gt_one
+      _ ≃ 2     := mul_identL
     have : False := le_gt_false ‹(2:ℚ)^2 ≤ 2› ‹(2:ℚ)^2 > 2›
     exact this.elim
 /-
