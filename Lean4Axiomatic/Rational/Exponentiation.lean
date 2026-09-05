@@ -821,8 +821,9 @@ def sqrt2_approx_new {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
   show Sqrt2Approx ε
 
   have : AP (ε ≄ 0) := AP.mk (pos_nonzero ‹ε > 0›)
+  have : ε^2 > 0 := pow_preserves_pos ‹ε > 0›
   have : AP (ε^2 ≄ 0) :=
-    have : ε^2 > 0 := pow_preserves_pos ‹ε > 0›
+
     have : ε^2 ≄ 0 := pos_nonzero ‹ε^2 > 0›
     AP.mk ‹ε^2 ≄ 0›
   let P (x : ℤ) := 2/ε^2 < x^2
@@ -836,25 +837,25 @@ def sqrt2_approx_new {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
   | .inl (fir : FirstInRange P lower upper) =>
     let a := fir.val - 1
     have : fir.val ≃ a + 1 := calc
-      _ = fir.val := rfl
-      _ ≃ fir.val + 0 := Rel.symm AA.identR
-      _ ≃ fir.val + (-1 + 1) := sorry --by srw [←AA.inverseL]
+      _ = fir.val              := rfl
+      _ ≃ fir.val + 0          := Rel.symm AA.identR
+      _ ≃ fir.val + (-1 + 1)   := sorry --by srw [←AA.inverseL]
       _ ≃ (fir.val + (-1)) + 1 := sorry
-      _ ≃ fir.val - 1 + 1 := sorry
-      _ ≃ a + 1 := sorry
+      _ ≃ fir.val - 1 + 1      := sorry
+      _ ≃ a + 1                := sorry
     have : P (a + 1) := AA.substFn ‹fir.val ≃ a + 1› fir.holds
     have : 2/ε^2 < (a + 1 : ℤ)^2 := ‹P (a + 1)›
     have : 2 < (a * ε + ε)^2 := calc
-      _ = (2:ℚ) := rfl
-      _ ≃ 2 * 1 := sorry
+      _ = (2:ℚ)               := rfl
+      _ ≃ 2 * 1               := sorry
       _ ≃ 2 * ((ε^2)⁻¹ * ε^2) := sorry
       _ ≃ (2 * (ε^2)⁻¹) * ε^2 := sorry
-      _ ≃ (2/ε^2) * ε^2 := sorry
+      _ ≃ (2/ε^2) * ε^2       := sorry
       _ < (a + 1 : ℤ)^2 * ε^2 := sorry --by srw [‹2/ε^2 < (a + 1 : ℤ)^2›]
-      _ ≃ (a + 1)^2 * ε^2 := sorry
-      _ ≃ ((a + 1) * ε)^2 := sorry
-      _ ≃ (a * ε + 1 * ε)^2 := sorry
-      _ ≃ (a * ε + ε)^2 := sorry
+      _ ≃ (a + 1)^2 * ε^2     := sorry
+      _ ≃ ((a + 1) * ε)^2     := sorry
+      _ ≃ (a * ε + 1 * ε)^2   := sorry
+      _ ≃ (a * ε + ε)^2       := sorry
 
     have : FalseWithin P lower fir.val := fir.fails
     have : lower ≤ a := sorry
@@ -863,10 +864,10 @@ def sqrt2_approx_new {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
     have : ¬(2/ε^2 < a^2) := ‹¬P a›
     have : 2/ε^2 ≥ a^2 := sorry
     have : (a * ε)^2 ≤ 2 := calc
-      _ = (a * ε)^2 := rfl
-      _ ≃ a^2 * ε^2 := Natural.pow_distribR_mul
+      _ = (a * ε)^2   := rfl
+      _ ≃ a^2 * ε^2   := Natural.pow_distribR_mul
       _ ≤ 2/ε^2 * ε^2 := sorry --by srw [‹a^2 ≤ 2/ε^2›]
-      _ ≃ 2 := sorry
+      _ ≃ 2           := sorry
 
     have : (a * ε)^2 < 2 ∨ (a * ε)^2 ≃ 2 := le_cases.mp ‹(a * ε)^2 ≤ 2›
     have : (a * ε)^2 < 2 :=
@@ -877,16 +878,32 @@ def sqrt2_approx_new {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
     have : 2 < (approx + ε)^2 := ‹2 < (a * ε + ε)^2›
     exact Sqrt2Approx.mk approx ‹approx^2 < 2› ‹2 < (approx + ε)^2›
   | .inr (_ : FalseWithin P lower upper) =>
-    -- have ¬P k for all k < limit
-    -- limit = 1 + ceil (2/ε)
-    -- so ¬P (ceil (2/ε)) ≡ ¬(target < (ceil (2/ε))^2) ≡ target ≥ (ceil (2/ε))^2
-    -- (ceil (2/ε))^2 ≤ 2/ε^2
-    -- (2/ε)^2 ≤ (ceil (2/ε))^2
-    -- 4/ε^2 ≤ (ceil (2/ε))^2 ≤ 2/ε^2
-    -- 4/ε^2 ≤ 2/ε^2
-    -- 4 ≤ 2
-    -- False
-    admit
+    have : 2/ε ≥ 0 := sorry
+    have : 2/ε ≤ ceil (2/ε) := sorry
+    have : (2/ε)^2 ≤ (ceil (2/ε))^2 :=
+      pow_preserves_ge_nonneg ‹2/ε ≤ ceil (2/ε)› ‹2/ε ≥ 0›
+    have : (2/ε)^2 * ε^2 ≤ (ceil (2/ε))^2 * ε^2 :=
+      le_substL_mul_pos ‹ε^2 > 0› ‹(2/ε)^2 ≤ (ceil (2/ε))^2›
+    have : (ceil (2/ε))^2 ≤ 2/ε^2 := sorry
+    have : (ceil (2/ε))^2 * ε^2 ≤ 2/ε^2 * ε^2 :=
+      le_substL_mul_pos ‹ε^2 > 0› ‹(ceil (2/ε))^2 ≤ 2/ε^2›
+
+    have : (2:ℚ)^2 ≤ 2 := calc
+      _ = (2:ℚ)^2               := rfl
+      _ ≃ 2^2 * 1               := eqv_symm mul_identR
+      _ ≃ 2^2 * ((ε^2)⁻¹ * ε^2) := by srw [←mul_inverseL]
+      _ ≃ (2^2 * (ε^2)⁻¹) * ε^2 := eqv_symm mul_assoc
+      _ ≃ 2^2/ε^2 * ε^2         := by srw [←div_mul_recip]
+      _ ≃ (2/ε)^2 * ε^2         := by srw [←pow_distribR_div]
+      _ ≤ (ceil (2/ε))^2 * ε^2  := ‹(2/ε)^2 * ε^2 ≤ (ceil (2/ε))^2 * ε^2›
+      _ ≤ 2/ε^2 * ε^2           := ‹(ceil (2/ε))^2 * ε^2 ≤ 2/ε^2 * ε^2›
+      _ ≃ (2 * (ε^2)⁻¹) * ε^2   := by srw [div_mul_recip]
+      _ ≃ 2 * ((ε^2)⁻¹ * ε^2)   := mul_assoc
+      _ ≃ 2 * 1                 := by srw [mul_inverseL]
+      _ ≃ 2                     := mul_identR
+    have : (2:ℚ)^2 > 2 := sorry
+    have : False := le_gt_false ‹(2:ℚ)^2 ≤ 2› ‹(2:ℚ)^2 > 2›
+    exact this.elim
 /-
 /-- TODO -/
 def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
