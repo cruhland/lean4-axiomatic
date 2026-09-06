@@ -200,6 +200,20 @@ theorem sub_assoc_addR {a b c : ℤ} : (a - b) + c ≃ a + (c - b) := calc
   _ ≃ a + (c + -b) := by srw [AA.comm]
   _ ≃ a + (c - b)  := by srw [←sub_defn]
 
+/-- TODO -/
+theorem add_sub_cancel {a b : ℤ} : a + b - b ≃ a := calc
+  _ = a + b - b   := rfl
+  _ ≃ a + (b - b) := sub_assoc_addL
+  _ ≃ a + 0       := by srw [sub_same]
+  _ ≃ a           := AA.identR
+
+/-- TODO -/
+theorem sub_add_cancel {a b : ℤ} : a - b + b ≃ a := calc
+  _ = a - b + b   := rfl
+  _ ≃ a + (b - b) := sub_assoc_addR
+  _ ≃ a + b - b   := Rel.symm sub_assoc_addL
+  _ ≃ a           := add_sub_cancel
+
 /--
 Move a subtraction's right operand to an addition's right operand, from left to
 right across an equivalence (or the reverse).
@@ -213,7 +227,7 @@ simplify.
 theorem subR_moveR_addR {a b c : ℤ} : a - b ≃ c ↔ a ≃ c + b := calc
   _ ↔       a - b ≃ c     := Iff.rfl
   _ ↔ (a - b) + b ≃ c + b := add_injectR.symm
-  _ ↔           a ≃ c + b := by srw [sub_assoc_addR, sub_same, add_identR]
+  _ ↔           a ≃ c + b := by srw [sub_add_cancel]
 
 /--
 Move a subtraction's right operand to an addition's left operand, from left to

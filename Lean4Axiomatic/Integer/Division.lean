@@ -201,10 +201,8 @@ theorem flooredDiv_unique
         _ ≃ sb + st - st * sb^2               := by srw [AA.comm]
         _ ≃ sb + st - st * 1                  := by srw [‹sb^2 ≃ 1›]
         _ ≃ sb + st - st                      := by srw [mul_identR]
-        _ ≃ sb + (st - st)                    := by srw [sub_assoc_addL]
-        _ ≃ sb + 0                            := by srw [sub_same]
         -- ↑ shorten with future tactic ↑
-        _ ≃ sgn b                             := AA.identR
+        _ ≃ sgn b                             := add_sub_cancel
       calc
         _ = sgn (abs b - (s - t) * sb)  := rfl
         _ ≃ sgn (b * sb - (s - t) * sb) := by srw [abs_sgn]

@@ -1906,9 +1906,7 @@ def nonneg_to_natural {a : ℤ} : a ≥ 0 → { n : ℕ // a ≃ n } := by
     _ ≃ ((m + d : ℕ):ℤ) - m := by srw [←‹m + d ≃ n›]
     _ ≃ m + d - m           := by srw [add_compat_nat]
     _ ≃ d + m - m           := by srw [AA.comm]
-    _ ≃ d + (m - m)         := sub_assoc_addL
-    _ ≃ d + 0               := by srw [sub_same]
-    _ ≃ d                   := AA.identR
+    _ ≃ d                   := add_sub_cancel
 
   have : { n : ℕ // a ≃ n } := Subtype.mk d ‹a ≃ d›
   exact this

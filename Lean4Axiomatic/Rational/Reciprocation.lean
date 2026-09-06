@@ -285,6 +285,20 @@ theorem div_same {p : ℚ} [AP (p ≄ 0)] : p/p ≃ 1 := calc
   _ ≃ p * p⁻¹ := div_mul_recip
   _ ≃ 1       := mul_inverseR
 
+/-- TODO -/
+theorem div_mul_cancelR {p q : ℚ} [AP (q ≄ 0)] : p/q * q ≃ p := calc
+  _ = p/q * q       := rfl
+  _ ≃ p * q⁻¹ * q   := by srw [div_mul_recip]
+  _ ≃ p * (q⁻¹ * q) := mul_assoc
+  _ ≃ p * 1         := by srw [mul_inverseL]
+  _ ≃ p             := mul_identR
+
+/-- TODO -/
+theorem div_mul_cancelL {p q : ℚ} [AP (q ≄ 0)] : q * (p/q) ≃ p := calc
+  _ = q * (p/q) := rfl
+  _ ≃ p/q * q   := mul_comm
+  _ ≃ p         := div_mul_cancelR
+
 /--
 Two rational numbers are equivalent if and only if their quotient is one.
 
@@ -303,10 +317,7 @@ theorem div_eqv_1 {p q : ℚ} [AP (q ≄ 0)] : p/q ≃ 1 ↔ p ≃ q := by
     show p ≃ q
     calc
       _ ≃ p             := eqv_refl
-      _ ≃ p * 1         := eqv_symm mul_identR
-      _ ≃ p * (q⁻¹ * q) := by srw [←mul_inverseL]
-      _ ≃ (p * q⁻¹) * q := eqv_symm mul_assoc
-      _ ≃ (p/q) * q     := by srw [←div_mul_recip]
+      _ ≃ (p/q) * q     := eqv_symm div_mul_cancelR
       _ ≃ 1 * q         := by srw [‹p/q ≃ 1›]
       _ ≃ q             := mul_identL
   case mpr =>

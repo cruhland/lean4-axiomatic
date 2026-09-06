@@ -298,9 +298,7 @@ theorem numer_gt_denom {r : Sqrt2Ratio ℤ} : r.numer > r.denom := by
       _ ≃ sgn (a^2 - b^2)         := Rel.symm ‹sgn (a^2 - b^2) ≃ sgn (a - b)›
       _ ≃ sgn (2 * b^2 - b^2)     := by srw [‹a^2 ≃ 2 * b^2›]
       _ ≃ sgn (b^2 + b^2 - b^2)   := by srw [Integer.mul_two]
-      _ ≃ sgn (b^2 + (b^2 - b^2)) := by srw [Integer.sub_assoc_addL]
-      _ ≃ sgn (b^2 + 0)           := by srw [Integer.sub_same]
-      _ ≃ sgn (b^2)               := by srw [Integer.add_identR]
+      _ ≃ sgn (b^2)               := by srw [Integer.add_sub_cancel]
       _ ≃ (sgn b)^2               := Integer.sgn_pow
       _ ≃ 1^2                     := by srw [Integer.gt_zero_sgn.mp ‹b > 0›]
       _ ≃ 1                       := Natural.pow_absorbL
@@ -475,10 +473,7 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
         _ = ((a'^2:ℤ):ℚ)                := rfl
         _ ≃ (a':ℚ)^2                    := pow_scompatL_from_integer
         _ = a'q^2                       := rfl
-        _ ≃ a'q^2 * 1                   := by srw [←mul_identR]
-        _ ≃ a'q^2 * ((b'q^2)⁻¹ * b'q^2) := by srw [←mul_inverseL]
-        _ ≃ a'q^2 * (b'q^2)⁻¹ * b'q^2   := eqv_symm mul_assoc
-        _ ≃ a'q^2/b'q^2 * b'q^2         := by srw [←div_mul_recip]
+        _ ≃ a'q^2/b'q^2 * b'q^2         := eqv_symm div_mul_cancelR
         _ ≃ (a'q/b'q)^2 * b'q^2         := by srw [←pow_distribR_div]
         _ = ((a':ℚ)/b')^2 * b'q^2       := rfl
         _ ≃ p^2 * b'q^2                 := by srw [←‹p ≃ a'/b'›]
@@ -835,6 +830,32 @@ def sqrt2_approx_new {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
   let upper := ceil (2/ε) + 1
   match find_first_in_range P lower upper with
   | .inl (fir : FirstInRange P lower upper) =>
+    have : P fir.val := fir.holds
+    have : 2/ε^2 < fir.val^2 := ‹P fir.val›
+    have : fir.val ≄ 0 := by
+      intro (_ : fir.val ≃ 0)
+      show False
+
+      have : (2:ℚ) < 0 := calc
+        _ = (2:ℚ)             := rfl
+        _ ≃ 2/ε^2 * ε^2       := eqv_symm div_mul_cancelR
+        _ < fir.val^2 * ε^2   := lt_substL_mul_pos ‹ε^2 > 0› ‹2/ε^2 < fir.val^2›
+        _ ≃ ((0:ℤ):ℚ)^2 * ε^2 := by srw [‹fir.val ≃ 0›]
+        _ = 0^2 * ε^2         := rfl
+        _ ≃ (0 * 0) * ε^2     := by srw [Natural.pow_two]
+        _ ≃ 0 * ε^2           := by srw [mul_absorbL]
+        _ ≃ 0                 := mul_absorbL
+      have : (2:ℚ) ≥ 0 := le_cases.mpr (Or.inl two_pos)
+      have : False := le_gt_false ‹(2:ℚ) ≥ 0› ‹(2:ℚ) < 0›
+      exact this
+    have : fir.val ≥ 0 := fir.lower
+    have : fir.val > 0 ∨ fir.val ≃ 0 := Integer.ge_split.mp ‹fir.val ≥ 0›
+    have : fir.val > 0 := this.resolve_right ‹fir.val ≄ 0›
+    have : fir.val ≥ 1 := calc
+      _ = fir.val := rfl
+      _ ≥ 0 + 1   := Integer.lt_iff_le_incL.mp ‹fir.val > 0›
+      _ ≃ 1       := AA.identL
+
     let a := fir.val - 1
     have : fir.val ≃ a + 1 := calc
       _ = fir.val              := rfl
@@ -858,16 +879,25 @@ def sqrt2_approx_new {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
       _ ≃ (a * ε + ε)^2       := sorry
 
     have : FalseWithin P lower fir.val := fir.fails
-    have : lower ≤ a := sorry
-    have : a < fir.val := sorry
+    have : lower ≤ a := calc
+      _ = lower       := rfl
+      _ = 0           := rfl
+      _ ≃ 1 - 1       := Rel.symm Integer.sub_same
+      _ ≤ fir.val - 1 := by srw [‹fir.val ≥ 1›]
+      _ = a           := rfl
+    have : a < fir.val := calc
+      _ = a               := rfl
+      _ = fir.val - 1     := rfl
+      _ < fir.val - 1 + 1 := Integer.lt_inc
+      _ ≃ fir.val         := Integer.sub_add_cancel
     have : ¬P a := ‹FalseWithin P lower fir.val› ‹lower ≤ a› ‹a < fir.val›
     have : ¬(2/ε^2 < a^2) := ‹¬P a›
-    have : 2/ε^2 ≥ a^2 := sorry
+    have : 2/ε^2 ≥ a^2 := not_gt_iff_le.mp ‹¬(2/ε^2 < a^2)›
     have : (a * ε)^2 ≤ 2 := calc
       _ = (a * ε)^2   := rfl
       _ ≃ a^2 * ε^2   := Natural.pow_distribR_mul
-      _ ≤ 2/ε^2 * ε^2 := sorry --by srw [‹a^2 ≤ 2/ε^2›]
-      _ ≃ 2           := sorry
+      _ ≤ 2/ε^2 * ε^2 := le_substL_mul_pos ‹ε^2 > 0› ‹a^2 ≤ 2/ε^2›
+      _ ≃ 2           := div_mul_cancelR
 
     have : (a * ε)^2 < 2 ∨ (a * ε)^2 ≃ 2 := le_cases.mp ‹(a * ε)^2 ≤ 2›
     have : (a * ε)^2 < 2 :=
@@ -877,6 +907,7 @@ def sqrt2_approx_new {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
     have : approx^2 < 2 := ‹(a * ε)^2 < 2›
     have : 2 < (approx + ε)^2 := ‹2 < (a * ε + ε)^2›
     exact Sqrt2Approx.mk approx ‹approx^2 < 2› ‹2 < (approx + ε)^2›
+
   | .inr (fw : FalseWithin P lower upper) =>
     apply False.elim
     show False
@@ -921,17 +952,11 @@ def sqrt2_approx_new {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
 
       show (2:ℚ)^2 ≤ 2 from calc
         _ = (2:ℚ)^2               := rfl
-        _ ≃ 2^2 * 1               := eqv_symm mul_identR
-        _ ≃ 2^2 * ((ε^2)⁻¹ * ε^2) := by srw [←mul_inverseL]
-        _ ≃ (2^2 * (ε^2)⁻¹) * ε^2 := eqv_symm mul_assoc
-        _ ≃ 2^2/ε^2 * ε^2         := by srw [←div_mul_recip]
+        _ ≃ 2^2/ε^2 * ε^2         := eqv_symm div_mul_cancelR
         _ ≃ (2/ε)^2 * ε^2         := by srw [←pow_distribR_div]
         _ ≤ (ceil (2/ε))^2 * ε^2  := ‹(2/ε)^2 * ε^2 ≤ (ceil (2/ε))^2 * ε^2›
         _ ≤ 2/ε^2 * ε^2           := ‹(ceil (2/ε))^2 * ε^2 ≤ 2/ε^2 * ε^2›
-        _ ≃ (2 * (ε^2)⁻¹) * ε^2   := by srw [div_mul_recip]
-        _ ≃ 2 * ((ε^2)⁻¹ * ε^2)   := mul_assoc
-        _ ≃ 2 * 1                 := by srw [mul_inverseL]
-        _ ≃ 2                     := mul_identR
+        _ ≃ 2                     := div_mul_cancelR
 
     have : (2:ℚ)^2 > 2 := calc
       _ = (2:ℚ)^2 := rfl

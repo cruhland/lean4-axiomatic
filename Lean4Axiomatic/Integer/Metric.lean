@@ -248,9 +248,7 @@ theorem sgn_sub_absorbR {a b : ℤ} : abs a > abs b → sgn (a - b) ≃ sgn a :=
       _ ≃ sgn a + sgn (-b) - sgn (-b) * (sgn a)^2 := by srw [AA.comm]
       _ ≃ sgn a + sgn (-b) - sgn (-b) * 1         := by srw [‹(sgn a)^2 ≃ 1›]
       _ ≃ sgn a + sgn (-b) - sgn (-b)             := by srw [mul_identR]
-      _ ≃ sgn a + (sgn (-b) - sgn (-b))           := sub_assoc_addL
-      _ ≃ sgn a + 0                               := by srw [sub_same]
-      _ ≃ sgn a                                   := AA.identR
+      _ ≃ sgn a                                   := add_sub_cancel
 
 /--
 Convert between two expressions of one integer's magnitude being smaller than
