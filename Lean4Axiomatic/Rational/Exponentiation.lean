@@ -819,11 +819,10 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
   have : AP (ε ≄ 0) := AP.mk (pos_nonzero ‹ε > 0›)
   have : ε^2 > 0 := pow_preserves_pos ‹ε > 0›
   have : AP (ε^2 ≄ 0) :=
-
     have : ε^2 ≄ 0 := pos_nonzero ‹ε^2 > 0›
     AP.mk ‹ε^2 ≄ 0›
-  let P (x : ℤ) := 2/ε^2 < x^2
 
+  let P (x : ℤ) := 2/ε^2 < x^2
   have : DecidablePred P := λ x => lt_decidable
   have P_subst {x₁ x₂ : ℤ} : x₁ ≃ x₂ → P x₁ → P x₂ := by
     intro (_ : x₁ ≃ x₂) (_ : P x₁)
@@ -839,81 +838,85 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
 
   let lower : ℤ := 0
   let upper := ceil (2/ε) + 1
-  match find_first_in_range P lower upper with
+  let res : FirstInRange P lower upper ⊕' FalseWithin P lower upper :=
+    find_first_in_range P lower upper
+  match ‹FirstInRange P lower upper ⊕' FalseWithin P lower upper› with
   | .inl (fir : FirstInRange P lower upper) =>
-    have : P fir.val := fir.holds
-    have : 2/ε^2 < fir.val^2 := ‹P fir.val›
-    have : fir.val ≄ 0 := by
-      intro (_ : fir.val ≃ 0)
-      show False
-
-      have : (2:ℚ) < 0 := calc
-        _ = (2:ℚ)             := rfl
-        _ ≃ 2/ε^2 * ε^2       := eqv_symm div_mul_cancelR
-        _ < fir.val^2 * ε^2   := lt_substL_mul_pos ‹ε^2 > 0› ‹2/ε^2 < fir.val^2›
-        _ ≃ ((0:ℤ):ℚ)^2 * ε^2 := by srw [‹fir.val ≃ 0›]
-        _ = 0^2 * ε^2         := rfl
-        _ ≃ (0 * 0) * ε^2     := by srw [Natural.pow_two]
-        _ ≃ 0 * ε^2           := by srw [mul_absorbL]
-        _ ≃ 0                 := mul_absorbL
-      have : (2:ℚ) ≥ 0 := le_cases.mpr (Or.inl two_pos)
-      have : False := le_gt_false ‹(2:ℚ) ≥ 0› ‹(2:ℚ) < 0›
-      exact this
-    have : fir.val ≥ 0 := fir.lower
-    have : fir.val > 0 ∨ fir.val ≃ 0 := Integer.ge_split.mp ‹fir.val ≥ 0›
-    have : fir.val > 0 := this.resolve_right ‹fir.val ≄ 0›
-    have : fir.val ≥ 1 := calc
-      _ = fir.val := rfl
-      _ ≥ 0 + 1   := Integer.lt_iff_le_incL.mp ‹fir.val > 0›
-      _ ≃ 1       := AA.identL
-
     let a := fir.val - 1
-    have : fir.val ≃ a + 1 := calc
-      _ = fir.val              := rfl
-      _ ≃ fir.val - 1 + 1      := Rel.symm Integer.sub_add_cancel
-      _ = a + 1                := rfl
-    have : P (a + 1) := AA.substFn ‹fir.val ≃ a + 1› ‹P fir.val›
-    have : 2/ε^2 < (a + 1 : ℤ)^2 := ‹P (a + 1)›
-    have : (2/ε^2) * ε^2 < (a + 1 : ℤ)^2 * ε^2 :=
-      lt_substL_mul_pos ‹ε^2 > 0› ‹2/ε^2 < (a + 1 : ℤ)^2›
-    have : 2 < (a * ε + ε)^2 := calc
-      _ = (2:ℚ)               := rfl
-      _ ≃ (2/ε^2) * ε^2       := eqv_symm div_mul_cancelR
-      _ < (a + 1 : ℤ)^2 * ε^2 := ‹(2/ε^2) * ε^2 < (a + 1 : ℤ)^2 * ε^2›
-      _ ≃ (a + (1:ℤ))^2 * ε^2 := by srw [add_compat_from_integer]
-      _ = (a + 1)^2 * ε^2     := rfl
-      _ ≃ ((a + 1) * ε)^2     := Rel.symm Natural.pow_distribR_mul
-      _ ≃ (a * ε + 1 * ε)^2   := by srw [mul_distribR]
-      _ ≃ (a * ε + ε)^2       := by srw [mul_identL]
-
-    have : FalseWithin P lower fir.val := fir.fails
-    have : lower ≤ a := calc
-      _ = lower       := rfl
-      _ = 0           := rfl
-      _ ≃ 1 - 1       := Rel.symm Integer.sub_same
-      _ ≤ fir.val - 1 := by srw [‹fir.val ≥ 1›]
-      _ = a           := rfl
-    have : a < fir.val := calc
-      _ = a               := rfl
-      _ = fir.val - 1     := rfl
-      _ < fir.val - 1 + 1 := Integer.lt_inc
-      _ ≃ fir.val         := Integer.sub_add_cancel
-    have : ¬P a := ‹FalseWithin P lower fir.val› ‹lower ≤ a› ‹a < fir.val›
-    have : ¬(2/ε^2 < a^2) := ‹¬P a›
-    have : 2/ε^2 ≥ a^2 := not_gt_iff_le.mp ‹¬(2/ε^2 < a^2)›
-    have : (a * ε)^2 ≤ 2 := calc
-      _ = (a * ε)^2   := rfl
-      _ ≃ a^2 * ε^2   := Natural.pow_distribR_mul
-      _ ≤ 2/ε^2 * ε^2 := le_substL_mul_pos ‹ε^2 > 0› ‹a^2 ≤ 2/ε^2›
-      _ ≃ 2           := div_mul_cancelR
-
-    have : (a * ε)^2 < 2 ∨ (a * ε)^2 ≃ 2 := le_cases.mp ‹(a * ε)^2 ≤ 2›
-    have : (a * ε)^2 < 2 :=
-      ‹(a * ε)^2 < 2 ∨ (a * ε)^2 ≃ 2›.resolve_right sqrt2_irrational
-
     let approx := a * ε
-    have : approx^2 < 2 := ‹(a * ε)^2 < 2›
-    have : 2 < (approx + ε)^2 := ‹2 < (a * ε + ε)^2›
+    have : P fir.val := fir.holds
+
+    have : approx^2 < 2 :=
+      have : fir.val ≄ 0 := by
+        intro (_ : fir.val ≃ 0)
+        show False
+
+        have : 2/ε^2 < fir.val^2 := ‹P fir.val›
+        have : 2/ε^2 * ε^2 < fir.val^2 * ε^2 :=
+          lt_substL_mul_pos ‹ε^2 > 0› ‹2/ε^2 < fir.val^2›
+        have : (2:ℚ) < 0 := calc
+          _ = (2:ℚ)             := rfl
+          _ ≃ 2/ε^2 * ε^2       := eqv_symm div_mul_cancelR
+          _ < fir.val^2 * ε^2   := ‹2/ε^2 * ε^2 < fir.val^2 * ε^2›
+          _ ≃ ((0:ℤ):ℚ)^2 * ε^2 := by srw [‹fir.val ≃ 0›]
+          _ = 0^2 * ε^2         := rfl
+          _ ≃ (0 * 0) * ε^2     := by srw [Natural.pow_two]
+          _ ≃ 0 * ε^2           := by srw [mul_absorbL]
+          _ ≃ 0                 := mul_absorbL
+        have : (2:ℚ) ≥ 0 := le_cases.mpr (Or.inl two_pos)
+        have : False := le_gt_false ‹(2:ℚ) ≥ 0› ‹(2:ℚ) < 0›
+        exact this
+      have : fir.val ≥ 0 := fir.lower
+      have : fir.val > 0 ∨ fir.val ≃ 0 := Integer.ge_split.mp ‹fir.val ≥ 0›
+      have : fir.val > 0 := this.resolve_right ‹fir.val ≄ 0›
+      have : fir.val ≥ 1 := calc
+        _ = fir.val := rfl
+        _ ≥ 0 + 1   := Integer.lt_iff_le_incL.mp ‹fir.val > 0›
+        _ ≃ 1       := AA.identL
+      have : FalseWithin P lower fir.val := fir.fails
+      have : lower ≤ a := calc
+        _ = lower       := rfl
+        _ = 0           := rfl
+        _ ≃ 1 - 1       := Rel.symm Integer.sub_same
+        _ ≤ fir.val - 1 := by srw [‹fir.val ≥ 1›]
+        _ = a           := rfl
+      have : a < fir.val := calc
+        _ = a               := rfl
+        _ = fir.val - 1     := rfl
+        _ < fir.val - 1 + 1 := Integer.lt_inc
+        _ ≃ fir.val         := Integer.sub_add_cancel
+      have : ¬P a := ‹FalseWithin P lower fir.val› ‹lower ≤ a› ‹a < fir.val›
+      have : ¬(2/ε^2 < a^2) := ‹¬P a›
+      have : 2/ε^2 ≥ a^2 := not_gt_iff_le.mp ‹¬(2/ε^2 < a^2)›
+      have : (a * ε)^2 ≤ 2 := calc
+        _ = (a * ε)^2   := rfl
+        _ ≃ a^2 * ε^2   := Natural.pow_distribR_mul
+        _ ≤ 2/ε^2 * ε^2 := le_substL_mul_pos ‹ε^2 > 0› ‹a^2 ≤ 2/ε^2›
+        _ ≃ 2           := div_mul_cancelR
+      have : (a * ε)^2 < 2 ∨ (a * ε)^2 ≃ 2 := le_cases.mp ‹(a * ε)^2 ≤ 2›
+      have : (a * ε)^2 < 2 := this.resolve_right sqrt2_irrational
+      show approx^2 < 2 from ‹(a * ε)^2 < 2›
+
+    have : 2 < (approx + ε)^2 :=
+      have : fir.val ≃ a + 1 := calc
+        _ = fir.val              := rfl
+        _ ≃ fir.val - 1 + 1      := Rel.symm Integer.sub_add_cancel
+        _ = a + 1                := rfl
+      have : P (a + 1) := AA.substFn ‹fir.val ≃ a + 1› ‹P fir.val›
+      have : 2/ε^2 < (a + 1 : ℤ)^2 := ‹P (a + 1)›
+      have : (2/ε^2) * ε^2 < (a + 1 : ℤ)^2 * ε^2 :=
+        lt_substL_mul_pos ‹ε^2 > 0› ‹2/ε^2 < (a + 1 : ℤ)^2›
+      have : 2 < (a * ε + ε)^2 := calc
+        _ = (2:ℚ)               := rfl
+        _ ≃ (2/ε^2) * ε^2       := eqv_symm div_mul_cancelR
+        _ < (a + 1 : ℤ)^2 * ε^2 := ‹(2/ε^2) * ε^2 < (a + 1 : ℤ)^2 * ε^2›
+        _ ≃ (a + (1:ℤ))^2 * ε^2 := by srw [add_compat_from_integer]
+        _ = (a + 1)^2 * ε^2     := rfl
+        _ ≃ ((a + 1) * ε)^2     := Rel.symm Natural.pow_distribR_mul
+        _ ≃ (a * ε + 1 * ε)^2   := by srw [mul_distribR]
+        _ ≃ (a * ε + ε)^2       := by srw [mul_identL]
+      show 2 < (approx + ε)^2 from ‹2 < (a * ε + ε)^2›
+
     exact Sqrt2Approx.mk approx ‹approx^2 < 2› ‹2 < (approx + ε)^2›
 
   | .inr (fw : FalseWithin P lower upper) =>
