@@ -847,28 +847,23 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
     have : P fir.val := fir.holds
 
     have : approx^2 < 2 :=
-      have : fir.val ≄ 0 := by
-        intro (_ : fir.val ≃ 0)
-        show False
-
-        have : 2/ε^2 < fir.val^2 := ‹P fir.val›
-        have : 2/ε^2 * ε^2 < fir.val^2 * ε^2 :=
-          lt_substL_mul_pos ‹ε^2 > 0› ‹2/ε^2 < fir.val^2›
-        have : (2:ℚ) < 0 := calc
-          _ = (2:ℚ)             := rfl
-          _ ≃ 2/ε^2 * ε^2       := eqv_symm div_mul_cancelR
-          _ < fir.val^2 * ε^2   := ‹2/ε^2 * ε^2 < fir.val^2 * ε^2›
-          _ ≃ ((0:ℤ):ℚ)^2 * ε^2 := by srw [‹fir.val ≃ 0›]
-          _ = 0^2 * ε^2         := rfl
-          _ ≃ (0 * 0) * ε^2     := by srw [Natural.pow_two]
-          _ ≃ 0 * ε^2           := by srw [mul_absorbL]
-          _ ≃ 0                 := mul_absorbL
-        have : (2:ℚ) ≥ 0 := le_cases.mpr (Or.inl two_pos)
-        have : False := le_gt_false ‹(2:ℚ) ≥ 0› ‹(2:ℚ) < 0›
-        exact this
+      have : 2/ε^2 > 0 := div_preserves_pos two_pos ‹ε^2 > 0›
+      have : ((fir.val^2 : ℤ):ℚ) > 0 := calc
+        _ = ((fir.val^2 : ℤ):ℚ) := rfl
+        _ ≃ (fir.val:ℚ)^2       := pow_scompatL_from_integer
+        _ > 2/ε^2               := ‹2/ε^2 < fir.val^2›
+        _ > 0                   := ‹2/ε^2 > 0›
+      have : fir.val^2 > 0 :=
+        lt_respects_from_integer.mpr ‹((fir.val^2 : ℤ):ℚ) > 0›
       have : fir.val ≥ 0 := fir.lower
-      have : fir.val > 0 ∨ fir.val ≃ 0 := Integer.ge_split.mp ‹fir.val ≥ 0›
-      have : fir.val > 0 := this.resolve_right ‹fir.val ≄ 0›
+      have : (sgn fir.val)^2 ≃ sgn fir.val :=
+        Integer.sgn_sqr_nonneg.mpr ‹fir.val ≥ 0›
+      have : sgn fir.val ≃ 1 := calc
+        _ = sgn fir.val     := rfl
+        _ ≃ (sgn fir.val)^2 := Rel.symm ‹(sgn fir.val)^2 ≃ sgn fir.val›
+        _ ≃ sgn (fir.val^2) := Rel.symm Integer.sgn_pow
+        _ ≃ 1               := Integer.gt_zero_sgn.mp ‹fir.val^2 > 0›
+      have : fir.val > 0 := Integer.gt_zero_sgn.mpr ‹sgn fir.val ≃ 1›
       have : fir.val ≥ 1 := calc
         _ = fir.val := rfl
         _ ≥ 0 + 1   := Integer.lt_iff_le_incL.mp ‹fir.val > 0›

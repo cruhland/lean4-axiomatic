@@ -1155,6 +1155,14 @@ theorem sgn_sqr_nonneg {p : ℚ} : (sgn p)^2 ≃ sgn p ↔ p ≥ 0 := calc
 
 variable [Reciprocation ℚ] [Division ℚ]
 
+/-- TODO -/
+theorem div_preserves_pos
+    {p q : ℚ} (p_pos : p > 0) (q_pos : q > 0)
+    : have : AP (q ≄ 0) := AP.mk (pos_nonzero ‹q > 0›)
+      p/q > 0
+    :=
+  sorry
+
 /--
 The comparison of reciprocals of two rational numbers gives the opposite result
 as comparison of the original numbers, when both numbers have the same nonzero
