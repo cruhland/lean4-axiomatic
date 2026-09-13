@@ -384,84 +384,12 @@ Extends `EqvOp` with `· ≃? ·`, a decision procedure for equivalence.
 class EqvOp? (α : Sort u)
     extends EqvOp α, Operators.TildeDashQuestion tildeDash
 
--- TODO: can this be made generic? yeah but it should be a def
-instance bool_eqvOp_inst : EqvOp Bool := {
-  tildeDash := (· = ·)
-  refl := rfl
-  symm := Eq.symm
-  trans := Eq.trans
-}
-
-/-- TODO -/
-@[gcongr]
-theorem ite_subst_cond
-    {α : Type u} [EqvOp α] {P₁ P₂ : Prop} [Decidable P₁] [Decidable P₂]
-    {y z : α} : (P₁ ↔ P₂) → (if P₁ then y else z) ≃ (if P₂ then y else z)
-    := by
-  intro (_ : P₁ ↔ P₂)
-  show (if P₁ then y else z) ≃ (if P₂ then y else z)
-
-  if P₁ then
-    have : P₂ := ‹P₁ ↔ P₂›.mp ‹P₁›
-    calc
-      _ = if P₁ then y else z := rfl
-      _ = y                   := if_pos ‹P₁›
-      _ ≃ y                   := refl
-      _ = if P₂ then y else z := (if_pos ‹P₂›).symm
-  else
-    have : ¬P₂ := mt ‹P₁ ↔ P₂›.mpr ‹¬P₁›
-    calc
-      _ = if P₁ then y else z := rfl
-      _ = z                   := if_neg ‹¬P₁›
-      _ ≃ z                   := refl
-      _ = if P₂ then y else z := (if_neg ‹¬P₂›).symm
-
-/-- TODO -/
-@[gcongr]
-theorem ite_subst_then
-    {α : Type u} [EqvOp α] {P : Prop} [Decidable P] {y₁ y₂ z : α}
-    : y₁ ≃ y₂ → (if P then y₁ else z) ≃ (if P then y₂ else z)
-    := by
-  intro (_ : y₁ ≃ y₂)
-  show (if P then y₁ else z) ≃ (if P then y₂ else z)
-
-  if P then calc
-    _ = if P then y₁ else z    := rfl
-    _ = y₁                     := if_pos ‹P›
-    _ ≃ y₂                     := ‹y₁ ≃ y₂›
-    _ = if P then y₂ else z    := (if_pos ‹P›).symm
-  else calc
-    _ = if P then y₁ else z     := rfl
-    _ = z                       := if_neg ‹¬P›
-    _ ≃ z                       := refl
-    _ = if P then y₂ else z     := (if_neg ‹¬P›).symm
-
-/-- TODO -/
-@[gcongr]
-theorem ite_subst_else
-    {α : Type u} [EqvOp α] {P : Prop} [Decidable P] {y z₁ z₂ : α}
-    : z₁ ≃ z₂ → (if P then y else z₁) ≃ (if P then y else z₂)
-    := by
-  intro (_ : z₁ ≃ z₂)
-  show (if P then y else z₁) ≃ (if P then y else z₂)
-
-  if P then calc
-    _ = if P then y else z₁ := rfl
-    _ = y                   := if_pos ‹P›
-    _ ≃ y                   := refl
-    _ = if P then y else z₂ := (if_pos ‹P›).symm
-  else calc
-    _ = if P then y else z₁ := rfl
-    _ = z₁                  := if_neg ‹¬P›
-    _ ≃ z₂                  := ‹z₁ ≃ z₂›
-    _ = if P then y else z₂ := (if_neg ‹¬P›).symm
-
 end Equivalence
 end Relation
 
 namespace Rel
 export Relation (refl symm trans trans_failL trans_failR)
-export Relation.Equivalence (iff_subst_eqv ite_subst_cond)
+export Relation.Equivalence (iff_subst_eqv)
 end Rel
 
 end Lean4Axiomatic
