@@ -1,9 +1,11 @@
 import Lean4Axiomatic.AbstractAlgebra.Commutative
 import Lean4Axiomatic.AbstractAlgebra.Core
+import Lean4Axiomatic.Logic
 import Lean4Axiomatic.Tactic.Rewrite
 
 namespace Lean4Axiomatic.AA
 
+open Logic (FalseWithin FirstInRange)
 open Relation.Equivalence (EqvOp)
 
 /-!
@@ -995,5 +997,95 @@ def cancelR_from_cancelL
   have : rβ (f x y₁) (f y₂ x) := AA.substLFn AA.comm ‹rβ (f y₁ x) (f y₂ x)›
   have : rβ (f x y₁) (f x y₂) := AA.substRFn AA.comm ‹rβ (f x y₁) (f y₂ x)›
   exact AA.cancelLC ‹C x› ‹rβ (f x y₁) (f x y₂)›
+
+/-- TODO -/
+@[gcongr]
+theorem FalseWithin_substL
+    {α : Type} [LE α] [LT α] [EqvOp α] [Trans (β := α) (· ≃ ·) (· ≤ ·) (· ≤ ·)]
+    {P : α → Prop} {x₁ x₂ z : α}
+    : x₁ ≃ x₂ → FalseWithin P x₁ z → FalseWithin P x₂ z
+    := by
+  intro (_ : x₁ ≃ x₂) (_ : FalseWithin P x₁ z)
+  show FalseWithin P x₂ z
+
+  have f₁ : {y : α} → x₁ ≤ y → y < z → ¬P y := ‹FalseWithin P x₁ z›
+  have f₂ : {y : α} → x₂ ≤ y → y < z → ¬P y := by
+    intro (y : α) (_ : x₂ ≤ y) (_ : y < z)
+    show ¬P y
+
+    have : x₁ ≤ y := calc
+      _ = x₁ := rfl
+      _ ≃ x₂ := ‹x₁ ≃ x₂›
+      _ ≤ y  := ‹x₂ ≤ y›
+    have : ¬P y := f₁ ‹x₁ ≤ y› ‹y < z›
+    exact this
+
+  have : FalseWithin P x₂ z := f₂
+  exact ‹FalseWithin P x₂ z›
+
+/-- TODO -/
+@[gcongr]
+theorem FalseWithin_substR
+    {α : Type} [LE α] [LT α] [EqvOp α] [Trans (β := α) (· < ·) (· ≃ ·) (· < ·)]
+    {P : α → Prop} {x z₁ z₂ : α}
+    : z₁ ≃ z₂ → FalseWithin P x z₁ → FalseWithin P x z₂
+    := by
+  intro (_ : z₁ ≃ z₂) (_ : FalseWithin P x z₁)
+  show FalseWithin P x z₂
+
+  have f₁ : {y : α} → x ≤ y → y < z₁ → ¬P y := ‹FalseWithin P x z₁›
+  have f₂ : {y : α} → x ≤ y → y < z₂ → ¬P y := by
+    intro (y : α) (_ : x ≤ y) (_ : y < z₂)
+    show ¬P y
+
+    have : y < z₁ := calc
+      _ = y  := rfl
+      _ < z₂ := ‹y < z₂›
+      _ ≃ z₁ := Rel.symm ‹z₁ ≃ z₂›
+    have : ¬P y := f₁ ‹x ≤ y› ‹y < z₁›
+    exact this
+
+  have : FalseWithin P x z₂ := f₂
+  exact ‹FalseWithin P x z₂›
+
+/-- TODO -/
+@[gcongr]
+def FirstInRange_substL
+    {α : Type} [LE α] [LT α] [EqvOp α] [Trans (β := α) (· ≃ ·) (· ≤ ·) (· ≤ ·)]
+    {P : α → Prop} {x₁ x₂ y : α}
+    : x₁ ≃ x₂ → FirstInRange P x₁ y → FirstInRange P x₂ y
+    := by
+  intro (_ : x₁ ≃ x₂) (fir : FirstInRange P x₁ y)
+  show FirstInRange P x₂ y
+
+  let v := fir.val
+  have : x₂ ≤ v := calc
+    _ = x₂ := rfl
+    _ ≃ x₁ := Rel.symm ‹x₁ ≃ x₂›
+    _ ≤ v  := fir.lower
+  have : v < y := fir.upper
+  have : P v := fir.holds
+  have : FalseWithin P x₂ v := FalseWithin_substL ‹x₁ ≃ x₂› fir.fails
+  exact FirstInRange.mk v ‹x₂ ≤ v› ‹v < y› ‹P v› ‹FalseWithin P x₂ v›
+
+/-- TODO -/
+@[gcongr]
+def FirstInRange_substR
+    {α : Type} [LE α] [LT α] [EqvOp α] [Trans (β := α) (· < ·) (· ≃ ·) (· < ·)]
+    {P : α → Prop} {x y₁ y₂ : α}
+    : y₁ ≃ y₂ → FirstInRange P x y₁ → FirstInRange P x y₂
+    := by
+  intro (_ : y₁ ≃ y₂) (fir : FirstInRange P x y₁)
+  show FirstInRange P x y₂
+
+  let v := fir.val
+  have : x ≤ v := fir.lower
+  have : v < y₂ := calc
+    _ = v  := rfl
+    _ < y₁ := fir.upper
+    _ ≃ y₂ := ‹y₁ ≃ y₂›
+  have : P v := fir.holds
+  have : FalseWithin P x v := fir.fails
+  exact FirstInRange.mk v ‹x ≤ v› ‹v < y₂› ‹P v› ‹FalseWithin P x v›
 
 end Lean4Axiomatic.AA

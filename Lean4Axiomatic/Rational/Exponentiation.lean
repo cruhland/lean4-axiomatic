@@ -805,13 +805,6 @@ structure Sqrt2Approx (ε : ℚ) where
 variable [FloorCeil ℚ]
 
 /-- TODO -/
-def find_first_in_range
-    (P : ℤ → Prop) [DecidablePred P] [AA.Substitutive₁ P (· ≃ ·) (· → ·)]
-    (a b : ℤ) : FirstInRange P a b ⊕' FalseWithin P a b
-    := by
-  admit
-
-/-- TODO -/
 def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
   intro (_ : ε > 0)
   show Sqrt2Approx ε
@@ -838,8 +831,37 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
 
   let lower : ℤ := 0
   let upper := ceil (2/ε) + 1
+  have : 2/ε ≥ 0 :=
+    have : (0:ℚ) ≤ 2 := le_cases.mpr (Or.inl two_pos)
+
+    show 2/ε ≥ 0 from calc
+      _ = 2/ε     := rfl
+      _ ≥ 0/ε     := le_substN_div_gt_zero ‹ε > 0› ‹(0:ℚ) ≤ 2›
+      _ ≃ 0 * ε⁻¹ := div_mul_recip
+      _ ≃ 0       := mul_absorbL
+  have : 2/ε ≤ ceil (2/ε) := ceil_lb
+  have : lower ≤ ceil (2/ε) :=
+    have : (lower:ℚ) ≤ ceil (2/ε) := calc
+      _ = (lower:ℚ)  := rfl
+      _ = 0          := rfl
+      _ ≤ 2/ε        := ‹2/ε ≥ 0›
+      _ ≤ ceil (2/ε) := ‹2/ε ≤ ceil (2/ε)›
+
+    show lower ≤ ceil (2/ε) from
+      le_respects_from_integer.mpr ‹(lower:ℚ) ≤ ceil (2/ε)›
+  have : ceil (2/ε) < upper := calc
+    _ = ceil (2/ε)     := rfl
+    _ < ceil (2/ε) + 1 := Integer.lt_inc
+    _ = upper          := rfl
+
   let res : FirstInRange P lower upper ⊕' FalseWithin P lower upper :=
-    find_first_in_range P lower upper
+    have : lower ≤ upper := calc
+      _ = lower      := rfl
+      _ ≤ ceil (2/ε) := ‹lower ≤ ceil (2/ε)›
+      _ ≤ upper      := Integer.le_split.mpr (.inl ‹ceil (2/ε) < upper›)
+
+    show FirstInRange P lower upper ⊕' FalseWithin P lower upper from
+      Integer.find_first_in_range P ‹lower ≤ upper›
   match ‹FirstInRange P lower upper ⊕' FalseWithin P lower upper› with
   | .inl (fir : FirstInRange P lower upper) =>
     let a := fir.val - 1
@@ -919,16 +941,6 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
     show False
 
     have : (2:ℚ)^2 ≤ 2 :=
-      have : 2/ε ≥ 0 :=
-        have : (0:ℚ) ≤ 2 := le_cases.mpr (Or.inl two_pos)
-
-        show 2/ε ≥ 0 from calc
-          _ = 2/ε     := rfl
-          _ ≥ 0/ε     := le_substN_div_gt_zero ‹ε > 0› ‹(0:ℚ) ≤ 2›
-          _ ≃ 0 * ε⁻¹ := div_mul_recip
-          _ ≃ 0       := mul_absorbL
-      have : 2/ε ≤ ceil (2/ε) := ceil_lb
-
       have : (2/ε)^2 * ε^2 ≤ (ceil (2/ε))^2 * ε^2 :=
         have : (2/ε)^2 ≤ (ceil (2/ε))^2 :=
           pow_preserves_ge_nonneg ‹2/ε ≤ ceil (2/ε)› ‹2/ε ≥ 0›
@@ -937,17 +949,6 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
           le_substL_mul_pos ‹ε^2 > 0› ‹(2/ε)^2 ≤ (ceil (2/ε))^2›
 
       have : (ceil (2/ε))^2 * ε^2 ≤ 2/ε^2 * ε^2 :=
-        have : (lower:ℚ) ≤ ceil (2/ε) := calc
-          _ = (lower:ℚ)  := rfl
-          _ = 0          := rfl
-          _ ≤ 2/ε        := ‹2/ε ≥ 0›
-          _ ≤ ceil (2/ε) := ‹2/ε ≤ ceil (2/ε)›
-        have : lower ≤ ceil (2/ε) :=
-          le_respects_from_integer.mpr ‹(lower:ℚ) ≤ ceil (2/ε)›
-        have : ceil (2/ε) < upper := calc
-          _ = ceil (2/ε)     := rfl
-          _ < ceil (2/ε) + 1 := Integer.lt_inc
-          _ = upper          := rfl
         have : ¬P (ceil (2/ε)) := fw ‹lower ≤ ceil (2/ε)› ‹ceil (2/ε) < upper›
         have : ¬(2/ε^2 < (ceil (2/ε))^2) := ‹¬P (ceil (2/ε))›
         have : (ceil (2/ε))^2 ≤ 2/ε^2 :=

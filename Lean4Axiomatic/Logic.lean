@@ -193,6 +193,18 @@ def Either.swap {α β : Prop} : Either α β → Either β α
 | .inr (y : β) => .inl y
 
 /-- TODO -/
+def psum_map
+    {α₁ : Sort u} {α₂ : Sort v} {β₁ : Sort w} {β₂ : Sort x}
+    : (α₁ → α₂) → (β₁ → β₂) → α₁ ⊕' β₁ → α₂ ⊕' β₂
+    := by
+  intro (f : α₁ → α₂) (g : β₁ → β₂) (_ : α₁ ⊕' β₁)
+  show α₂ ⊕' β₂
+
+  exact match ‹α₁ ⊕' β₁› with
+  | .inl (x : α₁) => .inl (f x)
+  | .inr (y : β₁) => .inr (g y)
+
+/-- TODO -/
 def FalseWithin {α : Type} [LE α] [LT α] (P : α → Prop) (x z : α) : Prop :=
   {y : α} → x ≤ y → y < z → ¬P y
 

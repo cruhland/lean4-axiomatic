@@ -8,7 +8,8 @@ namespace Lean4Axiomatic.Integer
 open AA.TwoOfThree (oneAndThree twoAndThree)
 open Coe (coe)
 open Logic (
-  AP and_mapL and_mapR Either iff_subst_contra iff_subst_covar or_mapL or_mapR
+  AP and_mapL and_mapR Either FalseWithin FirstInRange iff_subst_contra
+  iff_subst_covar or_mapL or_mapR psum_map
 )
 open Natural (step)
 open Sequence (InfiniteDescent)
@@ -1660,107 +1661,6 @@ theorem mul_preserves_nonneg {a b : ℤ} : a ≥ 0 → b ≥ 0 → a * b ≥ 0 :
     _ ≥ 0 * b := by srw [‹a ≥ 0›]
     _ ≃ 0     := AA.absorbL
 
-/-- Induction on integers greater than or equivalent to a starting value. -/
-theorem ind_from
-    {motive : ℤ → Prop}
-    (motive_subst : {c₁ c₂ : ℤ} → c₁ ≃ c₂ → motive c₁ → motive c₂)
-    {a b : ℤ} (a_ge_b : a ≥ b)
-    (base : motive b) (next : {c : ℤ} → c ≥ b → motive c → motive (c + 1))
-    : motive a
-    := by
-  /- Proof strategy: natural number induction -/
-
-  -- Introduce induction variable
-  have : a - b ≥ 0 := ge_iff_diff_nonneg.mp ‹a ≥ b›
-  have (Exists.intro (n : ℕ) (_ : a - b ≃ n)) := ge_zero_eqv_nat ‹a - b ≥ 0›
-  have : n + b ≃ a := Rel.symm (subR_moveR_addR.mp ‹a - b ≃ n›)
-
-  -- Motive, base case, and successor case for the induction
-  let motive' := λ (k : ℕ) => motive (k + b)
-  have : motive (0 + b) := motive_subst (Rel.symm AA.identL) base
-  have zero_case : motive' 0 := ‹motive (0 + b)›
-  have step_case (m : ℕ) : motive' m → motive' (step m) := by
-    intro (_ : motive' m)
-    show motive' (step m)
-    have : m + b ≥ b := calc
-      _ = m + b     := rfl
-      _ ≥ (0:ℕ) + b := by srw [Natural.ge_zero]
-      _ ≃ b         := AA.identL
-    have : (m + b) + 1 ≃ step m + b := calc
-      _ = (m + b) + 1     := rfl
-      _ ≃ m + (b + 1)     := add_assoc
-      _ ≃ m + (1 + b)     := by srw [add_comm]
-      _ ≃ (m + (1:ℕ)) + b := Rel.symm add_assoc
-      _ ≃ step m + b      := by srw [←add_compat_nat, Natural.add_one_step]
-    have : motive (m + b)       := ‹motive' m›
-    have : motive ((m + b) + 1) := next ‹m + b ≥ b› this
-    have : motive (step m + b)  := motive_subst ‹(m + b) + 1 ≃ step m + b› this
-    have : motive' (step m)     := this
-    exact this
-
-  -- Perform the induction and convert the result into the expected form
-  have : motive' n := Natural.ind zero_case step_case n
-  have : motive (n + b) := ‹motive' n›
-  have : motive a := motive_subst ‹n + b ≃ a› ‹motive (n + b)›
-  exact this
-
-/--
-An integer sequence cannot decrease forever while staying above a fixed value.
--/
-theorem bounded_inf_desc_impossible
-    {s : Sequence ℤ} {b : ℤ} (bounded : (n : ℕ) → s[n] > b)
-    : ¬(InfiniteDescent s)
-    := by
-  intro (_ : InfiniteDescent s)
-  have desc_at (n : ℕ) : s[n] > s[step n] := ‹InfiniteDescent s› n
-  show False
-
-  have : s[0] > s[1] := calc
-    _ = s[0]      := rfl
-    _ > s[step 0] := desc_at 0
-    _ ≃ s[1]      := by srw [←Natural.literal_step]
-
-  have : s[0] ≤ s[1] :=
-    let motive x := (n : ℕ) → s[n] ≥ x
-
-    have motive_subst {x₁ x₂ : ℤ} : x₁ ≃ x₂ → motive x₁ → motive x₂ := by
-      intro (_ : x₁ ≃ x₂) (m₁ : (n : ℕ) → s[n] ≥ x₁) (n : ℕ)
-      show s[n] ≥ x₂
-
-      calc
-        _ = s[n] := rfl
-        _ ≥ x₁ := m₁ n
-        _ ≃ x₂ := ‹x₁ ≃ x₂›
-
-    have lower_bound_at_index (a : ℤ) : a ≥ b → (n : ℕ) → s[n] ≥ a := by
-      intro (_ : a ≥ b)
-      show motive a
-
-      apply ind_from motive_subst ‹a ≥ b›
-      case base =>
-        show motive b
-        intro (n : ℕ)
-        show s[n] ≥ b
-
-        have : s[n] > b := bounded n
-        have : s[n] ≥ b := ge_split.mpr (.inl ‹s[n] > b›)
-        exact this
-      case next =>
-        intro (c : ℤ) (_ : c ≥ b) (ih : (n : ℕ) → s[n] ≥ c) (n : ℕ)
-        show s[n] ≥ c + 1
-        have : s[n] > c := calc
-          _ = s[n]      := rfl
-          _ > s[step n] := desc_at n
-          _ ≥ c         := ih (step n)
-        have : s[n] ≥ c + 1 := lt_iff_le_incL.mp ‹s[n] > c›
-        exact this
-    have : s[0] > b := bounded 0
-    have : s[0] ≥ b := ge_split.mpr (.inl ‹s[0] > b›)
-    show s[0] ≤ s[1] from lower_bound_at_index s[0] ‹s[0] ≥ b› 1
-
-  have : False := le_gt_false ‹s[0] ≤ s[1]› ‹s[0] > s[1]›
-  exact this
-
 /--
 Compute whether two integers are in a _greater than or equivalent to_ relation.
 -/
@@ -1924,5 +1824,171 @@ def pos_to_natural {a : ℤ} : a > 0 → { n : ℕ // a ≃ n ∧ n > 0 } := by
     _ > 0     := ‹a > 0›
   have : n > 0 := from_natural_respects_lt.mpr ‹(n:ℤ) > 0›
   exact Subtype.mk n (And.intro ‹a ≃ n› ‹n > 0›)
+
+/-- Induction on integers greater than or equivalent to a starting value. -/
+def ind_from
+    [Natural.Induction.{u} ℕ] {motive : ℤ → Sort u}
+    (motive_subst : {c₁ c₂ : ℤ} → c₁ ≃ c₂ → motive c₁ → motive c₂)
+    {a b : ℤ} (a_ge_b : a ≥ b)
+    (base : motive b) (next : {c : ℤ} → c ≥ b → motive c → motive (c + 1))
+    : motive a
+    := by
+  /- Proof strategy: natural number induction -/
+
+  -- Introduce induction variable
+  have : a - b ≥ 0 := ge_iff_diff_nonneg.mp ‹a ≥ b›
+  have (Subtype.mk (n : ℕ) (_ : a - b ≃ n)) := nonneg_to_natural ‹a - b ≥ 0›
+  have : n + b ≃ a := Rel.symm (subR_moveR_addR.mp ‹a - b ≃ n›)
+
+  -- Motive, base case, and successor case for the induction
+  let motive' := λ (k : ℕ) => motive (k + b)
+  have : motive (0 + b) := motive_subst (Rel.symm AA.identL) base
+  have zero_case : motive' 0 := ‹motive (0 + b)›
+  have step_case (m : ℕ) : motive' m → motive' (step m) := by
+    intro (_ : motive' m)
+    show motive' (step m)
+    have : m + b ≥ b := calc
+      _ = m + b     := rfl
+      _ ≥ (0:ℕ) + b := by srw [Natural.ge_zero]
+      _ ≃ b         := AA.identL
+    have : (m + b) + 1 ≃ step m + b := calc
+      _ = (m + b) + 1     := rfl
+      _ ≃ m + (b + 1)     := add_assoc
+      _ ≃ m + (1 + b)     := by srw [add_comm]
+      _ ≃ (m + (1:ℕ)) + b := Rel.symm add_assoc
+      _ ≃ step m + b      := by srw [←add_compat_nat, Natural.add_one_step]
+    have : motive (m + b)       := ‹motive' m›
+    have : motive ((m + b) + 1) := next ‹m + b ≥ b› this
+    have : motive (step m + b)  := motive_subst ‹(m + b) + 1 ≃ step m + b› this
+    have : motive' (step m)     := this
+    exact this
+
+  -- Perform the induction and convert the result into the expected form
+  have : motive' n := Natural.ind zero_case step_case n
+  have : motive (n + b) := ‹motive' n›
+  have : motive a := motive_subst ‹n + b ≃ a› ‹motive (n + b)›
+  exact this
+
+/--
+An integer sequence cannot decrease forever while staying above a fixed value.
+-/
+theorem bounded_inf_desc_impossible
+    {s : Sequence ℤ} {b : ℤ} (bounded : (n : ℕ) → s[n] > b)
+    : ¬(InfiniteDescent s)
+    := by
+  intro (_ : InfiniteDescent s)
+  have desc_at (n : ℕ) : s[n] > s[step n] := ‹InfiniteDescent s› n
+  show False
+
+  have : s[0] > s[1] := calc
+    _ = s[0]      := rfl
+    _ > s[step 0] := desc_at 0
+    _ ≃ s[1]      := by srw [←Natural.literal_step]
+
+  have : s[0] ≤ s[1] :=
+    let motive x := (n : ℕ) → s[n] ≥ x
+
+    have motive_subst {x₁ x₂ : ℤ} : x₁ ≃ x₂ → motive x₁ → motive x₂ := by
+      intro (_ : x₁ ≃ x₂) (m₁ : (n : ℕ) → s[n] ≥ x₁) (n : ℕ)
+      show s[n] ≥ x₂
+
+      calc
+        _ = s[n] := rfl
+        _ ≥ x₁ := m₁ n
+        _ ≃ x₂ := ‹x₁ ≃ x₂›
+
+    have lower_bound_at_index (a : ℤ) : a ≥ b → (n : ℕ) → s[n] ≥ a := by
+      intro (_ : a ≥ b)
+      show motive a
+
+      apply ind_from motive_subst ‹a ≥ b›
+      case base =>
+        show motive b
+        intro (n : ℕ)
+        show s[n] ≥ b
+
+        have : s[n] > b := bounded n
+        have : s[n] ≥ b := ge_split.mpr (.inl ‹s[n] > b›)
+        exact this
+      case next =>
+        intro (c : ℤ) (_ : c ≥ b) (ih : (n : ℕ) → s[n] ≥ c) (n : ℕ)
+        show s[n] ≥ c + 1
+        have : s[n] > c := calc
+          _ = s[n]      := rfl
+          _ > s[step n] := desc_at n
+          _ ≥ c         := ih (step n)
+        have : s[n] ≥ c + 1 := lt_iff_le_incL.mp ‹s[n] > c›
+        exact this
+    have : s[0] > b := bounded 0
+    have : s[0] ≥ b := ge_split.mpr (.inl ‹s[0] > b›)
+    show s[0] ≤ s[1] from lower_bound_at_index s[0] ‹s[0] ≥ b› 1
+
+  have : False := le_gt_false ‹s[0] ≤ s[1]› ‹s[0] > s[1]›
+  exact this
+
+/-- TODO -/
+def find_first_in_range
+    (P : ℤ → Prop) [DecidablePred P] [AA.Substitutive₁ P (· ≃ ·) (· → ·)]
+    {a b : ℤ} : a ≤ b → FirstInRange P a b ⊕' FalseWithin P a b
+    := by
+  intro (_ : a ≤ b)
+  let motive : ℤ → Type := λ x => FirstInRange P a x ⊕' FalseWithin P a x
+  have motive_subst {x₁ x₂ : ℤ} : x₁ ≃ x₂ → motive x₁ → motive x₂ := by
+    intro (_ : x₁ ≃ x₂) (_ : motive x₁)
+    show motive x₂
+
+    have : FirstInRange P a x₁ ⊕' FalseWithin P a x₁ := ‹motive x₁›
+    have f : FirstInRange P a x₁ → FirstInRange P a x₂ :=
+      AA.FirstInRange_substR ‹x₁ ≃ x₂›
+    have g : FalseWithin P a x₁ → FalseWithin P a x₂ :=
+      AA.FalseWithin_substR ‹x₁ ≃ x₂›
+    have : FirstInRange P a x₂ ⊕' FalseWithin P a x₂ :=
+      psum_map f g ‹FirstInRange P a x₁ ⊕' FalseWithin P a x₁›
+    have : motive x₂ := ‹FirstInRange P a x₂ ⊕' FalseWithin P a x₂›
+    exact this
+  apply ind_from motive_subst ‹a ≤ b›
+  case base =>
+    show FirstInRange P a a ⊕' FalseWithin P a a
+
+    have : FalseWithin P a a := by
+      intro (m : ℤ) (_ : a ≤ m) (_ : m < a) (_ : P m)
+      show False
+      exact le_gt_false ‹a ≤ m› ‹a > m›
+    exact .inr ‹FalseWithin P a a›
+  case next =>
+    intro (m : ℤ) (_ : a ≤ m) (ih : FirstInRange P a m ⊕' FalseWithin P a m)
+    show FirstInRange P a (m + 1) ⊕' FalseWithin P a (m + 1)
+
+    match ih with
+    | .inl (fir : FirstInRange P a m) =>
+      let k := fir.val
+
+      have : k < m + 1 := calc
+        _ = k     := rfl
+        _ < m     := fir.upper
+        _ < m + 1 := lt_inc
+
+      let fir' := FirstInRange.mk k fir.lower ‹k < m + 1› fir.holds fir.fails
+      exact .inl fir'
+    | .inr (fw : FalseWithin P a m) =>
+      if P m then
+        have : m < m + 1 := lt_inc
+        exact .inl (FirstInRange.mk m ‹a ≤ m› ‹m < m + 1› ‹P m› fw)
+      else
+        have : FalseWithin P a (m + 1) := by
+          intro (n : ℤ) (_ : a ≤ n) (_ : n < m + 1) (_ : P n)
+          show False
+
+          have : n ≤ m := le_iff_lt_incR.mpr ‹n < m + 1›
+          have : n < m ∨ n ≃ m := le_split.mp ‹n ≤ m›
+          match ‹n < m ∨ n ≃ m› with
+          | .inl (_ : n < m) =>
+            have : ¬P n := ‹FalseWithin P a m› ‹a ≤ n› ‹n < m›
+            exact absurd ‹P n› ‹¬P n›
+          | .inr (_ : n ≃ m) =>
+            have : P m := AA.substFn ‹n ≃ m› ‹P n›
+            exact absurd ‹P m› ‹¬P m›
+
+        exact .inr ‹FalseWithin P a (m + 1)›
 
 end Lean4Axiomatic.Integer
