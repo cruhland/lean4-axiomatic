@@ -269,7 +269,7 @@ rational numbers is decidable, so we can eliminate the double negation. In the
 reverse direction, obtain the sign value of _less than or equivalent to_ and
 reach a contradiction with the other hypothesis.
 -/
-theorem neg_le_sgn {p q : ℚ} : ¬(p ≤ q) ↔ sgn (p - q) ≃ 1 := by
+theorem not_le_sgn {p q : ℚ} : ¬(p ≤ q) ↔ sgn (p - q) ≃ 1 := by
   apply Iff.intro
   case mp =>
     intro (_ : ¬(p ≤ q))
@@ -283,17 +283,35 @@ theorem neg_le_sgn {p q : ℚ} : ¬(p ≤ q) ↔ sgn (p - q) ≃ 1 := by
     have : sgn (p - q) ≄ 1 := le_sgn.mp ‹p ≤ q›
     exact absurd ‹sgn (p - q) ≃ 1› ‹sgn (p - q) ≄ 1›
 
+/-- TODO -/
+theorem not_lt_sgn {p q : ℚ} : ¬(p < q) ↔ sgn (p - q) ≄ -1 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : ¬(p < q))
+    show sgn (p - q) ≄ -1
+    have : ¬(sgn (p - q) ≃ -1) := mt lt_sgn.mpr ‹¬(p < q)›
+    have : sgn (p - q) ≄ -1 := ‹¬(sgn (p - q) ≃ -1)›
+    exact this
+  case mpr =>
+    intro (_ : sgn (p - q) ≄ -1) (_ : p < q)
+    show False
+    have : sgn (p - q) ≃ -1 := lt_sgn.mp ‹p < q›
+    exact absurd ‹sgn (p - q) ≃ -1› ‹sgn (p - q) ≄ -1›
+
 /--
 The negation of the _greater than or equivalent to_ relation is the same as the
 _less than_ relation.
 -/
 theorem not_ge_iff_lt {p q : ℚ} : ¬(p ≥ q) ↔ p < q := calc
   _ ↔ ¬(p ≥ q)        := Iff.rfl
-  _ ↔ sgn (q - p) ≃ 1 := neg_le_sgn
+  _ ↔ sgn (q - p) ≃ 1 := not_le_sgn
   _ ↔ p < q           := gt_sgn.symm
 
 /-- TODO -/
-theorem not_gt_iff_le {p q : ℚ} : ¬(p > q) ↔ p ≤ q := sorry
+theorem not_gt_iff_le {p q : ℚ} : ¬(p > q) ↔ p ≤ q := calc
+  _ ↔ ¬(p > q)         := Iff.rfl
+  _ ↔ sgn (q - p) ≄ -1 := not_lt_sgn
+  _ ↔ p ≤ q            := ge_sgn.symm
 
 /--
 The _less than_ relation on rational numbers is irreflexive.
@@ -1160,8 +1178,18 @@ theorem div_preserves_pos
     {p q : ℚ} (p_pos : p > 0) (q_pos : q > 0)
     : have : AP (q ≄ 0) := AP.mk (pos_nonzero ‹q > 0›)
       p/q > 0
-    :=
-  sorry
+    := by
+  intro (_ : AP (q ≄ 0))
+  show p/q > 0
+
+  have : p * q > 0 := mul_preserves_pos ‹p > 0› ‹q > 0›
+  have : sgn (p/q) ≃ 1 := calc
+    _ = sgn (p/q)     := rfl
+    _ ≃ sgn p * sgn q := sgn_div
+    _ ≃ sgn (p * q)   := Rel.symm sgn_compat_mul
+    _ ≃ 1             := gt_zero_sgn.mp ‹p * q > 0›
+  have : p/q > 0 := gt_zero_sgn.mpr ‹sgn (p/q) ≃ 1›
+  exact this
 
 /--
 The comparison of reciprocals of two rational numbers gives the opposite result
@@ -1278,7 +1306,7 @@ instance le_decidable {p q : ℚ} : Decidable (p ≤ q) := by
   have : Decidable (sgn (p - q) ≃ 1) := Integer.eqv? (sgn (p - q)) 1
   match this with
   | isTrue (_ : sgn (p - q) ≃ 1) =>
-    have : ¬(p ≤ q) := neg_le_sgn.mpr ‹sgn (p - q) ≃ 1›
+    have : ¬(p ≤ q) := not_le_sgn.mpr ‹sgn (p - q) ≃ 1›
     have : Decidable (p ≤ q) := isFalse this
     exact this
   | isFalse (_ : sgn (p - q) ≄ 1) =>
