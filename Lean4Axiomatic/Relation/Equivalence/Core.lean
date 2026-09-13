@@ -1,6 +1,5 @@
 import Lean4Axiomatic.Function.Core
 import Lean4Axiomatic.Operators
-import Mathlib.Tactic.GCongr
 
 /-!
 # Equivalence relations
