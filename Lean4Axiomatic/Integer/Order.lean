@@ -1926,12 +1926,19 @@ theorem bounded_inf_desc_impossible
   have : False := le_gt_false ‹s[0] ≤ s[1]› ‹s[0] > s[1]›
   exact this
 
-/-- TODO -/
+/--
+Search an interval for the smallest integer satisfying a decidable predicate.
+
+Return either (1) the integer along with proof that it's the smallest, or (2)
+proof that there's no integer satisfying the predicate in the interval.
+-/
 def find_first_in_range
     (P : ℤ → Prop) [DecidablePred P] [AA.Substitutive₁ P (· ≃ ·) (· → ·)]
     {a b : ℤ} : a ≤ b → FirstInRange P a b ⊕' FalseWithin P a b
     := by
   intro (_ : a ≤ b)
+  show FirstInRange P a b ⊕' FalseWithin P a b
+
   let motive : ℤ → Type := λ x => FirstInRange P a x ⊕' FalseWithin P a x
   have motive_subst {x₁ x₂ : ℤ} : x₁ ≃ x₂ → motive x₁ → motive x₂ := by
     intro (_ : x₁ ≃ x₂) (_ : motive x₁)
@@ -1946,49 +1953,46 @@ def find_first_in_range
       psum_map f g ‹FirstInRange P a x₁ ⊕' FalseWithin P a x₁›
     have : motive x₂ := ‹FirstInRange P a x₂ ⊕' FalseWithin P a x₂›
     exact this
+
   apply ind_from motive_subst ‹a ≤ b›
   case base =>
     show FirstInRange P a a ⊕' FalseWithin P a a
 
     have : FalseWithin P a a := by
-      intro (m : ℤ) (_ : a ≤ m) (_ : m < a) (_ : P m)
+      intro (b' : ℤ) (_ : a ≤ b') (_ : b' < a) (_ : P b')
       show False
-      exact le_gt_false ‹a ≤ m› ‹a > m›
+      exact le_gt_false ‹a ≤ b'› ‹a > b'›
     exact .inr ‹FalseWithin P a a›
   case next =>
-    intro (m : ℤ) (_ : a ≤ m) (ih : FirstInRange P a m ⊕' FalseWithin P a m)
-    show FirstInRange P a (m + 1) ⊕' FalseWithin P a (m + 1)
+    intro (b' : ℤ) (_ : a ≤ b') (ih : FirstInRange P a b' ⊕' FalseWithin P a b')
+    show FirstInRange P a (b' + 1) ⊕' FalseWithin P a (b' + 1)
 
     match ih with
-    | .inl (fir : FirstInRange P a m) =>
-      let k := fir.val
-
-      have : k < m + 1 := calc
-        _ = k     := rfl
-        _ < m     := fir.upper
-        _ < m + 1 := lt_inc
-
-      let fir' := FirstInRange.mk k fir.lower ‹k < m + 1› fir.holds fir.fails
-      exact .inl fir'
-    | .inr (fw : FalseWithin P a m) =>
-      if P m then
-        have : m < m + 1 := lt_inc
-        exact .inl (FirstInRange.mk m ‹a ≤ m› ‹m < m + 1› ‹P m› fw)
+    | .inl (fir : FirstInRange P a b') =>
+      have : fir.val < b' + 1 := calc
+        _ = fir.val := rfl
+        _ < b'      := fir.upper
+        _ < b' + 1  := lt_inc
+      exact .inl { fir with upper := ‹fir.val < b' + 1› }
+    | .inr (fw : FalseWithin P a b') =>
+      if P b' then
+        have : b' < b' + 1 := lt_inc
+        exact .inl (FirstInRange.mk b' ‹a ≤ b'› ‹b' < b' + 1› ‹P b'› fw)
       else
-        have : FalseWithin P a (m + 1) := by
-          intro (n : ℤ) (_ : a ≤ n) (_ : n < m + 1) (_ : P n)
+        have : FalseWithin P a (b' + 1) := by
+          intro (c : ℤ) (_ : a ≤ c) (_ : c < b' + 1) (_ : P c)
           show False
 
-          have : n ≤ m := le_iff_lt_incR.mpr ‹n < m + 1›
-          have : n < m ∨ n ≃ m := le_split.mp ‹n ≤ m›
-          match ‹n < m ∨ n ≃ m› with
-          | .inl (_ : n < m) =>
-            have : ¬P n := ‹FalseWithin P a m› ‹a ≤ n› ‹n < m›
-            exact absurd ‹P n› ‹¬P n›
-          | .inr (_ : n ≃ m) =>
-            have : P m := AA.substFn ‹n ≃ m› ‹P n›
-            exact absurd ‹P m› ‹¬P m›
+          have : c ≤ b' := le_iff_lt_incR.mpr ‹c < b' + 1›
+          have : c < b' ∨ c ≃ b' := le_split.mp ‹c ≤ b'›
+          match ‹c < b' ∨ c ≃ b'› with
+          | .inl (_ : c < b') =>
+            have : ¬P c := ‹FalseWithin P a b'› ‹a ≤ c› ‹c < b'›
+            exact absurd ‹P c› ‹¬P c›
+          | .inr (_ : c ≃ b') =>
+            have : P b' := AA.substFn ‹c ≃ b'› ‹P c›
+            exact absurd ‹P b'› ‹¬P b'›
 
-        exact .inr ‹FalseWithin P a (m + 1)›
+        exact .inr ‹FalseWithin P a (b' + 1)›
 
 end Lean4Axiomatic.Integer

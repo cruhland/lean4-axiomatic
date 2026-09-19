@@ -200,14 +200,18 @@ theorem sub_assoc_addR {a b c : ℤ} : (a - b) + c ≃ a + (c - b) := calc
   _ ≃ a + (c + -b) := by srw [AA.comm]
   _ ≃ a + (c - b)  := by srw [←sub_defn]
 
-/-- TODO -/
+/--
+First adding, then subtracting the same integer from another, does nothing.
+-/
 theorem add_sub_cancel {a b : ℤ} : a + b - b ≃ a := calc
   _ = a + b - b   := rfl
   _ ≃ a + (b - b) := sub_assoc_addL
   _ ≃ a + 0       := by srw [sub_same]
   _ ≃ a           := AA.identR
 
-/-- TODO -/
+/--
+First subtracting, then adding the same integer to another, does nothing.
+-/
 theorem sub_add_cancel {a b : ℤ} : a - b + b ≃ a := calc
   _ = a - b + b   := rfl
   _ ≃ a + (b - b) := sub_assoc_addR
