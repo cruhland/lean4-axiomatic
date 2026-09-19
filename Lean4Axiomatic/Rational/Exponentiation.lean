@@ -470,17 +470,17 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
       have : AP (b'^2 ≄ 0) := AP.mk this
       let a'q : ℚ := a'; let b'q : ℚ := b'
       show ((a'^2:ℤ):ℚ) ≃ ((2 * b'^2 : ℤ):ℚ) from calc
-        _ = ((a'^2:ℤ):ℚ)                := rfl
-        _ ≃ (a':ℚ)^2                    := pow_scompatL_from_integer
-        _ = a'q^2                       := rfl
-        _ ≃ a'q^2/b'q^2 * b'q^2         := eqv_symm div_mul_cancelR
-        _ ≃ (a'q/b'q)^2 * b'q^2         := by srw [←pow_distribR_div]
-        _ = ((a':ℚ)/b')^2 * b'q^2       := rfl
-        _ ≃ p^2 * b'q^2                 := by srw [←‹p ≃ a'/b'›]
-        _ ≃ 2 * b'q^2                   := by srw [‹p^2 ≃ 2›]
-        _ = 2 * (b':ℚ)^2                := rfl
-        _ ≃ (2:ℚ) * ((b'^2:ℤ):ℚ)        := by srw [←pow_scompatL_from_integer]
-        _ ≃ ((2 * b'^2 : ℤ):ℚ)          := eqv_symm mul_compat_from_integer
+        _ = ((a'^2:ℤ):ℚ)          := rfl
+        _ ≃ (a':ℚ)^2              := pow_scompatL_from_integer
+        _ = a'q^2                 := rfl
+        _ ≃ a'q^2/b'q^2 * b'q^2   := eqv_symm div_mul_cancel
+        _ ≃ (a'q/b'q)^2 * b'q^2   := by srw [←pow_distribR_div]
+        _ = ((a':ℚ)/b')^2 * b'q^2 := rfl
+        _ ≃ p^2 * b'q^2           := by srw [←‹p ≃ a'/b'›]
+        _ ≃ 2 * b'q^2             := by srw [‹p^2 ≃ 2›]
+        _ = 2 * (b':ℚ)^2          := rfl
+        _ ≃ (2:ℚ) * ((b'^2:ℤ):ℚ)  := by srw [←pow_scompatL_from_integer]
+        _ ≃ ((2 * b'^2 : ℤ):ℚ)    := eqv_symm mul_compat_from_integer
 
     have : a > 0 :=
       have : a'^2 ≃ 2 * b'^2 :=
@@ -917,7 +917,7 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
         _ = (a * ε)^2   := rfl
         _ ≃ a^2 * ε^2   := Natural.pow_distribR_mul
         _ ≤ 2/ε^2 * ε^2 := le_substL_mul_pos ‹ε^2 > 0› ‹a^2 ≤ 2/ε^2›
-        _ ≃ 2           := div_mul_cancelR
+        _ ≃ 2           := div_mul_cancel
       have : (a * ε)^2 < 2 ∨ (a * ε)^2 ≃ 2 := le_cases.mp ‹(a * ε)^2 ≤ 2›
       have : (a * ε)^2 < 2 := this.resolve_right sqrt2_irrational
       show approx^2 < 2 from ‹(a * ε)^2 < 2›
@@ -933,7 +933,7 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
         lt_substL_mul_pos ‹ε^2 > 0› ‹2/ε^2 < (a + 1 : ℤ)^2›
       have : 2 < (a * ε + ε)^2 := calc
         _ = (2:ℚ)               := rfl
-        _ ≃ (2/ε^2) * ε^2       := eqv_symm div_mul_cancelR
+        _ ≃ (2/ε^2) * ε^2       := eqv_symm div_mul_cancel
         _ < (a + 1 : ℤ)^2 * ε^2 := ‹(2/ε^2) * ε^2 < (a + 1 : ℤ)^2 * ε^2›
         _ ≃ (a + (1:ℤ))^2 * ε^2 := by srw [add_compat_from_integer]
         _ = (a + 1)^2 * ε^2     := rfl
@@ -966,12 +966,12 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
           le_substL_mul_pos ‹ε^2 > 0› ‹(ceil (2/ε))^2 ≤ 2/ε^2›
 
       show (2:ℚ)^2 ≤ 2 from calc
-        _ = (2:ℚ)^2               := rfl
-        _ ≃ 2^2/ε^2 * ε^2         := eqv_symm div_mul_cancelR
-        _ ≃ (2/ε)^2 * ε^2         := by srw [←pow_distribR_div]
-        _ ≤ (ceil (2/ε))^2 * ε^2  := ‹(2/ε)^2 * ε^2 ≤ (ceil (2/ε))^2 * ε^2›
-        _ ≤ 2/ε^2 * ε^2           := ‹(ceil (2/ε))^2 * ε^2 ≤ 2/ε^2 * ε^2›
-        _ ≃ 2                     := div_mul_cancelR
+        _ = (2:ℚ)^2              := rfl
+        _ ≃ 2^2/ε^2 * ε^2        := eqv_symm div_mul_cancel
+        _ ≃ (2/ε)^2 * ε^2        := by srw [←pow_distribR_div]
+        _ ≤ (ceil (2/ε))^2 * ε^2 := ‹(2/ε)^2 * ε^2 ≤ (ceil (2/ε))^2 * ε^2›
+        _ ≤ 2/ε^2 * ε^2          := ‹(ceil (2/ε))^2 * ε^2 ≤ 2/ε^2 * ε^2›
+        _ ≃ 2                    := div_mul_cancel
 
     have : (2:ℚ)^2 > 2 := calc
       _ = (2:ℚ)^2 := rfl
