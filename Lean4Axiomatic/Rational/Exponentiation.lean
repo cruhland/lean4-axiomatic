@@ -791,20 +791,28 @@ theorem pow_preserves_ge_nonneg
     have : p^n ≥ q^n := ge_cases.mpr (Or.inr ‹p^n ≃ q^n›)
     exact this
 
-/-- TODO -/
+/--
+A rational approximation to the square root of two.
+
+The `ε` argument gives the maximum distance of the approximation from the true
+value.
+-/
 structure Sqrt2Approx (ε : ℚ) where
-  /-- TODO -/
+  /-- The approximated value. -/
   val : ℚ
 
-  /-- TODO -/
+  /-- The approximation is less than the square root of two. -/
   lower : val^2 < 2
 
-  /-- TODO -/
+  /-- The approximation is within `ε` of the square root of two. -/
   upper : 2 < (val + ε)^2
 
 variable [FloorCeil ℚ]
 
-/-- TODO -/
+/--
+Find a rational approximation to the square root of two, no more than `ε` away
+from the true value.
+-/
 def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
   intro (_ : ε > 0)
   show Sqrt2Approx ε

@@ -5,7 +5,7 @@ import Lean4Axiomatic.Rational.Sign
 
 namespace Lean4Axiomatic.Rational
 
-open Logic (AP iff_subst_covar or_mapL or_mapR)
+open Logic (AP iff_subst_contra iff_subst_covar or_mapL or_mapR)
 open Signed (sgn)
 
 /-! ## Axioms -/
@@ -256,61 +256,22 @@ theorem order_trichotomy
   exact AA.ExactlyOneOfThree.mk atLeastOne atMostOne
 
 /--
-Convert bidirectionally between a _not less than or equivalent to_ relation of
-two rational numbers and a fact about their difference's sign value.
-
-**Property intuition**: Another way of saying "not less than or equivalent to"
-is "greater than".
-
-**Proof intuition**: In the forward direction, _less than or equivalent to_ is
-defined as a sign value not equivalent to one, so the logical negation of this
-is a double negation of a sign value equivalent to one. But equivalence on
-rational numbers is decidable, so we can eliminate the double negation. In the
-reverse direction, obtain the sign value of _less than or equivalent to_ and
-reach a contradiction with the other hypothesis.
--/
-theorem not_le_sgn {p q : ℚ} : ¬(p ≤ q) ↔ sgn (p - q) ≃ 1 := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : ¬(p ≤ q))
-    show sgn (p - q) ≃ 1
-    have : ¬(sgn (p - q) ≄ 1) := mt le_sgn.mpr ‹¬(p ≤ q)›
-    have : sgn (p - q) ≃ 1 := Decidable.of_not_not this
-    exact this
-  case mpr =>
-    intro (_ : sgn (p - q) ≃ 1) (_ : p ≤ q)
-    show False
-    have : sgn (p - q) ≄ 1 := le_sgn.mp ‹p ≤ q›
-    exact absurd ‹sgn (p - q) ≃ 1› ‹sgn (p - q) ≄ 1›
-
-/-- TODO -/
-theorem not_lt_sgn {p q : ℚ} : ¬(p < q) ↔ sgn (p - q) ≄ -1 := by
-  apply Iff.intro
-  case mp =>
-    intro (_ : ¬(p < q))
-    show sgn (p - q) ≄ -1
-    have : ¬(sgn (p - q) ≃ -1) := mt lt_sgn.mpr ‹¬(p < q)›
-    have : sgn (p - q) ≄ -1 := ‹¬(sgn (p - q) ≃ -1)›
-    exact this
-  case mpr =>
-    intro (_ : sgn (p - q) ≄ -1) (_ : p < q)
-    show False
-    have : sgn (p - q) ≃ -1 := lt_sgn.mp ‹p < q›
-    exact absurd ‹sgn (p - q) ≃ -1› ‹sgn (p - q) ≄ -1›
-
-/--
-The negation of the _greater than or equivalent to_ relation is the same as the
-_less than_ relation.
+If one rational is not _greater than or equivalent to_ another, that is the
+same as it being _less than_ the other.
 -/
 theorem not_ge_iff_lt {p q : ℚ} : ¬(p ≥ q) ↔ p < q := calc
-  _ ↔ ¬(p ≥ q)        := Iff.rfl
-  _ ↔ sgn (q - p) ≃ 1 := not_le_sgn
-  _ ↔ p < q           := gt_sgn.symm
+  _ ↔ ¬(p ≥ q)           := Iff.rfl
+  _ ↔ ¬(sgn (q - p) ≄ 1) := iff_subst_contra mt le_sgn
+  _ ↔ sgn (q - p) ≃ 1    := Decidable.not_not
+  _ ↔ p < q              := gt_sgn.symm
 
-/-- TODO -/
+/--
+If one rational is not _greater than_ another, that is the same as it being
+_less than or equivalent to_ the other.
+-/
 theorem not_gt_iff_le {p q : ℚ} : ¬(p > q) ↔ p ≤ q := calc
   _ ↔ ¬(p > q)         := Iff.rfl
-  _ ↔ sgn (q - p) ≄ -1 := not_lt_sgn
+  _ ↔ sgn (q - p) ≄ -1 := iff_subst_contra mt lt_sgn
   _ ↔ p ≤ q            := ge_sgn.symm
 
 /--
@@ -1173,7 +1134,7 @@ theorem sgn_sqr_nonneg {p : ℚ} : (sgn p)^2 ≃ sgn p ↔ p ≥ 0 := calc
 
 variable [Reciprocation ℚ] [Division ℚ]
 
-/-- TODO -/
+/-- The result of dividing two positive rational numbers is also positive. -/
 theorem div_preserves_pos
     {p q : ℚ} (p_pos : p > 0) (q_pos : q > 0)
     : have : AP (q ≄ 0) := AP.mk (pos_nonzero ‹q > 0›)
@@ -1306,12 +1267,13 @@ instance le_decidable {p q : ℚ} : Decidable (p ≤ q) := by
   have : Decidable (sgn (p - q) ≃ 1) := Integer.eqv? (sgn (p - q)) 1
   match this with
   | isTrue (_ : sgn (p - q) ≃ 1) =>
-    have : ¬(p ≤ q) := not_le_sgn.mpr ‹sgn (p - q) ≃ 1›
-    have : Decidable (p ≤ q) := isFalse this
+    have : ¬(sgn (p - q) ≄ 1) := not_not_intro ‹sgn (p - q) ≃ 1›
+    have : ¬(p ≤ q) := mt le_sgn.mp ‹¬(sgn (p - q) ≄ 1)›
+    have : Decidable (p ≤ q) := isFalse ‹¬(p ≤ q)›
     exact this
   | isFalse (_ : sgn (p - q) ≄ 1) =>
     have : p ≤ q := le_sgn.mpr ‹sgn (p - q) ≄ 1›
-    have : Decidable (p ≤ q) := isTrue this
+    have : Decidable (p ≤ q) := isTrue ‹p ≤ q›
     exact this
 
 /--
