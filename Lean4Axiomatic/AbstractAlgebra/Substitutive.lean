@@ -998,7 +998,10 @@ def cancelR_from_cancelL
   have : rβ (f x y₁) (f x y₂) := AA.substRFn AA.comm ‹rβ (f x y₁) (f y₂ x)›
   exact AA.cancelLC ‹C x› ‹rβ (f x y₁) (f x y₂)›
 
-/-- TODO -/
+/--
+`FalseWithin` gives the same result on equivalent expressions of its interval's
+lower endpoint.
+-/
 @[gcongr]
 theorem FalseWithin_substL
     {α : Type} [LE α] [LT α] [EqvOp α] [Trans (β := α) (· ≃ ·) (· ≤ ·) (· ≤ ·)]
@@ -1023,7 +1026,10 @@ theorem FalseWithin_substL
   have : FalseWithin P x₂ z := f₂
   exact ‹FalseWithin P x₂ z›
 
-/-- TODO -/
+/--
+`FalseWithin` gives the same result on equivalent expressions of its interval's
+upper endpoint.
+-/
 @[gcongr]
 theorem FalseWithin_substR
     {α : Type} [LE α] [LT α] [EqvOp α] [Trans (β := α) (· < ·) (· ≃ ·) (· < ·)]
@@ -1048,7 +1054,10 @@ theorem FalseWithin_substR
   have : FalseWithin P x z₂ := f₂
   exact ‹FalseWithin P x z₂›
 
-/-- TODO -/
+/--
+`FirstInRange` gives the same result on equivalent expressions of its
+interval's lower endpoint.
+-/
 @[gcongr]
 def FirstInRange_substL
     {α : Type} [LE α] [LT α] [EqvOp α] [Trans (β := α) (· ≃ ·) (· ≤ ·) (· ≤ ·)]
@@ -1068,7 +1077,10 @@ def FirstInRange_substL
   have : FalseWithin P x₂ v := FalseWithin_substL ‹x₁ ≃ x₂› fir.fails
   exact FirstInRange.mk v ‹x₂ ≤ v› ‹v < y› ‹P v› ‹FalseWithin P x₂ v›
 
-/-- TODO -/
+/--
+`FirstInRange` gives the same result on equivalent expressions of its
+interval's upper endpoint.
+-/
 @[gcongr]
 def FirstInRange_substR
     {α : Type} [LE α] [LT α] [EqvOp α] [Trans (β := α) (· < ·) (· ≃ ·) (· < ·)]

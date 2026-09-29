@@ -9,7 +9,7 @@ open AA.TwoOfThree (oneAndThree twoAndThree)
 open Coe (coe)
 open Logic (
   AP and_mapL and_mapR Either FalseWithin FirstInRange iff_subst_contra
-  iff_subst_covar or_mapL or_mapR psum_map
+  iff_subst_covar or_mapL or_mapR
 )
 open Natural (step)
 open Sequence (InfiniteDescent)
@@ -1945,12 +1945,10 @@ def find_first_in_range
     show motive x₂
 
     have : FirstInRange P a x₁ ⊕' FalseWithin P a x₁ := ‹motive x₁›
-    have f : FirstInRange P a x₁ → FirstInRange P a x₂ :=
-      AA.FirstInRange_substR ‹x₁ ≃ x₂›
-    have g : FalseWithin P a x₁ → FalseWithin P a x₂ :=
-      AA.FalseWithin_substR ‹x₁ ≃ x₂›
+    have : FirstInRange P a x₂ ⊕' FalseWithin P a x₁ :=
+      by prw [‹x₁ ≃ x₂›] ‹FirstInRange P a x₁ ⊕' FalseWithin P a x₁›
     have : FirstInRange P a x₂ ⊕' FalseWithin P a x₂ :=
-      psum_map f g ‹FirstInRange P a x₁ ⊕' FalseWithin P a x₁›
+      by prw [‹x₁ ≃ x₂›] ‹FirstInRange P a x₂ ⊕' FalseWithin P a x₁›
     have : motive x₂ := ‹FirstInRange P a x₂ ⊕' FalseWithin P a x₂›
     exact this
 
