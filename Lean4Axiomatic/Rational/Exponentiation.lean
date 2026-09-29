@@ -294,14 +294,14 @@ theorem numer_gt_denom {r : Sqrt2Ratio ℤ} : r.numer > r.denom := by
       Integer.sgn_diff_pow_pos ‹a ≥ 0› ‹b ≥ 0› ‹2 ≥ 1›
 
     show sgn (a - b) ≃ 1 from calc
-      _ = sgn (a - b)             := rfl
-      _ ≃ sgn (a^2 - b^2)         := Rel.symm ‹sgn (a^2 - b^2) ≃ sgn (a - b)›
-      _ ≃ sgn (2 * b^2 - b^2)     := by srw [‹a^2 ≃ 2 * b^2›]
-      _ ≃ sgn (b^2 + b^2 - b^2)   := by srw [Integer.mul_two]
-      _ ≃ sgn (b^2)               := by srw [Integer.add_sub_cancel]
-      _ ≃ (sgn b)^2               := Integer.sgn_pow
-      _ ≃ 1^2                     := by srw [Integer.gt_zero_sgn.mp ‹b > 0›]
-      _ ≃ 1                       := Natural.pow_absorbL
+      _ = sgn (a - b)           := rfl
+      _ ≃ sgn (a^2 - b^2)       := Rel.symm ‹sgn (a^2 - b^2) ≃ sgn (a - b)›
+      _ ≃ sgn (2 * b^2 - b^2)   := by srw [‹a^2 ≃ 2 * b^2›]
+      _ ≃ sgn (b^2 + b^2 - b^2) := by srw [Integer.mul_two]
+      _ ≃ sgn (b^2)             := by srw [Integer.add_sub_cancel]
+      _ ≃ (sgn b)^2             := Integer.sgn_pow
+      _ ≃ 1^2                   := by srw [Integer.gt_zero_sgn.mp ‹b > 0›]
+      _ ≃ 1                     := Natural.pow_absorbL
 
   have : a > b := Integer.gt_sgn.mpr ‹sgn (a - b) ≃ 1›
   have : r.numer > r.denom := this
@@ -502,12 +502,12 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
 
     have : a^2 ≃ 2 * b^2 :=
       have : ((a^2:ℤ):ℚ) ≃ ((2 * b^2 : ℤ):ℚ) := calc
-        _ = ((a^2:ℤ):ℚ)                 := rfl
-        _ = (((abs a')^2:ℤ):ℚ)          := rfl
-        _ ≃ ((a'^2:ℤ):ℚ)                := by srw [Integer.abs_sqr]
-        _ ≃ ((2 * b'^2 : ℤ):ℚ)          := ‹((a'^2:ℤ):ℚ) ≃ ((2 * b'^2 : ℤ):ℚ)›
-        _ ≃ ((2 * (abs b')^2 : ℤ):ℚ)    := by srw [←Integer.abs_sqr]
-        _ = ((2 * b^2 : ℤ):ℚ)           := rfl
+        _ = ((a^2:ℤ):ℚ)              := rfl
+        _ = (((abs a')^2:ℤ):ℚ)       := rfl
+        _ ≃ ((a'^2:ℤ):ℚ)             := by srw [Integer.abs_sqr]
+        _ ≃ ((2 * b'^2 : ℤ):ℚ)       := ‹((a'^2:ℤ):ℚ) ≃ ((2 * b'^2 : ℤ):ℚ)›
+        _ ≃ ((2 * (abs b')^2 : ℤ):ℚ) := by srw [←Integer.abs_sqr]
+        _ = ((2 * b^2 : ℤ):ℚ)        := rfl
       show a^2 ≃ 2 * b^2 from from_integer_inject ‹((a^2:ℤ):ℚ) ≃ ((2*b^2:ℤ):ℚ)›
     show Sqrt2Ratio ℤ from Sqrt2Ratio.mk a b ‹a > 0› ‹b > 0› ‹a^2 ≃ 2 * b^2›
 
@@ -646,9 +646,9 @@ theorem sgn_diff_pow_pos
       _ ≃ 1 * sgn y     := by srw [Integer.gt_zero_sgn.mp ‹x > 0›]
       _ ≃ sgn y         := AA.identL
   have : sgn (b * d) ≃ 1 := calc
-    _ = sgn (b * d)   := rfl
-    _ ≃ sgn d         := sgn_mul_absorbL ‹b > 0›
-    _ ≃ 1             := Integer.gt_zero_sgn.mp ‹d > 0›
+    _ = sgn (b * d) := rfl
+    _ ≃ sgn d       := sgn_mul_absorbL ‹b > 0›
+    _ ≃ 1           := Integer.gt_zero_sgn.mp ‹d > 0›
   have sqr_sgn_bd_idemp : (sgn (b * d))^2 ≃ sgn (b * d) :=
     Integer.sqr_idemp_reasons.mpr (Or.inr ‹sgn (b * d) ≃ 1›)
   have sgn_bd_pow {k : ℕ} : sgn ((b * d)^k) ≃ 1 := calc
@@ -664,9 +664,9 @@ theorem sgn_diff_pow_pos
   have nonzero_bd_pow {k : ℕ} : Integer.Nonzero ((b * d)^k) :=
     Integer.sgn_nonzero.mpr sqrt1_sgn_bd_pow
   have : sgn (b * c) ≥ 0 := calc
-    _ = sgn (b * c)   := rfl
-    _ ≃ sgn c         := sgn_mul_absorbL ‹b > 0›
-    _ ≥ 0             := Integer.sgn_preserves_ge_zero.mp ‹c ≥ 0›
+    _ = sgn (b * c) := rfl
+    _ ≃ sgn c       := sgn_mul_absorbL ‹b > 0›
+    _ ≥ 0           := Integer.sgn_preserves_ge_zero.mp ‹c ≥ 0›
   have : b * c ≥ 0 := Integer.sgn_preserves_ge_zero.mpr this
   have : d ≥ 0 := Integer.ge_split.mpr (Or.inl ‹d > 0›)
   have : a * d ≥ 0 := Integer.mul_preserves_nonneg ‹a ≥ 0› ‹d ≥ 0›
@@ -817,12 +817,17 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
   intro (_ : ε > 0)
   show Sqrt2Approx ε
 
+  -- Basic facts used throughout the proof
   have : AP (ε ≄ 0) := AP.mk (pos_nonzero ‹ε > 0›)
   have : ε^2 > 0 := pow_preserves_pos ‹ε > 0›
   have : AP (ε^2 ≄ 0) :=
     have : ε^2 ≄ 0 := pos_nonzero ‹ε^2 > 0›
     AP.mk ‹ε^2 ≄ 0›
 
+  /-
+  The search will look for the first integer satisfying this predicate, which
+  counts how many `ε`'s must be added together to exceed the square root of two.
+  -/
   let P (x : ℤ) := 2/ε^2 < x^2
   have : DecidablePred P := λ x => lt_decidable
   have P_subst {x₁ x₂ : ℤ} : x₁ ≃ x₂ → P x₁ → P x₂ := by
@@ -837,6 +842,7 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
     exact this
   have : AA.Substitutive₁ P (· ≃ ·) (· → ·) := { subst₁ := P_subst }
 
+  -- Define the interval to search within, and derive related facts
   let lower : ℤ := 0
   let upper := ceil (2/ε) + 1
   have : 2/ε ≥ 0 :=
@@ -862,6 +868,7 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
     _ < ceil (2/ε) + 1 := Integer.lt_inc
     _ = upper          := rfl
 
+  -- Perform the search and inspect the result
   let res : FirstInRange P lower upper ⊕' FalseWithin P lower upper :=
     have : lower ≤ upper := calc
       _ = lower      := rfl
@@ -872,6 +879,7 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
       Integer.find_first_in_range P ‹lower ≤ upper›
   match ‹FirstInRange P lower upper ⊕' FalseWithin P lower upper› with
   | .inl (fir : FirstInRange P lower upper) =>
+    -- We found a value! Generate the approximation from it
     let a := fir.val - 1
     let approx := a * ε
     have : P fir.val := fir.holds
@@ -924,9 +932,9 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
 
     have : 2 < (approx + ε)^2 :=
       have : fir.val ≃ a + 1 := calc
-        _ = fir.val              := rfl
-        _ ≃ fir.val - 1 + 1      := Rel.symm Integer.sub_add_cancel
-        _ = a + 1                := rfl
+        _ = fir.val         := rfl
+        _ ≃ fir.val - 1 + 1 := Rel.symm Integer.sub_add_cancel
+        _ = a + 1           := rfl
       have : P (a + 1) := AA.substFn ‹fir.val ≃ a + 1› ‹P fir.val›
       have : 2/ε^2 < (a + 1 : ℤ)^2 := ‹P (a + 1)›
       have : (2/ε^2) * ε^2 < (a + 1 : ℤ)^2 * ε^2 :=
@@ -945,6 +953,10 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
     exact Sqrt2Approx.mk approx ‹approx^2 < 2› ‹2 < (approx + ε)^2›
 
   | .inr (fw : FalseWithin P lower upper) =>
+    /-
+    No value found: show this can't happen because the search interval is wide
+    enough to include approximations that must exceed the square root of two.
+    -/
     apply False.elim
     show False
 

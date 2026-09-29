@@ -310,10 +310,10 @@ theorem div_eqv_1 {p q : ℚ} [AP (q ≄ 0)] : p/q ≃ 1 ↔ p ≃ q := by
     intro (_ : p/q ≃ 1)
     show p ≃ q
     calc
-      _ ≃ p             := eqv_refl
-      _ ≃ (p/q) * q     := eqv_symm div_mul_cancel
-      _ ≃ 1 * q         := by srw [‹p/q ≃ 1›]
-      _ ≃ q             := mul_identL
+      _ ≃ p         := eqv_refl
+      _ ≃ (p/q) * q := eqv_symm div_mul_cancel
+      _ ≃ 1 * q     := by srw [‹p/q ≃ 1›]
+      _ ≃ q         := mul_identL
   case mpr =>
     intro (_ : p ≃ q)
     show p/q ≃ 1
