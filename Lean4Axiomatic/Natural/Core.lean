@@ -269,6 +269,8 @@ theorem rec_on_step
 
 end universe_polymorphic_induction
 
+variable [Induction.{0} ℕ]
+
 /--
 Recursion on equivalent natural numbers produces equivalent results, with
 identical arguments for the _zero_ and _step_ cases.
@@ -276,7 +278,7 @@ identical arguments for the _zero_ and _step_ cases.
 @[gcongr]
 theorem rec_on_subst
     {α : Sort u} [EqvOp α] {z : α} {s : α → α} {n₁ n₂ : ℕ}
-    [Induction.{0} ℕ] [Induction.{u} ℕ] [AA.Substitutive₁ s (· ≃ ·) (· ≃ ·)]
+    [Induction.{u} ℕ] [AA.Substitutive₁ s (· ≃ ·) (· ≃ ·)]
     : n₁ ≃ n₂ → rec_on n₁ z s ≃ rec_on n₂ z s
     := by
   revert n₂
@@ -328,8 +330,7 @@ natural numbers.
 
 **Proof intuition**: Follows directly from `cases_on`.
 -/
-theorem split_cases
-    [Induction.{0} ℕ] (n : ℕ) : n ≃ 0 ∨ ∃ (m : ℕ), n ≃ step m := by
+theorem split_cases (n : ℕ) : n ≃ 0 ∨ ∃ (m : ℕ), n ≃ step m := by
   apply cases_on n
   case zero =>
     show 0 ≃ 0 ∨ ∃ m, 0 ≃ step m
@@ -340,7 +341,7 @@ theorem split_cases
     exact Or.inr (Exists.intro k Rel.refl)
 
 /-- A natural number is never equal to its successor. -/
-theorem step_neqv [Induction.{0} ℕ] {n : ℕ} : step n ≄ n := by
+theorem step_neqv {n : ℕ} : step n ≄ n := by
   apply ind_on (motive := λ n => step n ≄ n) n
   case zero =>
     show step 0 ≄ 0

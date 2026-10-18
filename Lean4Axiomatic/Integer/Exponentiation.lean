@@ -191,9 +191,7 @@ theorem sse_same {a : ℤ} : a^3 ≃ a → sum_sub_err a a ≃ a := by
     _ = a + a - a * a^2 := rfl
     _ ≃ a + a - a^3     := by srw [←cube_splitL]
     _ ≃ a + a - a       := by srw [‹a^3 ≃ a›]
-    _ ≃ a + (a - a)     := sub_assoc_addL
-    _ ≃ a + 0           := by srw [sub_same]
-    _ ≃ a               := AA.identR
+    _ ≃ a               := add_sub_cancel
 
 /--
 A factor can be moved between the arguments of `sum_sub_err` and its result, if
@@ -762,9 +760,7 @@ theorem le_cube_subst {s t : ℤ} : 0 < s → s ≤ t → s^3 - s ≤ t^3 - t :=
             _ = 1 + 1 - 1 * 1^2             := rfl
             _ ≃ 1 + 1 - 1^2                 := by srw [mul_identL]
             _ ≃ 1 + 1 - 1                   := by srw [Natural.pow_absorbL]
-            _ ≃ 1 + (1 - 1)                 := sub_assoc_addL
-            _ ≃ 1 + 0                       := by srw [sub_same]
-            _ ≃ 1                           := AA.identR
+            _ ≃ 1                           := add_sub_cancel
 
         let ts1 := t * s - 1
         have : ts1 * (t^2 + s^2) ≥ 0 :=
@@ -799,9 +795,7 @@ theorem le_cube_subst {s t : ℤ} : 0 < s → s ≤ t → s^3 - s ≤ t^3 - t :=
           _ ≃ 1 + sts1 - sts1 * 1^2            := by srw [AA.comm]
           _ ≃ 1 + sts1 - sts1 * 1              := by srw [Natural.pow_absorbL]
           _ ≃ 1 + sts1 - sts1                  := by srw [mul_identR]
-          _ ≃ 1 + (sts1 - sts1)                := sub_assoc_addL
-          _ ≃ 1 + 0                            := by srw [sub_same]
-          _ ≃ 1                                := AA.identR
+          _ ≃ 1                                := add_sub_cancel
 
       have : sgn ts_quad ≃ 1 := calc
         _ = sgn ts_quad                  := rfl
@@ -874,9 +868,7 @@ theorem sgn_max {a : ℤ} : sgn a ≤ 1 :=
         _ ≃ 2 * (2^2 - 1^2)               := by srw [←Natural.pow_absorbL]
         _ ≃ 2 * ((2 - 1) * (2 + 1))       := by srw [factor_diff_sqr]
         _ ≃ 2 * ((1 + 1 - 1) * (2 + 1))   := by srw [←add_one_one]
-        _ ≃ 2 * ((1 + (1 - 1)) * (2 + 1)) := by srw [sub_assoc_addL]
-        _ ≃ 2 * ((1 + 0) * (2 + 1))       := by srw [sub_same]
-        _ ≃ 2 * (1 * (2 + 1))             := by srw [add_identR]
+        _ ≃ 2 * (1 * (2 + 1))             := by srw [add_sub_cancel]
         _ ≃ 2 * (2 + 1)                   := by srw [mul_identL]
         _ = 2 * ((2:ℕ) + (1:ℕ))           := rfl
         _ ≃ 2 * ((2 + 1 : ℕ):ℤ)           := by srw [←add_compat_nat]

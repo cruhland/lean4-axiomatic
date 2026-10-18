@@ -192,6 +192,53 @@ def Either.swap {α β : Prop} : Either α β → Either β α
 | .inl (x : α) => .inr x
 | .inr (y : β) => .inl y
 
+/-- Apply a function to the left side of a `PSum`. -/
+@[gcongr]
+def psum_mapL
+    {α₁ : Sort u} {α₂ : Sort v} {β : Sort w} : (α₁ → α₂) → α₁ ⊕' β → α₂ ⊕' β
+    := by
+  intro (f : α₁ → α₂) (_ : α₁ ⊕' β)
+  show α₂ ⊕' β
+
+  exact match ‹α₁ ⊕' β› with
+  | .inl (x : α₁) => .inl (f x)
+  | .inr (y : β) => .inr y
+
+/-- Apply a function to the right side of a `PSum`. -/
+@[gcongr]
+def psum_mapR
+    {α : Sort u} {β₁ : Sort v} {β₂ : Sort w} : (β₁ → β₂) → α ⊕' β₁ → α ⊕' β₂
+    := by
+  intro (g : β₁ → β₂) (_ : α ⊕' β₁)
+  show α ⊕' β₂
+
+  exact match ‹α ⊕' β₁› with
+  | .inl (x : α) => .inl x
+  | .inr (y : β₁) => .inr (g y)
+
+/-- Asserts that a predicate is false for all values in a half-open interval. -/
+def FalseWithin {α : Type} [LE α] [LT α] (P : α → Prop) (x z : α) : Prop :=
+  {y : α} → x ≤ y → y < z → ¬P y
+
+/-- The smallest value satisfying a predicate within a half-open interval. -/
+structure FirstInRange
+    {α : Type} [LE α] [LT α] (P : α → Prop) (lower_incl : α) (upper_excl : α)
+    : Type where
+  /-- The value. -/
+  val : α
+
+  /-- The value respects the interval's (inclusive) lower bound. -/
+  lower : lower_incl ≤ val
+
+  /-- The value respects the interval's (exclusive) upper bound. -/
+  upper : val < upper_excl
+
+  /-- The value satisfies the predicate. -/
+  holds : P val
+
+  /-- All interval elements less than the value fail the predicate. -/
+  fails : FalseWithin P lower_incl val
+
 /--
 Class that enables arbitrary expressions in `Prop` to be used as instance
 arguments.

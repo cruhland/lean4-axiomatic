@@ -1,3 +1,4 @@
+import Lean4Axiomatic.Rational.FloorCeil
 import Lean4Axiomatic.Rational.Metric
 
 /-!
@@ -11,7 +12,9 @@ derived properties.
 namespace Lean4Axiomatic.Rational
 
 open Lean4Axiomatic.Integer (Even Odd half_floored)
-open Lean4Axiomatic.Logic (AP iff_subst_covar or_identR or_mapR)
+open Lean4Axiomatic.Logic (
+  AP FalseWithin FirstInRange iff_subst_covar or_identR or_mapR
+)
 open Lean4Axiomatic.Metric (abs)
 open Lean4Axiomatic.Natural (pow_step pow_zero step)
 open Lean4Axiomatic.Relation.Equivalence (EqvOp)
@@ -291,16 +294,14 @@ theorem numer_gt_denom {r : Sqrt2Ratio ℤ} : r.numer > r.denom := by
       Integer.sgn_diff_pow_pos ‹a ≥ 0› ‹b ≥ 0› ‹2 ≥ 1›
 
     show sgn (a - b) ≃ 1 from calc
-      _ = sgn (a - b)             := rfl
-      _ ≃ sgn (a^2 - b^2)         := Rel.symm ‹sgn (a^2 - b^2) ≃ sgn (a - b)›
-      _ ≃ sgn (2 * b^2 - b^2)     := by srw [‹a^2 ≃ 2 * b^2›]
-      _ ≃ sgn (b^2 + b^2 - b^2)   := by srw [Integer.mul_two]
-      _ ≃ sgn (b^2 + (b^2 - b^2)) := by srw [Integer.sub_assoc_addL]
-      _ ≃ sgn (b^2 + 0)           := by srw [Integer.sub_same]
-      _ ≃ sgn (b^2)               := by srw [Integer.add_identR]
-      _ ≃ (sgn b)^2               := Integer.sgn_pow
-      _ ≃ 1^2                     := by srw [Integer.gt_zero_sgn.mp ‹b > 0›]
-      _ ≃ 1                       := Natural.pow_absorbL
+      _ = sgn (a - b)           := rfl
+      _ ≃ sgn (a^2 - b^2)       := Rel.symm ‹sgn (a^2 - b^2) ≃ sgn (a - b)›
+      _ ≃ sgn (2 * b^2 - b^2)   := by srw [‹a^2 ≃ 2 * b^2›]
+      _ ≃ sgn (b^2 + b^2 - b^2) := by srw [Integer.mul_two]
+      _ ≃ sgn (b^2)             := by srw [Integer.add_sub_cancel]
+      _ ≃ (sgn b)^2             := Integer.sgn_pow
+      _ ≃ 1^2                   := by srw [Integer.gt_zero_sgn.mp ‹b > 0›]
+      _ ≃ 1                     := Natural.pow_absorbL
 
   have : a > b := Integer.gt_sgn.mpr ‹sgn (a - b) ≃ 1›
   have : r.numer > r.denom := this
@@ -469,20 +470,17 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
       have : AP (b'^2 ≄ 0) := AP.mk this
       let a'q : ℚ := a'; let b'q : ℚ := b'
       show ((a'^2:ℤ):ℚ) ≃ ((2 * b'^2 : ℤ):ℚ) from calc
-        _ = ((a'^2:ℤ):ℚ)                := rfl
-        _ ≃ (a':ℚ)^2                    := pow_scompatL_from_integer
-        _ = a'q^2                       := rfl
-        _ ≃ a'q^2 * 1                   := by srw [←mul_identR]
-        _ ≃ a'q^2 * ((b'q^2)⁻¹ * b'q^2) := by srw [←mul_inverseL]
-        _ ≃ a'q^2 * (b'q^2)⁻¹ * b'q^2   := eqv_symm mul_assoc
-        _ ≃ a'q^2/b'q^2 * b'q^2         := by srw [←div_mul_recip]
-        _ ≃ (a'q/b'q)^2 * b'q^2         := by srw [←pow_distribR_div]
-        _ = ((a':ℚ)/b')^2 * b'q^2       := rfl
-        _ ≃ p^2 * b'q^2                 := by srw [←‹p ≃ a'/b'›]
-        _ ≃ 2 * b'q^2                   := by srw [‹p^2 ≃ 2›]
-        _ = 2 * (b':ℚ)^2                := rfl
-        _ ≃ (2:ℚ) * ((b'^2:ℤ):ℚ)        := by srw [←pow_scompatL_from_integer]
-        _ ≃ ((2 * b'^2 : ℤ):ℚ)          := eqv_symm mul_compat_from_integer
+        _ = ((a'^2:ℤ):ℚ)          := rfl
+        _ ≃ (a':ℚ)^2              := pow_scompatL_from_integer
+        _ = a'q^2                 := rfl
+        _ ≃ a'q^2/b'q^2 * b'q^2   := eqv_symm div_mul_cancel
+        _ ≃ (a'q/b'q)^2 * b'q^2   := by srw [←pow_distribR_div]
+        _ = ((a':ℚ)/b')^2 * b'q^2 := rfl
+        _ ≃ p^2 * b'q^2           := by srw [←‹p ≃ a'/b'›]
+        _ ≃ 2 * b'q^2             := by srw [‹p^2 ≃ 2›]
+        _ = 2 * (b':ℚ)^2          := rfl
+        _ ≃ (2:ℚ) * ((b'^2:ℤ):ℚ)  := by srw [←pow_scompatL_from_integer]
+        _ ≃ ((2 * b'^2 : ℤ):ℚ)    := eqv_symm mul_compat_from_integer
 
     have : a > 0 :=
       have : a'^2 ≃ 2 * b'^2 :=
@@ -504,12 +502,12 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
 
     have : a^2 ≃ 2 * b^2 :=
       have : ((a^2:ℤ):ℚ) ≃ ((2 * b^2 : ℤ):ℚ) := calc
-        _ = ((a^2:ℤ):ℚ)                 := rfl
-        _ = (((abs a')^2:ℤ):ℚ)          := rfl
-        _ ≃ ((a'^2:ℤ):ℚ)                := by srw [Integer.abs_sqr]
-        _ ≃ ((2 * b'^2 : ℤ):ℚ)          := ‹((a'^2:ℤ):ℚ) ≃ ((2 * b'^2 : ℤ):ℚ)›
-        _ ≃ ((2 * (abs b')^2 : ℤ):ℚ)    := by srw [←Integer.abs_sqr]
-        _ = ((2 * b^2 : ℤ):ℚ)           := rfl
+        _ = ((a^2:ℤ):ℚ)              := rfl
+        _ = (((abs a')^2:ℤ):ℚ)       := rfl
+        _ ≃ ((a'^2:ℤ):ℚ)             := by srw [Integer.abs_sqr]
+        _ ≃ ((2 * b'^2 : ℤ):ℚ)       := ‹((a'^2:ℤ):ℚ) ≃ ((2 * b'^2 : ℤ):ℚ)›
+        _ ≃ ((2 * (abs b')^2 : ℤ):ℚ) := by srw [←Integer.abs_sqr]
+        _ = ((2 * b^2 : ℤ):ℚ)        := rfl
       show a^2 ≃ 2 * b^2 from from_integer_inject ‹((a^2:ℤ):ℚ) ≃ ((2*b^2:ℤ):ℚ)›
     show Sqrt2Ratio ℤ from Sqrt2Ratio.mk a b ‹a > 0› ‹b > 0› ‹a^2 ≃ 2 * b^2›
 
@@ -648,9 +646,9 @@ theorem sgn_diff_pow_pos
       _ ≃ 1 * sgn y     := by srw [Integer.gt_zero_sgn.mp ‹x > 0›]
       _ ≃ sgn y         := AA.identL
   have : sgn (b * d) ≃ 1 := calc
-    _ = sgn (b * d)   := rfl
-    _ ≃ sgn d         := sgn_mul_absorbL ‹b > 0›
-    _ ≃ 1             := Integer.gt_zero_sgn.mp ‹d > 0›
+    _ = sgn (b * d) := rfl
+    _ ≃ sgn d       := sgn_mul_absorbL ‹b > 0›
+    _ ≃ 1           := Integer.gt_zero_sgn.mp ‹d > 0›
   have sqr_sgn_bd_idemp : (sgn (b * d))^2 ≃ sgn (b * d) :=
     Integer.sqr_idemp_reasons.mpr (Or.inr ‹sgn (b * d) ≃ 1›)
   have sgn_bd_pow {k : ℕ} : sgn ((b * d)^k) ≃ 1 := calc
@@ -666,9 +664,9 @@ theorem sgn_diff_pow_pos
   have nonzero_bd_pow {k : ℕ} : Integer.Nonzero ((b * d)^k) :=
     Integer.sgn_nonzero.mpr sqrt1_sgn_bd_pow
   have : sgn (b * c) ≥ 0 := calc
-    _ = sgn (b * c)   := rfl
-    _ ≃ sgn c         := sgn_mul_absorbL ‹b > 0›
-    _ ≥ 0             := Integer.sgn_preserves_ge_zero.mp ‹c ≥ 0›
+    _ = sgn (b * c) := rfl
+    _ ≃ sgn c       := sgn_mul_absorbL ‹b > 0›
+    _ ≥ 0           := Integer.sgn_preserves_ge_zero.mp ‹c ≥ 0›
   have : b * c ≥ 0 := Integer.sgn_preserves_ge_zero.mpr this
   have : d ≥ 0 := Integer.ge_split.mpr (Or.inl ‹d > 0›)
   have : a * d ≥ 0 := Integer.mul_preserves_nonneg ‹a ≥ 0› ‹d ≥ 0›
@@ -792,6 +790,209 @@ theorem pow_preserves_ge_nonneg
       _ ≃ q^n := by srw [←‹n ≃ 0›]
     have : p^n ≥ q^n := ge_cases.mpr (Or.inr ‹p^n ≃ q^n›)
     exact this
+
+/--
+A rational approximation to the square root of two.
+
+The `ε` argument gives the maximum distance of the approximation from the true
+value.
+-/
+structure Sqrt2Approx (ε : ℚ) where
+  /-- The approximated value. -/
+  val : ℚ
+
+  /-- The approximation is less than the square root of two. -/
+  lower : val^2 < 2
+
+  /-- The approximation is within `ε` of the square root of two. -/
+  upper : 2 < (val + ε)^2
+
+variable [FloorCeil ℚ]
+
+/--
+Find a rational approximation to the square root of two, no more than `ε` away
+from the true value.
+-/
+def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
+  intro (_ : ε > 0)
+  show Sqrt2Approx ε
+
+  -- Basic facts used throughout the proof
+  have : AP (ε ≄ 0) := AP.mk (pos_nonzero ‹ε > 0›)
+  have : ε^2 > 0 := pow_preserves_pos ‹ε > 0›
+  have : AP (ε^2 ≄ 0) :=
+    have : ε^2 ≄ 0 := pos_nonzero ‹ε^2 > 0›
+    AP.mk ‹ε^2 ≄ 0›
+
+  /-
+  The search will look for the first integer satisfying this predicate, which
+  counts how many `ε`'s must be added together to exceed the square root of two.
+  -/
+  let P (x : ℤ) := 2 < (x * ε)^2
+  have : DecidablePred P := λ x => lt_decidable
+  have P_subst {x₁ x₂ : ℤ} : x₁ ≃ x₂ → P x₁ → P x₂ := by
+    intro (_ : x₁ ≃ x₂) (_ : P x₁)
+    show P x₂
+
+    have : 2 < (x₂ * ε)^2 := calc
+      _ = 2 := rfl
+      _ < (x₁ * ε)^2  := ‹P x₁›
+      _ ≃ (x₂ * ε)^2  := by srw [‹x₁ ≃ x₂›]
+    have : P x₂ := ‹2 < (x₂ * ε)^2›
+    exact this
+  have : AA.Substitutive₁ P (· ≃ ·) (· → ·) := { subst₁ := P_subst }
+
+  /- Define the interval to search within, and derive related facts -/
+  let lower : ℤ := 0
+  -- Keep adding ε's until we exceed 2, which must be > sqrt 2
+  let upper := ceil (2/ε) + 1
+  have : 2/ε ≥ 0 :=
+    have : (0:ℚ) ≤ 2 := le_cases.mpr (Or.inl two_pos)
+
+    show 2/ε ≥ 0 from calc
+      _ = 2/ε     := rfl
+      _ ≥ 0/ε     := le_substN_div_gt_zero ‹ε > 0› ‹(0:ℚ) ≤ 2›
+      _ ≃ 0 * ε⁻¹ := div_mul_recip
+      _ ≃ 0       := mul_absorbL
+  have : 2/ε ≤ ceil (2/ε) := ceil_lb
+  have : lower ≤ ceil (2/ε) :=
+    have : (lower:ℚ) ≤ ceil (2/ε) := calc
+      _ = (lower:ℚ)  := rfl
+      _ = 0          := rfl
+      _ ≤ 2/ε        := ‹2/ε ≥ 0›
+      _ ≤ ceil (2/ε) := ‹2/ε ≤ ceil (2/ε)›
+
+    show lower ≤ ceil (2/ε) from
+      le_respects_from_integer.mpr ‹(lower:ℚ) ≤ ceil (2/ε)›
+  have : ceil (2/ε) < upper := calc
+    _ = ceil (2/ε)     := rfl
+    _ < ceil (2/ε) + 1 := Integer.lt_inc
+    _ = upper          := rfl
+
+  -- Perform the search and inspect the result
+  let res : FirstInRange P lower upper ⊕' FalseWithin P lower upper :=
+    have : lower ≤ upper := calc
+      _ = lower      := rfl
+      _ ≤ ceil (2/ε) := ‹lower ≤ ceil (2/ε)›
+      _ ≤ upper      := Integer.le_split.mpr (.inl ‹ceil (2/ε) < upper›)
+
+    show FirstInRange P lower upper ⊕' FalseWithin P lower upper from
+      Integer.find_first_in_range P ‹lower ≤ upper›
+  match ‹FirstInRange P lower upper ⊕' FalseWithin P lower upper› with
+  | .inl (fir : FirstInRange P lower upper) =>
+    -- We found a value! Generate the approximation from it
+    let v := fir.val
+    let a := v - 1
+    let approx := a * ε
+    have : P v := fir.holds
+    have : 2 < (v * ε)^2 := ‹P v›
+
+    have : approx^2 < 2 :=
+      have : (ε^2)⁻¹ > 0 :=
+        have : sgn ((ε^2)⁻¹) ≃ 1 := calc
+          _ = sgn ((ε^2)⁻¹) := rfl
+          _ ≃ sgn (ε^2)     := sgn_recip
+          _ ≃ 1             := gt_zero_sgn.mp ‹ε^2 > 0›
+        show (ε^2)⁻¹ > 0 from gt_zero_sgn.mpr ‹sgn ((ε^2)⁻¹) ≃ 1›
+      have vε_sqr_pos : (v * ε)^2 > 0 := calc
+        _ = (v * ε)^2 := rfl
+        _ > 2         := ‹2 < (v * ε)^2›
+        _ > 0         := two_pos
+      have : ((v^2 : ℤ):ℚ) > 0 := calc
+        _ = ((v^2 : ℤ):ℚ)         := rfl
+        _ ≃ v^2                   := pow_scompatL_from_integer
+        _ ≃ 1 * v^2               := eqv_symm mul_identL
+        _ ≃ (ε^2)⁻¹ * ε^2 * v^2   := by srw [←mul_inverseL]
+        _ ≃ (ε^2)⁻¹ * (ε^2 * v^2) := mul_assoc
+        _ ≃ (ε^2)⁻¹ * (ε * v)^2   := by srw [←Natural.pow_distribR_mul]
+        _ ≃ (ε^2)⁻¹ * (v * ε)^2   := by srw [mul_comm]
+        _ > (ε^2)⁻¹ * 0           := lt_substR_mul_pos ‹(ε^2)⁻¹ > 0› vε_sqr_pos
+        _ ≃ 0                     := mul_absorbR
+      have : v^2 > 0 := lt_respects_from_integer.mpr ‹((v^2 : ℤ):ℚ) > 0›
+      have : v ≥ 0 := fir.lower
+      have : (sgn v)^2 ≃ sgn v := Integer.sgn_sqr_nonneg.mpr ‹v ≥ 0›
+      have : sgn v ≃ 1 := calc
+        _ = sgn v     := rfl
+        _ ≃ (sgn v)^2 := Rel.symm ‹(sgn v)^2 ≃ sgn v›
+        _ ≃ sgn (v^2) := Rel.symm Integer.sgn_pow
+        _ ≃ 1         := Integer.gt_zero_sgn.mp ‹v^2 > 0›
+      have : v > 0 := Integer.gt_zero_sgn.mpr ‹sgn v ≃ 1›
+      have : v ≥ 1 := calc
+        _ = v     := rfl
+        _ ≥ 0 + 1 := Integer.lt_iff_le_incL.mp ‹v > 0›
+        _ ≃ 1     := AA.identL
+      have : FalseWithin P lower v := fir.fails
+      have : lower ≤ a := calc
+        _ = lower := rfl
+        _ = 0     := rfl
+        _ ≃ 1 - 1 := Rel.symm Integer.sub_same
+        _ ≤ v - 1 := by srw [‹v ≥ 1›]
+        _ = a     := rfl
+      have : a < v := calc
+        _ = a         := rfl
+        _ = v - 1     := rfl
+        _ < v - 1 + 1 := Integer.lt_inc
+        _ ≃ v         := Integer.sub_add_cancel
+      have : ¬P a := ‹FalseWithin P lower v› ‹lower ≤ a› ‹a < v›
+      have : ¬(2 < (a * ε)^2) := ‹¬P a›
+      have : (a * ε)^2 ≤ 2 := not_gt_iff_le.mp ‹¬(2 < (a * ε)^2)›
+      have : (a * ε)^2 < 2 ∨ (a * ε)^2 ≃ 2 := le_cases.mp ‹(a * ε)^2 ≤ 2›
+      have : (a * ε)^2 < 2 := this.resolve_right sqrt2_irrational
+      show approx^2 < 2 from ‹(a * ε)^2 < 2›
+
+    have : 2 < (approx + ε)^2 :=
+      have : v ≃ a + 1 := calc
+        _ = v         := rfl
+        _ ≃ v - 1 + 1 := Rel.symm Integer.sub_add_cancel
+        _ = a + 1     := rfl
+      have : P (a + 1) := AA.substFn ‹v ≃ a + 1› ‹P v›
+      have : 2 < ((a + 1 : ℤ) * ε)^2 := ‹P (a + 1)›
+      have : 2 < (a * ε + ε)^2 := calc
+        _ = (2:ℚ)               := rfl
+        _ < ((a + 1 : ℤ) * ε)^2 := ‹2 < ((a + 1 : ℤ) * ε)^2›
+        _ ≃ ((a + (1:ℤ)) * ε)^2 := by srw [add_compat_from_integer]
+        _ = ((a + 1) * ε)^2     := rfl
+        _ ≃ (a * ε + 1 * ε)^2   := by srw [mul_distribR]
+        _ ≃ (a * ε + ε)^2       := by srw [mul_identL]
+      show 2 < (approx + ε)^2 from ‹2 < (a * ε + ε)^2›
+
+    exact Sqrt2Approx.mk approx ‹approx^2 < 2› ‹2 < (approx + ε)^2›
+
+  | .inr (fw : FalseWithin P lower upper) =>
+    /-
+    No value found: show this can't happen because the search interval is wide
+    enough to include approximations that must exceed the square root of two.
+    -/
+    apply False.elim
+    show False
+
+    have : (2:ℚ)^2 ≤ 2 :=
+      have : (2/ε)^2 * ε^2 ≤ (ceil (2/ε))^2 * ε^2 :=
+        have : (2/ε)^2 ≤ (ceil (2/ε))^2 :=
+          pow_preserves_ge_nonneg ‹2/ε ≤ ceil (2/ε)› ‹2/ε ≥ 0›
+        show (2/ε)^2 * ε^2 ≤ (ceil (2/ε))^2 * ε^2 from
+          le_substL_mul_pos ‹ε^2 > 0› ‹(2/ε)^2 ≤ (ceil (2/ε))^2›
+
+      have : (ceil (2/ε) * ε)^2 ≤ 2 :=
+        have : ¬P (ceil (2/ε)) := fw ‹lower ≤ ceil (2/ε)› ‹ceil (2/ε) < upper›
+        have : ¬(2 < (ceil (2/ε) * ε)^2) := ‹¬P (ceil (2/ε))›
+        show (ceil (2/ε) * ε)^2 ≤ 2 from
+          not_gt_iff_le.mp ‹¬(2 < (ceil (2/ε) * ε)^2)›
+
+      show (2:ℚ)^2 ≤ 2 from calc
+        _ = (2:ℚ)^2              := rfl
+        _ ≃ 2^2/ε^2 * ε^2        := eqv_symm div_mul_cancel
+        _ ≃ (2/ε)^2 * ε^2        := by srw [←pow_distribR_div]
+        _ ≤ (ceil (2/ε))^2 * ε^2 := ‹(2/ε)^2 * ε^2 ≤ (ceil (2/ε))^2 * ε^2›
+        _ ≃ (ceil (2/ε) * ε)^2   := eqv_symm Natural.pow_distribR_mul
+        _ ≤ 2                    := ‹(ceil (2/ε) * ε)^2 ≤ 2›
+
+    have : (2:ℚ)^2 > 2 := calc
+      _ = (2:ℚ)^2 := rfl
+      _ ≃ 2 * 2   := Natural.pow_two
+      _ > 1 * 2   := lt_substL_mul_pos two_pos two_gt_one
+      _ ≃ 2       := mul_identL
+    exact le_gt_false ‹(2:ℚ)^2 ≤ 2› ‹(2:ℚ)^2 > 2›
 
 end pow_nat
 
