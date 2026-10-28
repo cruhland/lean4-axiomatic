@@ -87,6 +87,18 @@ theorem binom_sqr {a b : ℤ} : (a + b)^2 ≃ a^2 + 2 * a * b + b^2 := calc
 
 variable [Negation ℤ]
 
+/--
+Squaring a negated integer gives the same result as squaring the underlying
+value.
+-/
+theorem sqr_absorb_neg {a : ℤ} : (-a)^2 ≃ a^2 := calc
+  _ = (-a)^2        := rfl
+  _ ≃ (-1 * a)^2    := by srw [←mul_neg_one]
+  _ ≃ (-1)^2 * a^2  := Natural.pow_distribR_mul
+  _ ≃ -1 * -1 * a^2 := by srw [Natural.pow_two]
+  _ ≃ 1 * a^2       := by srw [neg_one_mul_neg_one_eqv_one]
+  _ ≃ a^2           := AA.identL
+
 section sub_only
 variable [Subtraction ℤ]
 
@@ -448,6 +460,27 @@ theorem sgn_diff_sqr_ge {a b : ℤ} : (sgn (a - b))^2 ≃ sgn (a - b) ↔ a ≥ 
     _ ↔ (sgn (a - b))^2 ≃ sgn (a - b) := Iff.rfl
     _ ↔ a - b ≥ 0                     := sgn_sqr_nonneg
     _ ↔ a ≥ b                         := ge_iff_diff_nonneg.symm
+
+/--
+The _less than or equivalent to_ relation on integers is antisymmetric: two
+integers must be equivalent if they are less than or equivalent to each other.
+-/
+theorem le_antisymm {a b : ℤ} : a ≤ b → b ≤ a → a ≃ b := by
+  intro (_ : a ≤ b) (_ : b ≤ a)
+  show a ≃ b
+
+  have : sgn (a - b) ≃ -sgn (a - b) := calc
+    _ = sgn (a - b)        := rfl
+    _ ≃ (sgn (a - b))^2    := Rel.symm (sgn_diff_sqr_ge.mpr ‹a ≥ b›)
+    _ ≃ (sgn (-(b - a)))^2 := by srw [←sub_neg_flip]
+    _ ≃ (-sgn (b - a))^2   := by srw [sgn_compat_neg]
+    _ ≃ (sgn (b - a))^2    := sqr_absorb_neg
+    _ ≃ sgn (b - a)        := sgn_diff_sqr_ge.mpr ‹b ≥ a›
+    _ ≃ sgn (-(a - b))     := by srw [←sub_neg_flip]
+    _ ≃ -sgn (a - b)       := sgn_compat_neg
+  have : sgn (a - b) ≃ 0 := neg_zero.mpr ‹sgn (a - b) ≃ -sgn (a - b)›
+  have : a ≃ b := eqv_sgn.mpr ‹sgn (a - b) ≃ 0›
+  exact this
 
 /--
 A positive right factor can be removed from both sides of a _less than or

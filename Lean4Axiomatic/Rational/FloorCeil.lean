@@ -91,4 +91,35 @@ theorem floor_bounds {p : ℚ} : floor p ≤ p ∧ p < floor p + 1 := by
     _ ≃ floor p + 1       := add_compat_from_integer
   exact And.intro ‹floor p ≤ p› ‹p < floor p + 1›
 
+/-- Taking the floor of an integer does nothing. -/
+theorem floor_int {a : ℤ} : floor (a:ℚ) ≃ a := by
+  have : floor (a:ℚ) ≤ (a:ℚ) := floor_ub
+  have : a ≤ (a:ℚ) := le_respects_from_integer.mp Integer.le_refl
+  have : a ≤ floor (a:ℚ) := floor_lb ‹a ≤ (a:ℚ)›
+  have : (a:ℚ) ≤ floor (a:ℚ) := le_respects_from_integer.mp ‹a ≤ floor (a:ℚ)›
+  have : (floor (a:ℚ) : ℚ) ≃ a :=
+    le_antisymm ‹floor (a:ℚ) ≤ (a:ℚ)› ‹(a:ℚ) ≤ floor (a:ℚ)›
+  have : floor (a:ℚ) ≃ a := from_integer_inject ‹(floor (a:ℚ) : ℚ) ≃ a›
+  exact this
+
+/-- Equivalent rational numbers have equivalent floors. -/
+@[gcongr]
+theorem floor_subst {p₁ p₂ : ℚ} : p₁ ≃ p₂ → floor p₁ ≃ floor p₂ := by
+  intro (_ : p₁ ≃ p₂)
+  show floor p₁ ≃ floor p₂
+
+  have : floor p₁ ≤ p₂ := calc
+    _ = (floor p₁ : ℚ) := rfl
+    _ ≤ p₁             := by srw [floor_ub]
+    _ ≃ p₂             := ‹p₁ ≃ p₂›
+  have : floor p₂ ≤ p₁ := calc
+    _ = (floor p₂ : ℚ) := rfl
+    _ ≤ p₂             := by srw [floor_ub]
+    _ ≃ p₁             := eqv_symm ‹p₁ ≃ p₂›
+  have : floor p₁ ≤ floor p₂ := floor_lb ‹floor p₁ ≤ p₂›
+  have : floor p₂ ≤ floor p₁ := floor_lb ‹floor p₂ ≤ p₁›
+  have : floor p₁ ≃ floor p₂ :=
+    Integer.le_antisymm ‹floor p₁ ≤ floor p₂› ‹floor p₂ ≤ floor p₁›
+  exact this
+
 end Lean4Axiomatic.Rational
