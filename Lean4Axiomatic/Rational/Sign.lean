@@ -1103,6 +1103,28 @@ theorem add_preserves_sign
     _ ≃ sgn (a*b * (d*d) + b*b * (c*d))   := by srw [AA.expr_xxfxxff_lr_swap_rl]
     _ ≃ s                                 := ‹sgn (a*b*(d*d) + b*b*(c*d)) ≃ s›
 
+/-- Zero is the only rational number equivalent to its negation. -/
+theorem neg_eqv_zero {p : ℚ} : p ≃ -p ↔ p ≃ 0 := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : p ≃ -p)
+    show p ≃ 0
+    have : sgn p ≃ 0 := calc
+      _ ≃ sgn p        := Rel.refl
+      _ ≃ sgn (p + p)  := Rel.symm (add_preserves_sign Rel.refl Rel.refl)
+      _ ≃ sgn (-p + p) := sgn_subst (add_substL ‹p ≃ -p›)
+      _ ≃ sgn (0:ℚ)    := sgn_subst add_inverseL
+      _ ≃ 0            := sgn_zero.mp eqv_refl
+    have : p ≃ 0 := sgn_zero.mpr ‹sgn p ≃ 0›
+    exact this
+  case mpr =>
+    intro (_ : p ≃ 0)
+    show p ≃ -p
+    calc
+      _ ≃ p  := eqv_refl
+      _ ≃ 0  := ‹p ≃ 0›
+      _ ≃ -p := eqv_symm (neg_preserves_zero.mpr ‹p ≃ 0›)
+
 /--
 The _signum_ function is idempotent: applying it twice is the same as applying
 it once.

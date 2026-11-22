@@ -97,7 +97,7 @@ theorem floor_ub {p : ℚ} : floor p ≤ p := by
   have (AsHalfPosRatio.mk (a:ℤ) (b:ℤ) (_ : b > 0) p_eqv) := as_half_pos_ratio p
   have : AP (b ≄ 0) := AP.mk (Integer.neqv_zero_from_gt_zero ‹b > 0›)
   have : p ≃ a/b := p_eqv
-  have : (b:ℚ) > 0 := lt_respects_from_integer.mp ‹b > 0›
+  have : (b:ℚ) > ((0:ℤ):ℚ) := by srw [‹b > 0›]
 
   -- Use integer division properties to set up the main inequality
   let d := Integer.div_floored a b; let q := d.quotient; let r := d.remainder
@@ -124,7 +124,7 @@ theorem floor_ub {p : ℚ} : floor p ≤ p := by
     -- ↑  end key lines  ↑
     _ ≃ a         := Rel.symm d.div_eqv
   have : ((b * q : ℤ):ℚ)/b ≤ (a:ℚ)/b :=
-    le_substN_div_gt_zero ‹(b:ℚ) > 0› (le_respects_from_integer.mp ‹b * q ≤ a›)
+    le_substN_div_gt_zero ‹(b:ℚ) > 0› (by srw [‹b * q ≤ a›])
 
   calc
     _ = (floor p : ℚ)     := rfl
@@ -169,7 +169,7 @@ theorem floor_lb {p : ℚ} {c : ℤ} : c ≤ p → c ≤ floor p := by
     _ ≃ b * q + b     := by srw [Integer.abs_ident ‹b ≥ 0›]
     _ ≃ b * q + b * 1 := by srw [←Integer.mul_identR]
     _ ≃ b * (q + 1)   := Rel.symm AA.distribL
-  have : (a:ℚ) < (b * (q+1) : ℤ) := lt_respects_from_integer.mp ‹a < b * (q+1)›
+  have : (a:ℚ) < (b * (q+1) : ℤ) := by srw [‹a < b * (q+1)›]
   have : (a:ℚ)/b < ((b * (q + 1) : ℤ):ℚ)/b :=
     lt_substN_div_pos ‹sgn (b:ℚ) ≃ 1› ‹(a:ℚ) < (b * (q+1) : ℤ)›
 
@@ -182,7 +182,12 @@ theorem floor_lb {p : ℚ} {c : ℤ} : c ≤ p → c ≤ floor p := by
     -- ↑  end key lines  ↑
     _ ≃ (b * (q + 1 : ℤ))/b     := by srw [mul_compat_from_integer]
     _ ≃ (q + 1 : ℤ)             := mulL_div_same
-  have : c < q + 1 := lt_respects_from_integer.mpr ‹(c:ℚ) < (q + 1 : ℤ)›
+  /-
+  TODO: "srw" tactic failed with: LHS [c] parse err: local var [_uniq.6197.6]
+  missing value
+  -/
+  --have : c < q + 1 := by srw [‹(c:ℚ) < ((q + 1 : ℤ):ℚ)›]
+  have : c < q + 1 := lt_respects_from_integer.mpr ‹(c:ℚ) < ((q + 1 : ℤ):ℚ)›
   calc
     -- ↓ begin key lines ↓
     _ = c               := rfl

@@ -801,6 +801,9 @@ structure Sqrt2Approx (ε : ℚ) where
   /-- The approximated value. -/
   val : ℚ
 
+  /-- The approximation is nonnegative. -/
+  nonneg : val ≥ 0
+
   /-- The approximation is less than the square root of two. -/
   lower : val^2 < 2
 
@@ -817,7 +820,7 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
   intro (_ : ε > 0)
   show Sqrt2Approx ε
 
-  -- Basic facts used throughout the proof
+  /- Basic facts used throughout the proof -/
   have : AP (ε ≄ 0) := AP.mk (pos_nonzero ‹ε > 0›)
   have : ε^2 > 0 := pow_preserves_pos ‹ε > 0›
   have : AP (ε^2 ≄ 0) :=
@@ -880,37 +883,37 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
       Integer.find_first_in_range P ‹lower ≤ upper›
   match ‹FirstInRange P lower upper ⊕' FalseWithin P lower upper› with
   | .inl (fir : FirstInRange P lower upper) =>
-    -- We found a value! Generate the approximation from it
+    /- We found a value! Generate the approximation from it -/
     let v := fir.val
     let a := v - 1
     let approx := a * ε
     have : P v := fir.holds
     have : 2 < (v * ε)^2 := ‹P v›
 
-    have : approx^2 < 2 :=
-      have : (ε^2)⁻¹ > 0 :=
+    have : lower ≤ a :=
+      have : v ≥ 0 := fir.lower
+      have : (sgn v)^2 ≃ sgn v := Integer.sgn_sqr_nonneg.mpr ‹v ≥ 0›
+      have : v^2 > 0 :=
         have : sgn ((ε^2)⁻¹) ≃ 1 := calc
           _ = sgn ((ε^2)⁻¹) := rfl
           _ ≃ sgn (ε^2)     := sgn_recip
           _ ≃ 1             := gt_zero_sgn.mp ‹ε^2 > 0›
-        show (ε^2)⁻¹ > 0 from gt_zero_sgn.mpr ‹sgn ((ε^2)⁻¹) ≃ 1›
-      have vε_sqr_pos : (v * ε)^2 > 0 := calc
-        _ = (v * ε)^2 := rfl
-        _ > 2         := ‹2 < (v * ε)^2›
-        _ > 0         := two_pos
-      have : ((v^2 : ℤ):ℚ) > 0 := calc
-        _ = ((v^2 : ℤ):ℚ)         := rfl
-        _ ≃ v^2                   := pow_scompatL_from_integer
-        _ ≃ 1 * v^2               := eqv_symm mul_identL
-        _ ≃ (ε^2)⁻¹ * ε^2 * v^2   := by srw [←mul_inverseL]
-        _ ≃ (ε^2)⁻¹ * (ε^2 * v^2) := mul_assoc
-        _ ≃ (ε^2)⁻¹ * (ε * v)^2   := by srw [←Natural.pow_distribR_mul]
-        _ ≃ (ε^2)⁻¹ * (v * ε)^2   := by srw [mul_comm]
-        _ > (ε^2)⁻¹ * 0           := lt_substR_mul_pos ‹(ε^2)⁻¹ > 0› vε_sqr_pos
-        _ ≃ 0                     := mul_absorbR
-      have : v^2 > 0 := lt_respects_from_integer.mpr ‹((v^2 : ℤ):ℚ) > 0›
-      have : v ≥ 0 := fir.lower
-      have : (sgn v)^2 ≃ sgn v := Integer.sgn_sqr_nonneg.mpr ‹v ≥ 0›
+        have : (ε^2)⁻¹ > 0 := gt_zero_sgn.mpr ‹sgn ((ε^2)⁻¹) ≃ 1›
+        have vε_sqr_pos : (v * ε)^2 > 0 := calc
+          _ = (v * ε)^2 := rfl
+          _ > 2         := ‹2 < (v * ε)^2›
+          _ > 0         := two_pos
+        have : ((v^2 : ℤ):ℚ) > 0 := calc
+          _ = ((v^2 : ℤ):ℚ)       := rfl
+          _ ≃ v^2                 := pow_scompatL_from_integer
+          _ ≃ 1 * v^2             := eqv_symm mul_identL
+          _ ≃ (ε^2)⁻¹ * ε^2 * v^2 := by srw [←mul_inverseL]
+          _ ≃ (ε^2)⁻¹ * (ε^2*v^2) := mul_assoc
+          _ ≃ (ε^2)⁻¹ * (ε*v)^2   := by srw [←Natural.pow_distribR_mul]
+          _ ≃ (ε^2)⁻¹ * (v*ε)^2   := by srw [mul_comm]
+          _ > (ε^2)⁻¹ * 0         := lt_substR_mul_pos ‹(ε^2)⁻¹ > 0› vε_sqr_pos
+          _ ≃ 0                   := mul_absorbR
+        show v^2 > 0 from lt_respects_from_integer.mpr ‹((v^2 : ℤ):ℚ) > 0›
       have : sgn v ≃ 1 := calc
         _ = sgn v     := rfl
         _ ≃ (sgn v)^2 := Rel.symm ‹(sgn v)^2 ≃ sgn v›
@@ -921,13 +924,22 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
         _ = v     := rfl
         _ ≥ 0 + 1 := Integer.lt_iff_le_incL.mp ‹v > 0›
         _ ≃ 1     := AA.identL
-      have : FalseWithin P lower v := fir.fails
-      have : lower ≤ a := calc
+      show lower ≤ a from calc
         _ = lower := rfl
         _ = 0     := rfl
         _ ≃ 1 - 1 := Rel.symm Integer.sub_same
         _ ≤ v - 1 := by srw [‹v ≥ 1›]
         _ = a     := rfl
+
+    have : approx ≥ 0 := calc
+      _ = approx    := rfl
+      _ = a * ε     := rfl
+      _ ≥ lower * ε := le_substL_mul_pos ‹ε > 0› (by srw [‹lower ≤ a›])
+      _ = 0 * ε     := rfl
+      _ ≃ 0         := mul_absorbL
+
+    have : approx^2 < 2 :=
+      have : FalseWithin P lower v := fir.fails
       have : a < v := calc
         _ = a         := rfl
         _ = v - 1     := rfl
@@ -956,7 +968,7 @@ def sqrt2_approx {ε : ℚ} : ε > 0 → Sqrt2Approx ε := by
         _ ≃ (a * ε + ε)^2       := by srw [mul_identL]
       show 2 < (approx + ε)^2 from ‹2 < (a * ε + ε)^2›
 
-    exact Sqrt2Approx.mk approx ‹approx^2 < 2› ‹2 < (approx + ε)^2›
+    exact Sqrt2Approx.mk approx ‹approx ≥ 0› ‹approx^2 < 2› ‹2 < (approx + ε)^2›
 
   | .inr (fw : FalseWithin P lower upper) =>
     /-
@@ -1652,7 +1664,6 @@ theorem pow_two_lower_bound {a : ℤ} : a ≥ 1 → (2:ℚ)^a ≥ a := by
   case next =>
     intro (c : ℤ) (_ : c ≥ 1) (_ : (2:ℚ)^c ≥ c)
     show (2:ℚ)^(c + 1) ≥ ((c + 1 : ℤ):ℚ)
-    have : (c:ℚ) ≥ 1 := le_respects_from_integer.mp ‹c ≥ 1›
     calc
       _ = (2:ℚ)^(c + 1)             := rfl
       _ ≃ (2:ℚ)^c * (2:ℚ)^((1:ℕ):ℤ) := pow_compatL_add
@@ -1662,7 +1673,7 @@ theorem pow_two_lower_bound {a : ℤ} : a ≥ 1 → (2:ℚ)^a ≥ a := by
       _ ≥ (c:ℚ) * 2                 := le_substL_mul_pos two_pos ‹(2:ℚ)^c ≥ c›
       _ ≃ (2:ℚ) * c                 := mul_comm
       _ ≃ (c:ℚ) + c                 := mul_two_add
-      _ ≥ (c:ℚ) + 1                 := by srw [‹1 ≤ (c:ℚ)›]
+      _ ≥ (c:ℚ) + (1:ℤ)             := by srw [‹c ≥ 1›]
       -- ↑  end key steps  ↑
       _ ≃ ((c + 1 : ℤ):ℚ)           := eqv_symm add_compat_from_integer
 

@@ -436,6 +436,7 @@ theorem le_dichotomy {p q : ℚ} : p ≤ q ∨ q ≤ p := by
 The _less than_ relation on rationals is consistent with its integer
 equivalent.
 -/
+@[gcongr]
 theorem lt_respects_from_integer {a b : ℤ} : a < b ↔ (a:ℚ) < (b:ℚ) := calc
   _ ↔ a < b                    := Iff.rfl
   -- ↓ begin key lines ↓
@@ -447,13 +448,14 @@ theorem lt_respects_from_integer {a b : ℤ} : a < b ↔ (a:ℚ) < (b:ℚ) := ca
 
 /-- The rational number two is greater than one. -/
 theorem two_gt_one : (2:ℚ) > 1 :=
-  have : (2:ℚ) = ((2:ℕ):ℚ) := rfl
-  lt_respects_from_integer.mp Integer.two_gt_one
+  have : ((2:ℤ):ℚ) > ((1:ℤ):ℚ) := by srw [Integer.two_gt_one]
+  show (2:ℚ) > 1 from this
 
 /--
 Conversion between integers and rationals preserves the _less than or
 equivalent to_ relation.
 -/
+@[gcongr]
 theorem le_respects_from_integer {a b : ℤ} : a ≤ b ↔ (a:ℚ) ≤ (b:ℚ) := calc
   _ ↔ a ≤ b                   := Iff.rfl
   -- ↓ begin key lines ↓
@@ -463,15 +465,11 @@ theorem le_respects_from_integer {a b : ℤ} : a ≤ b ↔ (a:ℚ) ≤ (b:ℚ) :
   -- ↑  end key lines  ↑
   _ ↔ (a:ℚ) ≤ (b:ℚ)           := le_sgn.symm
 
-/--
-One is greater than or equivalent to zero in the rationals.
-
-**Property and proof intuition**: This is consistent with the integers.
--/
+/-- One is greater than or equivalent to zero in the rationals. -/
 theorem one_ge_zero : (1:ℚ) ≥ 0 := by
-  have : (1:ℤ) > 0 := Integer.zero_lt_one
-  have : (1:ℚ) > 0 := lt_respects_from_integer.mp this
-  have : (1:ℚ) ≥ 0 := ge_cases.mpr (Or.inl this)
+  have : ((1:ℤ):ℚ) > ((0:ℤ):ℚ) := by srw [Integer.zero_lt_one]
+  have : (1:ℚ) > 0 := ‹((1:ℤ):ℚ) > ((0:ℤ):ℚ)›
+  have : (1:ℚ) ≥ 0 := ge_cases.mpr (.inl ‹(1:ℚ) > 0›)
   exact this
 
 /--
@@ -993,7 +991,8 @@ Negative one is less than zero in the rationals.
 theorem neg_one_lt_zero : (-1:ℚ) < 0 := calc
   _ ≃ (-1:ℚ)     := eqv_refl
   _ ≃ ((-1:ℤ):ℚ) := eqv_symm neg_compat_from_integer
-  _ < 0          := lt_respects_from_integer.mp Integer.neg_one_lt_zero
+  _ < ((0:ℤ):ℚ)  := by srw [Integer.neg_one_lt_zero]
+  _ = 0          := rfl
 
 /--
 Negate both operands of _less than_, reversing their ordering.
@@ -1632,7 +1631,7 @@ inductive NonnegRatio (p : ℚ) : Prop where
     (a_nneg : a ≥ 0)
     (b_pos : b > 0)
     (b_nz : AP ((b:ℚ) ≄ 0) :=
-      have : (b:ℚ) > 0 := lt_respects_from_integer.mp ‹b > 0›
+      have : (b:ℚ) > ((0:ℤ):ℚ) := by srw [‹b > 0›]
       have : (b:ℚ) ≄ 0 := pos_nonzero ‹(b:ℚ) > 0›
       AP.mk ‹(b:ℚ) ≄ 0›)
     (p_eqv : p ≃ a/b)
