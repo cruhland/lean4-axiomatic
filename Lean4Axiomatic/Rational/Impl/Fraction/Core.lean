@@ -72,7 +72,9 @@ def from_naive
     {α : Type} [EqvOp α] [OfNat α 0] [Positivity.Ops α] (p : Naive.Fraction α)
     : Positive p.denominator → Fraction α
     := by
-  revert p; intro (Naive.Fraction.mk pn pd) (_ : Positive pd)
+  revert p; intro (p : Naive.Fraction α)
+  let pn := p.numerator; let pd := p.denominator
+  intro (_ : Positive pd)
   have : AP (Positive pd) := AP.mk ‹Positive pd›
   exact pn//pd
 

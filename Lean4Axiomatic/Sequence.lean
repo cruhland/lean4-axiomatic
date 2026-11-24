@@ -10,7 +10,7 @@ open Relation.Equivalence (EqvOp)
 /-! ## Axioms / Definitions -/
 
 /-- An infinite, ordered collection of the provided `Sort`'s values. -/
-structure Sequence (α : Sort u) [EqvOp α] where
+structure Sequence (ℕ : Type) (α : Sort u) [Natural ℕ] [EqvOp α] where
   /--
   The element identified by the provided index value.
 
@@ -18,10 +18,10 @@ structure Sequence (α : Sort u) [EqvOp α] where
   works well because the natural numbers are infinite and ordered, so assigning
   an element to each of them gives us the properties we want for a sequence.
   -/
-  _at {ℕ : Type} [Natural ℕ] (index : ℕ) : α
+  _at (index : ℕ) : α
 
   /-- Equivalent index values produce equivalent elements. -/
-  subst {ℕ : Type} [Natural ℕ] {n₁ n₂ : ℕ} : n₁ ≃ n₂ → _at n₁ ≃ _at n₂
+  subst {n₁ n₂ : ℕ} : n₁ ≃ n₂ → _at n₁ ≃ _at n₂
 
 namespace Sequence
 
@@ -31,7 +31,7 @@ variable {ℕ : Type} [Natural ℕ]
 instance seq_getElem_inst
     {α : Type u} [EqvOp α]
     : GetElem
-        (coll := Sequence α) (idx := ℕ) (elem := α) (valid := λ _ _ => True)
+        (coll := Sequence ℕ α) (idx := ℕ) (elem := α) (valid := λ _ _ => True)
     := {
   getElem s n _ := s._at n
 }
@@ -43,7 +43,7 @@ Corollary of `Sequence.subst` that uses indexing syntax, for use with `gcongr`.
 -/
 @[gcongr]
 theorem at_substR
-    {α : Type u} [EqvOp α] {s : Sequence α} {n₁ n₂ : ℕ}
+    {α : Type u} [EqvOp α] {s : Sequence ℕ α} {n₁ n₂ : ℕ}
     : n₁ ≃ n₂ → s[n₁] ≃ s[n₂]
     := by
   intro (_ : n₁ ≃ n₂)
@@ -54,11 +54,13 @@ theorem at_substR
 A sequence is _linked_ by a property when that property holds between
 consecutive elements.
 -/
-def linked {α : Type u} [EqvOp α] (P : α → α → Prop) (s : Sequence α) : Prop :=
-  {ℕ : Type} → [Natural ℕ] → (n : ℕ) → P s[n] s[step n]
+def linked
+    {α : Type u} [EqvOp α] (P : α → α → Prop) (s : Sequence ℕ α) : Prop
+    :=
+  (n : ℕ) → P s[n] s[step n]
 
 /-- When each value in a sequence is less than the one preceding it. -/
-def InfiniteDescent {α : Type u} [EqvOp α] [LT α] (s : Sequence α) : Prop :=
+def InfiniteDescent {α : Type u} [EqvOp α] [LT α] (s : Sequence ℕ α) : Prop :=
   s.linked (· > ·)
 
 /-! ## Derived properties -/
@@ -67,12 +69,10 @@ def InfiniteDescent {α : Type u} [EqvOp α] [LT α] (s : Sequence α) : Prop :=
 def map
     {α : Type u} {β : Type v} [EqvOp α] [EqvOp β]
     (f : α → β) [AA.Substitutive₁ f (· ≃ ·) (· ≃ ·)]
-    (s : Sequence α) : Sequence β
+    (s : Sequence ℕ α) : Sequence ℕ β
     :=
-  let map_at {ℕ : Type} [Natural ℕ] (n : ℕ) := f s[n]
-  have map_at_subst
-      {ℕ : Type} [Natural ℕ] {n₁ n₂ : ℕ} : n₁ ≃ n₂ → map_at n₁ ≃ map_at n₂
-      := by
+  let map_at (n : ℕ) := f s[n]
+  have map_at_subst {n₁ n₂ : ℕ} : n₁ ≃ n₂ → map_at n₁ ≃ map_at n₂ := by
     intro (_ : n₁ ≃ n₂)
     show map_at n₁ ≃ map_at n₂
 
@@ -82,7 +82,7 @@ def map
       _ ≃ f s[n₂]   := AA.subst₁ (by srw [‹n₁ ≃ n₂›])
       _ = map_at n₂ := rfl
 
-  show Sequence β from {
+  show Sequence ℕ β from {
     _at := map_at
     subst := map_at_subst
   }
@@ -90,22 +90,20 @@ def map
 /-- How to compute the element of a mapped sequence at an index. -/
 theorem map_index
     {α : Type u} {β : Type v} [EqvOp α] [EqvOp β]
-    {f : α → β} [AA.Substitutive₁ f (· ≃ ·) (· ≃ ·)] {s : Sequence α} {n : ℕ}
+    {f : α → β} [AA.Substitutive₁ f (· ≃ ·) (· ≃ ·)] {s : Sequence ℕ α} {n : ℕ}
     : (s.map f)[n] ≃ f s[n]
     :=
   Rel.refl
 
 /-- Build a sequence by repeatedly applying a function to a starting value. -/
 def iterate
-    {α : Type} [EqvOp α]
+    (ℕ : Type) [Natural ℕ] {α : Type} [EqvOp α]
     (init : α) (next : α → α) [AA.Substitutive₁ next (· ≃ ·) (· ≃ ·)]
-    : Sequence α
+    : Sequence ℕ α
     :=
-  let nth {ℕ : Type} [Natural ℕ] (n : ℕ) : α := Natural.rec_on n init next
+  let nth (n : ℕ) : α := Natural.rec_on n init next
 
-  have nth_subst
-      {ℕ : Type} [Natural ℕ] {n₁ n₂ : ℕ} : n₁ ≃ n₂ → nth n₁ ≃ nth n₂
-      := by
+  have nth_subst {n₁ n₂ : ℕ} : n₁ ≃ n₂ → nth n₁ ≃ nth n₂ := by
     intro (_ : n₁ ≃ n₂)
     show nth n₁ ≃ nth n₂
     calc
@@ -114,7 +112,7 @@ def iterate
       _ ≃ Natural.rec_on n₂ init next := by srw [‹n₁ ≃ n₂›]
       _ = nth n₂                      := rfl
 
-  show Sequence α from {
+  show Sequence ℕ α from {
     _at := nth
     subst := nth_subst
   }
@@ -126,7 +124,7 @@ index zero.
 theorem iterate_at_zero
     {α : Type} [EqvOp α]
     {init : α} {next : α → α} [AA.Substitutive₁ next (· ≃ ·) (· ≃ ·)]
-    : (iterate init next)[0] ≃ init
+    : (iterate ℕ init next)[0] ≃ init
     :=
   Natural.rec_on_zero
 
@@ -137,7 +135,7 @@ an element produces the immediately following element.
 theorem iterate_at_step
     {α : Type} [EqvOp α]
     {init : α} {next : α → α} {n : ℕ} [AA.Substitutive₁ next (· ≃ ·) (· ≃ ·)]
-    : (iterate init next)[step n] ≃ next (iterate init next)[n]
+    : (iterate ℕ init next)[step n] ≃ next (iterate ℕ init next)[n]
     :=
   Natural.rec_on_step
 
@@ -154,10 +152,10 @@ theorem iterate_chain
     {P : α → α → Prop} [AA.Substitutive₂ P AA.tc (· ≃ ·) (· → ·)]
     {init : α} {next : α → α} [AA.Substitutive₁ next (· ≃ ·) (· ≃ ·)]
     (P_link : (x : α) → P x (next x))
-    : (iterate init next).linked P
+    : (iterate ℕ init next).linked P
     := by
-  intro (ℕ : Type) (_ : Natural ℕ) (n : ℕ)
-  let s := iterate init next
+  intro (n : ℕ)
+  let s := iterate ℕ init next
   let motive x := P s[x] s[step x]
   show motive n
 
@@ -165,12 +163,12 @@ theorem iterate_chain
   case zero =>
     show motive 0
     have : P init (next init) := P_link init
-    have : P (iterate init next)[0] (next init) :=
+    have : P (iterate ℕ init next)[0] (next init) :=
       AA.substLFn (Rel.symm iterate_at_zero) ‹P init (next init)›
     have : P s[0] (next init) := this
-    have : P s[0] (next (iterate init next)[0]) :=
+    have : P s[0] (next (iterate ℕ init next)[0]) :=
       AA.substRFn (AA.subst₁ (Rel.symm iterate_at_zero)) ‹P s[0] (next init)›
-    have : P s[0] (iterate init next)[step 0] :=
+    have : P s[0] (iterate ℕ init next)[step 0] :=
       AA.substRFn (Rel.symm iterate_at_step) this
     have : P s[0] s[step 0] := this
     have : motive 0 := this
@@ -179,8 +177,8 @@ theorem iterate_chain
     intro (m : ℕ)
     show motive (step m)
     have : P s[step m] (next s[step m]) := P_link s[step m]
-    have : P s[step m] (next (iterate init next)[step m]) := this
-    have : P s[step m] (iterate init next)[step (step m)] :=
+    have : P s[step m] (next (iterate ℕ init next)[step m]) := this
+    have : P s[step m] (iterate ℕ init next)[step (step m)] :=
       AA.substRFn (Rel.symm iterate_at_step) this
     have : P s[step m] s[step (step m)] := this
     have : motive (step m) := this
@@ -195,13 +193,13 @@ In other words, a function can be moved between the chain property and the
 sequence.
 -/
 theorem map_chain
-    {α : Type u} {β : Type v} [EqvOp α] [EqvOp β] {s : Sequence α}
+    {α : Type u} {β : Type v} [EqvOp α] [EqvOp β] {s : Sequence ℕ α}
     {P : β → β → Prop} [AA.Substitutive₂ P AA.tc (· ≃ ·) (· → ·)]
     {f : α → β} [AA.Substitutive₁ f (· ≃ ·) (· ≃ ·)]
-    (orig_chain : {ℕ : Type} → [Natural ℕ] → (n : ℕ) → P (f s[n]) (f s[step n]))
+    (orig_chain : (n : ℕ) → P (f s[n]) (f s[step n]))
     : (s.map f).linked P
     :=
-  let chain {ℕ : Type} [Natural ℕ] (n : ℕ) : P (s.map f)[n] (s.map f)[step n] :=
+  let chain (n : ℕ) : P (s.map f)[n] (s.map f)[step n] :=
     have : P (f s[n]) (f s[step n]) := orig_chain n
     have : P (s.map f)[n] (f s[step n]) := AA.substLFn (Rel.symm map_index) this
     have : P (s.map f)[n] (s.map f)[step n] :=
@@ -212,7 +210,7 @@ theorem map_chain
 
 /-- No natural number sequence is in infinite descent. -/
 theorem inf_desc_impossible
-    {s : Sequence ℕ} : ¬(InfiniteDescent s)
+    {s : Sequence ℕ ℕ} : ¬(InfiniteDescent s)
     := by
   intro (_ : InfiniteDescent s)
   have desc_at (n : ℕ) : s[n] > s[step n] := ‹InfiniteDescent s› n

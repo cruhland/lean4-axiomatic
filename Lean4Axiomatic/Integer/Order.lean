@@ -1873,7 +1873,7 @@ def ind_from
 An integer sequence cannot decrease forever while staying above a fixed value.
 -/
 theorem bounded_inf_desc_impossible
-    {s : Sequence ℤ} {b : ℤ} (bounded : (n : ℕ) → s[n] > b)
+    {s : Sequence ℕ ℤ} {b : ℤ} (bounded : (n : ℕ) → s[n] > b)
     : ¬(InfiniteDescent s)
     := by
   intro (_ : InfiniteDescent s)

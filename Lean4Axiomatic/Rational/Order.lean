@@ -1183,6 +1183,30 @@ theorem sgn_sub_recip
     _ ≃ sgn (q - p)                   := AA.identR
 
 /--
+The _less than_ relation between two rational numbers becomes _greater than_
+when taking the reciprocal of both operands.
+
+The operands must be either both positive or both negative.
+-/
+theorem lt_recip
+    {p q : ℚ} (pq_pos : p * q > 0)
+    : have : p * q ≄ 0 := pos_nonzero ‹p * q > 0›
+      have : p ≄ 0 ∧ q ≄ 0 := mul_split_nonzero.mp ‹p * q ≄ 0›
+      have : AP (p ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.1
+      have : AP (q ≄ 0) := AP.mk ‹p ≄ 0 ∧ q ≄ 0›.2
+      p < q ↔ p⁻¹ > q⁻¹
+    := by
+  intro _ _ (_ : AP (p ≄ 0)) (_ : AP (q ≄ 0))
+  show p < q ↔ p⁻¹ > q⁻¹
+
+  have : sgn (q - p) ≃ sgn (p⁻¹ - q⁻¹) := Rel.symm (sgn_sub_recip ‹p * q > 0›)
+  calc
+    _ ↔ p < q               := Iff.rfl
+    _ ↔ sgn (q - p) ≃ 1     := gt_sgn
+    _ ↔ sgn (p⁻¹ - q⁻¹) ≃ 1 := by srw [‹sgn (q - p) ≃ sgn (p⁻¹ - q⁻¹)›]
+    _ ↔ p⁻¹ > q⁻¹           := gt_sgn.symm
+
+/--
 Divide both operands of _less than or equivalent to_ by the same positive
 value.
 -/
