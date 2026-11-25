@@ -514,14 +514,14 @@ theorem sqrt2_irrational {p : ℚ} : p^2 ≄ 2 := by
       show a^2 ≃ 2 * b^2 from from_integer_inject ‹((a^2:ℤ):ℚ) ≃ ((2*b^2:ℤ):ℚ)›
     show Sqrt2Ratio ℤ from Sqrt2Ratio.mk a b ‹a > 0› ‹b > 0› ‹a^2 ≃ 2 * b^2›
 
-  let ratios : Sequence ℕ (Sqrt2Ratio ℤ) :=
+  let ratios : Sequence 0 (Sqrt2Ratio ℤ) :=
     Sequence.iterate ℕ init Sqrt2Ratio.smaller
-  let numerators : Sequence ℕ ℤ := ratios.map (·.numer)
+  let numerators : Sequence 0 ℤ := ratios.map (·.numer)
 
   have : InfiniteDescent numerators :=
-    have chain : (x : ℕ) → ratios[x].numer > ratios[step x].numer :=
+    have chain {x : ℕ} : 0 ≤ x → ratios[x].numer > ratios[step x].numer :=
       Sequence.iterate_chain Sqrt2Ratio.numer_gt_link
-    have desc : (x : ℕ) → numerators[x] > numerators[step x] :=
+    have desc {x : ℕ} : 0 ≤ x → numerators[x] > numerators[step x] :=
       Sequence.map_chain chain
     show InfiniteDescent numerators from desc
 
