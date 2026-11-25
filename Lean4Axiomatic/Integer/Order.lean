@@ -1,6 +1,6 @@
 module
 public import Lean4Axiomatic.Integer.Induction
-public import Lean4Axiomatic.Sequence
+public import Lean4Axiomatic.Natural.Sequence
 
 @[expose] public section
 
