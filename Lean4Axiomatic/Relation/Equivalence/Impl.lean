@@ -1,7 +1,10 @@
-import Lean4Axiomatic.Hand
-import Lean4Axiomatic.Operators
-import Lean4Axiomatic.Relation.Equivalence.Core
-import Mathlib.Tactic.GCongr
+module
+public import Lean4Axiomatic.Hand
+public import Lean4Axiomatic.Operators
+public import Lean4Axiomatic.Relation.Equivalence.Core
+public import Lean4Axiomatic.Tactic.GCongr
+
+@[expose] public section
 
 namespace Lean4Axiomatic.Relation.Equivalence.Impl
 

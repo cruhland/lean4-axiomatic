@@ -1,3 +1,6 @@
+module
+
+@[expose] public section
 
 /-! # Generic definitions and properties applicable to ordered types -/
 

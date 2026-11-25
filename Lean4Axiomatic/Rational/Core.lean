@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Integer
+module
+public import Lean4Axiomatic.Integer
+
+@[expose] public section
 
 /-! # Rational numbers: fundamental definitions and properties -/
 

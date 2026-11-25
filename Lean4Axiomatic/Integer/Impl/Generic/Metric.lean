@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Integer.Metric
+module
+public import Lean4Axiomatic.Integer.Metric
+
+@[expose] public section
 
 /-! # Generic implementation of integer metric functions and properties -/
 
@@ -23,8 +26,7 @@ local instance metric_ops : Metric.Ops ℤ := {
   _dist := _dist
 }
 
-@[implicit_reducible]
-def metric_props : Metric.Props ℤ := {
+theorem metric_props : Metric.Props ℤ := {
   abs_sgn := Rel.refl
 }
 

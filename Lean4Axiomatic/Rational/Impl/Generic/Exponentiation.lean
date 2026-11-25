@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Rational.Exponentiation
+module
+public import Lean4Axiomatic.Rational.Exponentiation
+
+@[expose] public section
 
 /-! # Generic implementation of exponentiation to integers, with properties -/
 
@@ -94,7 +97,7 @@ invoked using this context. Instead, think of this type as exponentiation to a
 specific, but unspecified, integer value.
 -/
 @[implicit_reducible]
-private def ind_ctx
+def ind_ctx
     : Integer.Induction.Context (λ (_ : ℤ) => (p : ℚ) → [AP (p ≄ 0)] → ℚ)
     :=
   Integer.ind_ctx_const on_diff_subst_pow
@@ -186,8 +189,7 @@ theorem pow_substR
 This file proves the theorems necessary for showing that its implementation of
 rational exponentiation to integer powers is correct.
 -/
-@[implicit_reducible]
-def exponentiation_props : Exponentiation.Props ℚ := {
+theorem exponentiation_props : Exponentiation.Props ℚ := {
   pow_diff := pow_diff
   pow_substR := pow_substR
 }

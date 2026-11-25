@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Integer.Sign
+module
+public import Lean4Axiomatic.Integer.Sign
+
+@[expose] public section
 
 /-! # Integer subtraction -/
 
@@ -454,8 +457,7 @@ theorem mul_cancelL {a b c : ℤ} : a ≄ 0 → a * b ≃ a * c → b ≃ c := b
     show b ≃ c
     exact zero_diff_iff_eqv.mp ‹b - c ≃ 0›
 
-@[implicit_reducible]
-def mul_cancellativeL
+theorem mul_cancellativeL
     : AA.CancellativeOn Hand.L (α := ℤ) (· * ·) (· ≄ 0) (· ≃ ·) (· ≃ ·)
     := {
   cancel := mul_cancelL

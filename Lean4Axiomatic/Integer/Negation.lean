@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Integer.Multiplication
+module
+public import Lean4Axiomatic.Integer.Multiplication
+
+@[expose] public section
 
 /-!
 # Integer negation
@@ -297,8 +300,7 @@ theorem neg_scompatR_mul {a b : ℤ} : -(a * b) ≃ a * (-b) := calc
   _ ≃ (-b) * a := neg_scompatL_mul
   _ ≃ a * (-b) := AA.comm
 
-@[implicit_reducible]
-def neg_semicompatibleL_mul
+theorem neg_semicompatibleL_mul
     : AA.SemicompatibleOn Hand.L (α := ℤ) (-·) (· * ·)
     := {
   scompat := neg_scompatL_mul

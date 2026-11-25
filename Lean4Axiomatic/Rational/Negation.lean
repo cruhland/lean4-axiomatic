@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Rational.Multiplication
+module
+public import Lean4Axiomatic.Rational.Multiplication
+
+@[expose] public section
 
 /-! # Rational numbers: negation and subtraction -/
 

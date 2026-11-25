@@ -1,5 +1,8 @@
-import Lean4Axiomatic.Natural.Division
-import Lean4Axiomatic.Natural.Exponentiation
+module
+public import Lean4Axiomatic.Natural.Division
+public import Lean4Axiomatic.Natural.Exponentiation
+
+@[expose] public section
 
 namespace Lean4Axiomatic
 

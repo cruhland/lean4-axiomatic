@@ -1,5 +1,8 @@
-import Lean4Axiomatic.Integer.Exponentiation
-import Lean4Axiomatic.Metric
+module
+public import Lean4Axiomatic.Integer.Exponentiation
+public import Lean4Axiomatic.Metric
+
+@[expose] public section
 
 /-! # Integer: metric functions -/
 

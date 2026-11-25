@@ -1,7 +1,10 @@
-import Lean4Axiomatic.AbstractAlgebra
-import Lean4Axiomatic.Logic
-import Lean4Axiomatic.Natural.Order
-import Lean4Axiomatic.ClassicalAlgebra.Monoid
+module
+public import Lean4Axiomatic.AbstractAlgebra
+public import Lean4Axiomatic.Logic
+public import Lean4Axiomatic.Natural.Order
+public import Lean4Axiomatic.ClassicalAlgebra.Monoid
+
+@[expose] public section
 
 /-!
 # Natural number multiplication
@@ -357,6 +360,28 @@ instance mul_associative : AA.Associative (α := ℕ) (· * ·) := {
   assoc := mul_assoc
 }
 
+local instance mul_monoid_ops :  CA.Monoid.Ops ℕ := {
+  binop := (· * ·)
+  ident := 1
+}
+
+theorem mul_monoid_props : CA.Monoid.Props (α := ℕ) := {
+  substL  := AA.substL
+  substR  := AA.substR
+  assoc   := mul_associative.assoc
+  identL  := AA.identL
+  identR  := AA.identR
+}
+
+/--
+Naturals numbers with multiplication form a monoid.  This allow us to avoid
+reproving basic facts about naturals that are true of all monoids.
+-/
+instance mul_monoid : CA.Monoid.Monoid (α := ℕ) := {
+  toOps   := mul_monoid_ops
+  toProps := mul_monoid_props
+}
+
 variable [Sign ℕ]
 
 /--
@@ -459,8 +484,7 @@ then multiplying them both by a nonzero (i.e., positive) natural number will
 preserve their ordering (by `mul_substitutive_lt`), contradicting the hypothesis
 that the products are equal. Thus the right-hand factors must be equal.
 -/
-@[implicit_reducible]
-def mul_cancelL
+theorem mul_cancelL
     : AA.CancellativeOn Hand.L (α := ℕ) (· * ·) (· ≄ 0) (· ≃ ·) (· ≃ ·)
     := by
   apply AA.CancellativeOn.mk
@@ -554,28 +578,5 @@ theorem sqrt1 {n : ℕ} : n * n ≃ 1 ↔ n ≃ 1 := by
     show n * n ≃ 1
     have : n * n ≃ 1 := factors_eqv_1.mpr (And.intro ‹n ≃ 1› ‹n ≃ 1›)
     exact this
-
-local instance mul_monoid_ops :  CA.Monoid.Ops ℕ := {
-  binop := (· * ·)
-  ident := 1
-}
-
-@[implicit_reducible]
-def mul_monoid_props : CA.Monoid.Props (α := ℕ) := {
-  substL  := AA.substL
-  substR  := AA.substR
-  assoc   := mul_associative.assoc
-  identL  := AA.identL
-  identR  := AA.identR
-}
-
-/--
-Naturals numbers with multiplication form a monoid.  This allow us to avoid
-reproving basic facts about naturals that are true of all monoids.
--/
-instance mul_monoid : CA.Monoid.Monoid (α := ℕ) := {
-  toOps   := mul_monoid_ops
-  toProps := mul_monoid_props
-}
 
 end Lean4Axiomatic.Natural

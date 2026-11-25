@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Integer.Sign
+module
+public import Lean4Axiomatic.Integer.Sign
+
+@[expose] public section
 
 /-! # Generic implementations of integer signedness properties -/
 

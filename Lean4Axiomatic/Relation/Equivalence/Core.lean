@@ -1,5 +1,8 @@
-import Lean4Axiomatic.Function.Core
-import Lean4Axiomatic.Operators
+module
+public import Lean4Axiomatic.Function.Core
+public import Lean4Axiomatic.Operators
+
+@[expose] public section
 
 /-!
 # Equivalence relations

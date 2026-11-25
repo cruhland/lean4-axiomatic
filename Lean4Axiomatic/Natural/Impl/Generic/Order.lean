@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Natural.Addition
+module
+public import Lean4Axiomatic.Natural.Addition
+
+@[expose] public section
 
 /-! # Generic implementation of natural number order relations -/
 

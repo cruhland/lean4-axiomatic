@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Natural.Multiplication
+module
+public import Lean4Axiomatic.Natural.Multiplication
+
+@[expose] public section
 
 /-! # Natural numbers: Euclidean division -/
 

@@ -1,5 +1,8 @@
-import Lean4Axiomatic.AbstractAlgebra.Substitutive
-import Lean4Axiomatic.Logic
+module
+public import Lean4Axiomatic.AbstractAlgebra.Substitutive
+public import Lean4Axiomatic.Logic
+
+@[expose] public section
 
 namespace Lean4Axiomatic.AA
 
@@ -125,8 +128,7 @@ meeting certain conditions.
 - `EqvOp α`: Necessary because `AbsorbingOn.absorb` requires it.
 - `Commutative f`: Restriction on `f` that's required for the derivation.
 -/
-@[implicit_reducible]
-def absorbingR_from_absorbingL
+theorem absorbingR_from_absorbingL
     {α : Sort u} {z : α} {f : α → α → α} [EqvOp α] [Commutative f]
     : AbsorbingOn Hand.L z f → AbsorbingOn Hand.R z f
     := by
@@ -229,8 +231,7 @@ version implies the other.
 - `EqvOp α`: Necessary because `IdentityOn.ident` expresses an equality on `α`.
 - `Commutative f`: Restriction on `f` that's required for the derivation.
 -/
-@[implicit_reducible]
-def identityR_from_identityL
+theorem identityR_from_identityL
     {α : Sort u} [EqvOp α] {e : α} {f : α → α → α} [Commutative f]
     : IdentityOn Hand.L e f → IdentityOn Hand.R e f
     := by
@@ -335,8 +336,7 @@ version implies the other.
 - `IdentityOn hand e f`: Evidence that `e` is an identity element.
 - `Commutative f`: Restriction on `f` that's required for the derivation.
 -/
-@[implicit_reducible]
-def inverseR_from_inverseL
+theorem inverseR_from_inverseL
     {α : Sort u} {e : α} {inv : α → α} {f : α → α → α}
     [EqvOp α] [Identity e f] [Commutative f]
     : InverseOn Hand.L inv f → InverseOn Hand.R inv f
@@ -441,8 +441,7 @@ version implies the other.
 - `Commutative g`:
     Restriction on `g` that's required for the derivation.
 -/
-@[implicit_reducible]
-def semicompatibleR_from_semicompatibleL
+theorem semicompatibleR_from_semicompatibleL
     {α : Sort u} {f : α → α} {g : α → α → α}
     [EqvOp α] [Substitutive₁ f (· ≃ ·) (· ≃ ·)] [Commutative g]
     : SemicompatibleOn Hand.L f g → SemicompatibleOn Hand.R f g
@@ -585,8 +584,7 @@ attribute [instance] Distributive.distributiveR
 Derive right-distributivity from left-distributivity for operations `f` and `g`
 meeting certain conditions.
 -/
-@[implicit_reducible]
-def distributiveR_from_distributiveL
+theorem distributiveR_from_distributiveL
     {α : Sort u} {f g : α → α → α}
     [EqvOp α] [Commutative f] [Substitutive₂ g AA.tc (· ≃ ·) (· ≃ ·)]
     : DistributiveOn Hand.L f g → DistributiveOn Hand.R f g := by
@@ -643,7 +641,7 @@ which one is inhabited.
 Intended to be used in contexts where the mapping functions are previously
 defined, to keep the code compact.
 -/
-def OneOfThree.map
+theorem OneOfThree.map
     {α₁ α₂ β₁ β₂ γ₁ γ₂ : Prop}
     : OneOfThree α₁ β₁ γ₁ → (α₁ → α₂) → (β₁ → β₂) → (γ₁ → γ₂)
     → OneOfThree α₂ β₂ γ₂
@@ -659,7 +657,7 @@ This merely changes how the type is written; the value is preserved. Useful
 in conjunction with `OneOfThree.map` to translate between arbitrary
 `OneOfThree` types.
 -/
-def OneOfThree.rotL {α β γ : Prop} : OneOfThree α β γ → OneOfThree β γ α
+theorem OneOfThree.rotL {α β γ : Prop} : OneOfThree α β γ → OneOfThree β γ α
 | first a => third a
 | second b => first b
 | third c => second c
@@ -672,7 +670,7 @@ This merely changes how the type is written; the value is preserved. Useful
 in conjunction with `OneOfThree.map` to translate between arbitrary
 `OneOfThree` types.
 -/
-def OneOfThree.rotR {α β γ : Prop} : OneOfThree α β γ → OneOfThree γ α β
+theorem OneOfThree.rotR {α β γ : Prop} : OneOfThree α β γ → OneOfThree γ α β
 | first a => second a
 | second b => third b
 | third c => first c
@@ -690,7 +688,7 @@ which ones are inhabited.
 Intended to be used in contexts where the mapping functions are previously
 defined, to keep the code compact.
 -/
-def TwoOfThree.map
+theorem TwoOfThree.map
     {α₁ α₂ β₁ β₂ γ₁ γ₂ : Prop} (f : α₁ → α₂) (g : β₁ → β₂) (h : γ₁ → γ₂)
     : TwoOfThree α₁ β₁ γ₁ → TwoOfThree α₂ β₂ γ₂
 | oneAndTwo a b => oneAndTwo (f a) (g b)
@@ -705,7 +703,7 @@ This merely changes how the type is written; the value is preserved. Useful
 in conjunction with `TwoOfThree.map` to translate between arbitrary
 `TwoOfThree` types.
 -/
-def TwoOfThree.rotL {α β γ : Prop} : TwoOfThree α β γ → TwoOfThree β γ α
+theorem TwoOfThree.rotL {α β γ : Prop} : TwoOfThree α β γ → TwoOfThree β γ α
 | oneAndTwo a b => oneAndThree b a
 | oneAndThree a c => twoAndThree c a
 | twoAndThree b c => oneAndTwo b c
@@ -718,7 +716,7 @@ This merely changes how the type is written; the value is preserved. Useful
 in conjunction with `TwoOfThree.map` to translate between arbitrary
 `TwoOfThree` types.
 -/
-def TwoOfThree.rotR {α β γ : Prop} : TwoOfThree α β γ → TwoOfThree γ α β
+theorem TwoOfThree.rotR {α β γ : Prop} : TwoOfThree α β γ → TwoOfThree γ α β
 | oneAndTwo a b => twoAndThree a b
 | oneAndThree a c => oneAndTwo c a
 | twoAndThree b c => oneAndThree c b
@@ -739,7 +737,7 @@ preserving the one that's inhabited.
 Intended to be used in contexts where the mapping functions are previously
 defined, to keep the code compact.
 -/
-def ExactlyOneOfThree.map
+theorem ExactlyOneOfThree.map
     {α₁ α₂ β₁ β₂ γ₁ γ₂ : Prop}
     : ExactlyOneOfThree α₁ β₁ γ₁ → (α₁ ↔ α₂) → (β₁ ↔ β₂) → (γ₁ ↔ γ₂)
     → ExactlyOneOfThree α₂ β₂ γ₂
@@ -759,7 +757,7 @@ This merely changes how the type is written; the value is preserved. Useful
 in conjunction with `ExactlyOneOfThree.map` to translate between arbitrary
 `ExactlyOneOfThree` types.
 -/
-def ExactlyOneOfThree.rotL
+theorem ExactlyOneOfThree.rotL
     {α β γ : Prop} : ExactlyOneOfThree α β γ → ExactlyOneOfThree β γ α
     := by
   intro (x : ExactlyOneOfThree α β γ)
@@ -775,7 +773,7 @@ This merely changes how the type is written; the value is preserved. Useful
 in conjunction with `ExactlyOneOfThree.map` to translate between arbitrary
 `ExactlyOneOfThree` types.
 -/
-def ExactlyOneOfThree.rotR
+theorem ExactlyOneOfThree.rotR
     {α β γ : Prop} : ExactlyOneOfThree α β γ → ExactlyOneOfThree γ α β
     := by
   intro (x : ExactlyOneOfThree α β γ)

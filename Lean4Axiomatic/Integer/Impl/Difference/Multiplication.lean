@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Integer.Impl.Difference.Addition
+module
+public import Lean4Axiomatic.Integer.Impl.Difference.Addition
+
+@[expose] public section
 
 namespace Lean4Axiomatic.Integer.Impl.Difference
 
@@ -121,8 +124,7 @@ theorem mul_substR {a₁ a₂ b : Difference ℕ} : a₁ ≃ a₂ → b * a₁ �
     _ ≃ a₂ * b := by srw [‹a₁ ≃ a₂›]
     _ ≃ b * a₂ := mul_comm
 
-@[implicit_reducible]
-def mul_substitutive
+theorem mul_substitutive
     : AA.Substitutive₂ (α := Difference ℕ) (· * ·) AA.tc (· ≃ ·) (· ≃ ·) := {
   substitutiveL := { subst₂ := λ (_ : True) => mul_substL }
   substitutiveR := { subst₂ := λ (_ : True) => mul_substR }
@@ -179,8 +181,7 @@ theorem mul_assoc {a b c : Difference ℕ} : (a * b) * c ≃ a * (b * c) := by
     _ = q——p * (n——m * k——j)                             := rfl
     _ = a * (b * c)                                      := rfl
 
-@[implicit_reducible]
-def mul_associative : AA.Associative (α := Difference ℕ) (· * ·) := {
+theorem mul_associative : AA.Associative (α := Difference ℕ) (· * ·) := {
   assoc := mul_assoc
 }
 
@@ -220,8 +221,7 @@ theorem mul_identR {a : Difference ℕ} : a * 1 ≃ a := calc
   _ ≃ 1 * a := mul_comm
   _ ≃ a     := mul_identL
 
-@[implicit_reducible]
-def mul_identity : AA.Identity (α := Difference ℕ) 1 (· * ·) := {
+theorem mul_identity : AA.Identity (α := Difference ℕ) 1 (· * ·) := {
   identityL := { ident := mul_identL }
   identityR := { ident := mul_identR }
 }
@@ -288,8 +288,7 @@ theorem mul_distribR
   _ ≃ a * b + a * c := mul_distribL
   _ ≃ b * a + c * a := by srw [mul_comm, mul_comm]
 
-@[implicit_reducible]
-def mul_distributive : AA.Distributive (α := Difference ℕ) (· * ·) (· + ·) := {
+theorem mul_distributive : AA.Distributive (α := Difference ℕ) (· * ·) (· + ·) := {
   distributiveL := { distrib := mul_distribL }
   distributiveR := { distrib := mul_distribR }
 }
@@ -317,8 +316,7 @@ theorem mul_compat_natural
     _ ≃ (n * m)——0                          := by srw [Natural.zero_add]
     _ = ((n * m : ℕ):Difference ℕ)          := rfl
 
-@[implicit_reducible]
-def mul_compatible_from_natural
+theorem mul_compatible_from_natural
     : AA.Compatible₂ (α := ℕ) (β := Difference ℕ) (↑·) (· * ·) (· * ·)
     := {
   compat₂ := mul_compat_natural

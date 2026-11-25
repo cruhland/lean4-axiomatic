@@ -1,5 +1,8 @@
-import Lean4Axiomatic.Integer.Induction
-import Lean4Axiomatic.Sequence
+module
+public import Lean4Axiomatic.Integer.Induction
+public import Lean4Axiomatic.Sequence
+
+@[expose] public section
 
 /-! # Integer order -/
 
@@ -491,8 +494,7 @@ theorem add_cancelL_lt {a b c : ℤ} : c + a < c + b → a < b := by
     b - a           ≃ _ := Rel.refl
   prw [‹c + b - (c + a) ≃ b - a›] ‹Positive (c + b - (c + a))›
 
-@[implicit_reducible]
-def add_cancellativeL_lt
+theorem add_cancellativeL_lt
     : AA.CancellativeOn Hand.L (α := ℤ) (· + ·) AA.tc (· < ·) (· < ·)
     := {
   cancel := λ (_ : True) => add_cancelL_lt
@@ -582,8 +584,7 @@ theorem mul_cancelL_lt {a b c : ℤ} : Positive c → c * a < c * b → a < b :=
     same_sign_positive ‹SameSign c (b - a)› ‹Positive c›
   exact this
 
-@[implicit_reducible]
-def mul_cancellativeL_lt
+theorem mul_cancellativeL_lt
     : AA.CancellativeOn Hand.L (α := ℤ) (· * ·) Positive (· < ·) (· < ·)
     := {
   cancel := mul_cancelL_lt

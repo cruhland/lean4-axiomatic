@@ -1,3 +1,4 @@
-import Lean4Axiomatic.Relation.Equivalence.Core
-import Lean4Axiomatic.Relation.Equivalence.Impl
-import Lean4Axiomatic.Relation.Equivalence.Unique
+module
+public import Lean4Axiomatic.Relation.Equivalence.Core
+public import Lean4Axiomatic.Relation.Equivalence.Impl
+public import Lean4Axiomatic.Relation.Equivalence.Unique

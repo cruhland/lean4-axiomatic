@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Integer.Division
+module
+public import Lean4Axiomatic.Integer.Division
+
+@[expose] public section
 
 /-! # Integer parity (evenness and oddness) -/
 
@@ -106,7 +109,7 @@ theorem half_floored_subst
     _ ≃ half_floored a₂ := Rel.symm half_floored_eqv
 
 /-- Any integer of the form `2 * b` is even. -/
-def even_from_eqv {a b : ℤ} : a ≃ 2 * b → Even a := by
+theorem even_from_eqv {a b : ℤ} : a ≃ 2 * b → Even a := by
   intro (_ : a ≃ 2 * b)
   show Even a
 
@@ -139,7 +142,7 @@ def even_from_eqv {a b : ℤ} : a ≃ 2 * b → Even a := by
   exact this
 
 /-- Any integer of the form `2 * b + 1` is odd. -/
-def odd_from_eqv {a b : ℤ} : a ≃ 2 * b + 1 → Odd a := by
+theorem odd_from_eqv {a b : ℤ} : a ≃ 2 * b + 1 → Odd a := by
   intro (_ : a ≃ 2 * b + 1)
   show Odd a
 
@@ -220,7 +223,7 @@ def parity (a : ℤ) : AA.ExactlyOneOfTwo₁ (Even a) (Odd a) :=
   }
 
 /-- Only even integers have even squares. -/
-def even_from_sqr_even {a : ℤ} : Even (a^2) → Even a := by
+theorem even_from_sqr_even {a : ℤ} : Even (a^2) → Even a := by
   intro (_ : Even (a^2))
   show Even a
 

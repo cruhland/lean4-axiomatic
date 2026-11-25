@@ -1,9 +1,13 @@
-import Lean4Axiomatic.Rational.Core
-import Lean4Axiomatic.Rational.Impl.Fraction.Naive
+module
+public import Lean4Axiomatic.Rational.Core
+public import Lean4Axiomatic.Rational.Impl.Fraction.Naive
+
+@[expose] public section
 
 namespace Lean4Axiomatic.Rational.Impl
 
 open Logic (AP)
+open Fraction.Naive (NaiveFraction)
 open Relation.Equivalence (EqvOp)
 open Signed (Negative Positive Positivity)
 
@@ -62,17 +66,17 @@ reusing naive fraction definitions that still work for true fractions.
 -/
 def naive
     {α : Type} [EqvOp α] [OfNat α 0] [Positivity.Ops α]
-    : Fraction α → Naive.Fraction α
-| a//b => Naive.Fraction.mk a b
+    : Fraction α → NaiveFraction α
+| a//b => NaiveFraction.mk a b
 
 /--
 Lift a naive fraction to a true fraction, if its denominator is positive.
 -/
 def from_naive
-    {α : Type} [EqvOp α] [OfNat α 0] [Positivity.Ops α] (p : Naive.Fraction α)
+    {α : Type} [EqvOp α] [OfNat α 0] [Positivity.Ops α] (p : NaiveFraction α)
     : Positive p.denominator → Fraction α
     := by
-  revert p; intro (p : Naive.Fraction α)
+  revert p; intro (p : NaiveFraction α)
   let pn := p.numerator; let pd := p.denominator
   intro (_ : Positive pd)
   have : AP (Positive pd) := AP.mk ‹Positive pd›

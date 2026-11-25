@@ -1,5 +1,8 @@
-import Lean4Axiomatic.AbstractAlgebra
-import Lean4Axiomatic.Integer.Addition
+module
+public import Lean4Axiomatic.AbstractAlgebra
+public import Lean4Axiomatic.Integer.Addition
+
+@[expose] public section
 
 /-! # Integer multiplication -/
 
@@ -76,8 +79,7 @@ local instance mul_monoid_ops : CA.Monoid.Ops ℤ := {
   ident := 1
 }
 
-@[implicit_reducible]
-def mul_monoid_props : CA.Monoid.Props (α := ℤ) := {
+theorem mul_monoid_props : CA.Monoid.Props (α := ℤ) := {
   substL  := AA.substL
   substR  := AA.substR
   assoc   := AA.assoc

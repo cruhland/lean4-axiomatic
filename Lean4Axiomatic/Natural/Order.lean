@@ -1,5 +1,8 @@
-import Lean4Axiomatic.Logic
-import Lean4Axiomatic.Natural.Sign
+module
+public import Lean4Axiomatic.Logic
+public import Lean4Axiomatic.Natural.Sign
+
+@[expose] public section
 
 /-!
 # Natural number ordering
@@ -345,8 +348,7 @@ theorem le_cancel_add {n m₁ m₂ : ℕ} : n + m₁ ≤ n + m₂ → m₁ ≤ m
     n + m₂       ≃ _ := Rel.refl
   exact AA.cancelL ‹n + (m₁ + d) ≃ n + m₂›
 
-@[implicit_reducible]
-def le_cancelL_add
+theorem le_cancelL_add
     : AA.CancellativeOn Hand.L (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·)
     := {
   cancel := λ (_ : True) => le_cancel_add

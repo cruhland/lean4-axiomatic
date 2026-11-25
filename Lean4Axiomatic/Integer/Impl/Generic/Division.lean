@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Integer.Division
+module
+public import Lean4Axiomatic.Integer.Division
+
+@[expose] public section
 
 /-! # Generic implementation of integer division functions and properties -/
 

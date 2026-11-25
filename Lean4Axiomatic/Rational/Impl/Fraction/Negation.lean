@@ -1,5 +1,8 @@
-import Lean4Axiomatic.Rational.Impl.Fraction.Multiplication
-import Lean4Axiomatic.Rational.Negation
+module
+public import Lean4Axiomatic.Rational.Impl.Fraction.Multiplication
+public import Lean4Axiomatic.Rational.Negation
+
+@[expose] public section
 
 namespace Lean4Axiomatic.Rational.Impl.Fraction
 

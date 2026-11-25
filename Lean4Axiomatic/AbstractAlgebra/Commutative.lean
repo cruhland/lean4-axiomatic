@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Relation.Equivalence
+module
+public import Lean4Axiomatic.Relation.Equivalence
+
+@[expose] public section
 
 namespace Lean4Axiomatic.AA
 

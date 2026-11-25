@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Rational.Order
+module
+public import Lean4Axiomatic.Rational.Order
+
+@[expose] public section
 
 /-! # Generic implementation of rational order and properties -/
 
@@ -22,8 +25,7 @@ local instance order_ops : Order.Ops ℚ := {
   lt := lt
 }
 
-@[implicit_reducible]
-def order_props : Order.Props ℚ := {
+theorem order_props : Order.Props ℚ := {
   le_sgn := Iff.intro id id
   lt_sgn := Iff.intro id id
 }

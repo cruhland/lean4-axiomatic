@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Rational.Core
+module
+public import Lean4Axiomatic.Rational.Core
+
+@[expose] public section
 
 /-! # Rational numbers: addition -/
 

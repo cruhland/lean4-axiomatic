@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Integer.Impl.Difference.Core
+module
+public import Lean4Axiomatic.Integer.Impl.Difference.Core
+
+@[expose] public section
 
 namespace Lean4Axiomatic.Integer.Impl.Difference
 
@@ -109,7 +112,7 @@ equivalence of two differences of natural number sums. The left and right
 elements of the differences are directly equivalent via associativity of
 natural number addition.
 -/
-def add_assoc {a b c : Difference ℕ} : (a + b) + c ≃ a + (b + c) := by
+theorem add_assoc {a b c : Difference ℕ} : (a + b) + c ≃ a + (b + c) := by
   revert a; intro (n——m); let a := n——m
   revert b; intro (k——j); let b := k——j
   revert c; intro (p——q); let c := p——q
@@ -125,8 +128,7 @@ def add_assoc {a b c : Difference ℕ} : (a + b) + c ≃ a + (b + c) := by
     _ = n——m + (k——j + p——q)         := rfl
     _ = a + (b + c)                  := rfl
 
-@[implicit_reducible]
-def add_associative : AA.Associative (α := Difference ℕ) (· + ·) := {
+theorem add_associative : AA.Associative (α := Difference ℕ) (· + ·) := {
   assoc := add_assoc
 }
 
@@ -148,8 +150,7 @@ theorem add_identL {a : Difference ℕ} : 0 + a ≃ a := by
     _ ≃ n——m             := by srw [Natural.zero_add, Natural.zero_add]
     _ = a                := rfl
 
-@[implicit_reducible]
-def add_identityL : AA.IdentityOn Hand.L (α := Difference ℕ) 0 (· + ·) := {
+theorem add_identityL : AA.IdentityOn Hand.L (α := Difference ℕ) 0 (· + ·) := {
   ident := add_identL
 }
 
@@ -177,8 +178,7 @@ theorem add_compat_natural
     _ = n——0 + m——0                         := rfl
     _ = (n:Difference ℕ) + (m:Difference ℕ) := rfl
 
-@[implicit_reducible]
-def add_compatible_from_natural
+theorem add_compatible_from_natural
     : AA.Compatible₂ (α := ℕ) (β := Difference ℕ) (↑·) (· + ·) (· + ·)
     := {
   compat₂ := add_compat_natural

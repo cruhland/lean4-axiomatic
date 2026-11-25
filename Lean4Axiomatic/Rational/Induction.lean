@@ -1,5 +1,8 @@
-import Lean4Axiomatic.Function
-import Lean4Axiomatic.Rational.Reciprocation
+module
+public import Lean4Axiomatic.Function
+public import Lean4Axiomatic.Rational.Reciprocation
+
+@[expose] public section
 
 /-!
 # Rational induction
@@ -10,9 +13,9 @@ concepts.
 
 namespace Lean4Axiomatic.Rational
 
-open Function (IndexedFamily fsubst)
-open Logic (AP)
-open Relation.Equivalence (EqvOp)
+open Lean4Axiomatic.Function (IndexedFamily fsubst)
+open Lean4Axiomatic.Logic (AP)
+open Lean4Axiomatic.Relation.Equivalence (EqvOp)
 
 /-! ## Axioms -/
 

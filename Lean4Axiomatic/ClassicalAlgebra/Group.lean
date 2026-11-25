@@ -1,5 +1,8 @@
-import Lean4Axiomatic.AbstractAlgebra.Substitutive
-import Lean4Axiomatic.ClassicalAlgebra.Monoid
+module
+public import Lean4Axiomatic.AbstractAlgebra.Substitutive
+public import Lean4Axiomatic.ClassicalAlgebra.Monoid
+
+@[expose] public section
 
 namespace Lean4Axiomatic.CA.Group
 

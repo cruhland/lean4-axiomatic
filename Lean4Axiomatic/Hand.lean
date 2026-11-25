@@ -1,3 +1,6 @@
+module
+
+@[expose] public section
 
 namespace Lean4Axiomatic
 

@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Natural.Core
+module
+public import Lean4Axiomatic.Natural.Core
+
+@[expose] public section
 
 /-! # Generic implementation of core natural number properties -/
 

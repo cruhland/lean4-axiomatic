@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Natural.Division
+module
+public import Lean4Axiomatic.Natural.Division
+
+@[expose] public section
 
 /-! # Generic implementation of natural number division and properties -/
 

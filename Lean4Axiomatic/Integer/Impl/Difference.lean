@@ -1,10 +1,13 @@
-import Lean4Axiomatic.Integer.Impl.Difference.Induction
-import Lean4Axiomatic.Integer.Impl.Difference.Sign
-import Lean4Axiomatic.Integer.Impl.Generic.Division
-import Lean4Axiomatic.Integer.Impl.Generic.Metric
-import Lean4Axiomatic.Integer.Impl.Generic.Order
-import Lean4Axiomatic.Integer.Impl.Generic.Parity
-import Lean4Axiomatic.Natural.Impl.Generic.Exponentiation
+module
+public import Lean4Axiomatic.Integer.Impl.Difference.Induction
+public import Lean4Axiomatic.Integer.Impl.Difference.Sign
+public import Lean4Axiomatic.Integer.Impl.Generic.Division
+public import Lean4Axiomatic.Integer.Impl.Generic.Metric
+public import Lean4Axiomatic.Integer.Impl.Generic.Order
+public import Lean4Axiomatic.Integer.Impl.Generic.Parity
+public import Lean4Axiomatic.Natural.Impl.Generic.Exponentiation
+
+@[expose] public section
 
 /-! # Implementation of integers as formal differences of natural numbers -/
 

@@ -1,5 +1,8 @@
-import Lean4Axiomatic.Rational.Addition
-import Lean4Axiomatic.Rational.Impl.Fraction.Core
+module
+public import Lean4Axiomatic.Rational.Addition
+public import Lean4Axiomatic.Rational.Impl.Fraction.Core
+
+@[expose] public section
 
 namespace Lean4Axiomatic.Rational.Impl.Fraction
 

@@ -1,12 +1,15 @@
-import Lean4Axiomatic.Natural.Impl.Generic
-import Lean4Axiomatic.Rational
-import Lean4Axiomatic.Rational.Impl.Fraction.Sign
-import Lean4Axiomatic.Rational.Impl.Fraction.Induction
-import Lean4Axiomatic.Rational.Impl.Generic.Exponentiation
-import Lean4Axiomatic.Rational.Impl.Generic.FloorCeil
-import Lean4Axiomatic.Rational.Impl.Generic.Metric
-import Lean4Axiomatic.Rational.Impl.Generic.MinMax
-import Lean4Axiomatic.Rational.Impl.Generic.Order
+module
+public import Lean4Axiomatic.Natural.Impl.Generic
+public import Lean4Axiomatic.Rational
+public import Lean4Axiomatic.Rational.Impl.Fraction.Sign
+public import Lean4Axiomatic.Rational.Impl.Fraction.Induction
+public import Lean4Axiomatic.Rational.Impl.Generic.Exponentiation
+public import Lean4Axiomatic.Rational.Impl.Generic.FloorCeil
+public import Lean4Axiomatic.Rational.Impl.Generic.Metric
+public import Lean4Axiomatic.Rational.Impl.Generic.MinMax
+public import Lean4Axiomatic.Rational.Impl.Generic.Order
+
+@[expose] public section
 
 /-! # Formal fraction implementation of rational numbers -/
 

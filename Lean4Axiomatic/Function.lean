@@ -1,1 +1,2 @@
-import Lean4Axiomatic.Function.IndexedFamily
+module
+public import Lean4Axiomatic.Function.IndexedFamily

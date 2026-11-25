@@ -1,5 +1,8 @@
-import Lean4Axiomatic.Rational.FloorCeil
-import Lean4Axiomatic.Rational.Metric
+module
+public import Lean4Axiomatic.Rational.FloorCeil
+public import Lean4Axiomatic.Rational.Metric
+
+@[expose] public section
 
 /-!
 # Rational numbers: exponentiation to natural numbers

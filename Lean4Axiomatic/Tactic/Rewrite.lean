@@ -1,6 +1,9 @@
-import Lean
-import Lean4Axiomatic.Relation.Equivalence
-import Mathlib.Tactic.GCongr
+module
+public import Lean
+public import Lean4Axiomatic.Relation.Equivalence
+public import Lean4Axiomatic.Tactic.GCongr
+
+@[expose] public meta section
 
 namespace Lean4Axiomatic.Tactic
 
@@ -23,14 +26,14 @@ open Lean.Meta (
 )
 open Lean.MVarId (gcongrForward)
 open Lean.Parser.Tactic (rwRuleSeq)
-open Mathlib.Tactic.GCongr (gcongrExt gcongrForwardDischarger GCongrKey)
-open Mathlib.Tactic.GCongr renaming getRel → parseGCongrRel
+open Lean4Axiomatic.Tactic.GCongr (gcongrExt gcongrForwardDischarger GCongrKey)
+open Lean4Axiomatic.Tactic.GCongr renaming getRel → parseGCongrRel
 
 /--
 Retrieve a metavariable's type with some additional processing to bring it into
 a useful form for tactics.
 -/
-private def mvarType (mvarId : MVarId) : MetaM Expr :=
+def mvarType (mvarId : MVarId) : MetaM Expr :=
   /-
   Instantiate metavariables, but only minimally reduce, to prevent large
   changes in the type's shape.
@@ -44,7 +47,7 @@ arguments (including zero), return the name and all arguments in order.
 Expands local `let` declarations and evaluates lambda applications for
 convenience.
 -/
-private partial def parseFnAndArgs
+partial def parseFnAndArgs
     (e : Expr) : MetaM (String ⊕ (Name × Array Expr))
     :=
   aux e #[]
@@ -68,7 +71,7 @@ where
       -- Continue trying to extract args from `fnExpr`
       aux fnExpr (args ++ outerArgs)
 
-private def gcongrKeyToString (key : GCongrKey) : String :=
+def gcongrKeyToString (key : GCongrKey) : String :=
   s!"\{relName={key.relName}, head={key.head}, arity={key.arity}}"
 
 instance gcongr_key_to_string_inst : ToString GCongrKey := {
@@ -98,7 +101,7 @@ automatically.
 No attempt is made to unwind changes to the proof context on failure, and any
 unsolved goals will "leak" into the top-level definition's context.
 -/
-private partial def simpleCongruence
+partial def simpleCongruence
     (goal : MVarId) (rwRule : Expr) : TacticM Unit
     := goal.withContext do
   /- Base case: can we easily close the goal? -/
@@ -127,7 +130,7 @@ private partial def simpleCongruence
     /-
     Detect whether the arguments on the LHS vs. RHS of the goal are "different"
     or not, where "different" has a specific meaning set by
-    `Mathlib.Tactic.GCongr.makeGCongrLemma`.
+    `Lean4Axiomatic.Tactic.GCongr.makeGCongrLemma`.
     -/
     let varyingArgs ← withReducibleAndInstances $
       (lhsArgs.zip rhsArgs).mapM λ (lhsArg, rhsArg) => do
@@ -166,8 +169,9 @@ private partial def simpleCongruence
   -/
   let some goalExpr ← getExprMVarAssignment? goal | panic! "goal not assigned"
   let goalArgs := goalExpr.getAppArgs
-  for (i, _, _) in gcongrLemma.mainSubgoals do
-    let some (.mvar mainSubgoal) := goalArgs[i]? | panic! "bad subgoal index"
+  for hyp in gcongrLemma.mainSubgoals do
+    let some (.mvar mainSubgoal) := goalArgs[hyp.hypIdx]?
+      | panic! "bad subgoal index"
     simpleCongruence mainSubgoal rwRule
 
   /- Try to solve the remaining subgoals of the chosen lemma. -/
@@ -179,7 +183,7 @@ private partial def simpleCongruence
     catch _ => checkpoint.restore
 
 /-- Undo `parseGCongrRel`: apply the named relation to the given terms. -/
-private def mkAppRel (relName : Name) (lhs rhs : Expr) : MetaM Expr :=
+def mkAppRel (relName : Name) (lhs rhs : Expr) : MetaM Expr :=
   if relName = `_Implies then return .forallE `x lhs rhs .default
   else mkAppM relName #[lhs, rhs]
 
@@ -189,7 +193,7 @@ Prove a "simple congruence" for each given rule, to solve the goal.
 The rules array is assumed to have been produced by `rwRuleSeqElab`. Fails if
 the array is empty, or if a congruence proof fails for any of the rules.
 -/
-private def simpleRewrite
+def simpleRewrite
     (initialGoal : MVarId) (directedRules : Array Expr) : TacticM Unit
     := do
   /-
@@ -263,7 +267,7 @@ on the argument.
 Callers should ensure that they're using the goal's metavariable context before
 invoking this function.
 -/
-private def predicateRewrite
+def predicateRewrite
     (goal : MVarId) (directedRules : Array Expr) (fnArg : Expr) : TacticM Unit
     := do
   /-
@@ -280,7 +284,7 @@ private def predicateRewrite
   simpleRewrite (initialGoal := fn.mvarId!) directedRules
 
 /-- Perform elaboration on syntax matching `Lean.Parser.Category.term`. -/
-private def termElab (termStx : Syntax) : TacticM Expr := do
+def termElab (termStx : Syntax) : TacticM Expr := do
   -- Requiring metavariable resolution here causes failures
   let term ← elabTerm termStx (expectedType? := none) (mayPostpone := true)
   -- Elaboration failed; we need to give up to prevent subtle errors downstream
@@ -288,7 +292,7 @@ private def termElab (termStx : Syntax) : TacticM Expr := do
   return term
 
 /-- Perform elaboration on syntax matching `Lean.Parser.Tactic.rwRuleSeq`. -/
-private def rwRuleSeqElab (rwRuleSeqStx : Syntax) : TacticM (Array Expr) :=
+def rwRuleSeqElab (rwRuleSeqStx : Syntax) : TacticM (Array Expr) :=
   let rwRuleStxsWithoutSeparators := rwRuleSeqStx[1].getArgs.getEvenElems
   rwRuleStxsWithoutSeparators.mapM λ rwRuleStx => do
     /- We expect each rule's syntax to be in a specific form; crash if not. -/
@@ -308,7 +312,7 @@ Convenient top-level error handling for tactics.
 If the wrapped tactic action fails, emits a human-readable message with
 details of the error.
 -/
-private def withTacticErrorHandling (t : Tactic) : Tactic := λ stx =>
+def withTacticErrorHandling (t : Tactic) : Tactic := λ stx =>
   try t stx
   catch e =>
     -- The first syntax element should be the "name" of the tactic

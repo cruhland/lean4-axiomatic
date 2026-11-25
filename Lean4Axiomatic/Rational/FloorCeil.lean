@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Rational.Order
+module
+public import Lean4Axiomatic.Rational.Order
+
+@[expose] public section
 
 /-! # Rational numbers: floor and ceiling functions -/
 

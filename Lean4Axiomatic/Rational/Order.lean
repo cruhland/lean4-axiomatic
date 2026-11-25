@@ -1,5 +1,8 @@
-import Lean4Axiomatic.Order
-import Lean4Axiomatic.Rational.Sign
+module
+public import Lean4Axiomatic.Order
+public import Lean4Axiomatic.Rational.Sign
+
+@[expose] public section
 
 /-! # Rational numbers: order -/
 

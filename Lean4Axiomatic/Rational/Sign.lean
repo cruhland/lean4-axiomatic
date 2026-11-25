@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Rational.Induction
+module
+public import Lean4Axiomatic.Rational.Induction
+
+@[expose] public section
 
 /-! # Rational numbers: sign -/
 

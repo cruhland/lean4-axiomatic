@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Rational.Metric
+module
+public import Lean4Axiomatic.Rational.Metric
+
+@[expose] public section
 
 /-! # Generic implementation of rational metric functions and properties -/
 
@@ -31,8 +34,7 @@ local instance metric_ops : Metric.Ops ℚ := {
   _between := _between
 }
 
-@[implicit_reducible]
-def metric_props : Metric.Props ℚ := {
+theorem metric_props : Metric.Props ℚ := {
   abs_sgn := eqv_refl
   dist_abs := eqv_refl
   close_dist := Iff.intro id id

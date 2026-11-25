@@ -1,6 +1,9 @@
-import Lean4Axiomatic.Integer.Negation
-import Lean4Axiomatic.Logic
-import Lean4Axiomatic.Sign
+module
+public import Lean4Axiomatic.Integer.Negation
+public import Lean4Axiomatic.Logic
+public import Lean4Axiomatic.Sign
+
+@[expose] public section
 
 /-!
 # Integer signedness
@@ -134,7 +137,7 @@ A pure sign (i.e., a square root of unity) is its own sign value.
 
 **Intuition**: Set the magnitude component of `NonzeroWithSign` to one.
 -/
-def NonzeroWithSign.for_sign {s : ℤ} [Sqrt1 s] : NonzeroWithSign s s :=
+theorem NonzeroWithSign.for_sign {s : ℤ} [Sqrt1 s] : NonzeroWithSign s s :=
   have : Positive (1:ℕ) := Natural.one_positive
   have : s ≃ s * 1 := Rel.symm AA.identR
   NonzeroWithSign.intro (1:ℕ) ‹Positive (1:ℕ)› ‹s ≃ s * 1›
@@ -238,8 +241,9 @@ class inductive Nonzero (a : ℤ) : Prop where
 Convenience constructor that infers early arguments of `Nonzero.intro` from the
 last, `NonzeroWithSign` argument.
 -/
-@[implicit_reducible]
-def Nonzero.mk {a s : ℤ} {sqrt1 : Sqrt1 s} : NonzeroWithSign a s → Nonzero a :=
+theorem Nonzero.mk
+    {a s : ℤ} {sqrt1 : Sqrt1 s} : NonzeroWithSign a s → Nonzero a
+    :=
   Nonzero.intro s sqrt1
 
 /-- Sign values (i.e., square roots of unity) are nonzero. -/
@@ -553,8 +557,38 @@ attribute [implicit_reducible, instance] Sign.toSgnProps
 
 variable
   {ℕ : Type} [Natural ℕ]
-  {ℤ : Type}
-    [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ] [Negation ℤ] [Sign ℤ]
+  {ℤ : Type} [Core (ℕ := ℕ) ℤ] [Addition ℤ] [Multiplication ℤ]
+
+/-- Evidence that two integers have the same sign. -/
+inductive SameSign (a b : ℤ) : Prop where
+| /--
+  Create an instance of `SameSign`.
+
+  **Parameters**:
+  - `sign`: The sign value of `a` and `b`, as an integer.
+  - `sqrt1`: Ensures that `sign` is a valid sign (i.e., has value `1` or `-1`).
+  - `nwsa`: Evidence that `a` has sign `sign`.
+  - `nwsb`: Evidence that `b` has sign `sign`.
+  -/
+  intro
+    (sign : ℤ)
+    (sqrt1 : Sqrt1 sign)
+    (nwsa : NonzeroWithSign a sign)
+    (nwsb : NonzeroWithSign b sign)
+
+/--
+Convenience constructor for `SameSign`.
+
+Only needs the `NonzeroWithSign` arguments passed explicitly; the others are
+inferred.
+-/
+theorem SameSign.mk
+    {a b s : ℤ} [Sqrt1 s] (_ : NonzeroWithSign a s) (_ : NonzeroWithSign b s)
+    : SameSign a b
+    :=
+  SameSign.intro s ‹Sqrt1 s› ‹NonzeroWithSign a s› ‹NonzeroWithSign b s›
+
+variable [Negation ℤ] [Sign ℤ]
 
 /--
 The `Positive` predicate respects equivalence.
@@ -601,7 +635,7 @@ theorem negative_subst {a₁ a₂ : ℤ} : a₁ ≃ a₂ → Negative a₁ → N
   exact this
 
 /-- An integer is positive if it's equivalent to a positive natural number. -/
-def positive_intro_nat
+theorem positive_intro_nat
     {m : ℕ} {a : ℤ} : Positive m → a ≃ coe m → Positive a
     := by
   intro (_ : Positive m) (_ : a ≃ coe m)
@@ -627,7 +661,7 @@ instance one_positive_inst : AP (Positive (1 : ℤ)) := AP.mk one_positive
 Extract evidence that a positive integer is equivalent to a positive natural
 number.
 -/
-def positive_elim_nat
+theorem positive_elim_nat
     {a : ℤ} : Positive a → ∃ n : ℕ, Positive n ∧ a ≃ coe n
     := by
   intro (_ : Positive a)
@@ -641,7 +675,7 @@ def positive_elim_nat
 An integer is negative if it's equivalent to the negation of a positive natural
 number.
 -/
-def negative_intro_nat
+theorem negative_intro_nat
     {m : ℕ} {a : ℤ} : Positive m → a ≃ -(coe m) → Negative a
     := by
   intro (_ : Positive m) (_ : a ≃ -(coe m))
@@ -655,7 +689,7 @@ def negative_intro_nat
 Extract evidence that a negative integer is equivalent to the negation of a
 positive natural number.
 -/
-def negative_elim_nat
+theorem negative_elim_nat
     {a : ℤ} : Negative a → ∃ n : ℕ, Positive n ∧ a ≃ -(coe n)
     := by
   intro (_ : Negative a)
@@ -885,35 +919,6 @@ theorem nonzeroWithSign_sign_inject
     have : Negative a := negative_iff_sign_neg1.mpr ‹NonzeroWithSign a (-1)›
     have : Positive a ∧ Negative a := And.intro ‹Positive a› ‹Negative a›
     exact absurd ‹Positive a ∧ Negative a› not_positive_and_negative
-
-/-- Evidence that two integers have the same sign. -/
-inductive SameSign (a b : ℤ) : Prop where
-| /--
-  Create an instance of `SameSign`.
-
-  **Parameters**:
-  - `sign`: The sign value of `a` and `b`, as an integer.
-  - `sqrt1`: Ensures that `sign` is a valid sign (i.e., has value `1` or `-1`).
-  - `nwsa`: Evidence that `a` has sign `sign`.
-  - `nwsb`: Evidence that `b` has sign `sign`.
-  -/
-  intro
-    (sign : ℤ)
-    (sqrt1 : Sqrt1 sign)
-    (nwsa : NonzeroWithSign a sign)
-    (nwsb : NonzeroWithSign b sign)
-
-/--
-Convenience constructor for `SameSign`.
-
-Only needs the `NonzeroWithSign` arguments passed explicitly; the others are
-inferred.
--/
-def SameSign.mk
-    {a b s : ℤ} [Sqrt1 s] (_ : NonzeroWithSign a s) (_ : NonzeroWithSign b s)
-    : SameSign a b
-    :=
-  SameSign.intro s ‹Sqrt1 s› ‹NonzeroWithSign a s› ‹NonzeroWithSign b s›
 
 /--
 If two integers have the same sign, and one is positive, the other _must_ be

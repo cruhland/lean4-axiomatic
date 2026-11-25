@@ -1,6 +1,9 @@
-import Lean4Axiomatic.AbstractAlgebra
-import Lean4Axiomatic.ClassicalAlgebra.Monoid
-import Lean4Axiomatic.Rational.Addition
+module
+public import Lean4Axiomatic.AbstractAlgebra
+public import Lean4Axiomatic.ClassicalAlgebra.Monoid
+public import Lean4Axiomatic.Rational.Addition
+
+@[expose] public section
 
 open Lean4Axiomatic.Logic (AP)
 
@@ -91,8 +94,7 @@ class inductive Sqrt1 (p : ℚ) : Prop where
   from_integer_intro (a : ℤ) (sqrt1 : Integer.Sqrt1 a) (eqv : p ≃ (a : ℚ))
 
 /-- Alternative to `Sqrt1.from_integer_intro` that infers more arguments. -/
-@[implicit_reducible]
-def Sqrt1.from_integer
+theorem Sqrt1.from_integer
     {a : ℤ} {p : ℚ} [Integer.Sqrt1 a] : p ≃ (a : ℚ) → Sqrt1 p
     :=
   from_integer_intro a ‹Integer.Sqrt1 a›
@@ -219,8 +221,7 @@ local instance mul_monoid_ops :  CA.Monoid.Ops ℚ := {
   ident := 1
 }
 
-@[implicit_reducible]
-def mul_monoid_props : CA.Monoid.Props (α := ℚ) :=
+theorem mul_monoid_props : CA.Monoid.Props (α := ℚ) :=
 {
   substL  := AA.substL
   substR  := AA.substR

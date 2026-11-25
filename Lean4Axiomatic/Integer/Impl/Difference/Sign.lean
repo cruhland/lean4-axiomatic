@@ -1,6 +1,9 @@
-import Lean4Axiomatic.Integer.Impl.Generic.Sign
-import Lean4Axiomatic.Integer.Impl.Difference.Multiplication
-import Lean4Axiomatic.Integer.Impl.Difference.Negation
+module
+public import Lean4Axiomatic.Integer.Impl.Generic.Sign
+public import Lean4Axiomatic.Integer.Impl.Difference.Multiplication
+public import Lean4Axiomatic.Integer.Impl.Difference.Negation
+
+@[expose] public section
 
 namespace Lean4Axiomatic.Integer.Impl.Difference
 

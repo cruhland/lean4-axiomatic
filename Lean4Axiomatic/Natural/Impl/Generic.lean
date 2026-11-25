@@ -1,8 +1,11 @@
-import Lean4Axiomatic.Natural.Impl.Generic.Core
-import Lean4Axiomatic.Natural.Impl.Generic.Division
-import Lean4Axiomatic.Natural.Impl.Generic.Exponentiation
-import Lean4Axiomatic.Natural.Impl.Generic.Order
-import Lean4Axiomatic.Natural.Impl.Generic.Sign
+module
+public import Lean4Axiomatic.Natural.Impl.Generic.Core
+public import Lean4Axiomatic.Natural.Impl.Generic.Division
+public import Lean4Axiomatic.Natural.Impl.Generic.Exponentiation
+public import Lean4Axiomatic.Natural.Impl.Generic.Order
+public import Lean4Axiomatic.Natural.Impl.Generic.Sign
+
+@[expose] public section
 
 /-!
 # Generic natural number axiom implementations

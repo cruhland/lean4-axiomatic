@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Integer.Impl.Difference.Addition
+module
+public import Lean4Axiomatic.Integer.Impl.Difference.Addition
+
+@[expose] public section
 
 namespace Lean4Axiomatic.Integer.Impl.Difference
 
@@ -56,8 +59,7 @@ theorem neg_subst {a₁ a₂ : Difference ℕ} : a₁ ≃ a₂ → -a₁ ≃ -a�
     _ = -(k——j) := rfl
     _ = -a₂     := rfl
 
-@[implicit_reducible]
-def neg_substitutive
+theorem neg_substitutive
     : AA.Substitutive₁ (α := Difference ℕ) (-·) (· ≃ ·) (· ≃ ·)
     := {
   subst₁ := neg_subst
@@ -98,8 +100,7 @@ theorem neg_invR {a : Difference ℕ} : a + (-a) ≃ 0 := calc
   _ ≃ (-a) + a := add_comm
   _ ≃ 0        := neg_invL
 
-@[implicit_reducible]
-def neg_inverse : AA.Inverse (α := Difference ℕ) (-·) (· + ·) := {
+theorem neg_inverse : AA.Inverse (α := Difference ℕ) (-·) (· + ·) := {
   inverseL := { inverse := neg_invL }
   inverseR := { inverse := neg_invR }
 }

@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Rational.FloorCeil
+module
+public import Lean4Axiomatic.Rational.FloorCeil
+
+@[expose] public section
 
 /-! # Generic implementation of rational floor and ceiling, with properties -/
 
@@ -227,8 +230,7 @@ theorem ceil_ub {p : ℚ} {a : ℤ} : p ≤ a → ceil p ≤ a := by
     _ ≤ -(-a)       := Integer.le_neg_flip.mp ‹-a ≤ floor (-p)›
     _ ≃ a           := Integer.neg_involutive
 
-@[implicit_reducible]
-def floor_ceil_props : FloorCeil.Props ℚ := {
+theorem floor_ceil_props : FloorCeil.Props ℚ := {
   floor_ub := floor_ub
   floor_lb := floor_lb
   ceil_lb := ceil_lb

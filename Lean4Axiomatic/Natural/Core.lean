@@ -1,4 +1,7 @@
-import Lean4Axiomatic.AbstractAlgebra
+module
+public import Lean4Axiomatic.AbstractAlgebra
+
+@[expose] public section
 
 /-!
 # Fundamental definitions and properties of natural numbers

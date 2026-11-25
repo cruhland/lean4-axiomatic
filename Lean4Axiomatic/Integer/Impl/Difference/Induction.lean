@@ -1,13 +1,18 @@
-import Lean4Axiomatic.Integer.Impl.Difference.Negation
-import Lean4Axiomatic.Integer.Impl.Generic.Subtraction
+module
+public import Lean4Axiomatic.Integer.Impl.Difference.Negation
+public import Lean4Axiomatic.Integer.Impl.Generic.Subtraction
+
+@[expose] public section
 
 namespace Lean4Axiomatic.Integer.Impl.Difference
 
 /-! ## Induction/eliminators on formal differences -/
 
-open scoped Integer.Impl.Generic
-open Function (IndexedFamily fsubst fsubst_refl fsubst_substR fsubst_trans)
-open Relation.Equivalence (EqvOp)
+open scoped Lean4Axiomatic.Integer.Impl.Generic
+open Lean4Axiomatic.Function (
+  IndexedFamily fsubst fsubst_refl fsubst_substR fsubst_trans
+)
+open Lean4Axiomatic.Relation.Equivalence (EqvOp)
 
 variable {ℕ : Type} [Natural ℕ]
 
@@ -171,8 +176,7 @@ Formal differences obey all expected properties of integer induction.
 
 Not an instance to prevent clashes with the `Induction` instances in `Integer`.
 -/
-@[implicit_reducible]
-def ind_props : Induction.Props (Difference ℕ) := {
+theorem ind_props : Induction.Props (Difference ℕ) := {
   ind_diff_subst := ind_diff_subst
   ind_diff_eval := ind_diff_eval
 }

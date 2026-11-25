@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Rational.MinMax
+module
+public import Lean4Axiomatic.Rational.MinMax
+
+@[expose] public section
 
 /-! # Generic implementation of rational min and max, with properties -/
 
@@ -154,8 +157,7 @@ theorem max_leR {p q : ℚ} : q ≤ max p q := by
     show q ≤ q
     exact le_refl
 
-@[implicit_reducible]
-def minmax_props : MinMax.Props ℚ := {
+theorem minmax_props : MinMax.Props ℚ := {
   min_cases := min_cases
   min_leL := min_leL
   min_leR := min_leR

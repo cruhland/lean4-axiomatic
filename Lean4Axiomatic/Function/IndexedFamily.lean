@@ -1,5 +1,8 @@
-import Lean4Axiomatic.Relation.Equivalence.Core
-import Mathlib.Tactic.GCongr
+module
+public import Lean4Axiomatic.Relation.Equivalence.Core
+public import Lean4Axiomatic.Tactic.GCongr
+
+@[expose] public section
 
 /-! # Indexed families of types -/
 

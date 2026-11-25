@@ -1,5 +1,8 @@
-import Lean4Axiomatic.Natural
-import Lean4Axiomatic.Relation.Equivalence
+module
+public import Lean4Axiomatic.Natural
+public import Lean4Axiomatic.Relation.Equivalence
+
+@[expose] public section
 
 /-! # Fundamental definitions and properties of integers -/
 

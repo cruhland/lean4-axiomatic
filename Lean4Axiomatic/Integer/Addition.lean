@@ -1,5 +1,8 @@
-import Lean4Axiomatic.AbstractAlgebra
-import Lean4Axiomatic.Integer.Core
+module
+public import Lean4Axiomatic.AbstractAlgebra
+public import Lean4Axiomatic.Integer.Core
+
+@[expose] public section
 
 /-! # Integer addition -/
 

@@ -1,7 +1,10 @@
-import Lean4Axiomatic.AbstractAlgebra.Commutative
-import Lean4Axiomatic.AbstractAlgebra.Core
-import Lean4Axiomatic.Logic
-import Lean4Axiomatic.Tactic.Rewrite
+module
+public import Lean4Axiomatic.AbstractAlgebra.Commutative
+public import Lean4Axiomatic.AbstractAlgebra.Core
+public import Lean4Axiomatic.Logic
+public import Lean4Axiomatic.Tactic.Rewrite
+
+@[expose] public section
 
 namespace Lean4Axiomatic.AA
 
@@ -441,7 +444,7 @@ using the equivalence, and obtain the implication's conclusion.
 - `p₂`: the other equivalent property.
 - `q`: the conclusion of the implication.
 -/
-def iff_substL {p₁ p₂ q : Prop} : (p₁ ↔ p₂) → (p₁ → q) → (p₂ → q) := by
+theorem iff_substL {p₁ p₂ q : Prop} : (p₁ ↔ p₂) → (p₁ → q) → (p₂ → q) := by
   intro ⟨(_ : p₁ → p₂), (_ : p₂ → p₁)⟩ (_ : p₁ → q) (_ : p₂)
   show q
   have : p₁ := ‹p₂ → p₁› ‹p₂›
@@ -460,7 +463,7 @@ and common assumption, then convert it to the other using the equivalence.
 - `p₂`: the other equivalent property.
 - `q`: the assumption of the implication.
 -/
-def iff_substR {p₁ p₂ q : Prop} : (p₁ ↔ p₂) → (q → p₁) → (q → p₂) := by
+theorem iff_substR {p₁ p₂ q : Prop} : (p₁ ↔ p₂) → (q → p₁) → (q → p₂) := by
   intro ⟨(_ : p₁ → p₂), (_ : p₂ → p₁)⟩ (_ : q → p₁) (_ : q)
   show p₂
   have : p₁ := ‹q → p₁› ‹q›
@@ -544,8 +547,7 @@ both invocations of `f`.
     their swapped-argument versions due to how `rS` is used here and in
     `Fn.Swappable f rS`.
 -/
-@[implicit_reducible]
-def substR_from_substL_swap
+theorem substR_from_substL_swap
     {α : Sort u} {β : Sort v}
     {f : α → α → β} {C : α → Prop} {rα : α → α → Prop} {rβ rS : β → β → Prop}
     [Fn.Swappable f rS] [Substitutive₂ rβ tc rS (· → ·)]
@@ -754,8 +756,7 @@ theorem substL {x₁ x₂ : α} {y : β} : x₁ ≃ x₂ → (x₁, y) ≃ (x₂
   show x₁ ≃ x₂ ∧ y ≃ y
   exact And.intro ‹x₁ ≃ x₂› Rel.refl
 
-@[implicit_reducible]
-def substitutiveL
+theorem substitutiveL
     : SubstitutiveOn Hand.L (α := α) (β := β) (·,·) tc (· ≃ ·) (· ≃ ·)
     := {
   subst₂ := λ (_ : True) => substL
@@ -784,8 +785,7 @@ theorem substR {x₁ x₂ : β} {y : α} : x₁ ≃ x₂ → (y, x₁) ≃ (y, x
   show y ≃ y ∧ x₁ ≃ x₂
   exact And.intro Rel.refl ‹x₁ ≃ x₂›
 
-@[implicit_reducible]
-def substitutiveR
+theorem substitutiveR
     : SubstitutiveOn Hand.R (α := α) (β := β) (·,·) tc (· ≃ ·) (· ≃ ·)
     := {
   subst₂ := λ (_ : True) => substR
@@ -984,8 +984,7 @@ arguments to `f` can be swapped so that left-handed cancellation can be used.
 - `Substitutive₂ rβ (· ≃ ·) (· → ·)`: needed to update the right-handed
   hypothesis involving `rβ` to a left-handed hypothesis.
 -/
-@[implicit_reducible]
-def cancelR_from_cancelL
+theorem cancelR_from_cancelL
     {α : Sort u} {β : Sort v}
     {f : α → α → β} {C : α → Prop} {rα : α → α → Prop} {rβ : β → β → Prop}
     [EqvOp β] [Commutative f] [Substitutive₂ rβ tc (· ≃ ·) (· → ·)]

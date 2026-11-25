@@ -1,5 +1,8 @@
-import Lean4Axiomatic.Natural.Addition
-import Lean4Axiomatic.Sign
+module
+public import Lean4Axiomatic.Natural.Addition
+public import Lean4Axiomatic.Sign
+
+@[expose] public section
 
 /-!
 # Natural number signedness

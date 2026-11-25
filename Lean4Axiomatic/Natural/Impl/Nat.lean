@@ -1,5 +1,8 @@
-import Lean4Axiomatic.Natural
-import Lean4Axiomatic.Natural.Impl.Generic
+module
+public import Lean4Axiomatic.Natural
+public import Lean4Axiomatic.Natural.Impl.Generic
+
+@[expose] public section
 
 /-!
 # Full implementation of `Natural` for Lean's prelude `Nat`
@@ -32,8 +35,7 @@ local instance literals : Literals Nat := {
   literal_step := Rel.refl
 }
 
-@[implicit_reducible]
-def step_substitutive
+theorem step_substitutive
     : AA.Substitutive₁ (step : Nat → Nat) (· ≃ ·) (· ≃ ·)
     := {
   subst₁ := congrArg step
@@ -42,8 +44,7 @@ def step_substitutive
 theorem succ_injective {n m : Nat} : Nat.succ n = Nat.succ m → n = m
 | Eq.refl _ => Eq.refl _
 
-@[implicit_reducible]
-def step_injective : AA.Injective (step : Nat → Nat) (· ≃ ·) (· ≃ ·) := {
+theorem step_injective : AA.Injective (step : Nat → Nat) (· ≃ ·) (· ≃ ·) := {
   inject := succ_injective
 }
 

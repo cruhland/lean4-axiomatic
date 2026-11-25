@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Integer.Parity
+module
+public import Lean4Axiomatic.Integer.Parity
+
+@[expose] public section
 
 /-! # Generic implementation of integer parity functions and properties -/
 
@@ -16,8 +19,7 @@ local instance parity_ops : Parity.Ops ℤ := {
   half_floored a := (div_floored a 2).quotient
 }
 
-@[implicit_reducible]
-def parity_props : Parity.Props ℤ := {
+theorem parity_props : Parity.Props ℤ := {
   even_rem := Iff.rfl
   odd_rem := Iff.rfl
   half_floored_eqv := Rel.refl

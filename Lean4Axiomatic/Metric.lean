@@ -1,3 +1,6 @@
+module
+
+@[expose] public section
 
 /-! # Functions and properties applicable to types with a metric -/
 

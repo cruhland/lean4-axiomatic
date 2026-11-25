@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Integer.Metric
+module
+public import Lean4Axiomatic.Integer.Metric
+
+@[expose] public section
 
 /-! # Integers: Division -/
 

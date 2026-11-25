@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Natural
+module
+public import Lean4Axiomatic.Natural
+
+@[expose] public section
 
 namespace Lean4Axiomatic
 

@@ -1,7 +1,10 @@
-import Lean4Axiomatic.Rational.Exponentiation
-import Lean4Axiomatic.Rational.FloorCeil
-import Lean4Axiomatic.Rational.Induction
-import Lean4Axiomatic.Rational.Metric
+module
+public import Lean4Axiomatic.Rational.Exponentiation
+public import Lean4Axiomatic.Rational.FloorCeil
+public import Lean4Axiomatic.Rational.Induction
+public import Lean4Axiomatic.Rational.Metric
+
+@[expose] public section
 
 /-! # Rational numbers -/
 

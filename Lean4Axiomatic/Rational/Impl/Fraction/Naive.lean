@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Integer
+module
+public import Lean4Axiomatic.Integer
+
+@[expose] public section
 
 namespace Lean4Axiomatic.Rational.Impl.Fraction.Naive
 
@@ -22,20 +25,20 @@ for "normal" fractions still apply to these unrestricted ones. But there are
 also some important differences, showing why restricting the denominator is
 needed.
 -/
-structure Fraction (α : Type) : Type where
+structure NaiveFraction (α : Type) : Type where
   numerator : α
   denominator : α
 
-local infix:90 "//" => Naive.Fraction.mk
+local infix:90 "//" => NaiveFraction.mk
 
 /--
-Create an ordered pair of `α` values from a `Naive.Fraction α`.
+Create an ordered pair of `α` values from a `NaiveFraction α`.
 
 Sometimes it can be helpful to have a strict form of equivalence between
 naive fractions, one that works component-wise; conversion to ordered pairs
 enables this.
 -/
-def Fraction.to_prod {α : Type} : Naive.Fraction α → α × α
+def NaiveFraction.to_prod {α : Type} : NaiveFraction α → α × α
 | a//b => (a, b)
 
 variable {ℕ : Type} [Natural ℕ]
@@ -56,16 +59,16 @@ This has the same form as the equivalence relation on traditional fractions,
 but it's not actually an equivalence relation because it fails to be transitive
 (see proofs below).
 -/
-def eqv : Naive.Fraction ℤ → Naive.Fraction ℤ → Prop
+def eqv : NaiveFraction ℤ → NaiveFraction ℤ → Prop
 | p//q, r//s => p * s ≃ r * q
 
 /-- Provide the `· ≃ ·` operator for equivalence of naive fractions. -/
-instance tildeDash : Operators.TildeDash (Naive.Fraction ℤ) := {
+instance tildeDash : Operators.TildeDash (NaiveFraction ℤ) := {
   tildeDash := eqv
 }
 
 /-- Naive fraction equivalence is reflexive. -/
-theorem eqv_refl {p : Naive.Fraction ℤ} : p ≃ p := by
+theorem eqv_refl {p : NaiveFraction ℤ} : p ≃ p := by
   revert p; intro (a//b); let p := a//b
   show p ≃ p
 
@@ -77,7 +80,7 @@ theorem eqv_refl {p : Naive.Fraction ℤ} : p ≃ p := by
     _ = p    := rfl
 
 /-- Naive fraction equivalence is symmetric. -/
-theorem eqv_symm {p q : Naive.Fraction ℤ} : p ≃ q → q ≃ p := by
+theorem eqv_symm {p q : NaiveFraction ℤ} : p ≃ q → q ≃ p := by
   revert p; intro (a//b); let p := a//b
   revert q; intro (c//d); let q := c//d
   intro (_ : p ≃ q)
@@ -101,14 +104,14 @@ the fraction `0//0`, and note that `p ≃ q` and `q ≃ r`. Now invoke transitiv
 to show that `p ≃ r`, contradicting our definition of `p` and `r`.
 -/
 theorem eqv_trans_impossible
-    : ¬(∀ p q r : Naive.Fraction ℤ, p ≃ q → q ≃ r → p ≃ r)
+    : ¬(∀ p q r : NaiveFraction ℤ, p ≃ q → q ≃ r → p ≃ r)
     := by
-  intro (trans : {p q r : Naive.Fraction ℤ} → p ≃ q → q ≃ r → p ≃ r)
+  intro (trans : {p q r : NaiveFraction ℤ} → p ≃ q → q ≃ r → p ≃ r)
   show False
 
-  let p : Naive.Fraction ℤ := 1//0
-  let q : Naive.Fraction ℤ := 0//0
-  let r : Naive.Fraction ℤ := 1//1
+  let p : NaiveFraction ℤ := 1//0
+  let q : NaiveFraction ℤ := 0//0
+  let r : NaiveFraction ℤ := 1//1
 
   have : (1:ℤ) * 0 ≃ 0 * 0 := calc
     _ = (1:ℤ) * 0 := rfl
@@ -155,7 +158,7 @@ of `q.denominator`. We're allowed to cancel it out because of the assumption
 that it's nonzero.
 -/
 theorem eqv_trans_nonzero_denom
-    {p q r : Naive.Fraction ℤ} : q.denominator ≄ 0 → p ≃ q → q ≃ r → p ≃ r
+    {p q r : NaiveFraction ℤ} : q.denominator ≄ 0 → p ≃ q → q ≃ r → p ≃ r
     := by
   revert p; intro (pn//pd); let p := pn//pd
   revert q; intro (qn//qd); let q := qn//qd
@@ -198,7 +201,7 @@ The naive fraction `0//0` is equivalent to any naive fraction.
 equivalence of two products, each containing a factor of zero. By absorption,
 this is the same as `0 ≃ 0`, which is trivially true.
 -/
-theorem zero_over_zero_eqv_any {p : Naive.Fraction ℤ} : 0//0 ≃ p := by
+theorem zero_over_zero_eqv_any {p : NaiveFraction ℤ} : 0//0 ≃ p := by
   revert p; intro (pn//pd); let p := pn//pd
   show 0//0 ≃ p
 
@@ -231,7 +234,7 @@ the other two fractions are zero. In the first case, the middle fraction is
 `0 ≃ 0` because `p` and `r`'s denominators are zero, and transitivity holds.
 -/
 theorem eqv_trans_almost
-    {p q r : Naive.Fraction ℤ}
+    {p q r : NaiveFraction ℤ}
     : p ≃ q → q ≃ r → (p ≃ r ∨ q.to_prod ≃ (0//0).to_prod)
     := by
   revert p; intro (pn//pd); let p := pn//pd
@@ -324,11 +327,11 @@ provide a reason for our definition of addition:
 4. `(a * d)//(b * d) + (b * c)//(b * d)`
 5. `(a * d + b * c)//(b * d)`
 -/
-def add : Naive.Fraction ℤ → Naive.Fraction ℤ → Naive.Fraction ℤ
+def add : NaiveFraction ℤ → NaiveFraction ℤ → NaiveFraction ℤ
 | a//b, c//d => (a * d + b * c)//(b * d)
 
 /-- Provide the `· + ·` operator for addition of naive fractions. -/
-instance addOp : Add (Naive.Fraction ℤ) := {
+instance addOp : Add (NaiveFraction ℤ) := {
   add := add
 }
 
@@ -391,7 +394,7 @@ the denominators of those fractions. And the product of two nonzero integers is
 always nonzero.
 -/
 theorem add_preserves_nonzero_denominators
-    {p q : Naive.Fraction ℤ}
+    {p q : NaiveFraction ℤ}
     : Nonzero p.denominator → Nonzero q.denominator
     → Nonzero ((p + q).denominator)
     := by
@@ -430,7 +433,7 @@ the denominators of those fractions. And the product of two positive integers
 is always positive.
 -/
 theorem add_preserves_positive_denominators
-    {p q : Naive.Fraction ℤ}
+    {p q : NaiveFraction ℤ}
     : Positive p.denominator → Positive q.denominator
     → Positive ((p + q).denominator)
     := by

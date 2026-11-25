@@ -1,14 +1,19 @@
-import Lean4Axiomatic.Rational.Impl.Fraction.Sign
-import Lean4Axiomatic.Rational.Impl.Fraction.Reciprocation
-import Lean4Axiomatic.Rational.Induction
+module
+public import Lean4Axiomatic.Rational.Impl.Fraction.Sign
+public import Lean4Axiomatic.Rational.Impl.Fraction.Reciprocation
+public import Lean4Axiomatic.Rational.Induction
+
+@[expose] public section
 
 namespace Lean4Axiomatic.Rational.Impl.Fraction
 
 /-! ## Induction/eliminators on formal fractions -/
 
-open Function (IndexedFamily fsubst fsubst_refl fsubst_substR fsubst_trans)
-open Logic (AP)
-open Signed (Positive sgn)
+open Lean4Axiomatic.Function (
+  IndexedFamily fsubst fsubst_refl fsubst_substR fsubst_trans
+)
+open Lean4Axiomatic.Logic (AP)
+open Lean4Axiomatic.Signed (Positive sgn)
 
 variable {ℕ ℤ : Type} [Natural ℕ] [Integer (ℕ := ℕ) ℤ]
 
@@ -139,8 +144,7 @@ theorem ind_ratio_eval
     _ ≃ or_ab                                       := fsubst_refl
     _ = ctx.on_ratio a b                            := rfl
 
-@[implicit_reducible]
-def ind_props : Induction.Props (Fraction ℤ) := {
+theorem ind_props : Induction.Props (Fraction ℤ) := {
   ind_ratio_subst := ind_ratio_subst
   ind_ratio_eval := ind_ratio_eval
 }

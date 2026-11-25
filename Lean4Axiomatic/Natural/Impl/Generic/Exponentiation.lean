@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Natural.Exponentiation
+module
+public import Lean4Axiomatic.Natural.Exponentiation
+
+@[expose] public section
 
 /-!
 # Generic implementation of natural number exponentiation and properties
@@ -53,8 +56,7 @@ theorem pow_step {x : α} {n : ℕ} : x^(step n) ≃ x^n * x := calc
   _ ≃ (rec_on n 1 (· * x)) * x  := rec_on_step
   _ = x^n * x                   := rfl
 
-@[implicit_reducible]
-def exponentiation_props : Exponentiation.Props (α := α) := {
+theorem exponentiation_props : Exponentiation.Props (α := α) := {
   pow_zero := pow_zero
   pow_step := pow_step
 }

@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Rational.Negation
+module
+public import Lean4Axiomatic.Rational.Negation
+
+@[expose] public section
 
 /-! # Rational numbers: reciprocation and division -/
 

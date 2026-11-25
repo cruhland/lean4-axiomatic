@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Hand
+module
+public import Lean4Axiomatic.Hand
+
+@[expose] public section
 
 namespace Lean4Axiomatic
 

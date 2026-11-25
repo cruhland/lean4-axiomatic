@@ -1,5 +1,8 @@
-import Lean4Axiomatic.Metric
-import Lean4Axiomatic.Rational.MinMax
+module
+public import Lean4Axiomatic.Metric
+public import Lean4Axiomatic.Rational.MinMax
+
+@[expose] public section
 
 /-! # Rational numbers: metric functions -/
 

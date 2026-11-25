@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Integer.Parity
+module
+public import Lean4Axiomatic.Integer.Parity
+
+@[expose] public section
 
 /-!
 # Combined typeclass of all integer definitions and properties

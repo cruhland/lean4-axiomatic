@@ -1,6 +1,9 @@
-import Lean4Axiomatic.AbstractAlgebra
-import Lean4Axiomatic.Operators
-import Lean4Axiomatic.Relation.Equivalence
+module
+public import Lean4Axiomatic.AbstractAlgebra
+public import Lean4Axiomatic.Operators
+public import Lean4Axiomatic.Relation.Equivalence
+
+@[expose] public section
 
 /-! # Generic definitions and properties applicable to signed types -/
 

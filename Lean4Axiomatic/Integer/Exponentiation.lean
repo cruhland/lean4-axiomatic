@@ -1,4 +1,7 @@
-import Lean4Axiomatic.Integer.Order
+module
+public import Lean4Axiomatic.Integer.Order
+
+@[expose] public section
 
 /-!
 # Integers: exponentiation to natural numbers

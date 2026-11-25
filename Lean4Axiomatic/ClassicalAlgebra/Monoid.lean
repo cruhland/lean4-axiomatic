@@ -1,4 +1,7 @@
-import Lean4Axiomatic.AbstractAlgebra
+module
+public import Lean4Axiomatic.AbstractAlgebra
+
+@[expose] public section
 
 namespace Lean4Axiomatic.CA.Monoid
 

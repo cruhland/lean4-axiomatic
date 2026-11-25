@@ -1,5 +1,8 @@
-import Lean4Axiomatic.Function
-import Lean4Axiomatic.Integer.Subtraction
+module
+public import Lean4Axiomatic.Function
+public import Lean4Axiomatic.Integer.Subtraction
+
+@[expose] public section
 
 /-!
 # Integer induction
@@ -26,8 +29,8 @@ show a result holds for natural numbers than for integers.
 
 namespace Lean4Axiomatic.Integer
 
-open Function (IndexedFamily fsubst)
-open Relation.Equivalence (EqvOp)
+open Lean4Axiomatic.Function (IndexedFamily fsubst)
+open Lean4Axiomatic.Relation.Equivalence (EqvOp)
 
 /-! ## Axioms -/
 
@@ -231,7 +234,7 @@ be written as the more convenient `ctx.ind_diff_eval` instead.
 
 See `Integer.Induction.Props.ind_diff_eval` for intuition.
 -/
-def Induction.Context.ind_diff_eval
+theorem Induction.Context.ind_diff_eval
     {motive : ℤ → Sort u} [IndexedFamily motive]
     : (ctx : Context motive) → {n m : ℕ} →
       ctx.ind_diff (n - m) ≃ ctx.on_diff n m
@@ -247,7 +250,7 @@ to be written as the more convenient `ctx.ind_diff_subst` instead.
 
 See `Integer.Induction.Props.ind_diff_subst` for intuition.
 -/
-def Induction.Context.ind_diff_subst
+theorem Induction.Context.ind_diff_subst
     {motive : ℤ → Sort u} [IndexedFamily motive]
     (ctx : Context motive) {a₁ a₂ : ℤ} (a_eqv : a₁ ≃ a₂)
     : fsubst ‹a₁ ≃ a₂› (ctx.ind_diff a₁) ≃ ctx.ind_diff a₂
@@ -279,7 +282,7 @@ function to those same numbers.
 **Intuition**: This is a special case of `ind_diff_eval` when the `motive`
 returns the same type for all inputs.
 -/
-def Induction.Context.rec_diff_eval
+theorem Induction.Context.rec_diff_eval
     {X : Sort u} [EqvOp X] (ctx : Context (λ (_ : ℤ) => X))
     : {n m : ℕ} → ctx.rec_diff (n - m) ≃ ctx.on_diff n m
     :=
@@ -292,7 +295,7 @@ Integer recursion obeys the substitution property on equivalence.
 returns the same type for all inputs.
 -/
 @[gcongr]
-def Induction.Context.rec_diff_subst
+theorem Induction.Context.rec_diff_subst
     {X : Sort u} [EqvOp X] (ctx : Context (λ (_ : ℤ) => X))
     : {a₁ a₂ : ℤ} → (a_eqv : a₁ ≃ a₂) → ctx.rec_diff a₁ ≃ ctx.rec_diff a₂
     :=
