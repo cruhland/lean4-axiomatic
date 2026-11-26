@@ -1496,6 +1496,23 @@ theorem pos_gt_iff_ge {a : ℤ} : a > 0 ↔ a ≥ 1 := calc
   _ ↔ a ≥ 0 + 1 := lt_iff_le_incL
   _ ↔ a ≥ 1     := Rel.iff_subst_eqv le_substL_eqv AA.identL
 
+/-- TODO -/
+instance unit_discrete_int_inst : UnitDiscrete ℤ :=
+  have lt_to_le {a b : ℤ} : a < b → a ≤ b := le_split.mpr ∘ .inl
+  let inc := (· + 1)
+
+  have min_separation {a b : ℤ} : a ≤ b ∨ inc b ≤ a :=
+    match show a ≤ b ∨ a > b from le_or_gt with
+    | .inl (_ : a ≤ b) => .inl ‹a ≤ b›
+    | .inr (_ : b < a) => .inr (show inc b ≤ a from lt_iff_le_incL.mp ‹b < a›)
+
+  show UnitDiscrete ℤ from {
+    lt_to_le := lt_to_le
+    inc := inc
+    lt_inc := lt_inc
+    min_separation := min_separation
+  }
+
 /--
 Every nonnegative integer is equivalent to a natural number.
 
