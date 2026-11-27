@@ -11,19 +11,38 @@ open Lean4Axiomatic.Relation.Equivalence (EqvOp)
 
 /-! ## Axioms / Definitions -/
 
-/-- TODO -/
+/-- A _unit discrete_ type has the properties needed for indexing a sequence. -/
 class UnitDiscrete (α : Type u) [LE α] [LT α] where
-  /-- TODO -/
+  /--
+  Ensures the _less than_ relation is compatible with
+  _less than or equivalent to_.
+
+  Note: this is only needed until a better ordering typeclass is available, to
+  replace `LE` and `LT`.
+  -/
   lt_to_le {x y : α} : x < y → x ≤ y
 
-  /-- TODO -/
+  /--
+  Increment: the value "immediately following" the provided value.
+
+  When indexing into a sequence, this enables us to go from one element to the
+  next.
+  -/
   inc : α → α
 
-  /-- TODO -/
-  lt_inc {x : α} : x < inc x
+  /--
+  Increment always produces a larger value.
 
-  /-- TODO -/
-  min_separation {x y : α} : x ≤ y ∨ inc y ≤ x
+  Without this requirement, `inc` might stay in place, or move backward.
+  -/
+  inc_greater {x : α} : x < inc x
+
+  /--
+  An increment is the smallest possible gap between values.
+
+  Without this requirement, `inc` might skip over valid indices.
+  -/
+  inc_minimal {x y : α} : x ≤ y ∨ inc y ≤ x
 
 export UnitDiscrete (inc)
 
@@ -35,7 +54,7 @@ theorem UnitDiscrete.le_inc
   intro (_ : x ≤ y)
   show x ≤ inc y
 
-  have : x < inc y := trans ‹x ≤ y› lt_inc
+  have : x < inc y := trans ‹x ≤ y› inc_greater
   have : x ≤ inc y := lt_to_le ‹x < inc y›
   exact this
 

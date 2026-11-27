@@ -15,9 +15,9 @@ variable {ℕ : Type} [Natural ℕ]
 instance unit_discrete_nat_inst : UnitDiscrete ℕ :=
   have lt_to_le {n m : ℕ} : n < m → n ≤ m := le_split.mpr ∘ .inl
   let inc := step
-  have lt_inc {n : ℕ} : n < inc n := lt_step
+  have inc_greater {n : ℕ} : n < inc n := lt_step
 
-  have min_separation {n m : ℕ} : n ≤ m ∨ inc m ≤ n :=
+  have inc_minimal {n m : ℕ} : n ≤ m ∨ inc m ≤ n :=
     match (trichotomy n m).atLeastOne with
     | .first (_ : n < m) =>
         have : n ≤ m := le_split.mpr (.inl ‹n < m›)
@@ -35,8 +35,8 @@ instance unit_discrete_nat_inst : UnitDiscrete ℕ :=
   show UnitDiscrete ℕ from {
     lt_to_le := lt_to_le
     inc := inc
-    lt_inc := lt_inc
-    min_separation := min_separation
+    inc_greater := inc_greater
+    inc_minimal := inc_minimal
   }
 
 /-- TODO -/
