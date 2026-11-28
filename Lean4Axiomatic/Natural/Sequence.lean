@@ -17,20 +17,20 @@ instance unit_discrete_nat_inst : UnitDiscrete ℕ :=
   let inc := step
   have inc_greater {n : ℕ} : n < inc n := lt_step
 
-  have inc_minimal {n m : ℕ} : n ≤ m ∨ inc m ≤ n :=
-    match (trichotomy n m).atLeastOne with
-    | .first (_ : n < m) =>
-        have : n ≤ m := le_split.mpr (.inl ‹n < m›)
-        .inl ‹n ≤ m›
-    | .second (_ : n ≃ m) =>
-        have : n ≤ m := le_split.mpr (.inr ‹n ≃ m›)
-        .inl ‹n ≤ m›
-    | .third (_ : n > m) =>
-        have : inc m ≤ n := calc
-          _ = inc m  := rfl
-          _ = step m := rfl
-          _ ≤ n      := lt_step_le.mp ‹m < n›
-        .inr ‹inc m ≤ n›
+  have inc_minimal {n m : ℕ} : inc n ≤ m ∨ m ≤ n :=
+    match (trichotomy m n).atLeastOne with
+    | .first (_ : m < n) =>
+        have : m ≤ n := le_split.mpr (.inl ‹m < n›)
+        .inr ‹m ≤ n›
+    | .second (_ : m ≃ n) =>
+        have : m ≤ n := le_split.mpr (.inr ‹m ≃ n›)
+        .inr ‹m ≤ n›
+    | .third (_ : m > n) =>
+        have : inc n ≤ m := calc
+          _ = inc n  := rfl
+          _ = step n := rfl
+          _ ≤ m      := lt_step_le.mp ‹n < m›
+        .inl ‹inc n ≤ m›
 
   show UnitDiscrete ℕ from {
     lt_to_le := lt_to_le

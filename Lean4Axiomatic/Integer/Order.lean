@@ -1501,10 +1501,10 @@ instance unit_discrete_int_inst : UnitDiscrete ℤ :=
   have lt_to_le {a b : ℤ} : a < b → a ≤ b := le_split.mpr ∘ .inl
   let inc := (· + 1)
 
-  have inc_minimal {a b : ℤ} : a ≤ b ∨ inc b ≤ a :=
-    match show a ≤ b ∨ a > b from le_or_gt with
-    | .inl (_ : a ≤ b) => .inl ‹a ≤ b›
-    | .inr (_ : b < a) => .inr (show inc b ≤ a from lt_iff_le_incL.mp ‹b < a›)
+  have inc_minimal {a b : ℤ} : inc a ≤ b ∨ b ≤ a :=
+    match show a < b ∨ a ≥ b from lt_or_ge with
+    | .inl (_ : a < b) => .inl (show inc a ≤ b from lt_iff_le_incL.mp ‹a < b›)
+    | .inr (_ : b ≤ a) => .inr ‹b ≤ a›
 
   show UnitDiscrete ℤ from {
     lt_to_le := lt_to_le

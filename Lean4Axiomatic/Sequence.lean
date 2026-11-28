@@ -42,7 +42,7 @@ class UnitDiscrete (α : Type u) [LE α] [LT α] where
 
   Without this requirement, `inc` might skip over valid indices.
   -/
-  inc_minimal {x y : α} : x ≤ y ∨ inc y ≤ x
+  inc_minimal {x y : α} : inc x ≤ y ∨ y ≤ x
 
 export UnitDiscrete (inc)
 
